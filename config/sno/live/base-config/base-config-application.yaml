@@ -12,5 +12,3 @@ spec:
     path: charts/ocp-base-config
     repoURL: https://github.com/igou-io/igou-openshift.git
     targetRevision: HEAD
-  syncPolicy:
-    automated: {}
