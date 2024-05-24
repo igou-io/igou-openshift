@@ -1,0 +1,66 @@
+cluster:
+  name: sno
+  baseDomain: igou.systems
+  gitOpsRepo: https://github.com/igou-io/igou-openshift.git
+  gitOpsBasePath: config
+  trustedCABundle: ""
+  openshiftVersion: "4.15"
+
+externalSecrets:
+  enabled: false
+  vaultBase: ''
+  vaultAuthPath: ''
+  secretBasePath: lab/
+
+certManager:
+  enabled: false
+  apiCert: true
+  defaultIngressCert: true
+  acmeBase: 'https://acme-v02.api.letsencrypt.org/directory'
+  externalSecret:
+    name: route53-key
+    vaultName: signal9-route53
+  solvers:
+    - http01:
+        ingress: {}
+    - dns01:
+        route53:
+          accessKeyID: REDACTED
+          region: us-east-1
+          secretAccessKeySecretRef:
+            key: secret-access-key
+            name: route53-key
+      selector:
+        dnsZones:
+          - signal9.gg
+          - lab.signal9.gg
+
+
+monitoring:
+  enabled: false
+  storageClass: standard
+
+network:
+  hostRouting: false
+
+auth:
+  enabled: false
+  oidcDisplayName: igou
+  oidcClientID: openshift
+  oidcIssuer: ''
+  externalSecret:
+    name: oauth-signal9-client-secret
+    vaultName: signal9-openid
+
+timesync:
+  enabled: false
+  ptp:
+    enabled: false
+    loadKvmModule: false
+    device: 'ptp_kvm'
+    sourceStratum: 2
+  ntpServers:
+    - 1.2.3.4
+
+gitops:
+  applicationControllerResources: {}

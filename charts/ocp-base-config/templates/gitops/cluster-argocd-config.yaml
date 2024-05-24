@@ -1,0 +1,48 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ArgoCD
+metadata:
+  name: openshift-gitops
+  namespace: openshift-gitops
+  annotations:
+    argocd.argoproj.io/sync-options: ServerSideApply=true,Validate=false
+spec:
+{{ if .Values.gitops.applicationControllerResources }}
+  controller:
+    resources:
+{{ toYaml .Values.gitops.applicationControllerResources | indent 6 }}
+{{ end }}
+  resourceTrackingMethod: annotation
+  resourceIgnoreDifferences:
+    resourceIdentifiers:
+    - group: metal3.io
+      kind: BareMetalHost
+      customization:
+        jsonPointers:
+        - /spec/online
+  resourceExclusions: |
+    - apiGroups:
+      - tekton.dev
+      clusters:
+      - '*'
+      kinds:
+      - TaskRun
+      - PipelineRun
+    - apiGroups:
+      - internal.open-cluster-management.io
+      clusters:
+      - '*'
+      kinds:
+      - ManagedClusterInfo
+  rbac:
+    policy: |
+      g, system:cluster-admins, role:admin
+      g, cluster-admins, role:admin
+      g, global-admins, role:admin
+    scopes: '[groups]'
+  server:
+    insecure: true
+    route:
+      enabled: true
+      tls:
+        termination: edge
+        insecureEdgeTerminationPolicy: Redirect
