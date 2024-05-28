@@ -30,6 +30,7 @@ certManager:
       selector:
         dnsZones:
           - igou.systems
+          - sno.igou.systems
 
 
 monitoring:
