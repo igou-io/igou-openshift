@@ -1,0 +1,12 @@
+namespace: 1password-connect
+resources:
+  - 1password-connect-cluster-role-binding.yaml
+helmCharts:
+- name: connect
+  includeCRDs: true
+  valuesInline:
+    connect:
+      applicationName: onepassword-connect
+  releaseName: connect
+  version: 1.15.0
+  repo: https://1password.github.io/connect-helm-charts
