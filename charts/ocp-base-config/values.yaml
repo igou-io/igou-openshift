@@ -41,13 +41,11 @@ network:
   hostRouting: false
 
 auth:
-  enabled: false
-  oidcDisplayName: igou
-  oidcClientID: openshift
-  oidcIssuer: ''
+  enabled: true
+  htpasswdDisplayName: igou
   externalSecret:
-    name: oauth-signal9-client-secret
-    vaultName: signal9-openid
+    name: htpasswd-secret
+    onePasswordSecretName: htpasswd
 
 timesync:
   enabled: false
