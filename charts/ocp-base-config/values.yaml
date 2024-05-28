@@ -29,7 +29,7 @@ certManager:
           email: igou.david@gmail.com
       selector:
         dnsZones:
-          - sno.igou.systems
+          - igou.systems
 
 
 monitoring:
