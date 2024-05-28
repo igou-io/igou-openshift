@@ -13,7 +13,7 @@ spec:
   renewBefore: 360h0m0s # 15d
   subject:
     organizations:
-    - "Signal9 Labs"
+    - "Igou"
   privateKey:
     size: 4096
     algorithm: RSA

@@ -8,7 +8,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   acme:
-    email: admin@signal9.gg
+    email: igou.david@gmail.com
     privateKeySecretRef:
       name: acme-private-key
     server: {{ .Values.certManager.acmeBase }}

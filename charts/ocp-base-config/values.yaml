@@ -13,27 +13,23 @@ externalSecrets:
 
 
 certManager:
-  enabled: false
+  enabled: true
   apiCert: true
   defaultIngressCert: true
   acmeBase: 'https://acme-v02.api.letsencrypt.org/directory'
   externalSecret:
-    name: route53-key
-    vaultName: signal9-route53
+    name: dns-token
+    onePasswordSecretName: dns-token
   solvers:
-    - http01:
-        ingress: {}
     - dns01:
-        route53:
-          accessKeyID: REDACTED
-          region: us-east-1
-          secretAccessKeySecretRef:
-            key: secret-access-key
-            name: route53-key
+        cloudflare:
+          apiTokenSecretRef:
+            key: dns-token
+            name: dns-token
+          email: igou.david@gmail.com
       selector:
         dnsZones:
-          - signal9.gg
-          - lab.signal9.gg
+          - sno.igou.systems
 
 
 monitoring:
