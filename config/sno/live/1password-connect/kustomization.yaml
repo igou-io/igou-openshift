@@ -1,7 +1,6 @@
 namespace: external-secrets-operator
 resources:
   - 1password-connect-cluster-role-binding.yaml
-  - 1password-connect-namespace.yaml
 helmCharts:
 - name: connect
   includeCRDs: true
