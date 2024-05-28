@@ -2,21 +2,22 @@
 apiVersion: external-secrets.io/v1beta1
 kind: ClusterSecretStore
 metadata:
-  name: vault
+  name: 1password
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/sync-wave: '1'
 spec:
   provider:
-    vault:
-      server: {{ .Values.externalSecrets.vaultBase }}
-      path: {{ .Values.externalSecrets.secretBasePath }}
-      version: "v2"
+    onepassword:
+      connectHost: http://onepassword-connect:8080
+      vaults:
+      {{- with .Values.externalSecrets.vaults }}
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
       auth:
-        kubernetes:
-          mountPath: {{ .Values.externalSecrets.vaultAuthPath }}
-          role: "external-secrets-operator"
-          serviceAccountRef:
-            name: "external-secrets-operator"
-            namespace: "external-secrets-operator"
+        secretRef:
+          connectTokenSecretRef:
+            name: onepassword-connect-token
+            key: token
+            namespace: external-secrets-operator
 {{ end }}

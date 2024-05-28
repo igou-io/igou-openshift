@@ -1,4 +1,4 @@
-namespace: 1password-connect
+namespace: external-secrets-operator
 resources:
   - 1password-connect-cluster-role-binding.yaml
   - 1password-connect-namespace.yaml
