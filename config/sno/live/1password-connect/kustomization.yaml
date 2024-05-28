@@ -1,6 +1,7 @@
 namespace: 1password-connect
 resources:
   - 1password-connect-cluster-role-binding.yaml
+  - 1password-connect-namespace.yaml
 helmCharts:
 - name: connect
   includeCRDs: true
