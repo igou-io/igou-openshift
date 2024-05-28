@@ -64,3 +64,4 @@ timesync:
 
 gitops:
   applicationControllerResources: {}
+  kustomizeBuildOptions: "--enable-helm"
