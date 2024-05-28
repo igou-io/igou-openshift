@@ -11,6 +11,9 @@ spec:
     resources:
 {{ toYaml .Values.gitops.applicationControllerResources | indent 6 }}
 {{ end }}
+{{ if .Values.gitops.kustomizeBuildOptions }}
+  kustomizeBuildOptions: {{ .Values.gitops.kustomizeBuildOptions }}
+{{end}}
   resourceTrackingMethod: annotation
   resourceIgnoreDifferences:
     resourceIdentifiers:
