@@ -7,10 +7,10 @@ cluster:
   openshiftVersion: "4.15"
 
 externalSecrets:
-  enabled: false
-  vaultBase: ''
-  vaultAuthPath: ''
-  secretBasePath: lab/
+  enabled: true
+  vaults:
+    openshift: 1
+
 
 certManager:
   enabled: false
