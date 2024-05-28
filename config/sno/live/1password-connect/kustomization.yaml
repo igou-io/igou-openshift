@@ -32,7 +32,7 @@ helmCharts:
       imagePullPolicy: IfNotPresent
       version: "{{ .Chart.AppVersion }}"
       nodeSelector:
-        node-role.kubernetes.io/control-plane: "true"
+        node-role.kubernetes.io/control-plane: ""
       probes:
         liveness: true
         readiness: true
