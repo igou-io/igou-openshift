@@ -24,7 +24,7 @@ certManager:
     - dns01:
         cloudflare:
           apiTokenSecretRef:
-            key: dns-token
+            key: credential
             name: dns-token
           email: igou.david@gmail.com
       selector:
