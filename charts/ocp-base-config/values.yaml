@@ -34,8 +34,8 @@ certManager:
 
 
 monitoring:
-  enabled: false
-  storageClass: standard
+  enabled: true
+  storageClass: lvms-vg1-immediate
 
 network:
   hostRouting: false
