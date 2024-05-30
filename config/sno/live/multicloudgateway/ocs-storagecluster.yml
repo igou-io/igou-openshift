@@ -4,7 +4,7 @@ metadata:
   annotations:
     uninstall.ocs.openshift.io/cleanup-policy: delete
     uninstall.ocs.openshift.io/mode: graceful
-    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-wave: "20"
   name: ocs-storagecluster
   namespace: openshift-storage
 spec:
