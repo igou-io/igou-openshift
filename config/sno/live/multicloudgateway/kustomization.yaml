@@ -3,4 +3,3 @@ kind: Kustomization
 resources:
 - ocs-storagecluster.yml
 - odf-operator-subscription.yml
-- openshift-storage-operatorgroup-operatorgroup.yml
