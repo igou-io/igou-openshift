@@ -14,7 +14,7 @@ data:
            requests:
              storage: 10Gi
     prometheusK8s:
-      retention: 7d
+      retention: 30d
       volumeClaimTemplate:
        spec:
          storageClassName: {{ .Values.monitoring.storageClass }}
