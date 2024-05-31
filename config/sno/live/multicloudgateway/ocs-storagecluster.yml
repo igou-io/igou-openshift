@@ -14,8 +14,6 @@ spec:
     kms: {}
   externalStorage: {}
   resourceProfile: "lean"
-  enableCephTools: false
-  allowRemoteStorageConsumers: false
   managedResources:
     cephObjectStoreUsers: {}
     cephCluster: {}
