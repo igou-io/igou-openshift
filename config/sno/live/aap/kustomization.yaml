@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - github.com/redhat-cop/gitops-catalog/ansible-automation-platform/operator/overlays/stable-2.4?ref=main
   - github.com/redhat-cop/gitops-catalog/ansible-automation-platform/instance/overlays/default?ref=main
+  - github.com/redhat-cop/gitops-catalog/ansible-automation-platform/hub-instance/overlays/default?ref=main
