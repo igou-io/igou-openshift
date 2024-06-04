@@ -10,7 +10,7 @@ spec:
     numVolumes: 1
     resources:
       requests:
-        storage: 150Gi
+        storage: 400Gi
     secret: {}
     storageClass: lvms-vg1-immediate
   type: pv-pool
