@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
 - ocs-storagecluster.yml
 - odf-operator-subscription.yml
+- lokistack-backingstore.yaml
