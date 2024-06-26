@@ -3,3 +3,4 @@ kind: Kustomization
 
 resources:
   - https://github.com/redhat-cop/gitops-catalog/nmstate/operator/overlays/stable?ref=main
+  - https://github.com/redhat-cop/gitops-catalog/nmstate/instance/overlays/default?ref=main
