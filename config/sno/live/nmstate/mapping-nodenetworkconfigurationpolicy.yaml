@@ -1,0 +1,16 @@
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: lab-inf-bridge
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: '3'
+spec:
+  desiredState:
+    ovn:
+      bridge-mappings:
+        - bridge: br-ex
+          localnet: localnet1
+          state: present
+  nodeSelector:
+    node-role.kubernetes.io/master: ''
