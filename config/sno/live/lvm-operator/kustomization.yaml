@@ -6,3 +6,5 @@ resources:
 - lvms-subscription.yml
 - openshift-storage-namespace.yml
 - openshift-storage-operatorgroup.yml
+commonAnnotations:
+  argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
