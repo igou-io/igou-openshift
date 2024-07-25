@@ -5,3 +5,5 @@ resources:
   - mapping-nodenetworkconfigurationpolicy.yaml
   - https://github.com/redhat-cop/gitops-catalog/nmstate/operator/overlays/stable?ref=main
   - https://github.com/redhat-cop/gitops-catalog/nmstate/instance/overlays/default?ref=main
+commonAnnotations:
+  argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
