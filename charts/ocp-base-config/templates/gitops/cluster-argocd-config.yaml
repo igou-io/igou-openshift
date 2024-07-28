@@ -37,9 +37,10 @@ spec:
       - '*'
       kinds:
       - ManagedClusterInfo
-  resourceHealthChecks: |
-    operators.coreos.com/Subscription:
-      health.lua: |
+  resourceHealthChecks:
+    - group: operators.coreos.com
+      kind: Subscription
+      check: |
         health_status = {}
         health_status.status = "Healthy"
         health_status.message = "Always healthy due to a bug"
