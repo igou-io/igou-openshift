@@ -43,7 +43,7 @@ spec:
       check: |
         health_status = {}
         health_status.status = "Healthy"
-        health_status.message = "Always healthy due to a bug"
+        health_status.message = "Temporary override due to an olm bug"
         return health_status
   rbac:
     policy: |
