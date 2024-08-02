@@ -5,3 +5,11 @@ resources:
 - kubevirt-hyperconverged-group-operatorgroup.yml
 - kubevirt-hyperconverged.yml
 - openshift-cnv-namespace.yml
+- virtualmachine-deployer-clusterrolebinding.yaml
+- virtualmachine-deployer-clusterrole.yaml
+- virtualmachine-deployer-serviceaccount.yaml
+- virtualmachine-deployer-token-secret.yaml
+- virtualmachine-reader-clusterrolebinding.yaml
+- virtualmachine-reader-clusterrole.yaml
+- virtualmachine-reader-serviceaccount.yaml
+- virtualmachine-reader-token-secret.yaml
