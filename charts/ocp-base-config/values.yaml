@@ -38,7 +38,7 @@ monitoring:
   storageClass: lvms-vg1-immediate
 
 network:
-  hostRouting: false
+  hostRouting: true
 
 auth:
   enabled: true
