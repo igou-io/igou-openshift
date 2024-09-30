@@ -12,7 +12,7 @@ spec:
   image_pull_policy: IfNotPresent
   web:
     replicas: 1
-  file_storage_access_mode: ReadWriteMany
+  file_storage_access_mode: ReadWriteOnce
   content:
     log_level: INFO
     replicas: 2
