@@ -27,8 +27,6 @@ spec:
     cephConfig: {}
   mirroring: {}
   multiCloudGateway:
-    endpoints:
-      maxCount: 1
     dbStorageClassName: lvms-vg1-immediate
     reconcileStrategy: standalone
     disableLoadBalancerService: true
