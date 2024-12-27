@@ -5,7 +5,7 @@ helmCharts:
 - name: tailscale
   includeCRDs: true
   releaseName: tailscale
-  version: 1.78.3
+  version: v1.78.3
   repo: https://1password.github.io/connect-helm-charts
   valuesInline:
     tailscale:
