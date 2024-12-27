@@ -1,6 +1,7 @@
 namespace: tailscale
 resources:
   - tailscale-namespace.yml
+  - tailscale-operator-anyuid-clusterrolebinding.yaml
   - operator-oauth-externalsecret.yml
 helmCharts:
 - name: tailscale-operator
