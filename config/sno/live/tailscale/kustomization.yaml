@@ -42,7 +42,7 @@ helmCharts:
           tag: ""
           digest: ""
           pullPolicy: Always
-        logging: "info" # info, debug, dev
+        logging: "debug" # info, debug, dev
         hostname: "tailscale-operator"
         nodeSelector:
           kubernetes.io/os: linux
