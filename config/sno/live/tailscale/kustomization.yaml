@@ -1,5 +1,6 @@
 namespace: tailscale
 resources:
+  - tailscale-namespace.yml
   - operator-oauth-externalsecret.yml
 helmCharts:
 - name: tailscale-operator
