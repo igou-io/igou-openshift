@@ -15,7 +15,7 @@ spec:
   syncPolicy:
     syncOptions:
       - CreateNamespace=true
-    automated: {}
+    # automated: {}
     retry:
       limit: -1
       backoff:
