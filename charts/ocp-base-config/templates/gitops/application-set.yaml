@@ -21,10 +21,10 @@ spec:
         - resources-finalizer.argocd.argoproj.io
     spec:
       project: default
-      # syncPolicy:
-      #   automated:
-      #     prune: true
-      #     allowEmpty: true
+      syncPolicy:
+        automated:
+          prune: true
+          allowEmpty: true
       destination:
         namespace: openshift-gitops
         server: "https://kubernetes.default.svc"
