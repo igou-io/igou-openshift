@@ -25,6 +25,6 @@ spec:
             stp:
               enabled: false
           port:
-            - name: enp87s0
+            - name: enp2s0f1
   nodeSelector:
     node-role.kubernetes.io/master: ''
