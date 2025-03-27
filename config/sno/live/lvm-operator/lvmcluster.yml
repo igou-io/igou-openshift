@@ -7,9 +7,33 @@ spec:
   storage:
     deviceClasses:
     - name: vg1
+      fstype: ext4
+      default: true
+      nodeSelector:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - sno
       deviceSelector:
         paths:
         - /dev/nvme0n1p5
+      thinPoolConfig:
+        name: thin-pool-1
+        sizePercent: 90
+        overprovisionRatio: 10
+    - name: vg1-epyc
+      deviceSelector:
+        paths:
+        - /dev/nvme0n1p5
+      nodeSelector:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - 7c-c2-55-e3-dc-22.igou.systems
       thinPoolConfig:
         name: thin-pool-1
         sizePercent: 90
