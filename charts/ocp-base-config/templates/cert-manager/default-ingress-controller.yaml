@@ -11,4 +11,8 @@ spec:
     name: acme-apps
   routeAdmission:
     wildcardPolicy: WildcardsAllowed
+  nodePlacement:
+    tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
 {{ end }}
