@@ -35,7 +35,7 @@ certManager:
 
 monitoring:
   enabled: true
-  storageClass: lvms-vg1-worker
+  storageClass: freenas-iscsi-ssd-csi
 
 network:
   hostRouting: false
