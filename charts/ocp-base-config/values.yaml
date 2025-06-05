@@ -34,7 +34,7 @@ certManager:
 
 
 monitoring:
-  enabled: false
+  enabled: true
   storageClass: lvms-vg1-worker
 
 network:
