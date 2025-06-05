@@ -4,13 +4,47 @@ metadata:
   name: lvmcluster
   namespace: openshift-storage
 spec:
+  tolerations:
+    - effect: NoSchedule
+      key: node-role.kubernetes.io/master
   storage:
     deviceClasses:
-    - name: vg1
+    - name: vg1-master
       deviceSelector:
+        forceWipeDevicesAndDestroyAllData: true
         paths:
         - /dev/nvme0n1p5
+      fstype: xfs
+      nodeSelector:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                  - sno
       thinPoolConfig:
+        chunkSizeCalculationPolicy: Static
+        metadataSizeCalculationPolicy: Host
         name: thin-pool-1
-        sizePercent: 90
         overprovisionRatio: 10
+        sizePercent: 90
+    - name: vg1-worker
+      default: true
+      deviceSelector:
+        forceWipeDevicesAndDestroyAllData: true
+        paths:
+        - /dev/nvme0n1p5
+      fstype: xfs
+      nodeSelector:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                  - 7c-c2-55-e3-dc-22.igou.systems
+      thinPoolConfig:
+        chunkSizeCalculationPolicy: Static
+        metadataSizeCalculationPolicy: Host
+        name: thin-pool-1
+        overprovisionRatio: 10
+        sizePercent: 90
