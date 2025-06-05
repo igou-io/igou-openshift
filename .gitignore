@@ -113,6 +113,8 @@ scheduler.json
 
 # Helm stuff
 **/charts
+!/charts/
+!/charts/**
 requirements.lock
 Chart.lock
 **/Chart.lock
