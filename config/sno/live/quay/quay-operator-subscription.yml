@@ -4,7 +4,7 @@ metadata:
   name: quay-operator
   namespace: quay-operator
 spec:
-  channel: 3.15
+  channel: "stable-3.14"
   installPlanApproval: Automatic
   name: quay-operator
   source: redhat-operators
