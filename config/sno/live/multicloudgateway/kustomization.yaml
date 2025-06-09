@@ -3,5 +3,6 @@ kind: Kustomization
 resources:
 - ocs-storagecluster.yml
 - odf-operator-subscription.yml
+- quay-bucket-backingstore.yml
 commonAnnotations:
   argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
