@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: aap-external-db-cnpg
+resources:
+- aap-external-db-cnpg-namespace.yaml
+- aap-ansibleautomationplatform.yml
+- aap-postgres-cluster.yaml
+- controller-database.yml
+- eda-database.yml
+- hub-database.yml
+- gateway-database.yml
+- external-postgres-configuration-eda-secret.yaml
+- external-postgres-configuration-hub-secret.yaml
+- external-postgres-configuration-gateway-secret.yaml
+- external-postgres-configuration-controller-secret.yaml
+commonAnnotations:
+  argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
