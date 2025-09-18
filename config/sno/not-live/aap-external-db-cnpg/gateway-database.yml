@@ -1,0 +1,11 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  generation: 1
+  name: gateway-database
+  namespace: aap-external-db
+spec:
+  cluster:
+    name: aap-postgres
+  name: gateway
+  owner: gateway
