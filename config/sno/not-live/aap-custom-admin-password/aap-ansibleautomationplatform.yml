@@ -1,0 +1,21 @@
+apiVersion: aap.ansible.com/v1alpha1
+kind: AnsibleAutomationPlatform
+metadata:
+  name: aap
+spec:
+  admin_password_secret: aap-admin-password
+  route_tls_termination_mechanism: Edge
+  service_type: ClusterIP
+  ingress_type: Route
+  no_log: true
+  redis_mode: standalone
+  image_pull_policy: Always
+  api:
+    log_level: INFO
+    replicas: 1
+  hub:
+    disabled: true
+  controller:
+    disabled: false
+  eda:
+    disabled: true
