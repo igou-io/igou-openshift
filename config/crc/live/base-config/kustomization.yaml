@@ -1,0 +1,48 @@
+resources:
+  - base-config-application.yaml
+helmGlobals:
+  chartHome: ../../../../charts/
+helmCharts:
+- name: ocp-base-config
+  includeCRDs: true
+  releaseName: ocp-base-config
+  valuesFile: values.yaml
+  valuesInline:
+    cluster:
+      name: crc
+      baseDomain: testing
+      gitOpsRepo: https://github.com/igou-io/igou-openshift.git
+      gitOpsBasePath: config
+      trustedCABundle: ""
+      openshiftVersion: "4.19"
+
+    externalSecrets:
+      enabled: false
+      vaults:
+        openshift: 1
+    certManager:
+      enabled: false
+    monitoring:
+      enabled: false
+    network:
+      hostRouting: false
+    auth:
+      enabled: false
+      htpasswdDisplayName: igou
+      externalSecret:
+        name: htpasswd-secret
+        onePasswordSecretName: htpasswd
+
+    timesync:
+      enabled: false
+      ptp:
+        enabled: false
+        loadKvmModule: false
+        device: 'ptp_kvm'
+        sourceStratum: 2
+      ntpServers:
+        - 1.2.3.4
+
+    gitops:
+      applicationControllerResources: {}
+      kustomizeBuildOptions: "--enable-helm"
