@@ -4,7 +4,8 @@
     "config:recommended"
   ],
   "helm-values": {
-    "managerFilePatterns": ["/\\.yaml(?:\\.j2)?$/"]
+    "managerFilePatterns": ["/\\.yaml(?:\\.j2)?$/"],
+    "pinDigests": true
   },
   "kubernetes": {
     "managerFilePatterns": ["/\\.yaml(?:\\.j2)?$/"]
