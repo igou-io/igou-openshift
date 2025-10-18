@@ -19,7 +19,7 @@ helmCharts:
             command: ["/app/.venv/bin/mcpo", "--config", "/config/config.json"]
             image:
               repository: quay.io/igou/mcpo
-              tag: "2025.10.18"
+              tag: "2025.10.18@sha256:a677bdf851f259533c919a17d513f4c30a1f377fbd4c6481b13b2f989eb403ec"
               pullPolicy: Always
             resources:
               requests:
