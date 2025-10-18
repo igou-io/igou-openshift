@@ -3,4 +3,10 @@
   "extends": [
     "config:recommended"
   ]
+  "helm-values": {
+    managerFilePatterns: ["/\\.yaml(?:\\.j2)?$/"],
+  },
+  "kubernetes": {
+    managerFilePatterns: ["/\\.yaml(?:\\.j2)?$/"],
+  },
 }
