@@ -12,7 +12,7 @@
   "packageRules": [
     {
       "matchDatasources": ["docker"],
-      "automerge": true,
+      "automerge": false,
       "automergeType": "branch",
       "matchUpdateTypes": ["digest"],
       "ignoreTests": true
