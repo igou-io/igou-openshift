@@ -13,14 +13,12 @@
   },
   "packageRules": [
     {
+      "description": "Default: Pin digests for all Docker images",
       "matchDatasources": ["docker"],
-      "pinDigests": true
-    },
-    {
-      "matchDatasources": ["docker"],
+      "pinDigests": true,
       "automerge": false,
       "automergeType": "branch",
-      "matchUpdateTypes": ["digest"],
+      "matchUpdateTypes": ["digest", "major", "minor", "patch"],
       "ignoreTests": true
     }
   ]
