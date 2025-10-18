@@ -1,0 +1,92 @@
+# Unfinished. Does not work on Openshift. Need to rebuild container to not run as root.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: mcpo
+resources:
+  - mcpo-namespace.yaml
+helmCharts:
+- name: app-template
+  namespace: mcpo
+  version: 4.3.0
+  releaseName: mcpo
+  repo: https://bjw-s-labs.github.io/helm-charts
+  valuesFile: values.yaml
+  valuesInline:
+    controllers:
+      main:
+        containers:
+          main:
+            command: ["/app/.venv/bin/mcpo", "--config", "/config/config.json"]
+            image:
+              repository: quay.io/igou/mcpo
+              tag: latest
+              pullPolicy: Always
+            resources:
+              requests:
+                cpu: 100m
+                memory: 100Mi
+    persistence:
+      config:
+        type: secret
+        enabled: true
+        name: mcpo
+    service:
+      main:
+        controller: main
+        ports:
+          http:
+            port: 8000
+            protocol: HTTP
+    ingress:
+      main:
+        enabled: true
+        className: openshift-default
+        hosts:
+          - host: mcpo.apps.sno.igou.systems
+            paths:
+              - path: /
+                service:
+                  identifier: main
+    rawResources:
+      mcpo-config-secret:
+        enabled: true
+        apiVersion: v1
+        kind: Secret
+        spec:
+          type: Opaque
+          stringData:
+            config.json: |-
+              {
+                "mcpServers": {
+                  "time": {
+                    "command": "python3",
+                    "args": ["-m", "mcp_server_time", "--local-timezone=America/New_York"]
+                  }
+                }
+              }
+      # mcpo-config-externalsecret:
+      #   enabled: true
+      #   apiVersion: external-secrets.io/v1beta1
+      #   kind: ExternalSecret
+      #   spec:
+      #     secretStoreRef:
+      #       kind: ClusterSecretStore
+      #       name: 1password
+      #     target:
+      #       name: mcpo-config
+      #       creationPolicy: Owner
+      #       template:
+      #         data:
+      #           config.json: |-
+      #             {
+      #               "mcpServers": {
+      #                 "memory": {
+      #                   "command": "npx",
+      #                   "args": ["-y", "@modelcontextprotocol/server-memory"]
+      #                 },
+      #                 "time": {
+      #                   "command": "uvx",
+      #                   "args": ["mcp-server-time", "--local-timezone=America/New_York"]
+      #                 }
+      #               }
+      #             }
