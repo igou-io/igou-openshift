@@ -42,7 +42,7 @@ helmCharts:
     # -- Open WebUI image tags can be found here: https://github.com/open-webui/open-webui
     image:
       repository: ghcr.io/open-webui/open-webui
-      tag: ""
+      tag: 0.6.33
       pullPolicy: "IfNotPresent"
     serviceAccount:
       enable: true
