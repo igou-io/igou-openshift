@@ -58,7 +58,8 @@ helmCharts:
       createClusterPushSecret: true
       # -- If true, create CRDs for Push Secret.
       createPushSecret: true
-      annotations: {}
+      annotations:
+        argocd.argoproj.io/sync-options: ServerSideApply=true
       conversion:
         # -- Conversion is disabled by default as we stopped supporting v1alpha1.
         enabled: false
