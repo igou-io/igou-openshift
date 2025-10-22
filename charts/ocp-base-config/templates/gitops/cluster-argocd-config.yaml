@@ -7,6 +7,19 @@ metadata:
     argocd.argoproj.io/sync-options: ServerSideApply=true,Validate=false
     argocd.argoproj.io/sync-wave: '-50'
 spec:
+  applicationSet:
+    resources:
+      limits:
+        cpu: "2"
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi
+    webhookServer:
+      ingress:
+        enabled: false
+      route:
+        enabled: false
 {{ if .Values.gitops.applicationControllerResources }}
   controller:
     resources:
@@ -15,6 +28,8 @@ spec:
 {{ if .Values.gitops.kustomizeBuildOptions }}
   kustomizeBuildOptions: {{ .Values.gitops.kustomizeBuildOptions }}
 {{end}}
+  notifications:
+    enabled: true
   resourceTrackingMethod: annotation
   resourceIgnoreDifferences:
     resourceIdentifiers:
