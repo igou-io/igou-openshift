@@ -1,0 +1,85 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-same-namespace
+  namespace: external-aap
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress:
+    # Allow traffic from Pods in the same namespace only
+    - from:
+      - podSelector: {}
+    - from:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: tailscale
+        podSelector: {}
+    - from:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: aap
+        podSelector: {}
+...
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-public-egress
+  namespace: external-aap
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress
+  egress:
+    # 1) Allow DNS lookups to the cluster DNS Service
+    - to:
+        - podSelector: {}
+          namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: external-aap
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - protocol: UDP
+          port: 5353
+        - protocol: TCP
+          port: 5353
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tailscale
+          podSelector: {}
+
+    # 3) Allow egress to the public Internet (block all other private/reserved ranges)
+    - to:
+      - ipBlock:
+          cidr: 0.0.0.0/0
+          # Exclude traffic to Kubernetes service IPs and pods
+          except:
+            - 10.0.0.0/8
+            - 172.16.0.0/12
+            - 192.168.0.0/16 #public net. If you want to restrict further, define ports:
+      ports:
+        - protocol: TCP
+        - protocol: UDP
+    - to:
+        - ipBlock:
+            cidr: 172.30.0.1/32  # <-- Replace with your cluster’s Service IP
+      ports:
+        - protocol: UDP
+          port: 443
+        - protocol: TCP
+          port: 443
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.10/32  # <-- Replace with your cluster’s Service IP
+      ports:
+        - protocol: UDP
+          port: 6443
+        - protocol: TCP
+          port: 6443
