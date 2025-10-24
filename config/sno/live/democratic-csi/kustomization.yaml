@@ -20,9 +20,8 @@ helmCharts:
       driver:
         enabled: true
         image:
-          registry: "docker.io/democraticcsi/democratic-csi"
+          registry: "ghcr.io/democratic-csi/democratic-csi"
           tag: "next"
-          repository: "docker.io"
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
@@ -42,8 +41,8 @@ helmCharts:
       driver:
         enabled: true
         image:
-          registry: docker.io/democraticcsi/democratic-csi
-          tag: next
+          registry: "ghcr.io/democratic-csi/democratic-csi"
+          tag: "next"
         localtimeHostPath: null
     csiDriver:
       name: "org.democratic-csi.iscsi"
@@ -78,8 +77,8 @@ helmCharts:
       driver:
         enabled: true
         image:
-          registry: docker.io/democraticcsi/democratic-csi
-          tag: next
+          registry: "ghcr.io/democratic-csi/democratic-csi"
+          tag: "next"
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
@@ -99,8 +98,8 @@ helmCharts:
       driver:
         enabled: true
         image:
-          registry: docker.io/democraticcsi/democratic-csi
-          tag: next
+          registry: "ghcr.io/democratic-csi/democratic-csi"
+          tag: "next"
         localtimeHostPath: null
     csiDriver:
       name: "org.democratic-csi.nfs"
@@ -137,8 +136,8 @@ helmCharts:
       driver:
         enabled: true
         image:
-          registry: docker.io/democraticcsi/democratic-csi
-          tag: next
+          registry: "ghcr.io/democratic-csi/democratic-csi"
+          tag: "next"
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
@@ -158,8 +157,8 @@ helmCharts:
       driver:
         enabled: true
         image:
-          registry: docker.io/democraticcsi/democratic-csi
-          tag: next
+          registry: "ghcr.io/democratic-csi/democratic-csi"
+          tag: "next"
         localtimeHostPath: null
     csiDriver:
       name: "org.democratic-csi.nvmeof-nvme"
