@@ -4,12 +4,10 @@
     "config:recommended"
   ],
   "helm-values": {
-    "managerFilePatterns": ["/\\.yaml(?:\\.j2)?$/"],
-    "pinDigests": true
+    "managerFilePatterns": ["/\\.yaml(?:\\.j2)?$/"]
   },
   "kubernetes": {
-    "managerFilePatterns": ["/\\.yaml(?:\\.j2)?$/"],
-    "pinDigests": true
+    "managerFilePatterns": ["/\\.yaml(?:\\.j2)?$/"]
   },
   "packageRules": [
     {
@@ -17,8 +15,8 @@
       "matchDatasources": ["docker"],
       "pinDigests": true,
       "automerge": false,
-      "automergeType": "branch",
-      "matchUpdateTypes": ["minor", "patch", "digest"],
+      "automergeType": "pr",
+      "matchUpdateTypes": ["digest"],
       "ignoreTests": true
     }
   ]
