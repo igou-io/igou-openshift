@@ -20,8 +20,9 @@ helmCharts:
       driver:
         enabled: true
         image:
-          registry: docker.io/democraticcsi/democratic-csi
-          tag: next
+          registry: "docker.io/democraticcsi/democratic-csi"
+          tag: "next"
+          repository: "docker.io"
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
