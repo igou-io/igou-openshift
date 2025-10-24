@@ -1,0 +1,16 @@
+apiVersion: aap.ansible.com/v1alpha1
+kind: AnsibleAutomationPlatform
+metadata:
+  name: external-aap
+  namespace: external-aap
+spec:
+  api:
+    log_level: DEBUG
+    replicas: 1
+  database:
+    postgres_data_volume_init: false
+  no_log: true
+  hub:
+    file_storage_access_mode: ReadWriteOnce
+  redis_mode: standalone
+  public_base_url: https://external-aap.tailscale-stub.ts.net
