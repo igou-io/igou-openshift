@@ -18,7 +18,7 @@
       "pinDigests": true,
       "automerge": false,
       "automergeType": "branch",
-      "matchUpdateTypes": ["digest", "major", "minor", "patch"],
+      "matchUpdateTypes": ["minor", "patch", "digest"],
       "ignoreTests": true
     }
   ]
