@@ -6,7 +6,7 @@ helmCharts:
   includeCRDs: true
   releaseName: external-secrets
   namespace: external-secrets-operator
-  version: 0.20.3
+  version: 0.20.4
   repo: https://charts.external-secrets.io
   valuesInline:
     global:
