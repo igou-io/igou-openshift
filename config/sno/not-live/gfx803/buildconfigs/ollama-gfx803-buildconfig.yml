@@ -1,0 +1,26 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: rocm6-gfx803-ollama
+  namespace: ollama
+spec:
+  source:
+    type: Git
+    git:
+      uri: 'https://github.com/robertrosenbusch/gfx803_rocm.git'
+      ref: main
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: Dockerfile_rocm64_ollama
+      from:
+        kind: DockerImage
+        name: igou-registry-quay-quay-enterprise.apps.sno.igou.systems/gfx803/rocm6_gfx803_base:latest
+      pullSecret:
+        name: igou-quay-gfx803-robotaccount
+  output:
+    to:
+      kind: DockerImage
+      name: 'igou-registry-quay-quay-enterprise.apps.sno.igou.systems/gfx803/rocm6_gfx803_ollama:latest'
+    pushSecret:
+      name: "igou-quay-gfx803-robotaccount"
