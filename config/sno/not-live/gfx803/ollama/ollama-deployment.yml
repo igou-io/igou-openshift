@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama
+  namespace: ollama
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ollama
+  template:
+    metadata:
+      labels:
+        app: ollama
+    spec:
+      containers:
+      - name: ollama
+        image: igou-registry-quay-quay-enterprise.apps.sno.igou.systems/gfx803/rocm6_gfx803_ollama:latest
+        ports:
+        - containerPort: 11434
+        volumeMounts:
+        - name: ollama-data
+          mountPath: /.ollama
+        resources:
+          limits:
+            amd.com/gpu: 1
+          requests:
+            amd.com/gpu: 1
+        tty: true
+      volumes:
+      - name: ollama-data
+        emptyDir:
+      imagePullSecrets:
+      - name: igou-quay-gfx803-robotaccount
+      restartPolicy: Always
