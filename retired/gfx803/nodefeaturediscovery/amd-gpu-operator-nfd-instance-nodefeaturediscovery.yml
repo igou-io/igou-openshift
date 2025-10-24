@@ -1,0 +1,31 @@
+apiVersion: nfd.openshift.io/v1
+kind: NodeFeatureDiscovery
+metadata:
+  name: amd-gpu-operator-nfd-instance
+  namespace: openshift-nfd
+spec:
+  workerConfig:
+    configData: |
+      core:
+        sleepInterval: 60s
+      sources:
+        pci:
+          deviceClassWhitelist:
+            - "0300"
+            - "03"
+            - "12"
+          deviceLabelFields:
+            - "vendor"
+            - "device"
+        custom:
+        - name: amd-gpu
+          labels:
+            feature.node.kubernetes.io/amd-gpu: "true"
+          matchAny:
+            - matchFeatures:
+                - feature: pci.device
+                  matchExpressions:
+                    vendor: {op: In, value: ["1002"]}
+                    device: {op: In, value: [
+                      "6fdf"
+                    ]}
