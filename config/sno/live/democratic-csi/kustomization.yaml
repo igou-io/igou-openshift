@@ -77,7 +77,6 @@ helmCharts:
       driver:
         enabled: true
         image:
-          repository: "ghcr.io/democratic-csi/democratic-csi"
           registry: "ghcr.io/democratic-csi/democratic-csi"
           tag: "next"
       tolerations:
