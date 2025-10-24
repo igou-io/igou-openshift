@@ -4,7 +4,7 @@ metadata:
   name: cluster-configs
   namespace: openshift-gitops
   annotations:
-    argocd.argoproj.io/sync-wave: '10'
+    argocd.argoproj.io/sync-wave: '-50'
 spec:
   generators:
     - git:
