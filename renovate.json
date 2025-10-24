@@ -13,7 +13,6 @@
     {
       "description": "Default: Pin digests for all Docker images",
       "matchDatasources": ["docker"],
-      "pinDigests": true,
       "automerge": false,
       "automergeType": "pr",
       "matchUpdateTypes": ["digest"],
