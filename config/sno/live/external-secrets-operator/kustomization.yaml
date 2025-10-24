@@ -13,7 +13,13 @@ helmCharts:
     global:
       nodeSelector:
         node-role.kubernetes.io/control-plane: ""
-      tolerations: []
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
       topologySpreadConstraints: []
       affinity: {}
       compatibility:
@@ -336,8 +342,6 @@ helmCharts:
 
     nodeSelector: {}
 
-    tolerations: []
-
     topologySpreadConstraints: []
 
     affinity: {}
@@ -440,7 +444,6 @@ helmCharts:
           # -- Add extra annotations to the Certificate resource.
           annotations: {}
 
-      tolerations: []
 
       topologySpreadConstraints: []
 
@@ -577,8 +580,6 @@ helmCharts:
         # If not set and create is true, a name is generated using the fullname template.
         name: ""
       nodeSelector: {}
-
-      tolerations: []
 
       topologySpreadConstraints: []
 
