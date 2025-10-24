@@ -79,6 +79,7 @@ helmCharts:
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
           tag: "next"
+          repository: "ghcr.io"
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
