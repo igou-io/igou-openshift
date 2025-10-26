@@ -1,7 +1,12 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    "config:recommended",
+    "docker:pinDigests",
+    "helpers:pinGitHubActionDigests",
+    ":configMigration",
+    ":pinDevDependencies",
+    "abandonments:recommended"
   ],
   "helm-values": {
     "managerFilePatterns": ["/\\.yaml(?:\\.j2)?$/"]
@@ -21,7 +26,7 @@
       "minimumReleaseAge": "3 days"
     },
     {
-      "description": "Default: Automerge all non major updates after 3 days. Pin digests",
+      "description": "Docker major updates",
       "matchDatasources": ["docker"],
       "pinDigests": true,
       "automerge": false,
