@@ -1,14 +1,22 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended",
-    "docker:pinDigests",
-    "docker:enableMajor"
+    "config:recommended"
   ],
   "helm-values": {
     "managerFilePatterns": ["/\\.yaml(?:\\.j2)?$/"]
   },
   "kubernetes": {
     "managerFilePatterns": ["/\\.yaml(?:\\.j2)?$/"]
-  }
+  },
+  "packageRules": [
+    {
+      "description": "Default: Pin digests for all Docker images",
+      "matchDatasources": ["docker"],
+      "automerge": false,
+      "automergeType": "pr",
+      "matchUpdateTypes": ["major", "minor", "patch", "digest"],
+      "ignoreTests": true
+    }
+  ]
 }
