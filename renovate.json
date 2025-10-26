@@ -11,11 +11,32 @@
   },
   "packageRules": [
     {
-      "description": "Default: Pin digests for all Docker images",
+      "description": "Default: Automerge all non major updates after 3 days. Pin digests",
       "matchDatasources": ["docker"],
+      "pinDigests": true,
+      "automerge": true,
+      "automergeType": "pr",
+      "matchUpdateTypes": ["digest", "minor", "patch"],
+      "ignoreTests": true,
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "description": "Default: Automerge all non major updates after 3 days. Pin digests",
+      "matchDatasources": ["docker"],
+      "pinDigests": true,
       "automerge": false,
       "automergeType": "pr",
-      "matchUpdateTypes": ["major", "minor", "patch", "digest"],
+      "matchUpdateTypes": ["major"],
+      "ignoreTests": true,
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "description": "Automerge all igou images",
+      "matchDatasources": ["docker"],
+      "automerge": true,
+      "automergeType": "pr",
+      "matchUpdateTypes": ["digest","major", "minor", "patch"],
+      "matchPackageNames": ["/igou/"],
       "ignoreTests": true
     }
   ]
