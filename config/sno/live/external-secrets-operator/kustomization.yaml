@@ -41,7 +41,7 @@ helmCharts:
     revisionHistoryLimit: 10
 
     image:
-      repository: oci.external-secrets.io/external-secrets/external-secrets
+      repository: ghcr.io/external-secrets/external-secrets
       pullPolicy: IfNotPresent
       # -- The image tag to use. The default is the chart appVersion.
       tag: "v0.20.3@sha256:1d2acb58ac792110ed01e0ece4880ab48b029ee5b1d3c1c22932d82781badfed"
@@ -382,7 +382,7 @@ helmCharts:
       # -- Specifies if webhook pod should use hostNetwork or not.
       hostNetwork: false
       image:
-        repository: oci.external-secrets.io/external-secrets/external-secrets
+        repository: ghcr.io/external-secrets/external-secrets
         pullPolicy: IfNotPresent
         # -- The image tag to use. The default is the chart appVersion.
         tag: "v0.20.3@sha256:1d2acb58ac792110ed01e0ece4880ab48b029ee5b1d3c1c22932d82781badfed"
@@ -559,7 +559,7 @@ helmCharts:
       revisionHistoryLimit: 10
 
       image:
-        repository: oci.external-secrets.io/external-secrets/external-secrets
+        repository: ghcr.io/external-secrets/external-secrets
         pullPolicy: IfNotPresent
         tag: "v0.20.3@sha256:1d2acb58ac792110ed01e0ece4880ab48b029ee5b1d3c1c22932d82781badfed"
         flavour: ""
