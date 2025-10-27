@@ -5,6 +5,7 @@ resources:
   - n8n-namespace.yaml
   - n8n-nonroot-v2-rolebinding.yaml
   - use-scc-nonroot-v2-role.yaml
+  - n8n-secrets-externalsecret.yaml
 helmCharts:
 - name: n8n
   namespace: n8n
@@ -90,19 +91,19 @@ helmCharts:
 
       # Extra environmental variables, so you can reference other configmaps and secrets into n8n as env vars.
       extraEnv:
-      #    N8N_DB_POSTGRESDB_NAME:
-      #      valueFrom:
-      #        secretKeyRef:
-      #          name: db-app
-      #          key: dbname
+         N8N_LICENSE_ACTIVATION_KEY:
+           valueFrom:
+             secretKeyRef:
+               name: n8n-secrets
+               key: N8N_LICENSE_ACTIVATION_KEY
       #
       # N8n Kubernetes specific settings
       #
       persistence:
         # If true, use a Persistent Volume Claim, If false, use emptyDir
-        enabled: false
+        enabled: true
         # what type volume, possible options are [existing, emptyDir, dynamic] dynamic for Dynamic Volume Provisioning, existing for using an existing Claim
-        type: emptyDir
+        type: freenas-iscsi-ssd-csi
         # Persistent Volume Storage Class
         # If defined, storageClassName: <storageClass>
         # If set to "-", storageClassName: "", which disables dynamic provisioning
@@ -124,7 +125,7 @@ helmCharts:
         accessModes:
           - ReadWriteOnce
         # Persistent Volume size
-        size: 1Gi
+        size: 10Gi
         # Use an existing PVC
         # existingClaim:
 
