@@ -9,7 +9,7 @@ resources:
 helmCharts:
 - name: n8n
   namespace: n8n
-  version: 1.0.15
+  version: 1.0.16
   releaseName: n8n
   repo: oci://8gears.container-registry.com/library
   valuesInline:
