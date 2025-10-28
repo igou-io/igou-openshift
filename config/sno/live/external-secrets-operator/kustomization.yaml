@@ -1,6 +1,6 @@
 resources:
   - external-secrets-operator-namespace.yaml
-  - onepassword-sdk-ocp-clustersecretstore.yaml
+  - onepassword-sdk-ocp-pull-clustersecretstore.yaml
   - onepassword-sdk-ocp-push-clustersecretstore.yaml
 helmCharts:
 - name: external-secrets
@@ -365,7 +365,7 @@ helmCharts:
       # -- Specifies whether a webhook deployment be created. If set to false, crds.conversion.enabled should also be set to false otherwise the kubeapi will be hammered because the conversion is looking for a webhook endpoint.
       create: true
       # -- Specifies the time to check if the cert is valid
-      certCheckInterval: "5m"
+      certCheckInterval: "1h0m0s"
       # -- Specifies the lookaheadInterval for certificate validity
       lookaheadInterval: ""
       replicaCount: 1
@@ -549,7 +549,7 @@ helmCharts:
     certController:
       # -- Specifies whether a certificate controller deployment be created.
       create: true
-      requeueInterval: "5m"
+      requeueInterval: "1h0m0s"
       replicaCount: 1
       # -- Specifies Log Params to the Certificate Controller
       log:
