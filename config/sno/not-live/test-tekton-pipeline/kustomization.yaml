@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: test-tekton-pipeline
+resources:
+- goodbye-task.yml
+- hello-goodbye-pipeline.yml
+- hello-task.yml
+- test-tekton-pipeline-namespace.yml
+- hello-binding-triggerbinding.yml
+- hello-template-triggertemplate.yml
+- hello-listener-eventlistener.yml
