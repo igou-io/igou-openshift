@@ -84,7 +84,7 @@ The pipeline should:
 $ tkn pipelinerun logs hello-goodbye-run-vqnpm
 [hello : echo] Hello World
 
-[goodbye : goodbye] Goodbye Ran via cli!
+[goodbye : goodbye] Goodbye Tekton!
 ```
 
 ## Troubleshooting
