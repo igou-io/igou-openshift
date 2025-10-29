@@ -77,8 +77,15 @@ tkn pipelinerun describe <pipelinerun-name>
 ## Expected Output
 
 The pipeline should:
-1. Print "Hello, \<username\>!"
+1. Print "Hello World"
 2. Print "Goodbye, \<username\>!"
+
+```bash
+$ tkn pipelinerun logs hello-goodbye-run-vqnpm
+[hello : echo] Hello World
+
+[goodbye : goodbye] Goodbye Ran via cli!
+```
 
 ## Troubleshooting
 
