@@ -1,0 +1,8 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: clone-read
+spec:
+  params:
+  - name: repo-url
+    value: $(body.repo-url)
