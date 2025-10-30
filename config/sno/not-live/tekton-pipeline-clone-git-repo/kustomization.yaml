@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: tekton-pipeline-clone-git-repo
+resources:
+- https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clone/0.10/git-clone.yaml
+- tekton-pipeline-clone-git-repo-namespace.yml
+- clone-read-pipeline.yml
+- clone-read-triggerbinding.yml
+- clone-read-triggertemplate.yml
+- clone-read-eventlistener.yml
+- el-clone-read-route.yml
+- show-readme-task.yml
+

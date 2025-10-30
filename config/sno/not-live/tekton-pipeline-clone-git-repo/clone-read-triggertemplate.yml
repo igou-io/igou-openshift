@@ -1,0 +1,29 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: clone-read
+spec:
+  params:
+  - name: repo-url
+    default: "https://github.com/igou-io/igou-openshift.git"
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1
+    kind: PipelineRun
+    metadata:
+      generateName: clone-read-run-
+    spec:
+      pipelineRef:
+        name: clone-read
+      params:
+      - name: repo-url
+        value: $(tt.params.repo-url)
+      workspaces:
+      - name: shared-data
+        volumeClaimTemplate:
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 1Gi
+
