@@ -1,0 +1,18 @@
+apiVersion: tekton.dev/v1 # or tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  generateName: molecule-taskrun-
+  namespace: tekton-taskrun-molecule
+spec:
+  params:
+    - name: url
+      value: https://github.com/david-igou/ansible-role-haproxy.git
+    - name: revision
+      value: 1f2942bc7b4f2157d06752151f98bbf3c941cf83
+    - name: molecule-scenario
+      value: kubevirt
+  taskRef:
+    name: molecule
+  workspaces:
+    - name: output
+      emptyDir: {}
