@@ -1,0 +1,23 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: molecule-converge-run-
+spec:
+  pipelineRef:
+    name: molecule-converge
+  workspaces:
+  - name: shared-data
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+  params:
+  - name: git-url
+    value: https://github.com/david-igou/ansible-role-haproxy.git
+  - name: git-revision
+    value: master
+  - name: molecule-scenario
+    value: kubevirt

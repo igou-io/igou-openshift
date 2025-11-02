@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: tekton-pipeline-molecule
+resources:
+- https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clone/0.10/git-clone.yaml
+- https://raw.githubusercontent.com/tektoncd/catalog/main/task/github-set-status/0.4/github-set-status.yaml
+- tekton-pipeline-molecule-namespace.yml
+- molecule-converge-pipeline.yml
+- molecule-task.yml
+- github-listener-eventlistener.yml
+- github-pr-binding-triggerbinding.yml
+- github-secret-externalsecret.yml
+- github-trigger-molecule-converge.yml
+- el-github-listener-ingress.yml
