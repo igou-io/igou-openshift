@@ -1,0 +1,54 @@
+apiVersion: tekton.dev/v1 # or tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: molecule
+spec:
+  description: |-
+    This task runs molecule tests for a given scenario.
+  params:
+  - name: molecule-scenario
+    description: Molecule scenario to run.
+    default: "default"
+    type: string
+  # Future params.. image, set k8s env vars,
+  # results:
+  # - description: The precise commit SHA that was fetched by this Task.
+  #   name: commit
+  #   type: string
+  # - description: The precise URL that was fetched by this Task.
+  #   name: url
+  #   type: string
+  # - description: The epoch timestamp of the commit that was fetched by this Task.
+  #   name: committer-date
+  #   type: string
+  steps:
+  - name: molecule # Need to get python deps installed, run from $(workspaces.source.path)
+    image: ghcr.io/ansible/community-ansible-dev-tools:v25.9.0
+    env:
+    - name: MOLECULE_SCENARIO
+      value: $(params.molecule-scenario)
+    workingDir: $(workspaces.source.path)
+    script: |
+      #!/usr/bin/env sh
+      set -eu
+
+      # If /var/run/secrets/kubernetes.io/serviceaccount/token exists, set K8S_AUTH_TOKEN to it
+      if [ -f "/var/run/secrets/kubernetes.io/serviceaccount/token" ] ; then
+        export K8S_AUTH_TOKEN="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
+      fi
+
+      # If /var/run/secrets/kubernetes.io/serviceaccount/namespace exists, set K8S_AUTH_NAMESPACE to it
+      if [ -f "/var/run/secrets/kubernetes.io/serviceaccount/namespace" ] ; then
+        export MOLECULE_NAMESPACE="$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)"
+      fi
+
+      # Molecule does not automatically install python dependencies, so we need to do it here
+      if [ -f "molecule/$(params.molecule-scenario)/requirements.txt" ] ; then
+        python3 -m pip install -r "molecule/$(params.molecule-scenario)/requirements.txt"
+      fi
+
+      # Run Molecule
+      molecule test -s "$(params.molecule-scenario)"
+  workspaces:
+  - name: source
+    description: Workspace to debug

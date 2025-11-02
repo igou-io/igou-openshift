@@ -1,0 +1,104 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: molecule-converge
+spec:
+  description: |
+    This pipeline runs molecule converge for a given scenario.
+  params:
+  - name: git-url
+    type: string
+    description: The git repo URL to clone from.
+  - name: git-revision
+    description: Revision to checkout. (branch, tag, sha, ref, etc...)
+    type: string
+    default: ""
+  - name: git-repo-name
+    type: string
+    description: The name of the git repository, ie "david-igou/ansible-role-haproxy"
+    default: ""
+  - name: molecule-scenario
+    description: Molecule scenario to run.
+    type: string
+    default: "default"
+  workspaces:
+  - name: shared-data
+    description: |
+      This workspace contains the cloned repo files, so they can be read by the
+      next task.
+  tasks:
+  - name: set-status-start
+    taskRef:
+      name: github-set-status
+    params:
+      - name: REPO_FULL_NAME
+        value: "$(params.git-repo-name)"
+      - name: SHA
+        value: "$(params.git-revision)"
+      - name: DESCRIPTION
+        value: "Build has started"
+      - name: STATE
+        value: pending
+      - name: TARGET_URL
+        value: https://console-openshift-console.apps.sno.igou.systems/k8s/ns/tekton-pipeline-molecule/tekton.dev~v1~PipelineRun/$(context.pipelineRun.name)
+  - name: fetch-source
+    taskRef:
+      name: git-clone
+    runAfter: ["set-status-start"]
+    workspaces:
+    - name: output
+      workspace: shared-data
+    params:
+    - name: url
+      value: $(params.git-url)
+    - name: revision
+      value: $(params.git-revision)
+    - name: verbose
+      value: "true"
+  - name: molecule
+    runAfter: ["fetch-source"]
+    taskRef:
+      name: molecule
+    workspaces:
+    - name: source
+      workspace: shared-data
+    params:
+    - name: molecule-scenario
+      value: $(params.molecule-scenario)
+  finally:
+    - name: set-status-success
+      when:
+        - input: $(tasks.molecule.status)
+          operator: in
+          values: ["Succeeded"]
+      taskRef:
+        name: github-set-status
+      params:
+        - name: REPO_FULL_NAME
+          value: "$(params.git-repo-name)"
+        - name: SHA
+          value: "$(params.git-revision)"
+        - name: DESCRIPTION
+          value: "Build has succeeded"
+        - name: STATE
+          value: success
+        - name: TARGET_URL
+          value: https://console-openshift-console.apps.sno.igou.systems/k8s/ns/tekton-pipeline-molecule/tekton.dev~v1~PipelineRun/$(context.pipelineRun.name)
+    - name: set-status-failure
+      when:
+        - input: $(tasks.molecule.status)
+          operator: in
+          values: ["Failed"]
+      taskRef:
+        name: github-set-status
+      params:
+        - name: REPO_FULL_NAME
+          value: "$(params.git-repo-name)"
+        - name: SHA
+          value: "$(params.git-revision)"
+        - name: DESCRIPTION
+          value: "Build has failed"
+        - name: STATE
+          value: failure
+        - name: TARGET_URL
+          value: https://console-openshift-console.apps.sno.igou.systems/k8s/ns/tekton-pipeline-molecule/tekton.dev~v1~PipelineRun/$(context.pipelineRun.name)
