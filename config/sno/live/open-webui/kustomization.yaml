@@ -7,7 +7,7 @@ resources:
 helmCharts:
 - name: open-webui
   namespace: open-webui
-  version: 8.12.2
+  version: 8.12.3
   releaseName: open-webui
   repo: https://helm.openwebui.com/
   valuesInline:
