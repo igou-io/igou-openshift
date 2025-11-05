@@ -1,0 +1,38 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: ansible-builder-run-
+  namespace: tekton-pipeline-ansible-builder
+spec:
+  pipelineRef:
+    name: ansible-builder
+  workspaces:
+  - name: shared-data
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+  params:
+  - name: git-url
+    value: https://github.com/david-igou/rh1-ee.git
+  - name: git-revision
+    value: main
+  - name: FILENAME
+    value: execution-environment.yml
+  - name: NAME
+    value: igou.io/rh1-ee
+  - name: TAG
+    value: latest
+  - name: CONTEXT
+    value: context
+  - name: OUTPUT_FILENAME
+    value: Containerfile
+  - name: VERBOSITY
+    value: "2"
+  - name: BUILDER_IMAGE
+    value: ghcr.io/ansible/community-ansible-dev-tools:v25.9.0
+  - name: SKIP_PUSH
+    value: "true"
