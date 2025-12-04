@@ -1,6 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "ignorePaths": "/charts/ocp-base-config/",
+  "ignorePaths": [
+    "/charts/ocp-base-config/"
+  ],
   "extends": [
     "config:recommended",
     "docker:pinDigests",
