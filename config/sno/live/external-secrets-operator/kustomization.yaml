@@ -2,6 +2,7 @@ resources:
   - external-secrets-operator-namespace.yaml
   - onepassword-sdk-ocp-pull-clustersecretstore.yaml
   - onepassword-sdk-ocp-push-clustersecretstore.yaml
+  - onepassword-sdk-rh1-clustersecretstore.yaml
 helmCharts:
 - name: external-secrets
   includeCRDs: true
