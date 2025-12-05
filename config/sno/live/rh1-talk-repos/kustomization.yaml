@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- "https://github.com/djdanielsson/rh1-cluster-config.git/applications/aap-dev/"
+- "https://github.com/djdanielsson/rh1-cluster-config.git/applications/aap-qa/"
+- "https://github.com/djdanielsson/rh1-cluster-config.git/applications/aap-prod/"
+- "https://github.com/djdanielsson/rh1-cluster-config.git/applications/ci-rh1-aap-config-as-code/"
+- "https://github.com/djdanielsson/rh1-cluster-config.git/applications/ci-rh1-ee/"
+- "https://github.com/djdanielsson/rh1-cluster-config.git/applications/ci-rh1-custom-collection/"
