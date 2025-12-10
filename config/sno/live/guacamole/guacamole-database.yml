@@ -1,0 +1,10 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: guacamole
+  namespace: guacamole
+spec:
+  cluster:
+    name: guacamole-postgres
+  name: guacamole
+  owner: guacamole

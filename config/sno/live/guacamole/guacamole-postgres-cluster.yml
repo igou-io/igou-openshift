@@ -1,0 +1,16 @@
+kind: Cluster
+apiVersion: postgresql.cnpg.io/v1
+metadata:
+  name: guacamole-postgres
+spec:
+  managed:
+    roles:
+      - name: guacamole
+        ensure: present
+        login: true
+        passwordSecret:
+          name: guacamole-postgres
+  instances: 1
+  logLevel: info
+  storage:
+    size: 1Gi

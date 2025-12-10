@@ -1,0 +1,148 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: guacamole
+resources:
+  - guacamole-namespace.yml
+  - guacamole-postgres-cluster.yml
+  - guacamole-postgres-externalsecret.yml
+  - guacamole-env-externalsecret.yml
+  - guacamole-database.yml
+  - guacd-serviceaccount.yml
+  - nonroot-v2-rolebinding.yaml
+  - use-scc-nonroot-v2-role.yaml
+helmCharts:
+- name: app-template
+  namespace: guacamole
+  version: 4.5.0
+  releaseName: guacamole
+  repo: https://bjw-s-labs.github.io/helm-charts
+  valuesFile: values.yaml
+  valuesInline:
+    controllers:
+      guacamole:
+        labels:
+          postgres: "true"
+        initContainers:
+          01-init-schema:
+            image:
+              repository: docker.io/guacamole/guacamole
+              tag: 1.6.0@sha256:f344085e618bb05e22b964b0208dbd06d3468275bac70206f93805245e067b40
+            command: ["/bin/sh", "-c"]
+            args: ["/opt/guacamole/bin/initdb.sh --postgresql > /migrations/initdb.sql"]
+            envFrom: &envFrom
+              - secretRef:
+                  name: guacamole-postgres-env
+          02-init-migrations:
+            image:
+              repository: ghcr.io/home-operations/postgres-init
+              tag: 17@sha256:86a1992d46273c58fd4ad95b626081dfaabfe16bd56944675169e406d1a660dd
+            command: ["/bin/sh", "-c"]
+            args: ["export PGPASSWORD=$(POSTGRESQL_PASSWORD); psql -h $(POSTGRESQL_HOSTNAME) -d $(POSTGRESQL_DATABASE) -U $(POSTGRESQL_USER) -a -w -f /migrations/initdb.sql || true;"]
+            envFrom: *envFrom
+        containers:
+          app:
+            image:
+              repository: docker.io/guacamole/guacamole
+              tag: 1.6.0@sha256:f344085e618bb05e22b964b0208dbd06d3468275bac70206f93805245e067b40
+            env:
+              TZ: "America/New_York"
+              TOTP_ENABLED: true
+              OPENID_ENABLED: false
+              WEBAPP_CONTEXT: ROOT
+              GUACD_HOSTNAME: guacd.guacamole.svc.cluster.local
+              GUACAMOLE_HOME: /guacamole
+              GUACD_PORT: "4822"
+              ENABLE_WEBSOCKET: true
+            envFrom: *envFrom
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: false
+            resources:
+              requests:
+                cpu: 250m
+                memory: 128Mi
+              limits:
+                memory: 2000Mi
+    # defaultPodOptions:
+    #   securityContext:
+    #     runAsNonRoot: false
+    #     runAsUser: 0
+    #     runAsGroup: 0
+    #     fsGroup: 0
+    #     fsGroupChangePolicy: OnRootMismatch
+    service:
+      app:
+        ports:
+          http:
+            port: 8080
+    ingress:
+      app:
+        className: openshift-default
+        annotations:
+          route.openshift.io/termination: edge
+        hosts:
+          - host: "guacamole.apps.sno.igou.systems"
+            paths:
+              - path: /
+                service:
+                  identifier: app
+                  port: http
+    persistence:
+      migrations:
+        type: emptyDir
+        advancedMounts:
+          guacamole:
+            01-init-schema:
+              - path: /migrations
+            02-init-migrations:
+              - path: /migrations
+- name: app-template
+  namespace: guacamole
+  version: 4.5.0
+  releaseName: guacd
+  repo: https://bjw-s-labs.github.io/helm-charts
+  valuesFile: values.yaml
+  valuesInline:
+    controllers:
+      guacd:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            image:
+              repository: docker.io/guacamole/guacd
+              tag: 1.6.0@sha256:8974eaa9ba32f713daf311e7cc8cd7e4cdfba1edea39eed75524e78ef4b08f4f
+            env:
+              TZ: "America/New_York"
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+            resources:
+              requests:
+                cpu: 10m
+                memory: 128Mi
+              limits:
+                memory: 512Mi
+        serviceAccount:
+          name: guacd
+    defaultPodOptions:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+    service:
+      app:
+        ports:
+          http:
+            port: 4822
+    persistence:
+      tmpfs:
+        type: emptyDir
+        advancedMounts:
+          guacd:
+            app:
+              - path: /home/guacd
+                subPath: guacd
