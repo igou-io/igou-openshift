@@ -40,9 +40,10 @@ spec:
         - /spec/online
     - kind: ServiceAccount
       name: pipeline
-      jsonPointers:
-        - /imagePullSecrets
-        - /secrets
+      customization:
+        jsonPointers:
+          - /imagePullSecrets
+          - /secrets
   resourceExclusions: |
     - apiGroups:
       - tekton.dev
