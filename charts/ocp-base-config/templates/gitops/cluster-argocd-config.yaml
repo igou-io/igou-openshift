@@ -39,7 +39,6 @@ spec:
         jsonPointers:
         - /spec/online
     - kind: ServiceAccount
-      name: pipeline
       customization:
         jsonPointers:
           - /imagePullSecrets
