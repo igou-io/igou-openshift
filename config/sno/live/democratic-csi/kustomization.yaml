@@ -13,7 +13,7 @@ helmCharts:
   namespace: democratic-csi
   includeCRDs: false
   releaseName: democratic-csi-iscsi-ssd-config
-  version: 0.15.0
+  version: 0.15.1
   repo: https://democratic-csi.github.io/charts/
   valuesInline:
     controller:
@@ -70,7 +70,7 @@ helmCharts:
   namespace: democratic-csi
   includeCRDs: false
   releaseName: democratic-csi-nfs-ssd-config
-  version: 0.15.0
+  version: 0.15.1
   repo: https://democratic-csi.github.io/charts/
   valuesInline:
     controller:
@@ -129,7 +129,7 @@ helmCharts:
   namespace: democratic-csi
   includeCRDs: false
   releaseName: democratic-csi-nvmeof-nvme-config
-  version: 0.15.0
+  version: 0.15.1
   repo: https://democratic-csi.github.io/charts/
   valuesInline:
     controller:
