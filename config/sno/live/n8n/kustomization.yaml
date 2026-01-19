@@ -31,7 +31,7 @@ helmCharts:
       repository: n8nio/n8n
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
-      tag: "2.4.3@sha256:fec47431bce7d3fd5106e82090ebaa275261886e5339ab13dd503462fdaac291"
+      tag: "2.4.4@sha256:69226d5f1eb13bc303418730939799239fa96545513f571f2890442b77c7a522"
     imagePullSecrets: []
 
     # The Name to use for the chart. Will be the prefix of all resources aka. The Chart.Name (default is 'n8n')
