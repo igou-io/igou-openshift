@@ -35,7 +35,7 @@ helmCharts:
         openshift:
           # set to true if running on openshift *and* you have need
           # ie: hostNetwork, hostIPC, etc are turned on
-          privileged: false
+          privileged: true
     node:
       tolerations:
       - effect: NoSchedule
@@ -94,7 +94,8 @@ helmCharts:
         openshift:
           # set to true if running on openshift *and* you have need
           # ie: hostNetwork, hostIPC, etc are turned on
-          privileged: false
+          privileged: true
+      hostNetwork: true
     node:
       rbac:
         openshift:
@@ -214,7 +215,8 @@ helmCharts:
         openshift:
           # set to true if running on openshift *and* you have need
           # ie: hostNetwork, hostIPC, etc are turned on
-          privileged: false
+          privileged: true
+      hostNetwork: true
     node:
       rbac:
         openshift:
