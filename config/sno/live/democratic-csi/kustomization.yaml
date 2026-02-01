@@ -21,7 +21,7 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next@sha256:6b758d6faf96f0e96d4b8ac0e240fc290c7bace23c20d78a3eb93781652cb1f1"
+          tag: "next"
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
@@ -42,7 +42,7 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next@sha256:6b758d6faf96f0e96d4b8ac0e240fc290c7bace23c20d78a3eb93781652cb1f1"
+          tag: "next"
         localtimeHostPath: null
     csiDriver:
       name: "org.democratic-csi.iscsi"
@@ -78,7 +78,7 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next@sha256:6b758d6faf96f0e96d4b8ac0e240fc290c7bace23c20d78a3eb93781652cb1f1"
+          tag: "next"
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
@@ -99,7 +99,7 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next@sha256:6b758d6faf96f0e96d4b8ac0e240fc290c7bace23c20d78a3eb93781652cb1f1"
+          tag: "next"
         localtimeHostPath: null
     csiDriver:
       name: "org.democratic-csi.nfs"
@@ -137,7 +137,7 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next@sha256:6b758d6faf96f0e96d4b8ac0e240fc290c7bace23c20d78a3eb93781652cb1f1"
+          tag: "next"
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
@@ -158,7 +158,7 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next@sha256:6b758d6faf96f0e96d4b8ac0e240fc290c7bace23c20d78a3eb93781652cb1f1"
+          tag: "next"
         localtimeHostPath: null
     csiDriver:
       name: "org.democratic-csi.nvmeof-nvme"
