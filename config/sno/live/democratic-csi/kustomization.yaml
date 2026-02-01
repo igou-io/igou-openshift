@@ -25,6 +25,8 @@ helmCharts:
           registry: "ghcr.io/democratic-csi/democratic-csi"
           tag: "next"
           pullPolicy: Always
+      nodeSelector:
+        kubernetes.io/hostname: sno
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
