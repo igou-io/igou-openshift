@@ -5,9 +5,11 @@ resources:
   - democratic-csi-iscsi-ssd-externalsecret.yml
   - democratic-csi-nfs-ssd-externalsecret.yml
   - democratic-csi-nvmeof-nvme-externalsecret.yml
+  - democratic-csi-nvmeof-ssd-externalsecret.yml
   - allow-privileged-to-democratic-csi-iscsi-ssd-config-node-sa-clusterrolebinding.yaml
   - allow-privileged-to-democratic-csi-nfs-ssd-config-node-sa-clusterrolebinding.yaml
   - allow-privileged-to-democratic-csi-nvmeof-nvme-config-node-sa-clusterrolebinding.yaml
+  - allow-privileged-to-democratic-csi-nvmeof-ssd-config-node-sa-clusterrolebinding.yaml
 helmCharts:
 - name: democratic-csi
   namespace: democratic-csi
@@ -125,10 +127,69 @@ helmCharts:
       existingConfigSecret: "democratic-csi-nfs-ssd-config"
       config:
         driver: freenas-nfs
+# - name: democratic-csi
+#   namespace: democratic-csi
+#   includeCRDs: false
+#   releaseName: democratic-csi-nvmeof-nvme-config
+#   version: 0.15.1
+#   repo: https://democratic-csi.github.io/charts/
+#   valuesInline:
+#     controller:
+#       driver:
+#         enabled: true
+#         image:
+#           registry: "ghcr.io/democratic-csi/democratic-csi"
+#           tag: "next"
+#       tolerations:
+#       - effect: NoSchedule
+#         key: node-role.kubernetes.io/master
+#       rbac:
+#         enabled: true
+#         openshift:
+#           # set to true if running on openshift *and* you have need
+#           # ie: hostNetwork, hostIPC, etc are turned on
+#           privileged: false
+#     node:
+#       rbac:
+#         openshift:
+#           privileged: true
+#       tolerations:
+#       - effect: NoSchedule
+#         key: node-role.kubernetes.io/master
+#       driver:
+#         enabled: true
+#         image:
+#           registry: "ghcr.io/democratic-csi/democratic-csi"
+#           tag: "next"
+#         localtimeHostPath: null
+#     csiDriver:
+#       name: "org.democratic-csi.nvmeof-nvme"
+#     storageClasses:
+#     - name: freenas-nvmeof-nvme-csi
+#       defaultClass: false
+#       reclaimPolicy: Delete
+#       volumeBindingMode: Immediate
+#       allowVolumeExpansion: true
+#       parameters:
+#         fsType: ext4
+#         detachedVolumesFromSnapshots: true
+#         detachedVolumesFromVolumes: true
+#       mountOptions: []
+#       secrets:
+#         provisioner-secret:
+#         controller-publish-secret:
+#         node-stage-secret:
+#         node-publish-secret:
+#         controller-expand-secret:
+#     volumeSnapshotClasses: []
+#     driver:
+#       existingConfigSecret: "democratic-csi-nvmeof-nvme-config"
+#       config:
+#         driver: zfs-generic-nvmeof
 - name: democratic-csi
   namespace: democratic-csi
   includeCRDs: false
-  releaseName: democratic-csi-nvmeof-nvme-config
+  releaseName: democratic-csi-nvmeof-ssd-config
   version: 0.15.1
   repo: https://democratic-csi.github.io/charts/
   valuesInline:
@@ -161,9 +222,9 @@ helmCharts:
           tag: "next"
         localtimeHostPath: null
     csiDriver:
-      name: "org.democratic-csi.nvmeof-nvme"
+      name: "org.democratic-csi.nvmeof-ssd"
     storageClasses:
-    - name: freenas-nvmeof-nvme-csi
+    - name: freenas-nvmeof-ssd-csi
       defaultClass: false
       reclaimPolicy: Delete
       volumeBindingMode: Immediate
@@ -181,6 +242,6 @@ helmCharts:
         controller-expand-secret:
     volumeSnapshotClasses: []
     driver:
-      existingConfigSecret: "democratic-csi-nvmeof-nvme-config"
+      existingConfigSecret: "democratic-csi-nvmeof-ssd-config"
       config:
-        driver: zfs-generic-nvmeof
+        driver: freenas-nvmeof
