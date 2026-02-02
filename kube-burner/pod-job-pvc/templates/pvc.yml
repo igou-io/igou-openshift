@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{.JobName}}-{{.storageClassName}}-pvc-{{.Replica}}-{{.Iteration}}
+  labels:
+    name: pod-job
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{.storageClassName}}
+  resources:
+    requests:
+      storage: {{.storageSize}}

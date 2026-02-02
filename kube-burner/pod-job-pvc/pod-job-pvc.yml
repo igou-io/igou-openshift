@@ -1,0 +1,46 @@
+---
+global:
+  gc: false
+  gcMetrics: true
+  deletionStrategy: default
+  measurements:
+   - name: jobLatency
+   - name: pvcLatency
+metricsEndpoints:
+  - indexer:
+      type: local
+jobs:
+  - name: pod-job-pvc
+    jobIterations: 1
+    qps: 300
+    burst: 300
+    preLoadImages: false
+    namespacedIterations: false
+    namespace: pod-job-pvc
+    waitWhenFinished: true
+    podWait: true
+    objects:
+
+      - objectTemplate: templates/pvc.yml
+        replicas: 1
+        inputVars:
+          storageClassName: freenas-nvmeof-ssd-csi
+          storageSize: 1Gi
+
+      - objectTemplate: templates/job.yml
+        replicas: 1
+        inputVars:
+          storageClassName: freenas-nvmeof-ssd-csi
+          containerImage: fedora
+
+      - objectTemplate: templates/pvc.yml
+        replicas: 1
+        inputVars:
+          storageClassName: freenas-iscsi-ssd-csi
+          storageSize: 1Gi
+
+      - objectTemplate: templates/job.yml
+        replicas: 1
+        inputVars:
+          storageClassName: freenas-iscsi-ssd-csi
+          containerImage: fedora
