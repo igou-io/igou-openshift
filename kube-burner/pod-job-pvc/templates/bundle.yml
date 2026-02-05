@@ -1,0 +1,50 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{.JobName}}-{{.storageClassName}}-pvc-{{.Replica}}-{{.Iteration}}
+  labels:
+    name: pod-job
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{.storageClassName}}
+  resources:
+    requests:
+      storage: {{.storageSize}}
+...
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{.JobName}}-{{.storageClassName}}-{{.Replica}}-{{.Iteration}}
+  labels:
+    name: pod-job
+spec:
+  parallelism: 1
+  completions: 1
+  completionMode: Indexed
+  template:
+    spec:
+      containers:
+      - name: hello-world
+        image: {{.containerImage}}
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Starting job..."
+          df -h /data
+          cd /data
+          curl -sL https://yabs.sh | bash -s -- -i -g -n
+          echo "Job complete"
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: {{.JobName}}-{{.storageClassName}}-pvc-{{.Replica}}-{{.Iteration}}
+      restartPolicy: Never
+...
