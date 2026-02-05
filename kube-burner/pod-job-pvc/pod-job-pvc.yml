@@ -21,26 +21,28 @@ jobs:
     podWait: true
     objects:
 
-      - objectTemplate: templates/pvc.yml
+      - objectTemplate: templates/bundle.yml
         replicas: 1
         inputVars:
-          storageClassName: freenas-nvmeof-ssd-csi
-          storageSize: 1Gi
-
-      - objectTemplate: templates/job.yml
-        replicas: 1
-        inputVars:
-          storageClassName: freenas-nvmeof-ssd-csi
+          storageClassName: freenas-nvmeof-nvme-csi
+          storageSize: 30Gi
           containerImage: fedora
 
-      - objectTemplate: templates/pvc.yml
-        replicas: 1
-        inputVars:
-          storageClassName: freenas-iscsi-ssd-csi
-          storageSize: 1Gi
+      # - objectTemplate: templates/bundle.yml
+      #   replicas: 5
+      #   inputVars:
+      #     storageClassName: freenas-nvmeof-ssd-csi
+      #     storageSize: 30Gi
+      #     containerImage: fedora
 
-      - objectTemplate: templates/job.yml
-        replicas: 1
-        inputVars:
-          storageClassName: freenas-iscsi-ssd-csi
-          containerImage: fedora
+      # - objectTemplate: templates/pvc.yml
+      #   replicas: 1
+      #   inputVars:
+      #     storageClassName: freenas-iscsi-ssd-csi
+      #     storageSize: 1Gi
+
+      # - objectTemplate: templates/job.yml
+      #   replicas: 1
+      #   inputVars:
+      #     storageClassName: freenas-iscsi-ssd-csi
+      #     containerImage: fedora
