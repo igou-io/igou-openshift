@@ -29,7 +29,7 @@ certManager:
 
 
 monitoring:
-  enabled: true
+  enabled: false
   storageClass: freenas-iscsi-ssd-csi
 
 network:
