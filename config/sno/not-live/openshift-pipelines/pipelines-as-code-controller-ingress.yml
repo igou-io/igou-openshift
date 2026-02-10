@@ -1,0 +1,14 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pipelines-as-code-controller
+  namespace: openshift-pipelines
+  annotations:
+    tailscale.com/funnel: "true"
+spec:
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: pipelines-as-code-controller
+      port:
+        number: 8080
