@@ -1,10 +1,10 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: allow-privileged-to-democratic-csi-iscsi-ssd-config-node-sa
+  name: allow-privileged-to-democratic-csi-iscsi-cold-config-node-sa
 subjects:
 - kind: ServiceAccount
-  name: democratic-csi-iscsi-ssd-config-node-sa
+  name: democratic-csi-iscsi-cold-config-node-sa
   namespace: democratic-csi
 roleRef:
   kind: ClusterRole
