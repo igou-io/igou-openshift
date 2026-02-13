@@ -2,19 +2,31 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: democratic-csi
 resources:
+  - democratic-csi-namespace.yaml
+  - democratic-csi-iscsi-fast-externalsecret.yml
   - democratic-csi-iscsi-ssd-externalsecret.yml
+  - democratic-csi-iscsi-cold-externalsecret.yml
+  - democratic-csi-nfs-fast-externalsecret.yml
   - democratic-csi-nfs-ssd-externalsecret.yml
-  - democratic-csi-nvmeof-nvme-externalsecret.yml
+  - democratic-csi-nfs-cold-externalsecret.yml
+  - democratic-csi-nvmeof-fast-externalsecret.yml
   - democratic-csi-nvmeof-ssd-externalsecret.yml
+  - democratic-csi-nvmeof-cold-externalsecret.yml
+  - allow-privileged-to-democratic-csi-iscsi-fast-config-node-sa-clusterrolebinding.yaml
   - allow-privileged-to-democratic-csi-iscsi-ssd-config-node-sa-clusterrolebinding.yaml
+  - allow-privileged-to-democratic-csi-iscsi-cold-config-node-sa-clusterrolebinding.yaml
+  - allow-privileged-to-democratic-csi-nfs-fast-config-node-sa-clusterrolebinding.yaml
   - allow-privileged-to-democratic-csi-nfs-ssd-config-node-sa-clusterrolebinding.yaml
-  - allow-privileged-to-democratic-csi-nvmeof-nvme-config-node-sa-clusterrolebinding.yaml
+  - allow-privileged-to-democratic-csi-nfs-cold-config-node-sa-clusterrolebinding.yaml
+  - allow-privileged-to-democratic-csi-nvmeof-fast-config-node-sa-clusterrolebinding.yaml
   - allow-privileged-to-democratic-csi-nvmeof-ssd-config-node-sa-clusterrolebinding.yaml
+  - allow-privileged-to-democratic-csi-nvmeof-cold-config-node-sa-clusterrolebinding.yaml
 helmCharts:
+# ---- iSCSI - fast pool ----
 - name: democratic-csi
   namespace: democratic-csi
   includeCRDs: false
-  releaseName: democratic-csi-iscsi-ssd-config
+  releaseName: democratic-csi-iscsi-fast-config
   version: 0.15.1
   repo: https://democratic-csi.github.io/charts/
   valuesInline:
@@ -25,17 +37,14 @@ helmCharts:
           registry: "ghcr.io/democratic-csi/democratic-csi"
           tag: "next"
           pullPolicy: Always
-      nodeSelector:
-        kubernetes.io/hostname: sno
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
       rbac:
         enabled: true
         openshift:
-          # set to true if running on openshift *and* you have need
-          # ie: hostNetwork, hostIPC, etc are turned on
           privileged: true
+      hostNetwork: true
     node:
       tolerations:
       - effect: NoSchedule
@@ -51,7 +60,66 @@ helmCharts:
           pullPolicy: Always
         localtimeHostPath: null
     csiDriver:
-      name: "org.democratic-csi.iscsi"
+      name: "org.democratic-csi.iscsi-fast"
+    storageClasses:
+    - name: freenas-iscsi-fast-csi
+      defaultClass: false
+      reclaimPolicy: Delete
+      volumeBindingMode: Immediate
+      allowVolumeExpansion: true
+      parameters:
+        fsType: ext4
+      mountOptions: []
+      secrets:
+        provisioner-secret:
+        controller-publish-secret:
+        node-stage-secret:
+        node-publish-secret:
+        controller-expand-secret:
+    volumeSnapshotClasses: []
+    driver:
+      existingConfigSecret: "democratic-csi-iscsi-fast-config"
+      config:
+        driver: freenas-iscsi
+# ---- iSCSI - ssd pool ----
+- name: democratic-csi
+  namespace: democratic-csi
+  includeCRDs: false
+  releaseName: democratic-csi-iscsi-ssd-config
+  version: 0.15.1
+  repo: https://democratic-csi.github.io/charts/
+  valuesInline:
+    controller:
+      driver:
+        enabled: true
+        image:
+          registry: "ghcr.io/democratic-csi/democratic-csi"
+          tag: "next"
+          pullPolicy: Always
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      rbac:
+        enabled: true
+        openshift:
+          privileged: true
+      hostNetwork: true
+    node:
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      rbac:
+        openshift:
+          privileged: true
+      driver:
+        enabled: true
+        image:
+          registry: "ghcr.io/democratic-csi/democratic-csi"
+          tag: "next"
+          pullPolicy: Always
+        localtimeHostPath: null
+    csiDriver:
+      name: "org.democratic-csi.iscsi-ssd"
     storageClasses:
     - name: freenas-iscsi-ssd-csi
       defaultClass: false
@@ -72,6 +140,127 @@ helmCharts:
       existingConfigSecret: "democratic-csi-iscsi-ssd-config"
       config:
         driver: freenas-iscsi
+# ---- iSCSI - cold pool ----
+- name: democratic-csi
+  namespace: democratic-csi
+  includeCRDs: false
+  releaseName: democratic-csi-iscsi-cold-config
+  version: 0.15.1
+  repo: https://democratic-csi.github.io/charts/
+  valuesInline:
+    controller:
+      driver:
+        enabled: true
+        image:
+          registry: "ghcr.io/democratic-csi/democratic-csi"
+          tag: "next"
+          pullPolicy: Always
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      rbac:
+        enabled: true
+        openshift:
+          privileged: true
+      hostNetwork: true
+    node:
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      rbac:
+        openshift:
+          privileged: true
+      driver:
+        enabled: true
+        image:
+          registry: "ghcr.io/democratic-csi/democratic-csi"
+          tag: "next"
+          pullPolicy: Always
+        localtimeHostPath: null
+    csiDriver:
+      name: "org.democratic-csi.iscsi-cold"
+    storageClasses:
+    - name: freenas-iscsi-cold-csi
+      defaultClass: false
+      reclaimPolicy: Delete
+      volumeBindingMode: Immediate
+      allowVolumeExpansion: true
+      parameters:
+        fsType: ext4
+      mountOptions: []
+      secrets:
+        provisioner-secret:
+        controller-publish-secret:
+        node-stage-secret:
+        node-publish-secret:
+        controller-expand-secret:
+    volumeSnapshotClasses: []
+    driver:
+      existingConfigSecret: "democratic-csi-iscsi-cold-config"
+      config:
+        driver: freenas-iscsi
+# ---- NFS - fast pool ----
+- name: democratic-csi
+  namespace: democratic-csi
+  includeCRDs: false
+  releaseName: democratic-csi-nfs-fast-config
+  version: 0.15.1
+  repo: https://democratic-csi.github.io/charts/
+  valuesInline:
+    controller:
+      driver:
+        enabled: true
+        image:
+          registry: "ghcr.io/democratic-csi/democratic-csi"
+          tag: "next"
+          pullPolicy: Always
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      rbac:
+        enabled: true
+        openshift:
+          privileged: true
+      hostNetwork: true
+    node:
+      rbac:
+        openshift:
+          privileged: true
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      driver:
+        enabled: true
+        image:
+          registry: "ghcr.io/democratic-csi/democratic-csi"
+          tag: "next"
+          pullPolicy: Always
+        localtimeHostPath: null
+    csiDriver:
+      name: "org.democratic-csi.nfs-fast"
+    storageClasses:
+    - name: freenas-nfs-fast-csi
+      defaultClass: false
+      reclaimPolicy: Delete
+      volumeBindingMode: Immediate
+      allowVolumeExpansion: true
+      parameters:
+        fsType: nfs
+      mountOptions:
+        - noatime
+        - nfsvers=4
+      secrets:
+        provisioner-secret:
+        controller-publish-secret:
+        node-stage-secret:
+        node-publish-secret:
+        controller-expand-secret:
+    volumeSnapshotClasses: []
+    driver:
+      existingConfigSecret: "democratic-csi-nfs-fast-config"
+      config:
+        driver: freenas-nfs
+# ---- NFS - ssd pool ----
 - name: democratic-csi
   namespace: democratic-csi
   includeCRDs: false
@@ -92,8 +281,6 @@ helmCharts:
       rbac:
         enabled: true
         openshift:
-          # set to true if running on openshift *and* you have need
-          # ie: hostNetwork, hostIPC, etc are turned on
           privileged: true
       hostNetwork: true
     node:
@@ -111,7 +298,7 @@ helmCharts:
           pullPolicy: Always
         localtimeHostPath: null
     csiDriver:
-      name: "org.democratic-csi.nfs"
+      name: "org.democratic-csi.nfs-ssd"
     storageClasses:
     - name: freenas-nfs-ssd-csi
       defaultClass: false
@@ -134,10 +321,11 @@ helmCharts:
       existingConfigSecret: "democratic-csi-nfs-ssd-config"
       config:
         driver: freenas-nfs
+# ---- NFS - cold pool ----
 - name: democratic-csi
   namespace: democratic-csi
   includeCRDs: false
-  releaseName: democratic-csi-nvmeof-nvme-config
+  releaseName: democratic-csi-nfs-cold-config
   version: 0.15.1
   repo: https://democratic-csi.github.io/charts/
   valuesInline:
@@ -147,14 +335,13 @@ helmCharts:
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
           tag: "next"
+          pullPolicy: Always
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
       rbac:
         enabled: true
         openshift:
-          # set to true if running on openshift *and* you have need
-          # ie: hostNetwork, hostIPC, etc are turned on
           privileged: true
       hostNetwork: true
     node:
@@ -169,11 +356,73 @@ helmCharts:
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
           tag: "next"
+          pullPolicy: Always
         localtimeHostPath: null
     csiDriver:
-      name: "org.democratic-csi.nvmeof-nvme"
+      name: "org.democratic-csi.nfs-cold"
     storageClasses:
-    - name: freenas-nvmeof-nvme-csi
+    - name: freenas-nfs-cold-csi
+      defaultClass: false
+      reclaimPolicy: Delete
+      volumeBindingMode: Immediate
+      allowVolumeExpansion: true
+      parameters:
+        fsType: nfs
+      mountOptions:
+        - noatime
+        - nfsvers=4
+      secrets:
+        provisioner-secret:
+        controller-publish-secret:
+        node-stage-secret:
+        node-publish-secret:
+        controller-expand-secret:
+    volumeSnapshotClasses: []
+    driver:
+      existingConfigSecret: "democratic-csi-nfs-cold-config"
+      config:
+        driver: freenas-nfs
+# ---- NVMe-oF - fast pool ----
+- name: democratic-csi
+  namespace: democratic-csi
+  includeCRDs: false
+  releaseName: democratic-csi-nvmeof-fast-config
+  version: 0.15.1
+  repo: https://democratic-csi.github.io/charts/
+  valuesInline:
+    controller:
+      driver:
+        enabled: true
+        image:
+          registry: "ghcr.io/democratic-csi/democratic-csi"
+          tag: "next"
+          pullPolicy: Always
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      rbac:
+        enabled: true
+        openshift:
+          privileged: true
+      hostNetwork: true
+    node:
+      rbac:
+        openshift:
+          privileged: true
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      driver:
+        enabled: true
+        image:
+          registry: "ghcr.io/democratic-csi/democratic-csi"
+          tag: "next"
+          pullPolicy: Always
+        localtimeHostPath: null
+    csiDriver:
+      name: "org.democratic-csi.nvmeof-fast"
+    storageClasses:
+    - name: freenas-nvmeof-fast-csi
       defaultClass: false
       reclaimPolicy: Delete
       volumeBindingMode: Immediate
@@ -191,9 +440,10 @@ helmCharts:
         controller-expand-secret:
     volumeSnapshotClasses: []
     driver:
-      existingConfigSecret: "democratic-csi-nvmeof-nvme-config"
+      existingConfigSecret: "democratic-csi-nvmeof-fast-config"
       config:
         driver: freenas-nvmeof
+# ---- NVMe-oF - ssd pool ----
 - name: democratic-csi
   namespace: democratic-csi
   includeCRDs: false
@@ -214,8 +464,6 @@ helmCharts:
       rbac:
         enabled: true
         openshift:
-          # set to true if running on openshift *and* you have need
-          # ie: hostNetwork, hostIPC, etc are turned on
           privileged: true
       hostNetwork: true
     node:
@@ -254,5 +502,66 @@ helmCharts:
     volumeSnapshotClasses: []
     driver:
       existingConfigSecret: "democratic-csi-nvmeof-ssd-config"
+      config:
+        driver: freenas-nvmeof
+# ---- NVMe-oF - cold pool ----
+- name: democratic-csi
+  namespace: democratic-csi
+  includeCRDs: false
+  releaseName: democratic-csi-nvmeof-cold-config
+  version: 0.15.1
+  repo: https://democratic-csi.github.io/charts/
+  valuesInline:
+    controller:
+      driver:
+        enabled: true
+        image:
+          registry: "ghcr.io/democratic-csi/democratic-csi"
+          tag: "next"
+          pullPolicy: Always
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      rbac:
+        enabled: true
+        openshift:
+          privileged: true
+      hostNetwork: true
+    node:
+      rbac:
+        openshift:
+          privileged: true
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+      driver:
+        enabled: true
+        image:
+          registry: "ghcr.io/democratic-csi/democratic-csi"
+          tag: "next"
+          pullPolicy: Always
+        localtimeHostPath: null
+    csiDriver:
+      name: "org.democratic-csi.nvmeof-cold"
+    storageClasses:
+    - name: freenas-nvmeof-cold-csi
+      defaultClass: false
+      reclaimPolicy: Delete
+      volumeBindingMode: Immediate
+      allowVolumeExpansion: true
+      parameters:
+        fsType: ext4
+        detachedVolumesFromSnapshots: true
+        detachedVolumesFromVolumes: true
+      mountOptions: []
+      secrets:
+        provisioner-secret:
+        controller-publish-secret:
+        node-stage-secret:
+        node-publish-secret:
+        controller-expand-secret:
+    volumeSnapshotClasses: []
+    driver:
+      existingConfigSecret: "democratic-csi-nvmeof-cold-config"
       config:
         driver: freenas-nvmeof
