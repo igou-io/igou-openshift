@@ -42,7 +42,7 @@ Each pool is exposed over both NFS and NVMe-oF, giving 6 storage classes total (
 
 # Benchmark Results - 2026-02-13
 
-## YABS Disk I/O
+## YABS (FIO) Disk I/O
 
 | storage_class | block_size | read_mb_s | read_iops | write_mb_s | write_iops | total_mb_s | total_iops |
 | --- | --- | --- | --- | --- | --- | --- | ---  |
