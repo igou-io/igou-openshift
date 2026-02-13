@@ -37,6 +37,9 @@ spec:
           limits:
             cpu: "2"
             memory: 1Gi
+        env:
+        - name: STORAGE_CLASS
+          value: "{{.storageClassName}}"
         command:
         - /bin/sh
         - -c
@@ -46,7 +49,7 @@ spec:
           cd /data
           curl -sL https://yabs.sh | bash -s -- -i -g -n -w yabs.json
 
-          # Parse yabs.json into comma-separated speeds (MB/s) and IOPS
+          # Parse yabs.json into CSV with headers
           JSON_FILE="yabs.json"
           if [ ! -f "$JSON_FILE" ]; then
             echo "Error: $JSON_FILE not found" >&2
@@ -63,7 +66,7 @@ spec:
                 echo "$kib" | awk '{printf "%.2f", $1 * 1024 / 1000000}'
               fi
             }
-            output=""
+            echo "storage_class,block_size,read_mb_s,read_iops,write_mb_s,write_iops,total_mb_s,total_iops"
             for bs in "4k" "64k" "512k" "1m"; do
               speed_r=$(extract_value "speed_r" "$bs")
               iops_r=$(extract_value "iops_r" "$bs")
@@ -75,13 +78,9 @@ spec:
                 speed_r_mb=$(kib_to_mb "$speed_r")
                 speed_w_mb=$(kib_to_mb "$speed_w")
                 speed_rw_mb=$(kib_to_mb "$speed_rw")
-                if [ -n "$output" ]; then
-                  output="${output},"
-                fi
-                output="${output}${speed_r_mb},${iops_r},${speed_w_mb},${iops_w},${speed_rw_mb},${iops_rw}"
+                echo "${STORAGE_CLASS},${bs},${speed_r_mb},${iops_r},${speed_w_mb},${iops_w},${speed_rw_mb},${iops_rw}"
               fi
             done
-            echo "$output"
           fi
 
           echo "Job complete"

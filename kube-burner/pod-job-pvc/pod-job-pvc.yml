@@ -10,7 +10,7 @@ metricsEndpoints:
   - indexer:
       type: local
 jobs:
-  - name: pod-job-pvc
+  - name: nfs-fast
     jobIterations: 1
     qps: 300
     burst: 300
@@ -20,7 +20,6 @@ jobs:
     waitWhenFinished: true
     podWait: true
     objects:
-
       - objectTemplate: templates/bundle.yml
         replicas: 1
         inputVars:
@@ -28,6 +27,16 @@ jobs:
           storageSize: 30Gi
           containerImage: fedora
 
+  - name: nfs-ssd
+    jobIterations: 1
+    qps: 300
+    burst: 300
+    preLoadImages: false
+    namespacedIterations: false
+    namespace: pod-job-pvc
+    waitWhenFinished: true
+    podWait: true
+    objects:
       - objectTemplate: templates/bundle.yml
         replicas: 1
         inputVars:
@@ -35,6 +44,16 @@ jobs:
           storageSize: 30Gi
           containerImage: fedora
 
+  - name: nfs-cold
+    jobIterations: 1
+    qps: 300
+    burst: 300
+    preLoadImages: false
+    namespacedIterations: false
+    namespace: pod-job-pvc
+    waitWhenFinished: true
+    podWait: true
+    objects:
       - objectTemplate: templates/bundle.yml
         replicas: 1
         inputVars:
@@ -42,6 +61,16 @@ jobs:
           storageSize: 30Gi
           containerImage: fedora
 
+  - name: nvmeof-fast
+    jobIterations: 1
+    qps: 300
+    burst: 300
+    preLoadImages: false
+    namespacedIterations: false
+    namespace: pod-job-pvc
+    waitWhenFinished: true
+    podWait: true
+    objects:
       - objectTemplate: templates/bundle.yml
         replicas: 1
         inputVars:
@@ -49,6 +78,16 @@ jobs:
           storageSize: 30Gi
           containerImage: fedora
 
+  - name: nvmeof-ssd
+    jobIterations: 1
+    qps: 300
+    burst: 300
+    preLoadImages: false
+    namespacedIterations: false
+    namespace: pod-job-pvc
+    waitWhenFinished: true
+    podWait: true
+    objects:
       - objectTemplate: templates/bundle.yml
         replicas: 1
         inputVars:
@@ -56,6 +95,16 @@ jobs:
           storageSize: 30Gi
           containerImage: fedora
 
+  - name: nvmeof-cold
+    jobIterations: 1
+    qps: 300
+    burst: 300
+    preLoadImages: false
+    namespacedIterations: false
+    namespace: pod-job-pvc
+    waitWhenFinished: true
+    podWait: true
+    objects:
       - objectTemplate: templates/bundle.yml
         replicas: 1
         inputVars:
