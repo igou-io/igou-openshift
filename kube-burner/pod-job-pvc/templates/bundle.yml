@@ -21,14 +21,22 @@ metadata:
   labels:
     name: pod-job
 spec:
+  backoffLimit: 0
   parallelism: 1
   completions: 1
   completionMode: Indexed
   template:
     spec:
       containers:
-      - name: hello-world
+      - name: yabs-benchmark
         image: {{.containerImage}}
+        resources:
+          requests:
+            cpu: 500m
+            memory: 256Mi
+          limits:
+            cpu: "2"
+            memory: 1Gi
         command:
         - /bin/sh
         - -c
@@ -36,7 +44,46 @@ spec:
           echo "Starting job..."
           df -h /data
           cd /data
-          curl -sL https://yabs.sh | bash -s -- -i -g -n
+          curl -sL https://yabs.sh | bash -s -- -i -g -n -w yabs.json
+
+          # Parse yabs.json into comma-separated speeds (MB/s) and IOPS
+          JSON_FILE="yabs.json"
+          if [ ! -f "$JSON_FILE" ]; then
+            echo "Error: $JSON_FILE not found" >&2
+          else
+            extract_value() {
+              local key="$1"
+              local bs="$2"
+              grep -o "\"bs\":\"$bs\"[^}]*\"$key\":[0-9]*" "$JSON_FILE" | \
+              sed -E 's/.*"'"$key"'":([0-9]+).*/\1/' | head -1
+            }
+            kib_to_mb() {
+              local kib="$1"
+              if [ -n "$kib" ]; then
+                echo "$kib" | awk '{printf "%.2f", $1 * 1024 / 1000000}'
+              fi
+            }
+            output=""
+            for bs in "4k" "64k" "512k" "1m"; do
+              speed_r=$(extract_value "speed_r" "$bs")
+              iops_r=$(extract_value "iops_r" "$bs")
+              speed_w=$(extract_value "speed_w" "$bs")
+              iops_w=$(extract_value "iops_w" "$bs")
+              speed_rw=$(extract_value "speed_rw" "$bs")
+              iops_rw=$(extract_value "iops_rw" "$bs")
+              if [ -n "$speed_r" ]; then
+                speed_r_mb=$(kib_to_mb "$speed_r")
+                speed_w_mb=$(kib_to_mb "$speed_w")
+                speed_rw_mb=$(kib_to_mb "$speed_rw")
+                if [ -n "$output" ]; then
+                  output="${output},"
+                fi
+                output="${output}${speed_r_mb},${iops_r},${speed_w_mb},${iops_w},${speed_rw_mb},${iops_rw}"
+              fi
+            done
+            echo "$output"
+          fi
+
           echo "Job complete"
         imagePullPolicy: IfNotPresent
         volumeMounts:

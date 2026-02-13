@@ -1,0 +1,318 @@
+=== pod/pod-job-pvc-freenas-nfs-cold-csi-1-0-0-82dxk ===
+Starting job...
+Filesystem                                                                        Size  Used Avail Use% Mounted on
+truenas.igou.systems:/mnt/cold/k8s/vols/pvc-236bd04c-06ff-482d-a633-0d674cedf22f   30G     0   30G   0% /data
+# ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## #
+#              Yet-Another-Bench-Script              #
+#                     v2025-04-20                    #
+# https://github.com/masonr/yet-another-bench-script #
+# ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## #
+
+Fri Feb 13 14:41:44 UTC 2026
+
+Basic System Information:
+---------------------------------
+bash: line 238: uptime: command not found
+Uptime     :
+Processor  : AMD EPYC 7K62 48-Core Processor
+CPU cores  : 192 @ 2600.000 MHz
+AES-NI     : ✔ Enabled
+VM-x/AMD-V : ✔ Enabled
+bash: line 268: free: command not found
+RAM        :
+bash: line 271: free: command not found
+Swap       :
+Disk       : 292.4 GiB
+Distro     : Fedora Linux 43 (Container Image)
+Kernel     : 5.14.0-570.51.1.el9_6.x86_64
+VM Type    :
+IPv4/IPv6  : ✔ Online / ❌ Offline
+
+Preparing system for disk tests...
+Generating fio test file...
+Running fio random mixed R+W disk test with 4k block size...
+Running fio random mixed R+W disk test with 64k block size...
+Running fio random mixed R+W disk test with 512k block size...
+Running fio random mixed R+W disk test with 1m block size...
+fio Disk Speed Tests (Mixed R/W 50/50) (Partition truenas.igou.systems:/mnt/cold/k8s/vols/pvc-236bd04c-06ff-482d-a633-0d674cedf22f):
+---------------------------------
+Block Size | 4k            (IOPS) | 64k           (IOPS)
+  ------   | ---            ----  | ----           ----
+Read       | 1.53 MB/s      (384) | 19.74 MB/s     (308)
+Write      | 1.56 MB/s      (392) | 20.24 MB/s     (316)
+Total      | 3.10 MB/s      (776) | 39.98 MB/s     (624)
+           |                      |
+Block Size | 512k          (IOPS) | 1m            (IOPS)
+  ------   | ---            ----  | ----           ----
+Read       | 24.90 MB/s      (48) | 22.57 MB/s      (22)
+Write      | 26.65 MB/s      (52) | 24.53 MB/s      (23)
+Total      | 51.55 MB/s     (100) | 47.10 MB/s      (45)
+
+YABS completed in 5 min 16 sec
+1.57,384,1.61,392,3.18,776,20.22,308,20.73,316,40.95,624,25.50,48,27.29,52,52.79,100,23.12,22,25.12,23,48.24,45
+Job complete
+=== pod/pod-job-pvc-freenas-nfs-fast-csi-1-0-0-pqbpk ===
+Starting job...
+Filesystem                                                                        Size  Used Avail Use% Mounted on
+truenas.igou.systems:/mnt/fast/k8s/vols/pvc-a6251d77-8872-4fae-8c9f-bd45ad3d4599   30G     0   30G   0% /data
+# ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## #
+#              Yet-Another-Bench-Script              #
+#                     v2025-04-20                    #
+# https://github.com/masonr/yet-another-bench-script #
+# ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## #
+
+Fri Feb 13 14:41:01 UTC 2026
+
+Basic System Information:
+---------------------------------
+bash: line 238: uptime: command not found
+Uptime     :
+Processor  : AMD EPYC 7K62 48-Core Processor
+CPU cores  : 192 @ 2600.000 MHz
+AES-NI     : ✔ Enabled
+VM-x/AMD-V : ✔ Enabled
+bash: line 268: free: command not found
+RAM        :
+bash: line 271: free: command not found
+Swap       :
+Disk       : 292.4 GiB
+Distro     : Fedora Linux 43 (Container Image)
+Kernel     : 5.14.0-570.51.1.el9_6.x86_64
+VM Type    :
+IPv4/IPv6  : ✔ Online / ❌ Offline
+
+Preparing system for disk tests...
+Generating fio test file...
+Running fio random mixed R+W disk test with 4k block size...
+Running fio random mixed R+W disk test with 64k block size...
+Running fio random mixed R+W disk test with 512k block size...
+Running fio random mixed R+W disk test with 1m block size...
+fio Disk Speed Tests (Mixed R/W 50/50) (Partition truenas.igou.systems:/mnt/fast/k8s/vols/pvc-a6251d77-8872-4fae-8c9f-bd45ad3d4599):
+---------------------------------
+Block Size | 4k            (IOPS) | 64k           (IOPS)
+  ------   | ---            ----  | ----           ----
+Read       | 5.72 MB/s     (1.4k) | 66.85 MB/s    (1.0k)
+Write      | 5.73 MB/s     (1.4k) | 67.21 MB/s    (1.0k)
+Total      | 11.45 MB/s    (2.8k) | 134.06 MB/s   (2.0k)
+           |                      |
+Block Size | 512k          (IOPS) | 1m            (IOPS)
+  ------   | ---            ----  | ----           ----
+Read       | 396.98 MB/s    (775) | 556.00 KB/s      (0)
+Write      | 418.07 MB/s    (816) | 688.00 KB/s      (0)
+Total      | 815.06 MB/s   (1.5k) | 1.24 MB/s        (0)
+
+YABS completed in 3 min 5 sec
+5.87,1432,5.87,1432,11.73,2864,68.46,1044,68.83,1050,137.28,2094,406.51,775,428.11,816,834.62,1591,0.57,0,0.70,0,1.27,0
+Job complete
+=== pod/pod-job-pvc-freenas-nfs-ssd-csi-1-0-0-k5k5t ===
+Starting job...
+Filesystem                                                                       Size  Used Avail Use% Mounted on
+truenas.igou.systems:/mnt/ssd/k8s/vols/pvc-48d2de69-498b-4c02-b7eb-1666d3e9dd14   30G     0   30G   0% /data
+# ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## #
+#              Yet-Another-Bench-Script              #
+#                     v2025-04-20                    #
+# https://github.com/masonr/yet-another-bench-script #
+# ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## #
+
+Fri Feb 13 14:41:01 UTC 2026
+
+Basic System Information:
+---------------------------------
+bash: line 238: uptime: command not found
+Uptime     :
+Processor  : AMD EPYC 7K62 48-Core Processor
+CPU cores  : 192 @ 2600.000 MHz
+AES-NI     : ✔ Enabled
+VM-x/AMD-V : ✔ Enabled
+bash: line 268: free: command not found
+RAM        :
+bash: line 271: free: command not found
+Swap       :
+Disk       : 292.4 GiB
+Distro     : Fedora Linux 43 (Container Image)
+Kernel     : 5.14.0-570.51.1.el9_6.x86_64
+VM Type    :
+IPv4/IPv6  : ✔ Online / ❌ Offline
+
+Preparing system for disk tests...
+Generating fio test file...
+Running fio random mixed R+W disk test with 4k block size...
+Running fio random mixed R+W disk test with 64k block size...
+Running fio random mixed R+W disk test with 512k block size...
+Running fio random mixed R+W disk test with 1m block size...
+fio Disk Speed Tests (Mixed R/W 50/50) (Partition truenas.igou.systems:/mnt/ssd/k8s/vols/pvc-48d2de69-498b-4c02-b7eb-1666d3e9dd14):
+---------------------------------
+Block Size | 4k            (IOPS) | 64k           (IOPS)
+  ------   | ---            ----  | ----           ----
+Read       | 4.84 MB/s     (1.2k) | 61.27 MB/s     (957)
+Write      | 4.87 MB/s     (1.2k) | 61.61 MB/s     (962)
+Total      | 9.72 MB/s     (2.4k) | 122.88 MB/s   (1.9k)
+           |                      |
+Block Size | 512k          (IOPS) | 1m            (IOPS)
+  ------   | ---            ----  | ----           ----
+Read       | 14.10 MB/s      (27) | 87.81 MB/s      (85)
+Write      | 14.83 MB/s      (28) | 93.66 MB/s      (91)
+Total      | 28.93 MB/s      (55) | 181.48 MB/s    (176)
+
+YABS completed in 3 min 29 sec
+4.97,1212,4.99,1217,9.95,2429,62.74,957,63.09,962,125.84,1919,14.44,27,15.19,28,29.63,55,89.93,85,95.91,91,185.84,176
+Job complete
+=== pod/pod-job-pvc-freenas-nvmeof-cold-csi-1-0-0-rmws8 ===
+Starting job...
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/nvme1n1     30G   24K   30G   1% /data
+# ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## #
+#              Yet-Another-Bench-Script              #
+#                     v2025-04-20                    #
+# https://github.com/masonr/yet-another-bench-script #
+# ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## #
+
+Fri Feb 13 14:41:46 UTC 2026
+
+Basic System Information:
+---------------------------------
+bash: line 238: uptime: command not found
+Uptime     :
+Processor  : AMD EPYC 7K62 48-Core Processor
+CPU cores  : 192 @ 2600.000 MHz
+AES-NI     : ✔ Enabled
+VM-x/AMD-V : ✔ Enabled
+bash: line 268: free: command not found
+RAM        :
+bash: line 271: free: command not found
+Swap       :
+Disk       : 321.8 GiB
+Distro     : Fedora Linux 43 (Container Image)
+Kernel     : 5.14.0-570.51.1.el9_6.x86_64
+VM Type    :
+IPv4/IPv6  : ✔ Online / ❌ Offline
+
+Preparing system for disk tests...
+Generating fio test file...
+Running fio random mixed R+W disk test with 4k block size...
+Running fio random mixed R+W disk test with 64k block size...
+Running fio random mixed R+W disk test with 512k block size...
+Running fio random mixed R+W disk test with 1m block size...
+fio Disk Speed Tests (Mixed R/W 50/50) (Partition /dev/nvme1n1):
+---------------------------------
+Block Size | 4k            (IOPS) | 64k           (IOPS)
+  ------   | ---            ----  | ----           ----
+Read       | 34.76 MB/s    (8.6k) | 126.71 MB/s   (1.9k)
+Write      | 34.86 MB/s    (8.7k) | 127.37 MB/s   (1.9k)
+Total      | 69.63 MB/s   (17.4k) | 254.09 MB/s   (3.9k)
+           |                      |
+Block Size | 512k          (IOPS) | 1m            (IOPS)
+  ------   | ---            ----  | ----           ----
+Read       | 749.40 MB/s   (1.4k) | 976.22 MB/s    (953)
+Write      | 789.22 MB/s   (1.5k) | 1.04 GB/s     (1.0k)
+Total      | 1.53 GB/s     (3.0k) | 2.01 GB/s     (1.9k)
+
+YABS completed in 1 min 23 sec
+35.60,8691,35.70,8716,71.30,17407,129.75,1979,130.44,1990,260.19,3969,767.39,1463,808.16,1541,1575.56,3004,999.65,953,1066.23,1016,2065.88,1969
+Job complete
+=== pod/pod-job-pvc-freenas-nvmeof-fast-csi-1-0-0-zz4np ===
+Starting job...
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/nvme1n1     30G   24K   30G   1% /data
+# ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## #
+#              Yet-Another-Bench-Script              #
+#                     v2025-04-20                    #
+# https://github.com/masonr/yet-another-bench-script #
+# ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## #
+
+Fri Feb 13 14:41:03 UTC 2026
+
+Basic System Information:
+---------------------------------
+bash: line 238: uptime: command not found
+Uptime     :
+Processor  : AMD EPYC 7K62 48-Core Processor
+CPU cores  : 192 @ 2844.081 MHz
+AES-NI     : ✔ Enabled
+VM-x/AMD-V : ✔ Enabled
+bash: line 268: free: command not found
+RAM        :
+bash: line 271: free: command not found
+Swap       :
+Disk       : 321.8 GiB
+Distro     : Fedora Linux 43 (Container Image)
+Kernel     : 5.14.0-570.51.1.el9_6.x86_64
+VM Type    :
+IPv4/IPv6  : ✔ Online / ❌ Offline
+
+Preparing system for disk tests...
+Generating fio test file...
+Running fio random mixed R+W disk test with 4k block size...
+Running fio random mixed R+W disk test with 64k block size...
+Running fio random mixed R+W disk test with 512k block size...
+Running fio random mixed R+W disk test with 1m block size...
+fio Disk Speed Tests (Mixed R/W 50/50) (Partition /dev/nvme1n1):
+---------------------------------
+Block Size | 4k            (IOPS) | 64k           (IOPS)
+  ------   | ---            ----  | ----           ----
+Read       | 305.66 MB/s  (76.4k) | 1.11 GB/s    (17.4k)
+Write      | 306.46 MB/s  (76.6k) | 1.12 GB/s    (17.5k)
+Total      | 612.12 MB/s (153.0k) | 2.24 GB/s    (35.0k)
+           |                      |
+Block Size | 512k          (IOPS) | 1m            (IOPS)
+  ------   | ---            ----  | ----           ----
+Read       | 1.44 GB/s     (2.8k) | 1.20 GB/s     (1.1k)
+Write      | 1.52 GB/s     (2.9k) | 1.28 GB/s     (1.2k)
+Total      | 2.97 GB/s     (5.8k) | 2.48 GB/s     (2.4k)
+
+YABS completed in 20 sec
+313.00,76415,313.82,76616,626.82,153031,1145.37,17477,1151.40,17568,2296.77,35045,1484.68,2831,1563.56,2982,3048.24,5813,1229.02,1172,1310.87,1250,2539.90,2422
+Job complete
+=== pod/pod-job-pvc-freenas-nvmeof-ssd-csi-1-0-0-9nzqp ===
+Starting job...
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/nvme2n1     30G   24K   30G   1% /data
+# ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## #
+#              Yet-Another-Bench-Script              #
+#                     v2025-04-20                    #
+# https://github.com/masonr/yet-another-bench-script #
+# ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## #
+
+Fri Feb 13 14:41:18 UTC 2026
+
+Basic System Information:
+---------------------------------
+bash: line 238: uptime: command not found
+Uptime     :
+Processor  : AMD EPYC 7K62 48-Core Processor
+CPU cores  : 192 @ 2600.000 MHz
+AES-NI     : ✔ Enabled
+VM-x/AMD-V : ✔ Enabled
+bash: line 268: free: command not found
+RAM        :
+bash: line 271: free: command not found
+Swap       :
+Disk       : 321.8 GiB
+Distro     : Fedora Linux 43 (Container Image)
+Kernel     : 5.14.0-570.51.1.el9_6.x86_64
+VM Type    :
+IPv4/IPv6  : ✔ Online / ❌ Offline
+
+Preparing system for disk tests...
+Generating fio test file...
+Running fio random mixed R+W disk test with 4k block size...
+Running fio random mixed R+W disk test with 64k block size...
+Running fio random mixed R+W disk test with 512k block size...
+Running fio random mixed R+W disk test with 1m block size...
+fio Disk Speed Tests (Mixed R/W 50/50) (Partition /dev/nvme2n1):
+---------------------------------
+Block Size | 4k            (IOPS) | 64k           (IOPS)
+  ------   | ---            ----  | ----           ----
+Read       | 225.13 MB/s  (56.2k) | 687.13 MB/s  (10.7k)
+Write      | 225.72 MB/s  (56.4k) | 690.75 MB/s  (10.7k)
+Total      | 450.85 MB/s (112.7k) | 1.37 GB/s    (21.5k)
+           |                      |
+Block Size | 512k          (IOPS) | 1m            (IOPS)
+  ------   | ---            ----  | ----           ----
+Read       | 1.40 GB/s     (2.7k) | 1.38 GB/s     (1.3k)
+Write      | 1.47 GB/s     (2.8k) | 1.47 GB/s     (1.4k)
+Total      | 2.88 GB/s     (5.6k) | 2.85 GB/s     (2.7k)
+
+YABS completed in 27 sec
+230.53,56282,231.14,56431,461.67,112713,703.63,10736,707.33,10793,1410.96,21529,1436.75,2740,1513.09,2885,2949.84,5625,1416.68,1351,1511.03,1441,2927.72,2792
+Job complete
