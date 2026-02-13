@@ -1,0 +1,7 @@
+job_name,storage_class,pvc_pending_ms,pvc_binding_ms,job_completion_ms
+nfs-cold,freenas-nfs-cold-csi,6,13472,179000
+nfs-fast,freenas-nfs-fast-csi,11,7933,68000
+nfs-ssd,freenas-nfs-ssd-csi,3,36810,122000
+nvmeof-cold,freenas-nvmeof-cold-csi,8,16560,101000
+nvmeof-fast,freenas-nvmeof-fast-csi,5,40150,80000
+nvmeof-ssd,freenas-nvmeof-ssd-csi,4,8315,50000

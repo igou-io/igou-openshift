@@ -1,32 +1,3 @@
-# pod-job-pvc
-
-A [kube-burner](https://github.com/kube-burner/kube-burner) workload that benchmarks storage performance across multiple CSI storage classes using [YABS](https://github.com/masonr/yet-another-bench-script).
-
-
-## Running
-
-```bash
-kube-burner init -c pod-job-pvc.yml
-```
-
-The config sets `gc: false`, so the namespace and resources will persist after the run completes. This lets you inspect results before cleaning up manually.
-
-## Getting all job pod logs
-
-To retrieve logs from every pod created by the jobs in the `pod-job-pvc` namespace:
-
-```bash
-kubectl get pods -n pod-job-pvc -o name | xargs -I{} sh -c 'echo "=== {} ===" && kubectl logs -n pod-job-pvc {}'
-```
-
-## Cleanup
-
-Since garbage collection is disabled, remove the namespace manually when finished:
-
-```bash
-kubectl delete namespace pod-job-pvc
-```
-
 # Benchmark Results - 2026-02-13
 
 ## YABS Disk I/O
