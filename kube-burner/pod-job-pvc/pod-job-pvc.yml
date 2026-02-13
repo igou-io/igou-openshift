@@ -111,3 +111,71 @@ jobs:
           storageClassName: freenas-nvmeof-cold-csi
           storageSize: 30Gi
           containerImage: fedora
+
+  - name: iscsi-fast
+    jobIterations: 1
+    qps: 300
+    burst: 300
+    preLoadImages: false
+    namespacedIterations: false
+    namespace: pod-job-pvc
+    waitWhenFinished: true
+    podWait: true
+    objects:
+      - objectTemplate: templates/bundle.yml
+        replicas: 1
+        inputVars:
+          storageClassName: freenas-iscsi-fast-csi
+          storageSize: 30Gi
+          containerImage: fedora
+
+  - name: iscsi-ssd
+    jobIterations: 1
+    qps: 300
+    burst: 300
+    preLoadImages: false
+    namespacedIterations: false
+    namespace: pod-job-pvc
+    waitWhenFinished: true
+    podWait: true
+    objects:
+      - objectTemplate: templates/bundle.yml
+        replicas: 1
+        inputVars:
+          storageClassName: freenas-iscsi-ssd-csi
+          storageSize: 30Gi
+          containerImage: fedora
+
+  - name: iscsi-cold
+    jobIterations: 1
+    qps: 300
+    burst: 300
+    preLoadImages: false
+    namespacedIterations: false
+    namespace: pod-job-pvc
+    waitWhenFinished: true
+    podWait: true
+    objects:
+      - objectTemplate: templates/bundle.yml
+        replicas: 1
+        inputVars:
+          storageClassName: freenas-iscsi-cold-csi
+          storageSize: 30Gi
+          containerImage: fedora
+
+  - name: lvms-vg1-worker
+    jobIterations: 1
+    qps: 300
+    burst: 300
+    preLoadImages: false
+    namespacedIterations: false
+    namespace: pod-job-pvc
+    waitWhenFinished: true
+    podWait: true
+    objects:
+      - objectTemplate: templates/bundle.yml
+        replicas: 1
+        inputVars:
+          storageClassName: lvms-vg1-worker
+          storageSize: 30Gi
+          containerImage: fedora
