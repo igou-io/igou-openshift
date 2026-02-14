@@ -16,7 +16,7 @@ jobs:
     burst: 300
     preLoadImages: false
     namespacedIterations: false
-    namespace: pod-job-pvc
+    namespace: yabs-fio
     waitWhenFinished: true
     podWait: true
     objects:
@@ -33,7 +33,7 @@ jobs:
     burst: 300
     preLoadImages: false
     namespacedIterations: false
-    namespace: pod-job-pvc
+    namespace: yabs-fio
     waitWhenFinished: true
     podWait: true
     objects:
@@ -50,7 +50,7 @@ jobs:
     burst: 300
     preLoadImages: false
     namespacedIterations: false
-    namespace: pod-job-pvc
+    namespace: yabs-fio
     waitWhenFinished: true
     podWait: true
     objects:
@@ -67,7 +67,7 @@ jobs:
     burst: 300
     preLoadImages: false
     namespacedIterations: false
-    namespace: pod-job-pvc
+    namespace: yabs-fio
     waitWhenFinished: true
     podWait: true
     objects:
@@ -84,7 +84,7 @@ jobs:
     burst: 300
     preLoadImages: false
     namespacedIterations: false
-    namespace: pod-job-pvc
+    namespace: yabs-fio
     waitWhenFinished: true
     podWait: true
     objects:
@@ -101,7 +101,7 @@ jobs:
     burst: 300
     preLoadImages: false
     namespacedIterations: false
-    namespace: pod-job-pvc
+    namespace: yabs-fio
     waitWhenFinished: true
     podWait: true
     objects:
@@ -118,7 +118,7 @@ jobs:
     burst: 300
     preLoadImages: false
     namespacedIterations: false
-    namespace: pod-job-pvc
+    namespace: yabs-fio
     waitWhenFinished: true
     podWait: true
     objects:
@@ -135,7 +135,7 @@ jobs:
     burst: 300
     preLoadImages: false
     namespacedIterations: false
-    namespace: pod-job-pvc
+    namespace: yabs-fio
     waitWhenFinished: true
     podWait: true
     objects:
@@ -152,7 +152,7 @@ jobs:
     burst: 300
     preLoadImages: false
     namespacedIterations: false
-    namespace: pod-job-pvc
+    namespace: yabs-fio
     waitWhenFinished: true
     podWait: true
     objects:
@@ -169,7 +169,7 @@ jobs:
     burst: 300
     preLoadImages: false
     namespacedIterations: false
-    namespace: pod-job-pvc
+    namespace: yabs-fio
     waitWhenFinished: true
     podWait: true
     objects:

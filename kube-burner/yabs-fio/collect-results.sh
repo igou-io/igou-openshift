@@ -38,8 +38,8 @@ LATENCY_CSV="${RESULTS_DIR}/${FILENAME}-${DATE}-latency.csv"
 
 # Collect YABS benchmark CSV from pod logs
 echo "Collecting benchmark results from pod logs..."
-kubectl get pods -n pod-job-pvc -o name | \
-  xargs -I{} kubectl logs -n pod-job-pvc {} | \
+kubectl get pods -n yabs-fio -o name | \
+  xargs -I{} kubectl logs -n yabs-fio {} | \
   awk '/^storage_class,/{if(!h++)print;next} /,(4k|64k|512k|1m),/{print}' > "$BENCH_CSV"
 echo "Wrote $BENCH_CSV"
 
