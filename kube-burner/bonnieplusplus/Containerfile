@@ -1,0 +1,3 @@
+FROM fedora:latest
+RUN dnf install -y bonnie++ && dnf clean all
+ENTRYPOINT ["/usr/sbin/bonnie++"]

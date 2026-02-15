@@ -1,0 +1,201 @@
+---
+global:
+  gc: false
+  gcMetrics: true
+  deletionStrategy: gvr
+  measurements:
+   - name: jobLatency
+   - name: pvcLatency
+metricsEndpoints:
+  - indexer:
+      type: local
+jobs:
+  - name: nvmeof-fast
+    cleanup: false
+    jobIterations: 1
+    qps: 300
+    burst: 300
+    preLoadImages: false
+    namespacedIterations: false
+    namespace: bonnieplusplus
+    waitWhenFinished: true
+    podWait: true
+    objects:
+      - objectTemplate: templates/bundle.yml
+        replicas: 1
+        inputVars:
+          storageClassName: freenas-nvmeof-fast-csi
+          storageSize: 30Gi
+          containerImage: image-registry.openshift-image-registry.svc.cluster.local:5000/bonnieplusplus/bonnieplusplus:latest
+          extraFlags: ""
+
+  - name: nvmeof-ssd
+    cleanup: false
+    jobIterations: 1
+    qps: 300
+    burst: 300
+    preLoadImages: false
+    namespacedIterations: false
+    namespace: bonnieplusplus
+    waitWhenFinished: true
+    podWait: true
+    objects:
+      - objectTemplate: templates/bundle.yml
+        replicas: 1
+        inputVars:
+          storageClassName: freenas-nvmeof-ssd-csi
+          storageSize: 30Gi
+          containerImage: image-registry.openshift-image-registry.svc.cluster.local:5000/bonnieplusplus/bonnieplusplus:latest
+          extraFlags: ""
+
+  - name: nvmeof-cold
+    cleanup: false
+    jobIterations: 1
+    qps: 300
+    burst: 300
+    preLoadImages: false
+    namespacedIterations: false
+    namespace: bonnieplusplus
+    waitWhenFinished: true
+    podWait: true
+    objects:
+      - objectTemplate: templates/bundle.yml
+        replicas: 1
+        inputVars:
+          storageClassName: freenas-nvmeof-cold-csi
+          storageSize: 30Gi
+          containerImage: image-registry.openshift-image-registry.svc.cluster.local:5000/bonnieplusplus/bonnieplusplus:latest
+          extraFlags: ""
+
+  - name: iscsi-fast
+    cleanup: false
+    jobIterations: 1
+    qps: 300
+    burst: 300
+    preLoadImages: false
+    namespacedIterations: false
+    namespace: bonnieplusplus
+    waitWhenFinished: true
+    podWait: true
+    objects:
+      - objectTemplate: templates/bundle.yml
+        replicas: 1
+        inputVars:
+          storageClassName: freenas-iscsi-fast-csi
+          storageSize: 30Gi
+          containerImage: image-registry.openshift-image-registry.svc.cluster.local:5000/bonnieplusplus/bonnieplusplus:latest
+          extraFlags: ""
+
+  - name: iscsi-ssd
+    cleanup: false
+    jobIterations: 1
+    qps: 300
+    burst: 300
+    preLoadImages: false
+    namespacedIterations: false
+    namespace: bonnieplusplus
+    waitWhenFinished: true
+    podWait: true
+    objects:
+      - objectTemplate: templates/bundle.yml
+        replicas: 1
+        inputVars:
+          storageClassName: freenas-iscsi-ssd-csi
+          storageSize: 30Gi
+          containerImage: image-registry.openshift-image-registry.svc.cluster.local:5000/bonnieplusplus/bonnieplusplus:latest
+          extraFlags: ""
+
+  - name: iscsi-cold
+    cleanup: false
+    jobIterations: 1
+    qps: 300
+    burst: 300
+    preLoadImages: false
+    namespacedIterations: false
+    namespace: bonnieplusplus
+    waitWhenFinished: true
+    podWait: true
+    objects:
+      - objectTemplate: templates/bundle.yml
+        replicas: 1
+        inputVars:
+          storageClassName: freenas-iscsi-cold-csi
+          storageSize: 30Gi
+          containerImage: image-registry.openshift-image-registry.svc.cluster.local:5000/bonnieplusplus/bonnieplusplus:latest
+          extraFlags: ""
+
+  - name: lvms-vg1-worker
+    cleanup: false
+    jobIterations: 1
+    qps: 300
+    burst: 300
+    preLoadImages: false
+    namespacedIterations: false
+    namespace: bonnieplusplus
+    waitWhenFinished: true
+    podWait: true
+    objects:
+      - objectTemplate: templates/bundle.yml
+        replicas: 1
+        inputVars:
+          storageClassName: lvms-vg1-worker
+          storageSize: 30Gi
+          containerImage: image-registry.openshift-image-registry.svc.cluster.local:5000/bonnieplusplus/bonnieplusplus:latest
+          extraFlags: ""
+
+  - name: nfs-fast
+    cleanup: false
+    jobIterations: 1
+    qps: 300
+    burst: 300
+    preLoadImages: false
+    namespacedIterations: false
+    namespace: bonnieplusplus
+    waitWhenFinished: true
+    podWait: true
+    objects:
+      - objectTemplate: templates/bundle.yml
+        replicas: 1
+        inputVars:
+          storageClassName: freenas-nfs-fast-csi
+          storageSize: 30Gi
+          containerImage: image-registry.openshift-image-registry.svc.cluster.local:5000/bonnieplusplus/bonnieplusplus:latest
+          extraFlags: "-f"
+
+  - name: nfs-ssd
+    cleanup: false
+    jobIterations: 1
+    qps: 300
+    burst: 300
+    preLoadImages: false
+    namespacedIterations: false
+    namespace: bonnieplusplus
+    waitWhenFinished: true
+    podWait: true
+    objects:
+      - objectTemplate: templates/bundle.yml
+        replicas: 1
+        inputVars:
+          storageClassName: freenas-nfs-ssd-csi
+          storageSize: 30Gi
+          containerImage: image-registry.openshift-image-registry.svc.cluster.local:5000/bonnieplusplus/bonnieplusplus:latest
+          extraFlags: "-f"
+
+  - name: nfs-cold
+    cleanup: false
+    jobIterations: 1
+    qps: 300
+    burst: 300
+    preLoadImages: false
+    namespacedIterations: false
+    namespace: bonnieplusplus
+    waitWhenFinished: true
+    podWait: true
+    objects:
+      - objectTemplate: templates/bundle.yml
+        replicas: 1
+        inputVars:
+          storageClassName: freenas-nfs-cold-csi
+          storageSize: 30Gi
+          containerImage: image-registry.openshift-image-registry.svc.cluster.local:5000/bonnieplusplus/bonnieplusplus:latest
+          extraFlags: "-f"
