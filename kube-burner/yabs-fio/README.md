@@ -169,3 +169,14 @@ Each pool is exposed over both NFS and NVMe-oF, giving 6 storage classes total (
 | nvmeof-cold | freenas-nvmeof-cold-csi | 8 | 22710 | 560000 |
 | nvmeof-fast | freenas-nvmeof-fast-csi | 2 | 10485 | 49000 |
 | nvmeof-ssd | freenas-nvmeof-ssd-csi | 7 | 8479 | 97000 |
+
+## Don't forget to reenable cache
+
+```bash
+zfs set primarycache=all cold
+zfs set secondarycache=all cold
+zfs set primarycache=all fast
+zfs set secondarycache=all fast
+zfs set primarycache=all ssd
+zfs set secondarycache=all ssd
+```

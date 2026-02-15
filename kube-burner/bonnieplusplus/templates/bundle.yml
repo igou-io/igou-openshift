@@ -1,0 +1,71 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{.JobName}}-{{.storageClassName}}-pvc-{{.Replica}}-{{.Iteration}}
+  labels:
+    name: bonnieplusplus
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{.storageClassName}}
+  resources:
+    requests:
+      storage: {{.storageSize}}
+...
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{.JobName}}-{{.storageClassName}}-{{.Replica}}-{{.Iteration}}
+  labels:
+    name: bonnieplusplus
+spec:
+  backoffLimit: 0
+  parallelism: 1
+  completions: 1
+  completionMode: Indexed
+  template:
+    spec:
+      containers:
+      - name: bonnieplusplus
+        image: {{.containerImage}}
+        resources:
+          limits:
+            memory: 4Gi
+          requests:
+            memory: 4Gi
+        env:
+        - name: STORAGE_CLASS
+          value: "{{.storageClassName}}"
+        - name: EXTRA_FLAGS
+          value: "{{.extraFlags}}"
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Starting bonnie++ benchmark on /data"
+          df -h /data
+
+          # Run bonnie++ with:
+          #   -d /data     : test directory
+          #   -r 4096      : tell bonnie++ container RAM is 4096MiB (matches limit)
+          #   -s 8192      : 8GB file size (2x RAM to defeat page cache)
+          #   -n 256       : 256 files for metadata tests
+          #   -m <class>   : machine name set to storage class for identification
+          #   -q           : quiet mode (CSV only)
+          #   $EXTRA_FLAGS : per-job flags (e.g. -f to skip per-char I/O)
+          # shellcheck disable=SC2086
+          bonnie++ -d /data -r 4096 -s 8192 -n 256 -m "${STORAGE_CLASS}" -q ${EXTRA_FLAGS} 2>&1
+
+          echo "Job complete"
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: {{.JobName}}-{{.storageClassName}}-pvc-{{.Replica}}-{{.Iteration}}
+      restartPolicy: Never
+...
