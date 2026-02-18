@@ -1,0 +1,16 @@
+{{- if and .Values.auth.enabled .Values.auth.externalSecret -}}
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  name: cluster
+  annotations:
+    argocd.argoproj.io/sync-wave: '1'
+spec:
+  identityProviders:
+  - mappingMethod: claim
+    name: {{ .Values.auth.htpasswdDisplayName }}
+    type: HTPasswd
+    htpasswd:
+      fileData:
+        name: htpasswd-secret
+{{ end }}
