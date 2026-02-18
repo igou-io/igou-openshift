@@ -1,0 +1,27 @@
+---
+global:
+  gc: true
+  gcMetrics: true
+  deletionStrategy: default
+  measurements:
+   - name: jobLatency
+metricsEndpoints:
+  - metrics: ["metrics.yml"]
+    indexer:
+      type: local
+jobs:
+  - name: pod-job
+    jobIterations: 1
+    qps: 300
+    burst: 300
+    preLoadImages: false
+    namespacedIterations: false
+    namespace: pod-job
+    waitWhenFinished: true
+    podWait: false
+    objects:
+
+      - objectTemplate: templates/job.yml
+        replicas: 1
+        inputVars:
+          containerImage: fedora
