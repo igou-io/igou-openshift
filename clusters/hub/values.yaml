@@ -7,7 +7,7 @@ applications:
     destination:
       namespace: open-cluster-management
     source:
-      path: clusters/hub/overlays/acm-operator
+      path: components/acm-operator
 
   acm-configuration:
     annotations:
@@ -16,5 +16,4 @@ applications:
     destination:
       namespace: open-cluster-management
     source:
-      path: clusters/hub/overlays/acm-configuration         
-                          
+      path: components/acm-configuration
