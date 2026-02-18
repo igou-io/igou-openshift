@@ -1,0 +1,10 @@
+applications:
+
+  aws-efs-csi-driver-operator:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '5'
+    destination:
+      namespace: cert-manager
+    source:
+      path: groups/geo-west/overlays/aws-efs-csi-driver-operator
