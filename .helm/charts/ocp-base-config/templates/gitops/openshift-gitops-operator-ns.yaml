@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-gitops-operator
+  annotations:
+    argocd.argoproj.io/sync-wave: '-60'
+  labels:
+    openshift.io/cluster-monitoring: 'true'
