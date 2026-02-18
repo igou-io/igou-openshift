@@ -3,3 +3,7 @@ kind: Kustomization
 
 resources:
   - ../../../components/external-secrets-operator
+  - onepassword-sdk-hub-pull-clustersecretstore.yaml
+  - onepassword-sdk-hub-push-clustersecretstore.yaml
+  - onepassword-sdk-ocp-pull-clustersecretstore.yaml
+  - onepassword-sdk-ocp-push-clustersecretstore.yaml
