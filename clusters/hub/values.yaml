@@ -17,3 +17,12 @@ applications:
       namespace: open-cluster-management
     source:
       path: components/acm-configuration
+
+  external-secrets-operator:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '0'
+    destination:
+      namespace: external-secrets-operator
+    source:
+      path: clusters/hub/external-secrets-operator
