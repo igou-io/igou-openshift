@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{.JobName}}-{{.Replica}}-{{.Iteration}}
+  labels:
+    name: pod-job
+spec:
+  parallelism: 1
+  completions: 1
+  completionMode: Indexed
+  template:
+    spec:
+      containers:
+      - name: hello-world
+        image: {{.containerImage}}
+        command: ["/bin/sh", "-c"]
+        args:
+          - echo "hello world"
+        imagePullPolicy: IfNotPresent
+      restartPolicy: Never
