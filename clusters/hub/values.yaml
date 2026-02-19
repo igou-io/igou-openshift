@@ -44,3 +44,21 @@ applications:
       namespace: democratic-csi
     source:
       path: components/democratic-csi
+
+  ansible-automation-platform:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '10'
+    destination:
+      namespace: ansible-automation-platform
+    source:
+      path: clusters/hub/ansible-automation-platform
+
+  nmstate:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '0'
+    destination:
+      namespace: nmstate
+    source:
+      path: clusters/hub/nmstate

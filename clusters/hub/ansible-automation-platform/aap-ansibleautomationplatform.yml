@@ -1,0 +1,27 @@
+apiVersion: aap.ansible.com/v1alpha1
+kind: AnsibleAutomationPlatform
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+  name: aap
+  namespace: ansible-automation-platform
+spec:
+  route_tls_termination_mechanism: Edge
+  admin_password_secret: aap-admin-password
+  service_type: ClusterIP
+  ingress_type: Route
+  no_log: false
+  redis_mode: standalone
+  image_pull_policy: Always
+  hostname: automation.apps.hub.igou.systems
+  api:
+    log_level: INFO
+    replicas: 1
+  database:
+    postgres_data_volume_init: false
+    postgres_storage_class: democratic-csi-nvmeof-ssd
+  route_host: automation.apps.hub.igou.systems
+  hub:
+    file_storage_storage_class: democratic-csi-nvmeof-ssd
+    redis_storage_class: democratic-csi-nvmeof-ssd
