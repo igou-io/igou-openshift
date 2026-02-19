@@ -26,3 +26,21 @@ applications:
       namespace: external-secrets-operator
     source:
       path: clusters/hub/external-secrets-operator
+
+  lvms-operator:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '0'
+    destination:
+      namespace: openshift-storage
+    source:
+      path: clusters/hub/lvms-operator
+
+  democratic-csi:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '10'
+    destination:
+      namespace: democratic-csi
+    source:
+      path: components/democratic-csi
