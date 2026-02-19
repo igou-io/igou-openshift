@@ -1,0 +1,42 @@
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: mapping-epyc
+spec:
+  desiredState:
+    interfaces:
+    - bridge:
+        options:
+          stp:
+            enabled: false
+        port:
+        - name: eno2np1
+      description: Linux bridge with enp87s0 as a port
+      ipv4:
+        dhcp: true
+        enabled: true
+      name: br1
+      state: up
+      type: linux-bridge
+    - name: enp129s0f1np1
+      description: Ethernet port enp129s0f1np1, Mellanox CX4
+      type: ethernet
+      state: up
+      mtu: 9000
+      ipv4:
+        dhcp: false
+        enabled: true
+        address:
+        - ip: 10.199.0.2
+          prefix-length: 24
+    ovn:
+      bridge-mappings:
+      - bridge: br-ex
+        localnet: localnet1
+        state: present
+    routes:
+      config:
+      - destination: 10.10.9.213/32
+        next-hop-interface: enp129s0f1np1
+  nodeSelector:
+    kubernetes.io/hostname: 7c-c2-55-e3-dc-22.igou.systems
