@@ -3,5 +3,6 @@ kind: Kustomization
 
 resources:
   - ../../../components/ansible-automation-platform
+  - ../../../components/cloudnative-pg
   - aap-admin-password-externalsecret.yml
   - aap-ansibleautomationplatform.yml
