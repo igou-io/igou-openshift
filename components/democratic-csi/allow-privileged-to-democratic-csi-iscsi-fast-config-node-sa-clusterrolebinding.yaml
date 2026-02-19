@@ -1,0 +1,12 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: allow-privileged-to-democratic-csi-iscsi-fast-config-node-sa
+subjects:
+- kind: ServiceAccount
+  name: democratic-csi-iscsi-fast-config-node-sa
+  namespace: democratic-csi
+roleRef:
+  kind: ClusterRole
+  name: system:openshift:scc:privileged
+  apiGroup: rbac.authorization.k8s.io
