@@ -62,3 +62,12 @@ applications:
       namespace: nmstate
     source:
       path: clusters/hub/nmstate
+
+  cloudnative-pg:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '0'
+    destination:
+      namespace: cloudnative-pg
+    source:
+      path: clusters/hub/cloudnative-pg
