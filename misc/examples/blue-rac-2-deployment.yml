@@ -1,0 +1,57 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blue-rac-2
+  labels:
+    app: blue-rac
+    cluster: "2"
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: blue-rac
+      cluster: "2"
+  template:
+    metadata:
+      labels:
+        app: blue-rac
+        cluster: "2"
+    spec:
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - blue-rac
+              topologyKey: kubernetes.io/hostname
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: cluster
+                  operator: In
+                  values:
+                  - "2"
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - name: pause
+        image: registry.k8s.io/pause:3.1
+        args:
+        - sleep
+        - infinity
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+

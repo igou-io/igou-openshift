@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mc-backup-idle
+  namespace: minecraft-server
+  labels:
+    app: mc-backup-idle
+spec:
+  restartPolicy: Always
+  containers:
+    - name: mc-backup
+      image: itzg/mc-backup:latest
+      imagePullPolicy: IfNotPresent
+      command: ["/bin/sh", "-c", "sleep infinity"]
+      volumeMounts:
+        - name: minecraft-datadir
+          mountPath: /data
+  volumes:
+    - name: minecraft-datadir
+      persistentVolumeClaim:
+        claimName: minecraft-datadir
