@@ -20,8 +20,8 @@ spec:
     replicas: 1
   database:
     postgres_data_volume_init: false
-    postgres_storage_class: democratic-csi-nvmeof-ssd
+    postgres_storage_class: freenas-nvmeof-ssd-csi
   route_host: automation.apps.hub.igou.systems
   hub:
-    file_storage_storage_class: democratic-csi-nvmeof-ssd
-    redis_storage_class: democratic-csi-nvmeof-ssd
+    file_storage_storage_class: freenas-nvmeof-ssd-csi
+    redis_storage_class: freenas-nvmeof-ssd-csi
