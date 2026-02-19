@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - ../../../components/lvms-operator
   - lvmcluster.yml
+  - lvms-lvm-local-storage-storageclass.yml
