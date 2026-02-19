@@ -115,6 +115,9 @@ scheduler.json
 **/charts
 !/charts/
 !/charts/**
+!/.helm/
+!/.helm/charts/
+!/.helm/charts/**
 requirements.lock
 Chart.lock
 **/Chart.lock

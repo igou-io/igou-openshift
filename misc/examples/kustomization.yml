@@ -1,0 +1,14 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: affinity-example
+resources:
+  - namespace.yml
+  - green-rac-1-deployment.yml
+  - green-rac-2-deployment.yml
+  - yellow-rac-1-deployment.yml
+  - yellow-rac-2-deployment.yml
+  - blue-rac-1-deployment.yml
+  - blue-rac-2-deployment.yml
+  - red-rac-1-deployment.yml
+  - red-rac-2-deployment.yml
