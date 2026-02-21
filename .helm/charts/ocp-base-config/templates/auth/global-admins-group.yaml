@@ -1,6 +1,10 @@
+{{- if .Values.auth.enabled -}}
 apiVersion: user.openshift.io/v1
 kind: Group
 metadata:
   name: global-admins
 users:
-- igou #todo template this
+{{- range .Values.auth.globalAdmins }}
+- {{ . }}
+{{- end }}
+{{- end -}}
