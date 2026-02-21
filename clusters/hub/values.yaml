@@ -67,8 +67,6 @@ applications:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
       argocd.argoproj.io/sync-wave: '8'
-    destination:
-      namespace: ocp-base-config
     source:
       path: clusters/hub/ocp-base-config
 
