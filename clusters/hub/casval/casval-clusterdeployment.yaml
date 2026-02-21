@@ -1,0 +1,22 @@
+apiVersion: hive.openshift.io/v1
+kind: ClusterDeployment
+metadata:
+  name: casval
+  namespace: casval
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  baseDomain: igou.systems
+  clusterInstallRef:
+    group: extensions.hive.openshift.io
+    kind: AgentClusterInstall
+    name: casval
+    version: v1beta1
+  clusterName: casval
+  platform:
+    agentBareMetal:
+      agentSelector:
+        matchLabels:
+          cluster-name: casval
+  pullSecretRef:
+    name: pull-secret

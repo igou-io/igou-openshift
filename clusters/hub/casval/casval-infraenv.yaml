@@ -1,0 +1,21 @@
+apiVersion: agent-install.openshift.io/v1beta1
+kind: InfraEnv
+metadata:
+  name: casval
+  namespace: casval
+  labels:
+    networkType: dhcp
+    agentclusterinstalls.extensions.hive.openshift.io/location: casval
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  agentLabels:
+    agentclusterinstalls.extensions.hive.openshift.io/location: casval
+  nmStateConfigLabelSelector:
+    matchLabels:
+      infraenvs.agent-install.openshift.io: casval
+  pullSecretRef:
+    name: pull-secret
+  sshAuthorizedKey: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOWgNfV1zdod84sj28d+z7YBLkaD5ZImElWt8zHw+u7/'
+  ipxeScriptType: DiscoveryImageAlways
+  cpuArchitecture: x86_64

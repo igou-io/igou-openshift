@@ -1,0 +1,25 @@
+apiVersion: metal3.io/v1alpha1
+kind: BareMetalHost
+metadata:
+  name: casval
+  namespace: casval
+  annotations:
+    inspect.metal3.io: disabled
+    bmac.agent-install.openshift.io/role: master
+    bmac.agent-install.openshift.io/remove-agent-and-node-on-delete: "true"
+    bmac.agent-install.openshift.io/hostname: "casval.igou.systems"
+    # baremetalhost.metal3.io/detached: ''
+  labels:
+    infraenvs.agent-install.openshift.io: casval
+spec:
+  online: true
+  automatedCleaningMode: disabled
+  bootMACAddress: '7C:C2:55:E3:DC:22'
+  bmc:
+    address: redfish-virtualmedia+https://10.10.60.221/redfish/v1/Systems/1/
+    credentialsName: casval-bmc-secret
+    disableCertificateVerification: true
+  # customDeploy:
+  #   method: start_assisted_install
+  rootDeviceHints:
+    deviceName: /dev/nvme0n1

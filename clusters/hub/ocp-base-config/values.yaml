@@ -1,0 +1,52 @@
+cluster:
+  name: hub
+  baseDomain: igou.systems
+
+
+
+certManager:
+  enabled: true
+  apiCert: true
+  defaultIngressCert: true
+  acmeBase: 'https://acme-v02.api.letsencrypt.org/directory'
+  externalSecret:
+    name: dns-token
+    onePasswordSecretName: dns-token
+  solvers:
+    - dns01:
+        cloudflare:
+          apiTokenSecretRef:
+            key: credential
+            name: dns-token
+          email: igou.david@gmail.com
+      selector:
+        dnsZones:
+          - igou.systems
+          - hub.igou.systems
+
+
+monitoring:
+  enabled: false
+  storageClass: freenas-nvmeof-fast-csi
+
+network:
+  hostRouting: false
+
+auth:
+  enabled: true
+  htpasswdDisplayName: igou
+  globalAdmins:
+    - igou
+  externalSecret:
+    name: htpasswd-secret
+    onePasswordSecretName: htpasswd
+
+timesync:
+  enabled: false
+  ptp:
+    enabled: false
+    loadKvmModule: false
+    device: 'ptp_kvm'
+    sourceStratum: 2
+  ntpServers:
+    - 10.10.90.1

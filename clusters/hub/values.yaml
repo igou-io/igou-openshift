@@ -1,9 +1,81 @@
 applications:
 
-  acm-operator:
+  external-secrets-operator:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '0'
+    destination:
+      namespace: external-secrets-operator
+    source:
+      path: clusters/hub/external-secrets-operator
+
+  lvms-operator:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '1'
+    destination:
+      namespace: openshift-storage
+    source:
+      path: clusters/hub/lvms-operator
+
+  machineconfigs:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '2'
+    destination:
+      namespace: openshift-machine-config-operator
+    source:
+      path: clusters/hub/machineconfigs
+
+  kubeletconfig:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '3'
+    destination:
+      namespace: openshift-machine-config-operator
+    source:
+      path: clusters/hub/kubeletconfig
+
+  nmstate:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
       argocd.argoproj.io/sync-wave: '5'
+    destination:
+      namespace: nmstate
+    source:
+      path: clusters/hub/nmstate
+
+  cert-manager-config:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '6'
+    destination:
+      namespace: cert-manager
+    source:
+      path: clusters/hub/cert-manager-config
+
+  democratic-csi:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '7'
+    destination:
+      namespace: democratic-csi
+    source:
+      path: components/democratic-csi
+
+  ocp-base-config:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '8'
+    destination:
+      namespace: ocp-base-config
+    source:
+      path: clusters/hub/ocp-base-config
+
+  acm-operator:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '10'
     destination:
       namespace: open-cluster-management
     source:
@@ -18,65 +90,29 @@ applications:
     source:
       path: components/acm-configuration
 
-  external-secrets-operator:
+  cloudnative-pg:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '0'
+      argocd.argoproj.io/sync-wave: '20'
     destination:
-      namespace: external-secrets-operator
+      namespace: cloudnative-pg
     source:
-      path: clusters/hub/external-secrets-operator
-
-  lvms-operator:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '0'
-    destination:
-      namespace: openshift-storage
-    source:
-      path: clusters/hub/lvms-operator
-
-  machineconfigs:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '0'
-    destination:
-      namespace: openshift-machine-config-operator
-    source:
-      path: clusters/hub/machineconfigs
-
-  democratic-csi:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '10'
-    destination:
-      namespace: democratic-csi
-    source:
-      path: components/democratic-csi
+      path: clusters/hub/cloudnative-pg
 
   ansible-automation-platform:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '10'
+      argocd.argoproj.io/sync-wave: '30'
     destination:
       namespace: ansible-automation-platform
     source:
       path: clusters/hub/ansible-automation-platform
 
-  nmstate:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '0'
-    destination:
-      namespace: nmstate
-    source:
-      path: clusters/hub/nmstate
-
-  cloudnative-pg:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '0'
-    destination:
-      namespace: cloudnative-pg
-    source:
-      path: clusters/hub/cloudnative-pg
+  # casval:
+  #   annotations:
+  #     argocd.argoproj.io/compare-options: IgnoreExtraneous
+  #     argocd.argoproj.io/sync-wave: '50'
+  #   destination:
+  #     namespace: casval
+  #   source:
+  #     path: clusters/hub/casval
