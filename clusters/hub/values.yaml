@@ -40,8 +40,6 @@ applications:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
       argocd.argoproj.io/sync-wave: '5'
-    destination:
-      namespace: nmstate
     source:
       path: clusters/hub/nmstate
 
@@ -69,6 +67,24 @@ applications:
       argocd.argoproj.io/sync-wave: '8'
     source:
       path: clusters/hub/ocp-base-config
+
+  apiserver-certs:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '9'
+    destination:
+      namespace: openshift-config
+    source:
+      path: clusters/hub/apiserver-certs
+
+  ingresscontroller-certs:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '9'
+    destination:
+      namespace: openshift-ingress
+    source:
+      path: clusters/hub/ingresscontroller-certs
 
   acm-operator:
     annotations:
