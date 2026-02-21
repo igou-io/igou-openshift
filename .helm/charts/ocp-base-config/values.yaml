@@ -1,36 +1,10 @@
 cluster:
-  name: sno
+  name: hub
   baseDomain: igou.systems
-  gitOpsRepo: https://github.com/igou-io/igou-openshift.git
-  gitOpsBasePath: config
-  trustedCABundle: ""
-  openshiftVersion: "4.15"
-
-
-certManager:
-  enabled: true
-  apiCert: true
-  defaultIngressCert: true
-  acmeBase: 'https://acme-v02.api.letsencrypt.org/directory'
-  externalSecret:
-    name: dns-token
-    onePasswordSecretName: dns-token
-  solvers:
-    - dns01:
-        cloudflare:
-          apiTokenSecretRef:
-            key: credential
-            name: dns-token
-          email: igou.david@gmail.com
-      selector:
-        dnsZones:
-          - igou.systems
-          - sno.igou.systems
-
 
 monitoring:
   enabled: false
-  storageClass: freenas-iscsi-ssd-csi
+  storageClass: freenas-nvmeof-fast-csi
 
 network:
   hostRouting: false
@@ -38,6 +12,8 @@ network:
 auth:
   enabled: true
   htpasswdDisplayName: igou
+  globalAdmins:
+    - igou
   externalSecret:
     name: htpasswd-secret
     onePasswordSecretName: htpasswd
@@ -50,8 +26,4 @@ timesync:
     device: 'ptp_kvm'
     sourceStratum: 2
   ntpServers:
-    - 1.2.3.4
-
-gitops:
-  applicationControllerResources: {}
-  kustomizeBuildOptions: "--enable-helm"
+    - 10.10.90.1
