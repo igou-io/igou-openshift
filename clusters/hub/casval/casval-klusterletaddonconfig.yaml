@@ -1,0 +1,32 @@
+apiVersion: agent.open-cluster-management.io/v1
+kind: KlusterletAddonConfig
+metadata:
+  creationTimestamp: "2026-02-24T18:12:00Z"
+  generation: 1
+  name: casval
+  namespace: casval
+  resourceVersion: "10899501"
+  uid: 22a0479a-9af5-471b-a970-a779da085d90
+spec:
+  applicationManager:
+    enabled: true
+  certPolicyController:
+    enabled: true
+  clusterLabels:
+    cloud: auto-detect
+    name: casval
+    vendor: auto-detect
+  clusterName: casval
+  clusterNamespace: casval
+  policyController:
+    enabled: true
+  searchCollector:
+    enabled: true
+status:
+  conditions:
+  - lastTransitionTime: "2026-02-24T18:12:00Z"
+    message: The cluster is not provisioned by ACM.
+    reason: OCPGlobalProxyNotDetected
+    status: "False"
+    type: OCPGlobalProxyDetected
+  ocpGlobalProxy: {}

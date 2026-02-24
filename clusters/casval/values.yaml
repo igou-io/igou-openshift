@@ -1,0 +1,125 @@
+applications:
+
+  external-secrets-operator:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '0'
+    destination:
+      namespace: external-secrets-operator
+    source:
+      path: clusters/casval/external-secrets-operator
+
+  machineconfigs:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '2'
+    destination:
+      namespace: openshift-machine-config-operator
+    source:
+      path: clusters/casval/machineconfigs
+
+  kubeletconfig:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '3'
+    destination:
+      namespace: openshift-machine-config-operator
+    source:
+      path: clusters/casval/kubeletconfig
+
+  # nmstate:
+  #   annotations:
+  #     argocd.argoproj.io/compare-options: IgnoreExtraneous
+  #     argocd.argoproj.io/sync-wave: '5'
+  #   source:
+  #     path: clusters/casval/nmstate
+
+  cert-manager-config:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '6'
+    destination:
+      namespace: cert-manager
+    source:
+      path: clusters/casval/cert-manager-config
+
+  # democratic-csi:
+  #   annotations:
+  #     argocd.argoproj.io/compare-options: IgnoreExtraneous
+  #     argocd.argoproj.io/sync-wave: '7'
+  #   destination:
+  #     namespace: democratic-csi
+  #   source:
+  #     path: components/democratic-csi
+  apiserver-certs:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '8'
+    destination:
+      namespace: openshift-config
+    source:
+      path: clusters/casval/apiserver-certs
+
+  ingresscontroller-certs:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '8'
+    destination:
+      namespace: openshift-ingress
+    source:
+      path: clusters/casval/ingresscontroller-certs
+
+  ocp-base-config:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '9'
+    source:
+      path: clusters/casval/ocp-base-config
+
+  # loki-operator:
+  #   annotations:
+  #     argocd.argoproj.io/compare-options: IgnoreExtraneous
+  #     argocd.argoproj.io/sync-wave: '10'
+  #   source:
+  #     path: components/loki-operator
+
+  # openshift-logging:
+  #   annotations:
+  #     argocd.argoproj.io/compare-options: IgnoreExtraneous
+  #     argocd.argoproj.io/sync-wave: '10'
+  #   source:
+  #     path: components/openshift-logging
+
+  # openshift-pipelines:
+  #   annotations:
+  #     argocd.argoproj.io/compare-options: IgnoreExtraneous
+  #     argocd.argoproj.io/sync-wave: '10'
+  #   source:
+  #     path: components/openshift-pipelines
+
+  # acm:
+  #   annotations:
+  #     argocd.argoproj.io/compare-options: IgnoreExtraneous
+  #     argocd.argoproj.io/sync-wave: '10'
+  #   destination:
+  #     namespace: open-cluster-management
+  #   source:
+  #     path: components/acm
+
+  # cloudnative-pg:
+  #   annotations:
+  #     argocd.argoproj.io/compare-options: IgnoreExtraneous
+  #     argocd.argoproj.io/sync-wave: '20'
+  #   destination:
+  #     namespace: cloudnative-pg
+  #   source:
+  #     path: clusters/hub/cloudnative-pg
+
+  # ansible-automation-platform:
+  #   annotations:
+  #     argocd.argoproj.io/compare-options: IgnoreExtraneous
+  #     argocd.argoproj.io/sync-wave: '30'
+  #   destination:
+  #     namespace: ansible-automation-platform
+  #   source:
+  #     path: clusters/hub/ansible-automation-platform
