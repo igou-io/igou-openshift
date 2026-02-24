@@ -43,14 +43,15 @@ applications:
     source:
       path: clusters/casval/cert-manager-config
 
-  # democratic-csi:
-  #   annotations:
-  #     argocd.argoproj.io/compare-options: IgnoreExtraneous
-  #     argocd.argoproj.io/sync-wave: '7'
-  #   destination:
-  #     namespace: democratic-csi
-  #   source:
-  #     path: components/democratic-csi
+  democratic-csi:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '7'
+    destination:
+      namespace: democratic-csi
+    source:
+      path: components/democratic-csi
+
   apiserver-certs:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
