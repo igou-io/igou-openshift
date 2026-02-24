@@ -86,6 +86,24 @@ applications:
     source:
       path: clusters/hub/ingresscontroller-certs
 
+  loki-operator:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '10'
+    destination:
+      namespace: openshift-operators-redhat
+    source:
+      path: components/loki-operator
+
+  openshift-logging:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '10'
+    destination:
+      namespace: openshift-logging
+    source:
+      path: components/openshift-logging
+
   acm-operator:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
