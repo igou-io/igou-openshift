@@ -17,6 +17,6 @@ spec:
     agentBareMetal:
       agentSelector:
         matchLabels:
-          cluster-name: casval
+          agent-install.openshift.io/bmh: casval
   pullSecretRef:
     name: pull-secret

@@ -19,6 +19,9 @@ spec:
       - cidr: 10.10.9.0/24
     serviceNetwork:
       - 172.30.0.0/16
+    userManagedNetworking: true
   provisionRequirements:
     controlPlaneAgents: 1
+    arbiterAgents: 0
+    workerAgents: 0
   sshPublicKey: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOWgNfV1zdod84sj28d+z7YBLkaD5ZImElWt8zHw+u7/'
