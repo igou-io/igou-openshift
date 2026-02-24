@@ -9,7 +9,7 @@ helmCharts:
   namespace: minecraft-server
   valuesFile: values-dummy.yaml
   releaseName: minecraft
-  version: 4.26.3
+  version: 4.26.4
   repo: https://itzg.github.io/minecraft-server-charts/
   valuesInline:
     image:
