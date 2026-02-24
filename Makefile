@@ -16,6 +16,19 @@ validate-kustomize: ## Validate all kustomization.yaml files build successfully
 			exit 1; \
 		fi'
 
+KUBECONFORM_FLAGS := -strict -ignore-missing-schemas \
+	-schema-location default \
+	-schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+	-summary
+
+.PHONY: validate-schemas
+validate-schemas: ## Validate rendered manifests against K8s/OpenShift schemas
+	@find $(REPO_ROOT) -name kustomization.yaml -print0 | \
+		xargs -0 -I{} sh -c 'dir=$$(dirname "{}"); reldir=$${dir#$(REPO_ROOT)/}; \
+		echo "--- $$reldir ---"; \
+		kustomize build --enable-helm "$$dir" 2>/dev/null | \
+		kubeconform $(KUBECONFORM_FLAGS) || exit 1'
+
 .PHONY: clean
 clean: ## Remove charts/ directories left behind by kustomize build (excludes .helm/charts)
 	@find $(REPO_ROOT) -type d -name charts -not -path '*/.helm/*' -print -exec rm -rf {} + 2>/dev/null || true

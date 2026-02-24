@@ -33,3 +33,23 @@ jobs:
 
       - name: Validate kustomize builds
         run: make validate-kustomize
+
+  validate-schemas:
+    name: Schema Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Install kubeconform
+        run: |
+          curl -sL https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz | \
+            tar xz -C /usr/local/bin
+
+      - name: Validate schemas
+        run: make validate-schemas
