@@ -4,8 +4,8 @@ REPO_ROOT := $(shell git rev-parse --show-toplevel)
 lint: clean ## Lint all YAML files with yamllint
 	yamllint -c .yamllint .
 
-.PHONY: validate
-validate: ## Validate all kustomization.yaml files build successfully
+.PHONY: validate-kustomize
+validate-kustomize: ## Validate all kustomization.yaml files build successfully
 	@find $(REPO_ROOT) -name kustomization.yaml -print0 | \
 		xargs -0 -I{} sh -c 'dir=$$(dirname "{}"); reldir=$${dir#$(REPO_ROOT)/}; \
 		if kustomize build --enable-helm "$$dir" > /dev/null 2>&1; then \

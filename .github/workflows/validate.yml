@@ -1,0 +1,35 @@
+name: Validate Manifests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: YAML Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Run yamllint
+        run: make lint
+
+  validate-kustomize:
+    name: Kustomize Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Validate kustomize builds
+        run: make validate-kustomize
