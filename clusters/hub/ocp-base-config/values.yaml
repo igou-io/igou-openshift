@@ -2,8 +2,6 @@ cluster:
   name: hub
   baseDomain: igou.systems
 
-
-
 certManager:
   enabled: true
   apiCert: true

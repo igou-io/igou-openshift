@@ -1,5 +1,9 @@
 REPO_ROOT := $(shell git rev-parse --show-toplevel)
 
+.PHONY: lint
+lint: clean ## Lint all YAML files with yamllint
+	yamllint -c .yamllint .
+
 .PHONY: validate
 validate: ## Validate all kustomization.yaml files build successfully
 	@find $(REPO_ROOT) -name kustomization.yaml -print0 | \
