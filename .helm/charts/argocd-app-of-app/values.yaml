@@ -19,7 +19,7 @@ default:
     - ApplyOutOfSyncOnly=true
     - PrunePropagationPolicy=foreground
     - PruneLast=true
-    - ServerSideApply=true  
+    - ServerSideApply=true
     - FailOnSharedResource=true
     - RespectIgnoreDifferences=true
     - CreateNamespace=false

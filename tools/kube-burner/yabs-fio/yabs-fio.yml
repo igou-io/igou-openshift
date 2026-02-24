@@ -4,8 +4,8 @@ global:
   gcMetrics: true
   deletionStrategy: default
   measurements:
-   - name: jobLatency
-   - name: pvcLatency
+    - name: jobLatency
+    - name: pvcLatency
 metricsEndpoints:
   - indexer:
       type: local
