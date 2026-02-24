@@ -2,6 +2,6 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - openshift-operators-redhat-namespace.yaml
-  - operatorgroup.yaml
-  - subscription.yaml
+  - loki-operator-operatorgroup.yaml
+  - loki-operator-subscription.yaml
 namespace: openshift-operators-redhat
