@@ -107,23 +107,14 @@ applications:
     source:
       path: components/openshift-pipelines
 
-  acm-operator:
+  acm:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
       argocd.argoproj.io/sync-wave: '10'
     destination:
       namespace: open-cluster-management
     source:
-      path: components/acm-operator
-
-  acm-configuration:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '15'
-    destination:
-      namespace: open-cluster-management
-    source:
-      path: components/acm-configuration
+      path: components/acm
 
   cloudnative-pg:
     annotations:

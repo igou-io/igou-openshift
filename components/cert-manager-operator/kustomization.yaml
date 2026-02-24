@@ -1,6 +1,8 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - https://github.com/redhat-cop/gitops-catalog/openshift-cert-manager-operator/operator/overlays/stable-v1?ref=main
+  - cert-manager-operator-namespace.yaml
+  - cert-manager-operator-operatorgroup.yaml
+  - cert-manager-operator-subscription.yaml
   - cert-manager-config.yaml
   - external-secret.yaml
