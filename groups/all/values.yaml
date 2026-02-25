@@ -27,13 +27,6 @@ applications:
     source:
       path: components/cert-manager-operator
 
-  apiserver:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '9'
-    source:
-      path: components/apiserver
-
   ingresscontroller:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
