@@ -84,6 +84,13 @@ applications:
     source:
       path: clusters/casval/apiserver
 
+  openshift-ai:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '10'
+    source:
+      path: components/openshift-ai
+
   # loki-operator:
   #   annotations:
   #     argocd.argoproj.io/compare-options: IgnoreExtraneous
