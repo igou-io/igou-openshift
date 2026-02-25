@@ -77,6 +77,13 @@ applications:
     source:
       path: clusters/casval/ocp-base-config
 
+  apiserver:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '9'
+    source:
+      path: clusters/casval/apiserver
+
   # loki-operator:
   #   annotations:
   #     argocd.argoproj.io/compare-options: IgnoreExtraneous

@@ -86,6 +86,13 @@ applications:
     source:
       path: clusters/hub/ingresscontroller-certs
 
+  apiserver:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '9'
+    source:
+      path: clusters/hub/apiserver
+
   loki-operator:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
