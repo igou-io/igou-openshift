@@ -1,0 +1,36 @@
+apiVersion: datasciencecluster.opendatahub.io/v2
+kind: DataScienceCluster
+metadata:
+  name: default-dsc
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  components:
+    aipipelines:
+      argoWorkflowsControllers:
+        managementState: Removed
+      managementState: Removed
+    dashboard:
+      managementState: Removed
+    feastoperator:
+      managementState: Removed
+    kserve:
+      managementState: Removed
+    kueue:
+      defaultClusterQueueName: default
+      defaultLocalQueueName: default
+      managementState: Removed
+    llamastackoperator:
+      managementState: Removed
+    modelregistry:
+      managementState: Removed
+      registriesNamespace: rhoai-model-registries
+    ray:
+      managementState: Removed
+    trainingoperator:
+      managementState: Removed
+    trustyai:
+      managementState: Removed
+    workbenches:
+      managementState: Removed
+      workbenchNamespace: rhods-notebooks
