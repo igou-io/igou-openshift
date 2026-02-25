@@ -3,7 +3,7 @@ kind: DataScienceCluster
 metadata:
   name: default-dsc
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: '5'
 spec:
   components:
     aipipelines:
