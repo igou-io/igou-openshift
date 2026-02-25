@@ -25,3 +25,8 @@ spec:
     arbiterAgents: 0
     workerAgents: 0
   sshPublicKey: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOWgNfV1zdod84sj28d+z7YBLkaD5ZImElWt8zHw+u7/'
+  clusterMetadata:
+    clusterID: 730b4abc-0ca1-4089-bb39-a9b9ea43f6c4
+    adminKubeconfigSecretRef:
+      name: casval-admin-kubeconfig
+    infraID: f81ae946-f0fc-4cdf-ab65-a85a8bcb89cf
