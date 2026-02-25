@@ -29,6 +29,9 @@ validate-schemas: ## Validate rendered manifests against K8s/OpenShift schemas
 		kustomize build --enable-helm "$$dir" 2>/dev/null | \
 		kubeconform $(KUBECONFORM_FLAGS) || exit 1'
 
+.PHONY: test
+test: lint validate-kustomize validate-schemas ## Run all tests (lint, validate-kustomize, validate-schemas)
+
 .PHONY: clean
 clean: ## Remove charts/ directories left behind by kustomize build (excludes .helm/charts)
 	@find $(REPO_ROOT) -type d -name charts -not -path '*/.helm/*' -print -exec rm -rf {} + 2>/dev/null || true
