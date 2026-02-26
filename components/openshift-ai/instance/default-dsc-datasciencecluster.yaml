@@ -12,26 +12,26 @@ spec:
         managementState: Removed
       managementState: Removed
     dashboard:
-      managementState: Removed
+      managementState: Managed
     feastoperator:
-      managementState: Removed
+      managementState: Managed
     kserve:
-      managementState: Removed
+      managementState: Managed
     kueue:
       defaultClusterQueueName: default
       defaultLocalQueueName: default
-      managementState: Removed
+      managementState: Managed
     llamastackoperator:
-      managementState: Removed
+      managementState: Managed
     modelregistry:
-      managementState: Removed
+      managementState: Managed
       registriesNamespace: rhoai-model-registries
     ray:
-      managementState: Removed
+      managementState: Managed
     trainingoperator:
-      managementState: Removed
+      managementState: Managed
     trustyai:
-      managementState: Removed
+      managementState: Managed
     workbenches:
-      managementState: Removed
+      managementState: Managed
       workbenchNamespace: rhods-notebooks
