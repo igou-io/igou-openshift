@@ -17,9 +17,9 @@ spec:
       sources:
         pci:
           deviceClassWhitelist:
-            - "0200"
-            - "03"
-            - "12"
+            - "0200" # Network controllers
+            - "03" # Display controllers
+            - "12" # Processing accelerators
           deviceLabelFields:
             - "class"
             - "vendor"
