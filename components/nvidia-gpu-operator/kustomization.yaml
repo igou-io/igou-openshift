@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - nvidia-gpu-operator-namespace.yaml
+  - nvidia-gpu-operator-operatorgroup.yaml
+  - gpu-operator-certified-subscription.yaml
+  - gpu-cluster-policy-clusterpolicy.yaml
+commonAnnotations:
+  argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
