@@ -9,7 +9,7 @@ spec:
   restartPolicy: Always
   containers:
     - name: mc-backup
-      image: itzg/mc-backup:latest@sha256:1cdd72cc6a762ddce2e9d6e601071a6af6027a91ce78d862bdc6e005f2476b67
+      image: itzg/mc-backup:latest@sha256:da610560a2b5a6b2f488dd8a26a33e821e07f3f40d8ed1c6c8399348b228c313
       imagePullPolicy: IfNotPresent
       command: ["/bin/sh", "-c", "sleep infinity"]
       volumeMounts:
