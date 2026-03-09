@@ -91,6 +91,13 @@ applications:
     source:
       path: components/openshift-ai
 
+  rhcl-operator:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '10'
+    source:
+      path: components/rhcl-operator
+
   openshift-nfd:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
