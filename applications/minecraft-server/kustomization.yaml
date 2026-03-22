@@ -14,7 +14,7 @@ helmCharts:
   valuesInline:
     image:
       repository: itzg/minecraft-server
-      tag: latest
+      tag: latest@sha256:faa991313445ced8b2901f4404b9ba2c05ec66791e04b060cb18104f7366001f
       pullPolicy: IfNotPresent
       pullSecret: ""
 
@@ -105,7 +105,7 @@ helmCharts:
 
     sidecarContainers:
     - name: minecraft-exporter
-      image: ghcr.io/dirien/minecraft-exporter:0.22.0
+      image: ghcr.io/dirien/minecraft-exporter:0.22.0@sha256:a1d1da2e2f91631c6dc4806bef54c234750af9ac63af3761230f97a67d4681fa
       imagePullPolicy: IfNotPresent
       env:
         - name: MC_RCON_ADDRESS
@@ -486,7 +486,7 @@ helmCharts:
       enabled: true
       image:
         repository: itzg/mc-backup
-        tag: latest
+        tag: latest@sha256:74dc4c561e90b61c86d2f45474e63d3f535faa636c1c54e28e626ab9c95f755a
         pullPolicy: IfNotPresent
       #  wait 2 minutes before starting
       initialDelay: 2m
