@@ -46,6 +46,13 @@
       "matchUpdateTypes": ["digest","major", "minor", "patch"],
       "matchPackageNames": ["/igou/"],
       "ignoreTests": true
+    },
+    {
+      "description": "Disable digest pinning for OCI helm charts managed by kustomize",
+      "matchManagers": ["kustomize"],
+      "matchDatasources": ["docker"],
+      "matchDepTypes": ["HelmChart"],
+      "pinDigests": false
     }
   ]
 }
