@@ -129,3 +129,6 @@ kube-burner*.log
 **/collected-metrics
 !/collected-metrics/
 !/collected-metrics/**
+
+# claude
+.claude/*
