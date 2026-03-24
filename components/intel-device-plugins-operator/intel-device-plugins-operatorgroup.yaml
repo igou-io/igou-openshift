@@ -1,0 +1,8 @@
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: intel-device-plugins-group
+  namespace: intel-device-plugins
+  annotations:
+    argocd.argoproj.io/sync-wave: '1'
+spec: {}
