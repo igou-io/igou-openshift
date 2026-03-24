@@ -114,6 +114,13 @@ applications:
     source:
       path: components/openshift-pipelines
 
+  intel-device-plugins-operator:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '10'
+    source:
+      path: components/intel-device-plugins-operator
+
   acm:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous

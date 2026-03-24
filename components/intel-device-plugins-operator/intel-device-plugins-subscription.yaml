@@ -1,0 +1,13 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: intel-device-plugins-operator
+  namespace: intel-device-plugins
+  annotations:
+    argocd.argoproj.io/sync-wave: '1'
+spec:
+  channel: stable
+  installPlanApproval: Automatic
+  name: intel-device-plugins-operator
+  source: certified-operators
+  sourceNamespace: openshift-marketplace

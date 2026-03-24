@@ -1,0 +1,12 @@
+apiVersion: deviceplugin.intel.com/v1
+kind: GpuDevicePlugin
+metadata:
+  name: gpudeviceplugin
+  namespace: intel-device-plugins
+  annotations:
+    argocd.argoproj.io/sync-wave: '2'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  sharedDevNum: 10
+  enableMonitoring: true
+  logLevel: 4
