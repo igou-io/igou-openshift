@@ -16,6 +16,12 @@ spec:
           localnet: trunk-network
           state: present
     interfaces:
+      - name: enp2s0f1.45
+        type: vlan
+        state: up
+        vlan:
+          base-iface: enp2s0f1
+          id: 45
       - name: br-secondary
         type: ovs-bridge
         state: up
