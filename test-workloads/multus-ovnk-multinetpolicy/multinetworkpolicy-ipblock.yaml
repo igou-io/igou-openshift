@@ -1,0 +1,17 @@
+apiVersion: k8s.cni.cncf.io/v1beta1
+kind: MultiNetworkPolicy
+metadata:
+  name: ingress-ipblock
+  namespace: multus-ovnk-multinetpolicy
+  annotations:
+    k8s.v1.cni.cncf.io/policy-for: multus-ovnk-multinetpolicy/vlan45-trunk
+spec:
+  podSelector:
+    matchLabels:
+      name: multinetpolicy-test
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - ipBlock:
+            cidr: 10.10.45.0/24

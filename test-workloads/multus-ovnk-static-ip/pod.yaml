@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: multus-ovnk-static-ip-test
+  namespace: multus-ovnk-static-ip
+  annotations:
+    k8s.v1.cni.cncf.io/networks: |-
+      [
+        {
+          "name": "vlan45-trunk",
+          "ips": ["10.10.45.222/24"]
+        }
+      ]
+spec:
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: tools
+      image: registry.redhat.io/openshift4/ose-tools-rhel9:latest
+      command: ["sleep", "infinity"]
+      securityContext:
+        allowPrivilegeEscalation: false
+        runAsNonRoot: true
+        capabilities:
+          drop:
+            - ALL

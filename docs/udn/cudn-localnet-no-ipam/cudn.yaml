@@ -1,0 +1,19 @@
+apiVersion: k8s.ovn.org/v1
+kind: ClusterUserDefinedNetwork
+metadata:
+  name: vlan45-no-ipam
+spec:
+  namespaceSelector:
+    matchLabels:
+      network.igou.systems/vlan45-noipam: "true"
+  network:
+    topology: Localnet
+    localnet:
+      role: Secondary
+      physicalNetworkName: trunk-network
+      vlan:
+        mode: Access
+        access:
+          id: 45
+      ipam:
+        mode: Disabled
