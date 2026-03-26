@@ -22,7 +22,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: nginx
-          image: quay.io/hummingbird/nginx:1.28.2@sha256:67bef246c4f920ce4246596ae4ce9f8390906847e787db815a5ae1f723c2c16d
+          image: quay.io/hummingbird/nginx:1.28.2@sha256:abafaf282a8b910057ad5963f4ffb84866f55e3f794ecb3e8816f15c6a9c0cbe
           ports:
             - containerPort: 8080
           securityContext:
