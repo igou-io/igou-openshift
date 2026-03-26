@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: multus-ovnk-static-ip-mac-nginx
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+      annotations:
+        k8s.v1.cni.cncf.io/networks: |-
+          [
+            {
+              "name": "vlan45-trunk",
+              "ips": ["10.10.45.224/24"],
+              "mac": "02:00:0a:0a:2d:e0",
+              "interface": "vlan45",
+              "default-route": ["10.10.45.1"]
+            }
+          ]
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: nginx
+          image: quay.io/hummingbird/nginx:1.28.2@sha256:67bef246c4f920ce4246596ae4ce9f8390906847e787db815a5ae1f723c2c16d
+          ports:
+            - containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL

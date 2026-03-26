@@ -1,0 +1,88 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: jellyfin
+resources:
+  - jellyfin-namespace.yaml
+  - jellyfin-media-nfs-pv.yaml
+  - jellyfin-media-nfs-pvc.yaml
+  - jellyfin-nad-vlan45.yaml
+helmCharts:
+- name: jellyfin
+  namespace: jellyfin
+  version: 2.7.0
+  releaseName: jellyfin
+  repo: https://jellyfin.github.io/jellyfin-helm/
+  valuesInline:
+    replicaCount: 1
+    image:
+      repository: docker.io/jellyfin/jellyfin
+      pullPolicy: IfNotPresent
+    podAnnotations:
+      k8s.v1.cni.cncf.io/networks: |-
+        [
+          {
+            "name": "vlan45-jellyfin",
+            "ips": ["10.10.45.221/24"]
+          }
+        ]
+    serviceAccount:
+      create: true
+      automount: true
+    podSecurityContext:
+      seccompProfile:
+        type: RuntimeDefault
+      supplementalGroups:
+        - 797
+    securityContext:
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      capabilities:
+        drop:
+          - ALL
+    resources:
+      limits:
+        gpu.intel.com/i915: "1"
+    deploymentStrategy:
+      type: Recreate
+    service:
+      type: ClusterIP
+      port: 8096
+    ingress:
+      enabled: false
+    persistence:
+      config:
+        enabled: false
+      media:
+        enabled: false
+    volumes:
+      - name: media-nfs
+        persistentVolumeClaim:
+          claimName: jellyfin-media
+          readOnly: true
+    volumeMounts:
+      - name: media-nfs
+        mountPath: /media
+        readOnly: true
+    jellyfin:
+      enableDLNA: false
+patches:
+  - target:
+      labelSelector: app.kubernetes.io/instance=jellyfin
+    patch: |
+      - op: add
+        path: /metadata/namespace
+        value: jellyfin
+  - target:
+      kind: Deployment
+      name: jellyfin
+    patch: |
+      - op: test
+        path: /spec/template/spec/volumes/1/name
+        value: media
+      - op: remove
+        path: /spec/template/spec/volumes/1
+      - op: test
+        path: /spec/template/spec/containers/0/volumeMounts/1/name
+        value: media
+      - op: remove
+        path: /spec/template/spec/containers/0/volumeMounts/1

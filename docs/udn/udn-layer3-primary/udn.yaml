@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: example-l3-primary
+  labels:
+    k8s.ovn.org/primary-user-defined-network: ""
+---
+apiVersion: k8s.ovn.org/v1
+kind: UserDefinedNetwork
+metadata:
+  name: tenant-l3
+  namespace: example-l3-primary
+spec:
+  topology: Layer3
+  layer3:
+    role: Primary
+    subnets:
+    - cidr: "10.100.0.0/16"
+      hostSubnet: 24

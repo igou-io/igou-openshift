@@ -1,0 +1,14 @@
+apiVersion: k8s.cni.cncf.io/v1beta1
+kind: MultiNetworkPolicy
+metadata:
+  name: allow-same-namespace
+  namespace: multus-ovnk-multinetpolicy
+  annotations:
+    k8s.v1.cni.cncf.io/policy-for: multus-ovnk-multinetpolicy/vlan45-trunk
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {}

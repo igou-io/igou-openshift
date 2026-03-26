@@ -1,0 +1,26 @@
+apiVersion: k8s.ovn.org/v1
+kind: ClusterUserDefinedNetwork
+metadata:
+  name: vlan45-shared
+spec:
+  namespaceSelector:
+    matchLabels:
+      network.igou.systems/vlan45: "true"
+  network:
+    topology: Localnet
+    localnet:
+      role: Secondary
+      physicalNetworkName: trunk-network
+      vlan:
+        mode: Access
+        access:
+          id: 45
+      subnets:
+      - "10.10.45.0/24"
+      excludeSubnets:
+      - "10.10.45.0/25"
+      - "10.10.45.128/26"
+      - "10.10.45.192/29"
+      ipam:
+        mode: Enabled
+        lifecycle: Persistent

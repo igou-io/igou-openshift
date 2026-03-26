@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: multus-ovnk-multinetpolicy-test
+  namespace: multus-ovnk-multinetpolicy
+  labels:
+    name: multinetpolicy-test
+  annotations:
+    k8s.v1.cni.cncf.io/networks: vlan45-trunk
+spec:
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: tools
+      image: registry.redhat.io/openshift4/ose-tools-rhel9:latest
+      command: ["sleep", "infinity"]
+      securityContext:
+        allowPrivilegeEscalation: false
+        runAsNonRoot: true
+        capabilities:
+          drop:
+            - ALL

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: multus-pod-nad-test-privileged
+  namespace: multus-pod-nad-privileged
+  annotations:
+    k8s.v1.cni.cncf.io/networks: vlan45-trunk
+spec:
+  serviceAccountName: privileged-sa
+  containers:
+    - name: tools
+      image: registry.redhat.io/openshift4/ose-tools-rhel9:latest
+      command: ["sleep", "infinity"]
+      securityContext:
+        privileged: true

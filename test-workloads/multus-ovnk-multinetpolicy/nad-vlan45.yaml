@@ -1,0 +1,18 @@
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: vlan45-trunk
+  namespace: multus-ovnk-multinetpolicy
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "vlan45-multinetpolicy",
+      "type": "ovn-k8s-cni-overlay",
+      "topology": "localnet",
+      "physicalNetworkName": "trunk-network",
+      "netAttachDefName": "multus-ovnk-multinetpolicy/vlan45-trunk",
+      "vlanID": 45,
+      "subnets": "10.10.45.0/24",
+      "excludeSubnets": "10.10.45.0/25, 10.10.45.128/26, 10.10.45.192/29, 10.10.45.200/32"
+    }
