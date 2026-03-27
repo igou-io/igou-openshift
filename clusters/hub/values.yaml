@@ -66,7 +66,7 @@ applications:
     destination:
       namespace: democratic-csi
     source:
-      path: components/democratic-csi
+      path: clusters/hub/democratic-csi
 
   ocp-base-config:
     annotations:
