@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: multus-dummy-device-test
+  namespace: multus-dummy-device
+  annotations:
+    k8s.v1.cni.cncf.io/networks: dummy-net
+spec:
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: tools
+      image: registry.redhat.io/openshift4/ose-tools-rhel9:latest
+      command: ["sleep", "infinity"]
+      securityContext:
+        allowPrivilegeEscalation: false
+        runAsNonRoot: true
+        capabilities:
+          drop:
+            - ALL

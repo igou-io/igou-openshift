@@ -1,0 +1,23 @@
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: ipvlan-l3
+  namespace: multus-ipvlan-l3
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "ipvlan-l3",
+      "type": "ipvlan",
+      "master": "enp2s0f1.45",
+      "linkInContainer": false,
+      "mode": "l3",
+      "ipam": {
+        "type": "static",
+        "addresses": [
+          {
+            "address": "10.10.45.245/32"
+          }
+        ]
+      }
+    }
