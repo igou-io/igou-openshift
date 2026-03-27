@@ -9,9 +9,9 @@ spec:
       "cniVersion": "0.3.1",
       "name": "vlan45-macvlan",
       "type": "macvlan",
-      "master": "enp2s0f1",
+      "master": "enp2s0f1.45",
+      "linkInContainer": false,
       "mode": "bridge",
-      "vlan": 45,
       "ipam": {
         "type": "static",
         "routes": [
