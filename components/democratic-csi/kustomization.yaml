@@ -3,15 +3,6 @@ kind: Kustomization
 namespace: democratic-csi
 resources:
   - democratic-csi-namespace.yaml
-  - democratic-csi-iscsi-fast-externalsecret.yml
-  - democratic-csi-iscsi-ssd-externalsecret.yml
-  - democratic-csi-iscsi-cold-externalsecret.yml
-  - democratic-csi-nfs-fast-externalsecret.yml
-  - democratic-csi-nfs-ssd-externalsecret.yml
-  - democratic-csi-nfs-cold-externalsecret.yml
-  - democratic-csi-nvmeof-fast-externalsecret.yml
-  - democratic-csi-nvmeof-ssd-externalsecret.yml
-  - democratic-csi-nvmeof-cold-externalsecret.yml
   - allow-privileged-to-democratic-csi-iscsi-fast-config-node-sa-clusterrolebinding.yaml
   - allow-privileged-to-democratic-csi-iscsi-ssd-config-node-sa-clusterrolebinding.yaml
   - allow-privileged-to-democratic-csi-iscsi-cold-config-node-sa-clusterrolebinding.yaml
