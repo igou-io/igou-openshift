@@ -146,14 +146,14 @@ applications:
     source:
       path: clusters/hub/cloudnative-pg
 
-  # ansible-automation-platform:
-  #   annotations:
-  #     argocd.argoproj.io/compare-options: IgnoreExtraneous
-  #     argocd.argoproj.io/sync-wave: '30'
-  #   destination:
-  #     namespace: ansible-automation-platform
-  #   source:
-  #     path: clusters/hub/ansible-automation-platform
+  ansible-automation-platform:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '30'
+    destination:
+      namespace: ansible-automation-platform
+    source:
+      path: clusters/hub/ansible-automation-platform
 
   # casval:
   #   annotations:
