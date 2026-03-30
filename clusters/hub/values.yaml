@@ -155,6 +155,13 @@ applications:
     source:
       path: clusters/hub/ansible-automation-platform
 
+  service-accounts:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '40'
+    source:
+      path: clusters/hub/service-accounts
+
   # casval:
   #   annotations:
   #     argocd.argoproj.io/compare-options: IgnoreExtraneous
