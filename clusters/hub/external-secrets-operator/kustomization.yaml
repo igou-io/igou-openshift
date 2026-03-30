@@ -7,3 +7,4 @@ resources:
   - onepassword-sdk-hub-push-clustersecretstore.yaml
   - onepassword-sdk-ocp-pull-clustersecretstore.yaml
   - onepassword-sdk-ocp-push-clustersecretstore.yaml
+  - onepassword-sdk-claude-container-clustersecretstore.yaml

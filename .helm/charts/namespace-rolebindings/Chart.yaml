@@ -1,0 +1,5 @@
+apiVersion: v2
+name: namespace-rolebindings
+description: Bind a ClusterRole to a ServiceAccount via per-namespace RoleBindings
+type: application
+version: 0.1.0

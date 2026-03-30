@@ -1,0 +1,9 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../../components/service-accounts
+  - cluster-read-only-token-push-pushsecret.yaml
+  - cluster-edit-token-push-pushsecret.yaml
+  - claude-edit-token-push-pushsecret.yaml

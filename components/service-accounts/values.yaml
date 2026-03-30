@@ -1,0 +1,13 @@
+bindings:
+  - serviceAccount:
+      name: cluster-edit
+      namespace: service-accounts
+    clusterRole: edit
+    namespaces:
+      - default
+  - serviceAccount:
+      name: claude-edit
+      namespace: service-accounts
+    clusterRole: edit
+    namespaces:
+      - claude
