@@ -56,6 +56,7 @@ Each cluster uses its own `values.yaml` to define managed applications. Each ent
 - **Secrets**: externalized via External Secrets Operator + 1Password ClusterSecretStore — never stored in git
 - **Container images**: pinned to digest where possible (Renovate manages updates)
 - **Single-node tolerations**: many components explicitly tolerate/schedule on master nodes
+- **File naming**: YAML files should be named `<metadata.name>-<kind>.yaml` whenever possible (e.g. `my-app-deployment.yaml`, `cluster-read-only-serviceaccount.yaml`)
 
 ### Networking (Hub)
 
