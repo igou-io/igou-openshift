@@ -162,6 +162,13 @@ applications:
     source:
       path: clusters/hub/service-accounts
 
+  openshift-virt:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '50'
+    source:
+      path: components/openshift-virt
+
   # casval:
   #   annotations:
   #     argocd.argoproj.io/compare-options: IgnoreExtraneous
