@@ -33,6 +33,7 @@ User Defined Networks provide OVN-Kubernetes-native network segmentation and sec
 | [cudn-localnet-no-ipam](cudn-localnet-no-ipam/) | CUDN with localnet topology, IPAM disabled |
 | [udn-layer2-primary](udn-layer2-primary/) | Namespace-scoped Layer2 primary UDN |
 | [udn-layer3-primary](udn-layer3-primary/) | Namespace-scoped Layer3 primary UDN |
+| [clusters/hub/udn](../clusters/hub/udn/) | Hub production: VLAN 9 localnet (no IPAM) on `trunk-network` |
 
 ## Prerequisites
 
