@@ -1,0 +1,23 @@
+# Localnet CUDN: VLAN 9 on the hub trunk (OVS localnet trunk-network → br-secondary).
+# See docs/udn/cudn-localnet-no-ipam/ and clusters/hub/nmstate/mapping-nodenetworkconfigurationpolicy.yaml
+apiVersion: k8s.ovn.org/v1
+kind: ClusterUserDefinedNetwork
+metadata:
+  name: vlan9-no-ipam
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  namespaceSelector:
+    matchLabels:
+      network.igou.systems/vlan9: "true"
+  network:
+    topology: Localnet
+    localnet:
+      role: Secondary
+      physicalNetworkName: trunk-network
+      vlan:
+        mode: Access
+        access:
+          id: 9
+      ipam:
+        mode: Disabled

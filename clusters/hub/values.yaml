@@ -43,12 +43,12 @@ applications:
     source:
       path: clusters/hub/nmstate
 
-  # udn:
-  #   annotations:
-  #     argocd.argoproj.io/compare-options: IgnoreExtraneous
-  #     argocd.argoproj.io/sync-wave: '5'
-  #   source:
-  #     path: clusters/hub/udn
+  udn:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '6'
+    source:
+      path: clusters/hub/udn
 
   cert-manager-config:
     annotations:
