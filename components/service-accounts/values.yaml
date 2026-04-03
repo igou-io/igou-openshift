@@ -11,3 +11,9 @@ bindings:
     clusterRole: edit
     namespaces:
       - claude
+  - serviceAccount:
+      name: ansible-molecule
+      namespace: service-accounts
+    clusterRole: molecule-kubernetes
+    namespaces:
+      - molecule

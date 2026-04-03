@@ -11,6 +11,9 @@ resources:
   - cluster-edit-token-secret.yaml
   - claude-edit-serviceaccount.yaml
   - claude-edit-token-secret.yaml
+  - ansible-molecule-serviceaccount.yaml
+  - ansible-molecule-token-secret.yaml
+  - ansible-molecule-clusterrole.yaml
 
 helmGlobals:
   chartHome: ../../.helm/charts
