@@ -155,6 +155,12 @@ applications:
     source:
       path: clusters/hub/ansible-automation-platform
 
+  molecule:
+    annotations:
+      argocd.argoproj.io/sync-wave: '39'
+    source:
+      path: components/molecule
+
   service-accounts:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
