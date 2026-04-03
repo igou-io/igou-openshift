@@ -7,3 +7,4 @@ resources:
   - cluster-read-only-token-push-pushsecret.yaml
   - cluster-edit-token-push-pushsecret.yaml
   - claude-edit-token-push-pushsecret.yaml
+  - ansible-molecule-token-push-pushsecret.yaml
