@@ -36,7 +36,7 @@ helmCharts:
       # -- Docker pull policy
       pullPolicy: IfNotPresent
       # -- Docker image tag, overrides the image tag whose default is the chart appVersion.
-      tag: "0.20.1@sha256:6741c10fffd264d93172686f53c8753bbc9e12b2f2495d5d4045ea20851e081b"
+      tag: "0.20.2@sha256:0455f166da85b1d07f694c33ba09278ca649603c0611ba8e46272b16eed7fccd"
     # -- Docke registry secret names as an array
     imagePullSecrets: []
     # -- String to partially override template  (will maintain the release name)
