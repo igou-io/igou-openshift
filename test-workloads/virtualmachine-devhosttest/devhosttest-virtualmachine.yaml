@@ -1,0 +1,74 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: devhosttest
+  namespace: vlan9-test
+spec:
+  dataVolumeTemplates:
+  - metadata:
+      creationTimestamp: null
+      name: devhosttest-volume
+    spec:
+      sourceRef:
+        kind: DataSource
+        name: centos-stream10
+        namespace: openshift-virtualization-os-images
+      storage:
+        resources:
+          requests:
+            storage: 30Gi
+        storageClassName: lvms-lvm-local-storage-immediate
+  instancetype:
+    kind: virtualmachineclusterinstancetype
+    name: u1.2xmedium
+  preference:
+    kind: virtualmachineclusterpreference
+    name: centos.stream10
+  runStrategy: Always
+  template:
+    metadata:
+      annotations:
+        kubevirt.io/pci-topology-version: v3
+      creationTimestamp: null
+      labels:
+        network.kubevirt.io/headlessService: headless
+    spec:
+      architecture: amd64
+      domain:
+        devices:
+          autoattachPodInterface: false
+          disks:
+          - bootOrder: 1
+            name: rootdisk
+          interfaces:
+          - bridge: {}
+            macAddress: "02:AB:BE:C9:E7:6F"
+            model: virtio
+            name: nic-devhosttest
+            state: up
+        machine:
+          type: pc-q35-rhel9.6.0
+        resources: {}
+      networks:
+      - multus:
+          networkName: vlan9-no-ipam
+        name: nic-devhosttest
+      subdomain: headless
+      volumes:
+      - dataVolume:
+          name: devhosttest-volume
+        name: rootdisk
+      - cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            users:
+              - default
+              - name: igou
+                lock_passwd: true
+                sudo: ALL=(ALL) NOPASSWD:ALL
+                ssh_authorized_keys:
+                  - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOWgNfV1zdod84sj28d+z7YBLkaD5ZImElWt8zHw+u7/
+            runcmd:
+              - ["sudo", "yum", "install", "-y", "qemu-guest-agent"]
+              - ["sudo", "systemctl", "start", "qemu-guest-agent"]
+        name: cloudinitdisk

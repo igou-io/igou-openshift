@@ -80,10 +80,7 @@ helmCharts:
         #  - llama2
         #  - mistral
         pull:
-          - deepseek-r1:14b
-          - qwen2.5-coder:14b
           - gpt-oss:20b
-          - deepseek-coder:6.7b
         # -- List of models to load in memory at container startup
         # run:
         #  - llama2
@@ -240,7 +237,7 @@ helmCharts:
     # ref: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
     persistentVolume:
       # -- Enable persistence using PVC
-      enabled: true
+      enabled: false
       # -- Ollama server data Persistent Volume access modes
       # Must match those of existing PV or dynamic provisioner
       # Ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
@@ -253,14 +250,14 @@ helmCharts:
       # Requires server.persistentVolume.enabled: true
       existingClaim: ""
       # -- Ollama server data Persistent Volume size
-      size: 300Gi
+      # size: 300Gi
       # -- Ollama server data Persistent Volume Storage Class
       # If defined, storageClassName: <storageClass>
       # If set to "-", storageClassName: "", which disables dynamic provisioning
       # If undefined (the default) or set to null, no storageClassName spec is
       # set, choosing the default provisioner.  (gp2 on AWS, standard on
       # GKE, AWS & OpenStack)
-      storageClass: "freenas-iscsi-ssd-csi"
+      # storageClass: "freenas-iscsi-ssd-csi"
       # -- Ollama server data Persistent Volume Binding Mode
       # If defined, volumeMode: <volumeMode>
       # If empty (the default) or set to null, no volumeBindingMode spec is

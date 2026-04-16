@@ -8,12 +8,32 @@ spec:
   components:
     - kind: quay
       managed: true
+      overrides:
+        replicas: 1
+        resources:
+          requests:
+            cpu: 10m
+            memory: 10Mi
     - kind: postgres
       managed: true
+      overrides:
+        replicas: 1
+        resources:
+          requests:
+            cpu: 10m
+            memory: 10Mi
     - kind: clair
       managed: true
+      overrides:
+        replicas: 1
+        resources:
+          requests:
+            cpu: 10m
+            memory: 10Mi
     - kind: redis
       managed: true
+      overrides:
+        replicas: 1
     - kind: horizontalpodautoscaler
       managed: false
     - kind: objectstorage
@@ -22,9 +42,21 @@ spec:
       managed: true
     - kind: mirror
       managed: true
+      overrides:
+        replicas: 1
+        resources:
+          requests:
+            cpu: 10m
+            memory: 10Mi
     - kind: monitoring
       managed: true
     - kind: tls
       managed: true
     - kind: clairpostgres
       managed: true
+      overrides:
+        replicas: 1
+        resources:
+          requests:
+            cpu: 10m
+            memory: 10Mi
