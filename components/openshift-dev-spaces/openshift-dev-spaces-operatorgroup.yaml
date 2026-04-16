@@ -1,0 +1,11 @@
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: openshift-dev-spaces
+  namespace: openshift-dev-spaces
+  annotations:
+    argocd.argoproj.io/sync-wave: '9'
+spec:
+  targetNamespaces:
+    - openshift-dev-spaces

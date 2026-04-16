@@ -1,0 +1,7 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-dev-spaces
+  annotations:
+    argocd.argoproj.io/sync-wave: '8'
