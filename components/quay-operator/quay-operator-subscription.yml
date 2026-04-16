@@ -6,7 +6,7 @@ metadata:
   name: quay-operator
   namespace: openshift-operators
 spec:
-  channel: stable-3.14
+  channel: stable-3.16
   installPlanApproval: Automatic
   name: quay-operator
   source: redhat-operators
