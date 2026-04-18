@@ -146,6 +146,13 @@ applications:
     source:
       path: clusters/hub/cloudnative-pg
 
+  jellyfin:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/jellyfin
+
   ansible-automation-platform:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
