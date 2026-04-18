@@ -5,6 +5,7 @@ resources:
   - jellyfin-namespace.yaml
   - jellyfin-media-nfs-pv.yaml
   - jellyfin-media-nfs-pvc.yaml
+  - jellyfin-config-pvc.yaml
   - jellyfin-nad-vlan45.yaml
 helmCharts:
 - name: jellyfin
@@ -43,6 +44,10 @@ helmCharts:
     resources:
       limits:
         gpu.intel.com/i915: "1"
+    # Pin to the hub node: only this node has the Intel iGPU (i915) that
+    # jellyfin uses for hardware-accelerated transcoding.
+    nodeSelector:
+      kubernetes.io/hostname: hub.igou.systems
     deploymentStrategy:
       type: Recreate
     service:
@@ -52,7 +57,8 @@ helmCharts:
       enabled: false
     persistence:
       config:
-        enabled: false
+        enabled: true
+        existingClaim: jellyfin-config
       media:
         enabled: false
     volumes:
