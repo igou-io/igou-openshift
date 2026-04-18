@@ -1,0 +1,7 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - redhat-oadp-operator-namespace.yaml
+  - redhat-oadp-operator-operatorgroup.yaml
+  - redhat-oadp-operator-subscription.yaml

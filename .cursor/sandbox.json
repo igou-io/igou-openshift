@@ -3,33 +3,34 @@
   "networkPolicy": {
     "default": "deny",
     "allow": [
-      "github.com",
+      "*.docker.io",
       "*.github.com",
       "*.githubusercontent.com",
-      "api.anthropic.com",
-      "claude.ai",
-      "registry.npmjs.org",
-      "pypi.org",
-      "files.pythonhosted.org",
-      "dl.k8s.io",
-      "mirror.openshift.com",
+      "*.quay.io",
       "*.redhat.com",
       "*.redhat.io",
-      "quay.io",
-      "*.quay.io",
-      "registry.access.redhat.com",
+      "api.anthropic.com",
+      "claude.ai",
+      "dl.k8s.io",
+      "files.pythonhosted.org",
       "ghcr.io",
-      "*.docker.io"
-    ]
+      "github.com",
+      "mirror.openshift.com",
+      "pypi.org",
+      "quay.io",
+      "registry.access.redhat.com",
+      "registry.npmjs.org"
+    ],
+    "deny": []
   },
   "additionalReadwritePaths": [
-    "/tmp",
+    "/home/igou/.config/argocd",
     "/home/igou/.kube",
-    "/home/igou/.config/argocd"
+    "/tmp"
   ],
   "additionalReadonlyPaths": [
-    "/home/igou/.ssh",
-    "/home/igou/.config/op"
+    "/home/igou/.config/op",
+    "/home/igou/.ssh"
   ],
   "disableTmpWrite": false,
   "enableSharedBuildCache": false

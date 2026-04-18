@@ -1,7 +1,7 @@
 ---
 name: scaffold-component-olm
 description: Scaffold a new OLM operator component in components/ following repo conventions. Generates Namespace, OperatorGroup, Subscription, kustomization.yaml, and optionally ExternalSecret. Use when adding a new OLM operator to the platform.
-argument-hint: <component-name>
+argument-hint: <component-name> [--auto|-y]
 disable-model-invocation: true
 allowed-tools: Read, Write, Bash(kustomize build *), Bash(oc get packagemanifest *), Bash(ls *), Bash(cat *)
 ---
@@ -10,11 +10,35 @@ allowed-tools: Read, Write, Bash(kustomize build *), Bash(oc get packagemanifest
 
 Scaffold a new OLM operator component under `components/` following the exact conventions of this repo.
 
-## Component name
+## Parsing arguments
 
-The component to scaffold is: **$ARGUMENTS**
+`$ARGUMENTS` may contain:
+- A component name (required unless empty — then ask)
+- An optional `--auto` or `-y` flag to enable **autoaccept mode**
+
+Examples: `redhat-oadp-operator --auto`, `-y metallb-operator`, `my-operator`
+
+Parse the component name and check for the autoaccept flag.
 
 If `$ARGUMENTS` is empty, ask the user for the component name before proceeding.
+
+### Autoaccept mode
+
+When `--auto` or `-y` is present, **do not ask the user any follow-up questions**. Use all defaults from the PackageManifest lookup and the defaults table below, then proceed directly to file generation and validation.
+
+If autoaccept is enabled but the PackageManifest lookup fails, fall back to interactive mode (ask for the correct package name).
+
+Defaults assumed in autoaccept mode:
+| Field | Default |
+|-------|---------|
+| `namespace` | same as `component-name` |
+| `package` | same as `component-name` |
+| `channel` | from PackageManifest `defaultChannel` |
+| `catalog-source` | from PackageManifest `catalogSource` |
+| `operator-group-scope` | `OwnNamespace` |
+| `sync-wave` | `8` |
+| `skip-dry-run` | `no` |
+| `external-secret` | `no` |
 
 ## Step 1: PackageManifest lookup
 
@@ -36,6 +60,8 @@ Report back: "Found package `<package>` in `<catalog-source>`. Default channel: 
 **If the lookup fails** (exit non-zero or empty output), the package name may differ from the component name, or the catalog may not be synced yet. Note this and ask the user to supply the correct package name, then retry the lookup with the corrected name before proceeding.
 
 ## Step 2: Gather remaining information
+
+**If autoaccept mode is enabled and the PackageManifest lookup succeeded**, skip this step entirely — use all defaults and proceed to Step 3. Report the resolved values in the completion report instead.
 
 With channel and catalog-source pre-filled from the lookup (or supplied by the user after a failed lookup), ask for only the remaining unknowns in a single message:
 
