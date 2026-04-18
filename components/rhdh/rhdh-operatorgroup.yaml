@@ -1,0 +1,11 @@
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: rhdh
+  namespace: rhdh
+  annotations:
+    argocd.argoproj.io/sync-wave: '9'
+spec:
+  targetNamespaces:
+    - rhdh

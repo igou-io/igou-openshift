@@ -1,0 +1,11 @@
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: redhat-oadp-operator
+  namespace: redhat-oadp-operator
+  annotations:
+    argocd.argoproj.io/sync-wave: '9'
+spec:
+  targetNamespaces:
+    - redhat-oadp-operator
