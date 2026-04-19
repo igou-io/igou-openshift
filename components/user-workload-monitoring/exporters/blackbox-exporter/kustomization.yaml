@@ -85,3 +85,15 @@ helmCharts:
               query_name: igou.systems
               query_type: SOA
               preferred_ip_protocol: ip4
+# OpenShift SCC (restricted-v2) assigns runAsUser from the namespace UID range.
+# The chart hard-codes runAsUser/runAsGroup on the container securityContext;
+# remove them here so SCC admission can inject valid values.
+patches:
+  - target:
+      kind: Deployment
+      name: blackbox-exporter
+    patch: |
+      - op: remove
+        path: /spec/template/spec/containers/0/securityContext/runAsUser
+      - op: remove
+        path: /spec/template/spec/containers/0/securityContext/runAsGroup
