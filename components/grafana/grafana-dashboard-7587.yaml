@@ -12,7 +12,7 @@ spec:
       dashboards: grafana
   resyncPeriod: 24h
   datasources:
-    - inputName: DS_PROMETHEUS
+    - inputName: DS_SIGNCL-PROMETHEUS
       datasourceName: thanos-querier
   grafanaCom:
     id: 7587
