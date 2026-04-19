@@ -13,7 +13,7 @@ spec:
   targets:
     staticConfig:
       static:
-        - https://jellyfin.biscuit.igou.systems
+        - https://jellyfintest.biscuit.igou.systems
       labels:
         tier: critical
         category: jellyfin
