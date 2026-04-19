@@ -1,0 +1,87 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: blackbox-exporter
+resources:
+  - blackbox-exporter-namespace.yaml
+  - blackbox-exporter-prometheusrule.yaml
+  - probes/infra-https-probe.yaml
+  - probes/saas-https-probe.yaml
+helmCharts:
+  - name: prometheus-blackbox-exporter
+    namespace: blackbox-exporter
+    version: 11.9.1
+    releaseName: blackbox-exporter
+    repo: https://prometheus-community.github.io/helm-charts
+    valuesInline:
+      fullnameOverride: blackbox-exporter
+      image:
+        registry: quay.io
+        repository: prometheus/blackbox-exporter
+        tag: v0.28.0
+      restartPolicy: Always
+      podSecurityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      securityContext:
+        runAsNonRoot: true
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+      serviceMonitor:
+        enabled: true
+        defaults:
+          labels:
+            release: blackbox-exporter
+          interval: 30s
+          scrapeTimeout: 10s
+      resources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
+        limits:
+          memory: 128Mi
+      config:
+        modules:
+          http_2xx:
+            prober: http
+            timeout: 10s
+            http:
+              method: GET
+              preferred_ip_protocol: ip4
+              valid_http_versions: [HTTP/1.1, HTTP/2.0]
+              valid_status_codes: []
+              fail_if_ssl: false
+              fail_if_not_ssl: false
+              tls_config:
+                insecure_skip_verify: false
+          http_2xx_insecure:
+            prober: http
+            timeout: 10s
+            http:
+              method: GET
+              preferred_ip_protocol: ip4
+              valid_http_versions: [HTTP/1.1, HTTP/2.0]
+              valid_status_codes: []
+              tls_config:
+                insecure_skip_verify: true
+          http_post_2xx:
+            prober: http
+            timeout: 10s
+            http:
+              method: POST
+              preferred_ip_protocol: ip4
+          tcp_connect:
+            prober: tcp
+            timeout: 10s
+            tcp:
+              preferred_ip_protocol: ip4
+          dns_soa:
+            prober: dns
+            timeout: 10s
+            dns:
+              query_name: igou.systems
+              query_type: SOA
+              preferred_ip_protocol: ip4

@@ -7,6 +7,7 @@ resources:
   - jellyfin-media-nfs-pvc.yaml
   - jellyfin-config-pvc.yaml
   - jellyfin-nad-vlan45.yaml
+  - jellyfin-probe.yaml
 helmCharts:
 - name: jellyfin
   namespace: jellyfin

@@ -1,0 +1,65 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: blackbox-exporter
+  namespace: blackbox-exporter
+  labels:
+    app.kubernetes.io/name: blackbox-exporter
+    openshift.io/prometheus-rule-evaluation-scope: leaf-prometheus
+spec:
+  groups:
+    - name: blackbox.alerts
+      rules:
+        - alert: BlackboxProbeFailed
+          expr: probe_success == 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Probe failed for {{ $labels.instance }}
+            description: |
+              Blackbox probe {{ $labels.job }} against {{ $labels.instance }}
+              has failed for more than 5 minutes (tier={{ $labels.tier }}).
+        - alert: BlackboxProbeFailedCritical
+          expr: probe_success{tier="critical"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: Critical probe failed for {{ $labels.instance }}
+            description: |
+              Critical-tier blackbox probe against {{ $labels.instance }}
+              has failed for more than 2 minutes.
+        - alert: BlackboxProbeSlow
+          expr: probe_duration_seconds > 5
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: Probe slow for {{ $labels.instance }}
+            description: |
+              Probe {{ $labels.job }} against {{ $labels.instance }} took
+              {{ $value | humanizeDuration }} (> 5s) for more than 10 minutes.
+    - name: blackbox.tls
+      rules:
+        - alert: BlackboxSSLCertExpiringSoon
+          expr: (probe_ssl_earliest_cert_expiry - time()) / 86400 < 14
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: TLS cert for {{ $labels.instance }} expires in {{ $value | humanize }}d
+            description: |
+              Certificate presented by {{ $labels.instance }} will expire in
+              under 14 days.
+        - alert: BlackboxSSLCertExpiringCritical
+          expr: (probe_ssl_earliest_cert_expiry - time()) / 86400 < 3
+          for: 15m
+          labels:
+            severity: critical
+          annotations:
+            summary: TLS cert for {{ $labels.instance }} expires in {{ $value | humanize }}d
+            description: |
+              Certificate presented by {{ $labels.instance }} will expire in
+              under 3 days — renew immediately.
