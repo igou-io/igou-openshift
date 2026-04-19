@@ -50,6 +50,13 @@ applications:
     source:
       path: clusters/hub/udn
 
+  user-workload-monitoring:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '6'
+    source:
+      path: components/user-workload-monitoring
+
   cert-manager-config:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
