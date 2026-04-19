@@ -19,8 +19,6 @@ spec:
     auth:
       disable_login_form: 'true'
       disable_signout_menu: 'false'
-    auth.basic:
-      enabled: 'false'
     auth.anonymous:
       enabled: 'false'
     auth.proxy:
