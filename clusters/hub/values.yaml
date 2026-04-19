@@ -144,6 +144,13 @@ applications:
     source:
       path: components/acm
 
+  grafana:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '10'
+    source:
+      path: components/grafana
+
   cloudnative-pg:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
