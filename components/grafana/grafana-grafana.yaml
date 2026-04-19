@@ -1,0 +1,100 @@
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: Grafana
+metadata:
+  name: grafana
+  namespace: grafana
+  labels:
+    dashboards: grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: '11'
+spec:
+  config:
+    log:
+      mode: console
+      level: info
+    server:
+      http_addr: 127.0.0.1
+      http_port: '3000'
+      root_url: https://grafana.apps.hub.igou.systems
+    auth:
+      disable_login_form: 'true'
+      disable_signout_menu: 'false'
+    auth.basic:
+      enabled: 'false'
+    auth.anonymous:
+      enabled: 'false'
+    auth.proxy:
+      enabled: 'true'
+      header_name: X-Forwarded-User
+      header_property: username
+      auto_sign_up: 'true'
+    users:
+      auto_assign_org: 'true'
+      auto_assign_org_role: Admin
+  deployment:
+    spec:
+      template:
+        spec:
+          serviceAccountName: grafana
+          volumes:
+            - name: grafana-tls
+              secret:
+                secretName: grafana-tls
+            - name: oauth-proxy-cookie
+              secret:
+                secretName: grafana-oauth-cookie
+          containers:
+            - name: grafana
+              # operator manages image/args; only need to ensure
+              # it listens on localhost (set via spec.config above)
+            - name: oauth-proxy
+              image: quay.io/openshift/origin-oauth-proxy:4.21
+              imagePullPolicy: IfNotPresent
+              ports:
+                - name: https
+                  containerPort: 8443
+                  protocol: TCP
+              args:
+                - '--provider=openshift'
+                - '--https-address=:8443'
+                - '--http-address='
+                - '--email-domain=*'
+                - '--upstream=http://127.0.0.1:3000'
+                - '--openshift-service-account=grafana'
+                - '--openshift-sar={"namespace":"grafana","resource":"services","name":"grafana-service","verb":"get"}'
+                - '--tls-cert=/etc/tls/private/tls.crt'
+                - '--tls-key=/etc/tls/private/tls.key'
+                - '--cookie-secret-file=/etc/proxy/cookie/cookie-secret'
+                - '--pass-user-headers=true'
+                - '--skip-provider-button=true'
+              volumeMounts:
+                - name: grafana-tls
+                  mountPath: /etc/tls/private
+                  readOnly: true
+                - name: oauth-proxy-cookie
+                  mountPath: /etc/proxy/cookie
+                  readOnly: true
+  service:
+    metadata:
+      annotations:
+        service.beta.openshift.io/serving-cert-secret-name: grafana-tls
+    spec:
+      ports:
+        - name: https
+          port: 8443
+          protocol: TCP
+          targetPort: 8443
+  route:
+    spec:
+      host: grafana.apps.hub.igou.systems
+      port:
+        targetPort: https
+      tls:
+        termination: reencrypt
+        insecureEdgeTerminationPolicy: Redirect
+      to:
+        kind: Service
+        name: grafana-service
+        weight: 100
+      wildcardPolicy: None

@@ -5,3 +5,12 @@ resources:
   - grafana-namespace.yaml
   - grafana-operatorgroup.yaml
   - grafana-subscription.yaml
+  - grafana-serviceaccount.yaml
+  - grafana-rbac.yaml
+  - grafana-sa-token-secret.yaml
+  - grafana-oauth-cookie-password.yaml
+  - grafana-oauth-cookie-externalsecret.yaml
+  - grafana-grafana.yaml
+  - grafana-thanos-datasource.yaml
+commonAnnotations:
+  argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
