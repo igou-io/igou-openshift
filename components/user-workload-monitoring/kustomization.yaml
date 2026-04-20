@@ -5,3 +5,4 @@ resources:
   - cluster-monitoring-config-configmap.yaml
   - user-workload-monitoring-config-configmap.yaml
   - exporters/blackbox-exporter
+  - servicemonitors/argocd-servicemonitor.yaml
