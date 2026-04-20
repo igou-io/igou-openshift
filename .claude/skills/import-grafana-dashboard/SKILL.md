@@ -1,21 +1,25 @@
 ---
 name: import-grafana-dashboard
-description: Import a dashboard from grafana.com into a Grafana instance managed by the grafana-operator. Fetches the dashboard JSON, resolves its `__inputs` to existing GrafanaDatasources, generates a `GrafanaDashboard` CR, and wires it into the target component's kustomization.yaml.
-argument-hint: <grafana-com-id> [component-path]
+description: Import a dashboard from grafana.com or a URL into a Grafana instance managed by the grafana-operator. Fetches the dashboard JSON, resolves its `__inputs` to existing GrafanaDatasources, generates a `GrafanaDashboard` CR, and wires it into the target component's kustomization.yaml.
+argument-hint: <grafana-com-id-or-url> [component-path]
 allowed-tools: Read, Edit, Write, WebFetch, Bash(kustomize build *), Bash(ls *), Grep, Glob
 ---
 
-# Import a grafana.com dashboard via the Grafana Operator
+# Import a Grafana dashboard via the Grafana Operator
 
-Generate a `grafana.integreatly.org/v1beta1 GrafanaDashboard` CR that pulls a dashboard from grafana.com and maps its `__inputs` to existing `GrafanaDatasource` resources in the target component.
+Generate a `grafana.integreatly.org/v1beta1 GrafanaDashboard` CR that pulls a dashboard from grafana.com (via `spec.grafanaCom`) or from an arbitrary URL (via `spec.url`), and maps its `__inputs` to existing `GrafanaDatasource` resources in the target component.
 
 ## Inputs
 
-`$ARGUMENTS` should be `<grafana-com-id> [component-path]`. Examples:
+`$ARGUMENTS` should be `<grafana-com-id-or-url> [component-path]`. Examples:
 - `7587`
 - `1860 components/grafana`
+- `https://raw.githubusercontent.com/org/repo/main/dashboard.json`
+- `https://example.com/dashboard.json components/grafana`
 
-If the dashboard ID is missing, ask. If the component path is missing, default to `components/grafana` and confirm. The component path must contain a `Grafana` CR (so the `instanceSelector` label can be derived) and at least one `GrafanaDatasource` (so inputs can be mapped).
+**Source detection**: If the first argument is a URL (starts with `http://` or `https://`), use URL mode (`spec.url`). Otherwise treat it as a grafana.com dashboard ID (`spec.grafanaCom`).
+
+If the source is missing, ask. If the component path is missing, default to `components/grafana` and confirm. The component path must contain a `Grafana` CR (so the `instanceSelector` label can be derived) and at least one `GrafanaDatasource` (so inputs can be mapped).
 
 ## Step 1: Inspect the target component
 
@@ -26,7 +30,9 @@ If the dashboard ID is missing, ask. If the component path is missing, default t
 
 If the directory has no `Grafana` CR or no `GrafanaDatasource`, stop and tell the user — importing won't work without them.
 
-## Step 2: Fetch the dashboard metadata from grafana.com
+## Step 2: Fetch the dashboard metadata
+
+### grafana.com mode (numeric ID)
 
 Use `WebFetch` against:
 
@@ -55,6 +61,19 @@ Capture every entry where `type: datasource` — these are the inputs the operat
 
 If `WebFetch` to grafana.com is blocked in this environment, stop and tell the user; ask them to paste the `__inputs` block from the dashboard JSON, or to provide the JSON via `spec.json:` instead of `spec.grafanaCom:`.
 
+### URL mode (http/https URL)
+
+Use `WebFetch` to fetch the dashboard JSON from the URL directly.
+
+From the JSON, check for:
+
+1. **`__inputs` array** — if present, these need `spec.datasources` mapping (same as grafana.com mode).
+2. **Template variables** — if the dashboard uses `$datasource` (a Grafana template variable of type `datasource`), no `spec.datasources` mapping is needed. The user selects the datasource in the Grafana UI at view time.
+
+Extract the dashboard `title` from the JSON for naming hints.
+
+For the `dashboard-name`, derive it from the URL path (e.g. `https://...external-secrets.../dashboard.json` → `grafana-dashboard-external-secrets`). If ambiguous, ask the user.
+
 ## Step 3: Map inputs to datasources
 
 For each `__input`:
@@ -70,15 +89,18 @@ Build the `datasources:` list using the **exact** `name` from each `__input` (ca
 
 | Field | Description | Default |
 |-------|-------------|---------|
-| `dashboard-name` | `metadata.name` of the GrafanaDashboard CR | `grafana-dashboard-<id>` |
-| `pin-revision` | Pin to the current `latestRevision` (`yes`/`no`) | `no` (track latest) |
-| `resync-period` | How often the operator re-pulls from grafana.com | `24h` |
+| `dashboard-name` | `metadata.name` of the GrafanaDashboard CR | `grafana-dashboard-<id>` (grafana.com) or `grafana-dashboard-<slug>` (URL) |
+| `pin-revision` | Pin to the current `latestRevision` (`yes`/`no`) — grafana.com only | `no` (track latest) |
+| `resync-period` | How often the operator re-pulls from grafana.com | `24h` (grafana.com mode) |
+| `content-cache-duration` | How often the operator re-fetches the URL | `24h` (URL mode) |
 | `sync-wave` | ArgoCD sync-wave annotation | auto-detect (see Step 1) |
 | `folder` | Grafana folder to place the dashboard in | unset (root folder) |
 
-Ask in a single message. Use the dashboard's grafana.com `slug` to suggest a friendlier `dashboard-name` if the user wants one.
+Ask in a single message. Use the dashboard's grafana.com `slug` or URL path to suggest a friendlier `dashboard-name` if the user wants one.
 
 ## Step 5: Generate the GrafanaDashboard CR
+
+### grafana.com mode
 
 ```yaml
 ---
@@ -103,6 +125,30 @@ spec:
     # revision: <n>           # only if pin-revision=yes
 ```
 
+### URL mode
+
+```yaml
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: <dashboard-name>
+  namespace: <namespace-from-Grafana-CR>
+  annotations:
+    argocd.argoproj.io/sync-wave: '<sync-wave>'
+spec:
+  instanceSelector:
+    matchLabels:
+      <key>: <value>          # from the Grafana CR's labels
+  url: <dashboard-url>
+  contentCacheDuration: <content-cache-duration>
+  # datasources:             # only if the JSON has __inputs
+  #   - inputName: <input-name-1>
+  #     datasourceName: <datasource-name-1>
+```
+
+Omit `datasources:` if the dashboard uses Grafana template variables (`$datasource`) instead of `__inputs`. The template variable lets users pick the datasource in the UI.
+
 Include `folder: <folder>` under `spec` only if the user provided one.
 
 ### File naming
@@ -125,8 +171,8 @@ If it fails, fix and rerun before reporting completion.
 
 ## Completion report
 
-1. **Dashboard**: title, grafana.com ID, revision being tracked (or pinned)
-2. **Inputs resolved**: each `__input` → datasource mapping, plus any unresolved warnings
+1. **Dashboard**: title, source (grafana.com ID + revision, or URL)
+2. **Inputs resolved**: each `__input` → datasource mapping, or note that dashboard uses template variables (no mapping needed)
 3. **File created** (path)
 4. **kustomization.yaml updated** (one-line diff)
 5. **Kustomize build result**
@@ -138,3 +184,6 @@ If it fails, fix and rerun before reporting completion.
 - `tlsSkipVerify: true` on the datasource (as in the hub's `thanos-querier`) is fine — the substitution happens by datasource UID, not URL.
 - The Grafana CR must already include the dashboard's label in `instanceSelector.matchLabels` — otherwise the operator silently ignores the new dashboard.
 - For air-gapped imports, replace `spec.grafanaCom` with `spec.json: |` and inline the JSON, or `spec.url:` pointing at an internal mirror. Everything else (inputs mapping, instance selector) is identical.
+- **`__inputs` vs template variables**: Dashboards exported from grafana.com typically use `__inputs` for datasource binding. Dashboards from project repos often use Grafana template variables (`$datasource` of type `datasource`) instead — these don't need `spec.datasources` mapping because the user selects the datasource in the UI. Check the JSON for both patterns.
+- **`spec.url` caching**: The operator fetches the URL on initial sync and re-fetches after `contentCacheDuration` expires. Unlike `spec.grafanaCom` which uses `resyncPeriod`, URL-sourced dashboards use `contentCacheDuration`. If neither is set, the operator uses its default (which may be very long).
+- **`spec.url` auth**: For private URLs, use `spec.urlAuthorization` to attach bearer tokens or basic auth headers. Public raw GitHub URLs don't need auth.
