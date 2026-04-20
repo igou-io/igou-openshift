@@ -14,6 +14,8 @@ spec:
   targets:
     staticConfig:
       static:
+        - https://automation.apps.hub.igou.systems
+        - https://grafana.apps.hub.igou.systems
         - https://truenas.igou.systems
       labels:
         tier: standard
@@ -36,12 +38,35 @@ spec:
     staticConfig:
       static:
         - https://homepage.biscuit.igou.systems/
-        - https://netbootxyz.infra.igou.systems
-        - https://prowlarr.biscuit.igou.systems/
-        - https://radarr.biscuit.igou.systems/
+        - https://igou-registry-quay-quay-enterprise.apps.hub.igou.systems
+        - https://igounas.igou.systems/
+        - https://unifi.igounas.igou.systems
+        - https://prowlarr.biscuit.igou.systems/ping
+        - https://radarr.biscuit.igou.systems/ping
         - https://romm.biscuit.igou.systems
-        - https://sonarr.biscuit.igou.systems/
+        - https://sonarr.biscuit.igou.systems/ping
         - https://torrent.biscuit.igou.systems/
+      labels:
+        tier: critical
+        category: infra
+        owner: platform
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: infra-https-401-ok
+  namespace: blackbox-exporter
+  labels:
+    app.kubernetes.io/name: blackbox-exporter
+spec:
+  interval: 60s
+  module: http_401_ok
+  prober:
+    url: blackbox-exporter.blackbox-exporter.svc:9115
+  targets:
+    staticConfig:
+      static:
+        - https://netbootxyz.infra.igou.systems
       labels:
         tier: critical
         category: infra
