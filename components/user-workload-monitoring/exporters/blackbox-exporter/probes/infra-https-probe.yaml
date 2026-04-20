@@ -19,3 +19,30 @@ spec:
         tier: standard
         category: infra
         owner: platform
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: infra-https-homepage-biscuit
+  namespace: blackbox-exporter
+  labels:
+    app.kubernetes.io/name: blackbox-exporter
+spec:
+  interval: 60s
+  module: http_2xx
+  prober:
+    url: blackbox-exporter.blackbox-exporter.svc:9115
+  targets:
+    staticConfig:
+      static:
+        - https://homepage.biscuit.igou.systems/
+        - https://netbootxyz.infra.igou.systems
+        - https://prowlarr.biscuit.igou.systems/
+        - https://radarr.biscuit.igou.systems/
+        - https://romm.biscuit.igou.systems
+        - https://sonarr.biscuit.igou.systems/
+        - https://torrent.biscuit.igou.systems/
+      labels:
+        tier: critical
+        category: infra
+        owner: platform
