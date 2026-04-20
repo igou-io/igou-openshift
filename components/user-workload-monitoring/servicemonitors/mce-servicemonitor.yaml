@@ -1,0 +1,35 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: mce-discovery-operator
+  namespace: multicluster-engine
+  labels:
+    app.kubernetes.io/part-of: multicluster-engine
+spec:
+  selector:
+    matchLabels:
+      backplaneconfig.name: multiclusterengine
+  namespaceSelector:
+    matchNames:
+    - multicluster-engine
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: mce-backplane-operator
+  namespace: multicluster-engine
+  labels:
+    app.kubernetes.io/part-of: multicluster-engine
+spec:
+  selector:
+    matchLabels:
+      control-plane: backplane-operator
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics

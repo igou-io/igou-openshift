@@ -6,3 +6,9 @@ resources:
   - user-workload-monitoring-config-configmap.yaml
   - exporters/blackbox-exporter
   - servicemonitors/argocd-servicemonitor.yaml
+  - servicemonitors/cert-manager-servicemonitor.yaml
+  - servicemonitors/external-secrets-podmonitor.yaml
+  - servicemonitors/grafana-operator-servicemonitor.yaml
+  - servicemonitors/hypershift-servicemonitor.yaml
+  - servicemonitors/mce-servicemonitor.yaml
+  - servicemonitors/quay-servicemonitor.yaml
