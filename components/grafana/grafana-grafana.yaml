@@ -46,7 +46,7 @@ spec:
               # operator manages image/args; only need to ensure
               # it listens on localhost (set via spec.config above)
             - name: oauth-proxy
-              image: quay.io/openshift/origin-oauth-proxy:4.21
+              image: quay.io/openshift/origin-oauth-proxy:4.21@sha256:aa5fa4391d948c048a89ced2706d6e4540f122170dbfda80c091792e9638c65e
               imagePullPolicy: IfNotPresent
               ports:
                 - name: https
