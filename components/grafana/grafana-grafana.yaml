@@ -9,6 +9,14 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: '11'
 spec:
+  persistentVolumeClaim:
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: freenas-nvmeof-ssd
   config:
     log:
       mode: console
@@ -31,6 +39,8 @@ spec:
       auto_assign_org_role: Admin
   deployment:
     spec:
+      strategy:
+        type: Recreate
       template:
         spec:
           serviceAccountName: grafana
