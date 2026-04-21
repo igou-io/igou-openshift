@@ -226,7 +226,11 @@ helmCharts:
     extraArgs: []
     # -- Additional environments variables on the output Deployment definition.
     # For extra OLLAMA env, please refer to https://github.com/ollama/ollama/blob/main/envconfig/config.go
-    extraEnv: []
+    extraEnv:
+      - name: OLLAMA_SCHED_SPREAD
+        value: "1"
+      - name: OLLAMA_NUM_PARALLEL
+        value: "2"
     #  - name: OLLAMA_DEBUG
     #    value: "1"
     # -- Additionl environment variables from external sources (like ConfigMap)
