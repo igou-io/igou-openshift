@@ -59,7 +59,7 @@ helmCharts:
         type: 'nvidia'
         # -- Specify the number of GPU
         # If you use MIG section below then this parameter is ignored
-        number: 1
+        number: 2
         # -- only for nvidia cards; change to (example) 'nvidia.com/mig-1g.10gb' to use MIG slice
         nvidiaResource: "nvidia.com/gpu"
         # nvidiaResource: "nvidia.com/mig-1g.10gb" # example
