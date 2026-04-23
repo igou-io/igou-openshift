@@ -1,5 +1,5 @@
 cluster:
-  name: hub
+  name: ocp
   baseDomain: igou.systems
 
 certManager:
@@ -20,7 +20,7 @@ certManager:
       selector:
         dnsZones:
           - igou.systems
-          - hub.igou.systems
+          - ocp.igou.systems
 
 
 monitoring:

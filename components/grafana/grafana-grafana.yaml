@@ -23,7 +23,7 @@ spec:
       level: info
     server:
       http_port: '3000'
-      root_url: https://grafana.apps.hub.igou.systems
+      root_url: https://grafana.apps.ocp.igou.systems
     auth:
       disable_login_form: 'true'
       disable_signout_menu: 'false'
@@ -98,7 +98,7 @@ spec:
           targetPort: 8443
   route:
     spec:
-      host: grafana.apps.hub.igou.systems
+      host: grafana.apps.ocp.igou.systems
       port:
         targetPort: https
       tls:

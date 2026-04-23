@@ -14,8 +14,8 @@ spec:
   targets:
     staticConfig:
       static:
-        - https://automation.apps.hub.igou.systems
-        - https://grafana.apps.hub.igou.systems
+        - https://automation.apps.ocp.igou.systems
+        - https://grafana.apps.ocp.igou.systems
         - https://truenas.igou.systems
       labels:
         tier: standard
@@ -38,7 +38,7 @@ spec:
     staticConfig:
       static:
         - https://homepage.biscuit.igou.systems/
-        - https://igou-registry-quay-quay-enterprise.apps.hub.igou.systems
+        - https://igou-registry-quay-quay-enterprise.apps.ocp.igou.systems
         - https://igounas.igou.systems/
         - https://unifi.igounas.igou.systems
         - https://prowlarr.biscuit.igou.systems/ping
