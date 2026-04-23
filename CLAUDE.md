@@ -24,10 +24,7 @@ Multi-cluster GitOps repository for OpenShift/OKD managed by ArgoCD. The hub clu
 
 ### Clusters
 
-- **clusters/hub/** — Hub cluster (single-node OKD). Runs ArgoCD, ACM, and all platform operators. App-of-apps root.
-- **clusters/casval/** — Spoke cluster provisioned and managed by ACM on hub. Has its own network topology, interfaces, and VLAN layout distinct from hub.
-
-Each cluster directory contains cluster-specific configuration (NMState, base config, networking). Do not assume hub's interface names, VLAN IDs, or network layout apply to other clusters.
+- **clusters/ocp/** — Primary cluster (single-node OKD). Runs ArgoCD, ACM, and all platform operators. App-of-apps root.
 
 ### Layout
 
@@ -58,14 +55,12 @@ Each cluster uses its own `values.yaml` to define managed applications. Each ent
 - **Single-node tolerations**: many components explicitly tolerate/schedule on master nodes
 - **File naming**: YAML files should be named `<metadata.name>-<kind>.yaml` whenever possible (e.g. `my-app-deployment.yaml`, `cluster-read-only-serviceaccount.yaml`)
 
-### Networking (Hub)
-
-The following is specific to the hub cluster. Other clusters (e.g. casval) have different interfaces, VLAN IDs, and network layouts — always check the cluster-specific config under `clusters/<name>/`.
+### Networking
 
 - Primary CNI: OVN-Kubernetes
 - Secondary interface: `enp2s0f1` (OVS-managed via `br-secondary`), VLAN 45 subinterface: `enp2s0f1.45`
 - Multus secondary networks use macvlan on `enp2s0f1.45` (not the OVS-managed base interface)
-- NMState NNCP in `clusters/hub/nmstate/` manages interface and bridge config
+- NMState NNCP in `clusters/ocp/nmstate/` manages interface and bridge config
 - OVS bridges require `allow-extra-patch-ports: true` when OVN adds patch ports
 
 ## Cluster Inspection

@@ -32,7 +32,7 @@ traffic off the cluster SDN and off the ingress controller.
    - Name: `vlan45-jellyfin` (namespace-scoped to `jellyfin`)
    - CNI: `macvlan` in `bridge` mode
    - Master interface: `enp2s0f1.45` (VLAN 45 subinterface of the
-     OVS-managed secondary NIC; see `clusters/hub/nmstate/` for the NNCP
+     OVS-managed secondary NIC; see `clusters/ocp/nmstate/` for the NNCP
      that provisions it)
    - IPAM: `static` — the IP is assigned per-pod via the pod annotation
      below, not by the NAD itself. Default route via `10.10.45.1`.
@@ -64,7 +64,7 @@ traffic off the cluster SDN and off the ingress controller.
   rolling update would briefly have two pods and collide on the IP.
 - If the VLAN 45 subinterface (`enp2s0f1.45`) goes away (NNCP drift, NIC
   rename), pod admission fails with a CNI error. Check
-  `clusters/hub/nmstate/` first when that happens.
+  `clusters/ocp/nmstate/` first when that happens.
 
 ### Reaching jellyfin from the LAN
 

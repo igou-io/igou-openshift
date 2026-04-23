@@ -7,7 +7,7 @@ default:
     autoSyncPrune: false
     project: cluster-config
     labels:
-      app-source: cluster-hub
+      app-source: cluster-ocp
       repo: cluster-config
     destination:
       namespace: openshift-gitops

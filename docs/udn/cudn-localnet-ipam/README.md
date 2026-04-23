@@ -37,4 +37,4 @@ annotations:
 
 ## Pin a specific IP
 
-To force OVN to assign a specific IP (e.g., `.221`), use `excludeSubnets` to exclude everything else. See `clusters/hub/udn/jellyfin-cudn.yaml` for an example.
+To force OVN to assign a specific IP (e.g., `.221`), use `excludeSubnets` to exclude everything else. See `clusters/ocp/udn/jellyfin-cudn.yaml` for an example.
