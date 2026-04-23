@@ -22,7 +22,7 @@ spec:
     - server auth
     - client auth
   dnsNames:
-    - "*.apps.hub.igou.systems"
+    - "*.apps.ocp.igou.systems"
   issuerRef:
     name: cluster-acme
     kind: ClusterIssuer

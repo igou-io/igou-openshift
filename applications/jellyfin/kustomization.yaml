@@ -48,7 +48,7 @@ helmCharts:
     # Pin to the hub node: only this node has the Intel iGPU (i915) that
     # jellyfin uses for hardware-accelerated transcoding.
     nodeSelector:
-      kubernetes.io/hostname: hub.igou.systems
+      kubernetes.io/hostname: ocp.igou.systems
     deploymentStrategy:
       type: Recreate
     service:

@@ -21,4 +21,4 @@ spec:
         selector:
           dnsZones:
             - igou.systems
-            - hub.igou.systems
+            - ocp.igou.systems

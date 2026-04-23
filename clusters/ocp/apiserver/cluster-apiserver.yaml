@@ -10,6 +10,6 @@ spec:
   servingCerts:
     namedCertificates:
     - names:
-      - api.hub.igou.systems
+      - api.ocp.igou.systems
       servingCertificate:
         name: acme-api
