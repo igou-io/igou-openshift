@@ -16,6 +16,22 @@ projects:
       - group: '*'
         kind: '*'
 
+  cluster-apps:
+    annotations:
+      notifications.argoproj.io/subscribe.on-sync-failed.slack: cluster-gitops
+      notifications.argoproj.io/subscribe.on-health-degraded.slack: cluster-gitops
+    description: Project for user-facing applications and workloads
+    namespace: openshift-gitops
+    sourceRepos:
+    - "{{ .Values.default.app.source.repoURL }}"
+    destinations: |
+      - namespace: '*'
+        server: https://kubernetes.default.svc
+    extraFields: |
+      clusterResourceWhitelist:
+      - group: '*'
+        kind: '*'
+
 applications:
 
   cert-manager-operator:

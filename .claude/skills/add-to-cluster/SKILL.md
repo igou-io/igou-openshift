@@ -14,20 +14,20 @@ Add an existing component or application to a cluster's `values.yaml` for ArgoCD
 The path and optional cluster: **$ARGUMENTS**
 
 Expected formats:
-- `components/<name>` or `applications/<name>` — adds to default cluster (`hub`)
-- `components/<name> hub` or `components/<name> casval` — adds to specified cluster
+- `components/<name>` or `applications/<name>` — adds to default cluster (`ocp`)
+- `components/<name> ocp` — adds to specified cluster
 - `<name>` — attempt to resolve: check if `components/<name>/` or `applications/<name>/` exists
 - If `$ARGUMENTS` is empty, ask the user for the path and cluster
 
 ## Step 1: Resolve the path
 
-1. Parse `$ARGUMENTS` to extract the path and optional cluster name (default: `hub`)
+1. Parse `$ARGUMENTS` to extract the path and optional cluster name (default: `ocp`)
 2. Verify the directory exists — check for a `kustomization.yaml` inside it
 3. If the path is just a name (no prefix), check both `components/<name>/` and `applications/<name>/`. If both exist, ask the user which one. If neither exists, report the error.
 4. Determine the source path to use in values.yaml:
    - For `components/<name>`: source path is `components/<name>`
    - For `applications/<name>`: source path is `applications/<name>`
-   - If a cluster-specific overlay exists at `clusters/<cluster>/<name>/`, use that path instead (e.g. `clusters/hub/<name>`)
+   - If a cluster-specific overlay exists at `clusters/<cluster>/<name>/`, use that path instead (e.g. `clusters/ocp/<name>`)
 
 ## Step 2: Read existing values.yaml
 

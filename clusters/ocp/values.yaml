@@ -7,7 +7,7 @@ applications:
     destination:
       namespace: external-secrets-operator
     source:
-      path: clusters/hub/external-secrets-operator
+      path: clusters/ocp/external-secrets-operator
 
   lvms-operator:
     annotations:
@@ -16,7 +16,7 @@ applications:
     destination:
       namespace: openshift-storage
     source:
-      path: clusters/hub/lvms-operator
+      path: clusters/ocp/lvms-operator
 
   machineconfigs:
     annotations:
@@ -25,7 +25,7 @@ applications:
     destination:
       namespace: openshift-machine-config-operator
     source:
-      path: clusters/hub/machineconfigs
+      path: clusters/ocp/machineconfigs
 
   kubeletconfig:
     annotations:
@@ -34,21 +34,21 @@ applications:
     destination:
       namespace: openshift-machine-config-operator
     source:
-      path: clusters/hub/kubeletconfig
+      path: clusters/ocp/kubeletconfig
 
   nmstate:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
       argocd.argoproj.io/sync-wave: '5'
     source:
-      path: clusters/hub/nmstate
+      path: clusters/ocp/nmstate
 
   udn:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
       argocd.argoproj.io/sync-wave: '6'
     source:
-      path: clusters/hub/udn
+      path: clusters/ocp/udn
 
   user-workload-monitoring:
     annotations:
@@ -64,7 +64,7 @@ applications:
     destination:
       namespace: cert-manager
     source:
-      path: clusters/hub/cert-manager-config
+      path: clusters/ocp/cert-manager-config
 
   democratic-csi:
     annotations:
@@ -73,14 +73,14 @@ applications:
     destination:
       namespace: democratic-csi
     source:
-      path: clusters/hub/democratic-csi
+      path: clusters/ocp/democratic-csi
 
   ocp-base-config:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
       argocd.argoproj.io/sync-wave: '8'
     source:
-      path: clusters/hub/ocp-base-config
+      path: clusters/ocp/ocp-base-config
 
   apiserver-certs:
     annotations:
@@ -89,7 +89,7 @@ applications:
     destination:
       namespace: openshift-config
     source:
-      path: clusters/hub/apiserver-certs
+      path: clusters/ocp/apiserver-certs
 
   ingresscontroller-certs:
     annotations:
@@ -98,14 +98,14 @@ applications:
     destination:
       namespace: openshift-ingress
     source:
-      path: clusters/hub/ingresscontroller-certs
+      path: clusters/ocp/ingresscontroller-certs
 
   apiserver:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
       argocd.argoproj.io/sync-wave: '9'
     source:
-      path: clusters/hub/apiserver
+      path: clusters/ocp/apiserver
 
   loki-operator:
     annotations:
@@ -135,15 +135,6 @@ applications:
     source:
       path: components/intel-device-plugins-operator
 
-  acm:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '10'
-    destination:
-      namespace: open-cluster-management
-    source:
-      path: components/acm
-
   grafana:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
@@ -158,9 +149,10 @@ applications:
     destination:
       namespace: cloudnative-pg
     source:
-      path: clusters/hub/cloudnative-pg
+      path: clusters/ocp/cloudnative-pg
 
   jellyfin:
+    project: cluster-apps
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
       argocd.argoproj.io/sync-wave: '20'
@@ -168,13 +160,14 @@ applications:
       path: applications/jellyfin
 
   ansible-automation-platform:
+    project: cluster-apps
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
       argocd.argoproj.io/sync-wave: '30'
     destination:
       namespace: ansible-automation-platform
     source:
-      path: clusters/hub/ansible-automation-platform
+      path: clusters/ocp/ansible-automation-platform
 
   molecule:
     annotations:
@@ -187,7 +180,7 @@ applications:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
       argocd.argoproj.io/sync-wave: '40'
     source:
-      path: clusters/hub/service-accounts
+      path: clusters/ocp/service-accounts
 
   openshift-virt:
     annotations:
@@ -195,12 +188,3 @@ applications:
       argocd.argoproj.io/sync-wave: '50'
     source:
       path: components/openshift-virt
-
-  # casval:
-  #   annotations:
-  #     argocd.argoproj.io/compare-options: IgnoreExtraneous
-  #     argocd.argoproj.io/sync-wave: '50'
-  #   destination:
-  #     namespace: casval
-  #   source:
-  #     path: clusters/hub/casval
