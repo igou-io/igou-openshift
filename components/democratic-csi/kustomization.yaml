@@ -475,7 +475,7 @@ helmCharts:
       name: "org.democratic-csi.nvmeof-ssd"
     storageClasses:
     - name: freenas-nvmeof-ssd-csi
-      defaultClass: false
+      defaultClass: true
       reclaimPolicy: Delete
       volumeBindingMode: Immediate
       allowVolumeExpansion: true
