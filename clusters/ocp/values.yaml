@@ -124,6 +124,21 @@ applications:
       namespace: openshift-cluster-api
     source:
       path: clusters/ocp/cluster-api
+    # Metal3/CAPM3 patches BMH spec fields when it claims the host (online,
+    # consumerRef, image, userData, customDeploy, preprovisioning*). Leave
+    # those to the controllers so ArgoCD doesn't fight them back to the
+    # minimal manifest checked into git.
+    ignoreDifferences:
+      - group: metal3.io
+        kind: BareMetalHost
+        jsonPointers:
+          - /spec/online
+          - /spec/consumerRef
+          - /spec/image
+          - /spec/userData
+          - /spec/customDeploy
+          - /spec/preprovisioningNetworkDataName
+          - /spec/networkData
 
   cluster-api-autoscaler:
     annotations:
