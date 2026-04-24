@@ -12,7 +12,6 @@ resources:
   - casval-bmc-secret-externalsecret.yaml
   - capi-csr-approver.yaml
   - capi-node-cleanup.yaml
-  - casval-node-taint.yaml
 
 # Propagate clusterName from the ConfigMap into every field that must match
 # infrastructure.status.infrastructureName. On reprovision, edit the
