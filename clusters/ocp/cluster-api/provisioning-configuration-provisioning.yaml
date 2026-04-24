@@ -1,0 +1,11 @@
+---
+# watchAllNamespaces=true is required so BMO reconciles the BMH that lives
+# in openshift-cluster-api (CAPM3 requires the BMH to be co-located with
+# the Metal3Machine it creates).
+apiVersion: metal3.io/v1alpha1
+kind: Provisioning
+metadata:
+  name: provisioning-configuration
+spec:
+  provisioningNetwork: Disabled
+  watchAllNamespaces: true

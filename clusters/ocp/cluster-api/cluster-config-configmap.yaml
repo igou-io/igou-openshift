@@ -1,0 +1,13 @@
+---
+# Single source of truth for the CAPI cluster name. Must equal
+# infrastructure.status.infrastructureName on this cluster. Update on
+# reprovision; the kustomize replacements in kustomization.yaml propagate
+# this value into the Cluster, Metal3Cluster, and MachineSet fields that
+# depend on it.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-api-cluster-config
+  namespace: openshift-cluster-api
+data:
+  clusterName: ocp-hb42r

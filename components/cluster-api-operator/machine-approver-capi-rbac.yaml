@@ -1,0 +1,32 @@
+---
+# Grants the existing machine-approver (in openshift-cluster-machine-approver)
+# read access to CAPI Machine objects so it can validate kubelet CSRs from
+# CAPI-provisioned nodes. On clusters with the ClusterAPIMachineManagement
+# feature gate, the CVO creates this automatically. Without the feature gate,
+# we must supply it.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:openshift:controller:machine-approver-capi
+rules:
+  - apiGroups:
+      - cluster.x-k8s.io
+    resources:
+      - machines
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: system:openshift:controller:machine-approver-capi
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:openshift:controller:machine-approver-capi
+subjects:
+  - kind: ServiceAccount
+    name: machine-approver-sa
+    namespace: openshift-cluster-machine-approver

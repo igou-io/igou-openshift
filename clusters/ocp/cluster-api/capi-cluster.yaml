@@ -1,0 +1,26 @@
+---
+# Cluster + Metal3Cluster metadata.name must equal
+# infrastructure.status.infrastructureName. The literal below is a default;
+# the kustomize replacement in kustomization.yaml overrides these fields
+# (and MachineSet cluster-name fields) from the cluster-config ConfigMap.
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: Metal3Cluster
+metadata:
+  name: ocp-hb42r
+  namespace: openshift-cluster-api
+spec:
+  controlPlaneEndpoint:
+    host: api-int.ocp.igou.systems
+    port: 6443
+  noCloudProvider: true
+---
+apiVersion: cluster.x-k8s.io/v1beta2
+kind: Cluster
+metadata:
+  name: ocp-hb42r
+  namespace: openshift-cluster-api
+spec:
+  infrastructureRef:
+    apiGroup: infrastructure.cluster.x-k8s.io
+    kind: Metal3Cluster
+    name: ocp-hb42r

@@ -88,6 +88,15 @@ spec:
     rollingUpdate:
       maxUnavailable: '1'
     updateStrategy: RollingUpdate
+    # Tolerate the casval burst taint so the driver, device plugin, DCGM, and
+    # validator DaemonSets land on the burst node — without this, the GPU
+    # device plugin never advertises nvidia.com/gpu and the autoscaler's
+    # scheduling simulation never resolves.
+    tolerations:
+      - key: workload
+        operator: Equal
+        value: burst
+        effect: NoSchedule
   sandboxWorkloads:
     defaultWorkload: container
     enabled: false

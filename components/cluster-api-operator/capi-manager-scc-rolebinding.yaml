@@ -1,0 +1,17 @@
+---
+# Upstream CAPI containers run as UID 65532, outside OpenShift's default
+# namespace UID range. Grant nonroot-v2 SCC to the capi-manager SA so the
+# controller pods can start.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: capi-manager-scc-nonroot-v2
+  namespace: capi-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:openshift:scc:nonroot-v2
+subjects:
+  - kind: ServiceAccount
+    name: capi-manager
+    namespace: capi-system

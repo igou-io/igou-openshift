@@ -275,9 +275,14 @@ helmCharts:
       # reference the PV moving forward
       volumeName: ""
     # -- Node labels for pod assignment.
-    nodeSelector: {}
+    nodeSelector:
+      node-role.kubernetes.io/burst: ""
     # -- Tolerations for pod assignment
-    tolerations: []
+    tolerations:
+      - key: workload
+        operator: Equal
+        value: burst
+        effect: NoSchedule
     # -- Affinity for pod assignment
     affinity: {}
     # -- Lifecycle for pod assignment (override ollama.models startup pull/run)

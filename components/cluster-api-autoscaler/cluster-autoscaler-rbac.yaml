@@ -1,0 +1,150 @@
+---
+# Standard cluster-autoscaler RBAC for the clusterapi cloud provider.
+# Sources:
+#   https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/clusterapi/examples/deployment.yaml
+#   https://github.com/kubernetes/autoscaler/blob/master/cluster-autoscaler/cloudprovider/clusterapi/README.md
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cluster-api-autoscaler
+rules:
+  - apiGroups: [""]
+    resources: ["events", "endpoints"]
+    verbs: ["create", "patch"]
+  - apiGroups: [""]
+    resources: ["pods/eviction"]
+    verbs: ["create"]
+  - apiGroups: [""]
+    resources: ["pods/status"]
+    verbs: ["update"]
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    resourceNames: ["cluster-api-autoscaler"]
+    verbs: ["get", "update"]
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["watch", "list", "get", "update"]
+  - apiGroups: [""]
+    resources:
+      - "namespaces"
+      - "pods"
+      - "services"
+      - "replicationcontrollers"
+      - "persistentvolumeclaims"
+      - "persistentvolumes"
+    verbs: ["watch", "list", "get"]
+  - apiGroups: ["extensions"]
+    resources: ["replicasets", "daemonsets"]
+    verbs: ["watch", "list", "get"]
+  - apiGroups: ["policy"]
+    resources: ["poddisruptionbudgets"]
+    verbs: ["watch", "list"]
+  - apiGroups: ["apps"]
+    resources: ["statefulsets", "replicasets", "daemonsets"]
+    verbs: ["watch", "list", "get"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses", "csinodes", "csidrivers", "csistoragecapacities", "volumeattachments"]
+    verbs: ["watch", "list", "get"]
+  - apiGroups: ["batch", "extensions"]
+    resources: ["jobs"]
+    verbs: ["get", "list", "watch", "patch"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["create"]
+  - apiGroups: ["coordination.k8s.io"]
+    resourceNames: ["cluster-api-autoscaler"]
+    resources: ["leases"]
+    verbs: ["get", "update"]
+  # CAPI access — discover and scale MachineSets / MachineDeployments / Machines.
+  - apiGroups: ["cluster.x-k8s.io"]
+    resources:
+      - "machinedeployments"
+      - "machinedeployments/scale"
+      - "machines"
+      - "machinesets"
+      - "machinesets/scale"
+      - "machinepools"
+      - "machinepools/scale"
+    verbs: ["get", "list", "update", "watch", "patch"]
+  # Infrastructure provider templates — the autoscaler reads the MachineSet's
+  # infrastructureRef target (Metal3MachineTemplate here) to introspect the
+  # node group. Wildcard covers any infra provider.
+  - apiGroups: ["infrastructure.cluster.x-k8s.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-api-autoscaler
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-api-autoscaler
+subjects:
+  - kind: ServiceAccount
+    name: cluster-api-autoscaler
+    namespace: cluster-api-autoscaler-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cluster-api-autoscaler
+  namespace: cluster-api-autoscaler-system
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["create", "delete", "get", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cluster-api-autoscaler
+  namespace: cluster-api-autoscaler-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cluster-api-autoscaler
+subjects:
+  - kind: ServiceAccount
+    name: cluster-api-autoscaler
+    namespace: cluster-api-autoscaler-system
+---
+# kube-system access — the upstream cluster-autoscaler hardcodes kube-system
+# for the cluster-autoscaler-status ConfigMap and (when --leader-elect-
+# resource-namespace is unset for some build flavors) the leader election
+# lease. Granting only the two resourceNames it actually touches.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cluster-api-autoscaler
+  namespace: kube-system
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    resourceNames: ["cluster-autoscaler-status"]
+    verbs: ["get", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["create"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    resourceNames: ["cluster-api-autoscaler"]
+    verbs: ["get", "update"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cluster-api-autoscaler
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cluster-api-autoscaler
+subjects:
+  - kind: ServiceAccount
+    name: cluster-api-autoscaler
+    namespace: cluster-api-autoscaler-system

@@ -107,6 +107,33 @@ applications:
     source:
       path: clusters/ocp/apiserver
 
+  cluster-api-operator:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '10'
+    destination:
+      namespace: capi-operator-system
+    source:
+      path: components/cluster-api-operator
+
+  cluster-api:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '11'
+    destination:
+      namespace: openshift-cluster-api
+    source:
+      path: clusters/ocp/cluster-api
+
+  cluster-api-autoscaler:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '12'
+    destination:
+      namespace: cluster-api-autoscaler-system
+    source:
+      path: components/cluster-api-autoscaler
+
   loki-operator:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
