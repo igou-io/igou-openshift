@@ -65,8 +65,8 @@ spec:
     useNvidiaDriverCRD: false
   devicePlugin:
     config:
-      name: ''
-      default: ''
+      name: time-slicing-config
+      default: any
     mps:
       root: /run/nvidia/mps
     enabled: true
