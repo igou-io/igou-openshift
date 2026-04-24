@@ -13,7 +13,7 @@ metadata:
     # Bounds for the cluster-api cluster-autoscaler. Replicas stays 0; the
     # autoscaler scales up to 1 when a Pending pod opts in via the burst
     # nodeSelector + toleration and back to 0 once the workload drains.
-    cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size: "1"
+    cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size: "0"
     cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size: "1"
     # Capacity hints — the autoscaler can't introspect a 0-replica node group,
     # so it simulates "if I provisioned a node here, would this Pending pod
@@ -26,7 +26,7 @@ metadata:
     capacity.cluster-autoscaler.kubernetes.io/taints: "workload=burst:NoSchedule"
 spec:
   clusterName: ocp-hb42r
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       cluster.x-k8s.io/cluster-name: ocp-hb42r
