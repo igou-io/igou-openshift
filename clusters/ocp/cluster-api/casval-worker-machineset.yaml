@@ -51,6 +51,10 @@ spec:
         - key: workload
           value: burst
           effect: NoSchedule
+          # Always: CAPI reapplies the taint if it's removed from the Node.
+          # OnInitialization would set it once at node registration then stop
+          # managing it.
+          propagation: Always
       bootstrap:
         dataSecretName: worker-user-data-managed
       clusterName: ocp-hb42r
