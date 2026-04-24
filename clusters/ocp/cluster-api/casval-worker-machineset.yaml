@@ -26,7 +26,7 @@ metadata:
     capacity.cluster-autoscaler.kubernetes.io/taints: "workload=burst:NoSchedule"
 spec:
   clusterName: ocp-hb42r
-  replicas: 0
+  replicas: 1
   selector:
     matchLabels:
       cluster.x-k8s.io/cluster-name: ocp-hb42r
