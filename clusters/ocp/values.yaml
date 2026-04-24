@@ -153,6 +153,13 @@ applications:
           - /spec/customDeploy
           - /spec/preprovisioningNetworkDataName
           - /spec/networkData
+      # The cluster-autoscaler owns replicas for autoscaler-managed
+      # MachineSets — leave it to the autoscaler so ArgoCD doesn't revert
+      # scale-ups to 0 and trigger a delete/recreate loop.
+      - group: cluster.x-k8s.io
+        kind: MachineSet
+        jsonPointers:
+          - /spec/replicas
 
   cluster-api-autoscaler:
     annotations:
