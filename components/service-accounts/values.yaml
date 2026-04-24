@@ -9,8 +9,7 @@ bindings:
       name: claude-edit
       namespace: service-accounts
     clusterRole: edit
-    namespaces:
-      - claude
+    namespaces: []
   - serviceAccount:
       name: ansible-molecule
       namespace: service-accounts

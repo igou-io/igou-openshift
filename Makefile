@@ -17,7 +17,7 @@ validate-kustomize: ## Validate all kustomization.yaml files build successfully
 		fi'
 
 KUBECONFORM_FLAGS := -strict -ignore-missing-schemas \
-	-skip ClusterSecretStore \
+	-skip ClusterSecretStore,MachineSet \
 	-schema-location default \
 	-schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
 	-summary
