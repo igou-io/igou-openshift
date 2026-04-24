@@ -16,7 +16,7 @@ spec:
       resources:
         requests:
           storage: 1Gi
-      storageClassName: freenas-nvmeof-ssd
+      storageClassName: freenas-nvmeof-ssd-csi
   config:
     log:
       mode: console
