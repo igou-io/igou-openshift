@@ -55,6 +55,11 @@ spec:
             - --v=2
             # Scaling behavior — tuned for slow bare-metal provisioning and
             # to actually power down idle workers.
+            # Proactively scale node groups up to their min-size annotation
+            # instead of only treating min-size as a scale-down floor. Without
+            # this, a MachineSet with replicas=0 and min-size=1 stays at 0
+            # until an unschedulable pod appears.
+            - --enforce-node-group-min-size=true
             - --scale-down-enabled=true
             - --scale-down-delay-after-add=10m
             - --scale-down-delay-after-delete=1m
