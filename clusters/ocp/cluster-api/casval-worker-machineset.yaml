@@ -37,11 +37,20 @@ spec:
         cluster.x-k8s.io/cluster-name: ocp-hb42r
         cluster.x-k8s.io/set-name: casval-worker
         node-role.kubernetes.io/worker: ""
+        # Propagated to the Node by CAPI's label propagation (node-role.* prefix).
+        node-role.kubernetes.io/burst: ""
       annotations:
         # Pre-terminate hook drives the capi-node-cleanup CronJob workaround
         # for the orphan-node bug on clusters without CAPI control-plane Machines.
         pre-terminate.delete.hook.machine.cluster.x-k8s.io/node-cleanup: capi-node-cleanup
     spec:
+      # Propagated to the Node by CAPI (requires MachineTaintPropagation feature
+      # gate on the core controller, added in v1.12). Workloads opt in via the
+      # matching nodeSelector + toleration.
+      taints:
+        - key: workload
+          value: burst
+          effect: NoSchedule
       bootstrap:
         dataSecretName: worker-user-data-managed
       clusterName: ocp-hb42r
