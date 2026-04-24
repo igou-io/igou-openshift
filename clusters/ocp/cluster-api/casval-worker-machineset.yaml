@@ -20,7 +20,13 @@ metadata:
     # fit?" using these values. Must reflect the casval host accurately.
     capacity.cluster-autoscaler.kubernetes.io/cpu: "192"
     capacity.cluster-autoscaler.kubernetes.io/memory: "428Gi"
-    capacity.cluster-autoscaler.kubernetes.io/gpu-count: "2"
+    # 2 physical GPUs × 4 time-sliced replicas (see nvidia-gpu-operator
+    # time-slicing-config ConfigMap) = 8 advertised nvidia.com/gpu slots.
+    # Must include the time-slicing multiplier so the autoscaler's template
+    # node simulation matches what the real node will advertise — otherwise
+    # the validator DaemonSet's 1-GPU reservation makes larger pod requests
+    # (e.g. ollama requesting 2) fail NodeResourcesFit in the simulation.
+    capacity.cluster-autoscaler.kubernetes.io/gpu-count: "8"
     capacity.cluster-autoscaler.kubernetes.io/gpu-type: "nvidia.com/gpu"
     capacity.cluster-autoscaler.kubernetes.io/labels: "node-role.kubernetes.io/burst="
     capacity.cluster-autoscaler.kubernetes.io/taints: "workload=burst:NoSchedule"
