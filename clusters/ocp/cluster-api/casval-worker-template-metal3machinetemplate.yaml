@@ -1,0 +1,20 @@
+---
+# IMPORTANT: do NOT set .spec.template.spec.image — install_coreos reads
+# image_source from Ironic and passes it to coreos-installer, and setting
+# image here causes CAPM3 to propagate it to the BMH where it breaks IPA.
+# Omitting image lets install_coreos use the RHCOS image embedded in the
+# live ISO.
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: Metal3MachineTemplate
+metadata:
+  name: casval-worker-template
+  namespace: openshift-cluster-api
+spec:
+  template:
+    spec:
+      customDeploy:
+        method: install_coreos
+      hostSelector: {}
+      userData:
+        name: worker-user-data-managed
+        namespace: openshift-cluster-api

@@ -1,0 +1,36 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - capi-operator-system-namespace.yaml
+  - capi-system-namespace.yaml
+  - capm3-system-namespace.yaml
+  - providers.yaml
+  - capi-manager-scc-rolebinding.yaml
+  - capm3-manager-scc-rolebinding.yaml
+  - ipam-manager-scc-rolebinding.yaml
+  - machine-approver-capi-rbac.yaml
+  - capi-workload-cluster-access-rbac.yaml
+
+helmCharts:
+  - name: cluster-api-operator
+    releaseName: capi-operator
+    namespace: capi-operator-system
+    version: 0.26.0
+    repo: https://kubernetes-sigs.github.io/cluster-api-operator
+    includeCRDs: true
+    valuesInline:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: Exists
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule

@@ -1,0 +1,55 @@
+---
+# spec.clusterName and the cluster.x-k8s.io/cluster-name label must equal
+# infrastructure.status.infrastructureName — replaced from the cluster-config
+# ConfigMap via kustomize.
+apiVersion: cluster.x-k8s.io/v1beta2
+kind: MachineSet
+metadata:
+  name: casval-worker
+  namespace: openshift-cluster-api
+  labels:
+    cluster.x-k8s.io/cluster-name: ocp-hb42r
+  annotations:
+    # Bounds for the cluster-api cluster-autoscaler. Replicas stays 0; the
+    # autoscaler scales up to 1 when a Pending pod opts in via the burst
+    # nodeSelector + toleration and back to 0 once the workload drains.
+    cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size: "0"
+    cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size: "1"
+    # Capacity hints — the autoscaler can't introspect a 0-replica node group,
+    # so it simulates "if I provisioned a node here, would this Pending pod
+    # fit?" using these values. Must reflect the casval host accurately.
+    capacity.cluster-autoscaler.kubernetes.io/cpu: "192"
+    capacity.cluster-autoscaler.kubernetes.io/memory: "428Gi"
+    capacity.cluster-autoscaler.kubernetes.io/gpu-count: "2"
+    capacity.cluster-autoscaler.kubernetes.io/gpu-type: "nvidia.com/gpu"
+    capacity.cluster-autoscaler.kubernetes.io/labels: "node-role.kubernetes.io/burst="
+    capacity.cluster-autoscaler.kubernetes.io/taints: "workload=burst:NoSchedule"
+spec:
+  clusterName: ocp-hb42r
+  replicas: 0
+  selector:
+    matchLabels:
+      cluster.x-k8s.io/cluster-name: ocp-hb42r
+      cluster.x-k8s.io/set-name: casval-worker
+  template:
+    metadata:
+      labels:
+        cluster.x-k8s.io/cluster-name: ocp-hb42r
+        cluster.x-k8s.io/set-name: casval-worker
+        node-role.kubernetes.io/worker: ""
+      annotations:
+        # Pre-terminate hook drives the capi-node-cleanup CronJob workaround
+        # for the orphan-node bug on clusters without CAPI control-plane Machines.
+        pre-terminate.delete.hook.machine.cluster.x-k8s.io/node-cleanup: capi-node-cleanup
+    spec:
+      bootstrap:
+        dataSecretName: worker-user-data-managed
+      clusterName: ocp-hb42r
+      infrastructureRef:
+        apiGroup: infrastructure.cluster.x-k8s.io
+        kind: Metal3MachineTemplate
+        name: casval-worker-template
+      deletion:
+        nodeDrainTimeoutSeconds: 300
+        nodeVolumeDetachTimeoutSeconds: 120
+        nodeDeletionTimeoutSeconds: 120

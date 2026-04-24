@@ -1,0 +1,21 @@
+---
+# Minimal BMH: only bmc, bootMACAddress, rootDeviceHints, online. Do NOT set
+# customDeploy, image, or userData — those are injected by CAPM3 when it
+# claims the host via consumerRef. Pre-setting them makes BMO self-provision
+# outside CAPI control.
+apiVersion: metal3.io/v1alpha1
+kind: BareMetalHost
+metadata:
+  name: casval
+  namespace: openshift-cluster-api
+spec:
+  architecture: x86_64
+  automatedCleaningMode: disabled
+  online: false
+  bootMACAddress: 7C:C2:55:E3:DC:22
+  bmc:
+    address: redfish-virtualmedia://10.10.60.221/redfish/v1/Systems/1
+    credentialsName: casval-bmc-secret
+    disableCertificateVerification: true
+  rootDeviceHints:
+    deviceName: /dev/nvme0n1

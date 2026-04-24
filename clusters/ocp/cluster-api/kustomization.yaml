@@ -1,0 +1,45 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - openshift-cluster-api-namespace.yaml
+  - cluster-config-configmap.yaml
+  - provisioning-configuration-provisioning.yaml
+  - capi-cluster.yaml
+  - casval-worker-template-metal3machinetemplate.yaml
+  - casval-worker-machineset.yaml
+  - casval-baremetalhost.yaml
+  - casval-bmc-secret-externalsecret.yaml
+  - capi-csr-approver.yaml
+  - capi-node-cleanup.yaml
+  - casval-node-taint.yaml
+
+# Propagate clusterName from the ConfigMap into every field that must match
+# infrastructure.status.infrastructureName. On reprovision, edit the
+# ConfigMap only; replacements handle the rest.
+replacements:
+  - source:
+      kind: ConfigMap
+      name: cluster-api-cluster-config
+      fieldPath: data.clusterName
+    targets:
+      - select:
+          group: cluster.x-k8s.io
+          kind: Cluster
+        fieldPaths:
+          - metadata.name
+          - spec.infrastructureRef.name
+      - select:
+          group: infrastructure.cluster.x-k8s.io
+          kind: Metal3Cluster
+        fieldPaths:
+          - metadata.name
+      - select:
+          group: cluster.x-k8s.io
+          kind: MachineSet
+        fieldPaths:
+          - metadata.labels.[cluster.x-k8s.io/cluster-name]
+          - spec.clusterName
+          - spec.selector.matchLabels.[cluster.x-k8s.io/cluster-name]
+          - spec.template.metadata.labels.[cluster.x-k8s.io/cluster-name]
+          - spec.template.spec.clusterName

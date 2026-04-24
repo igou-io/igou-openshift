@@ -1,0 +1,167 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: capi-node-cleanup
+  namespace: openshift-cluster-api
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: capi-node-cleanup
+  namespace: openshift-cluster-api
+rules:
+- apiGroups: ["cluster.x-k8s.io"]
+  resources: ["machines"]
+  verbs: ["get", "list", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: capi-node-cleanup
+  namespace: openshift-cluster-api
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: capi-node-cleanup
+subjects:
+- kind: ServiceAccount
+  name: capi-node-cleanup
+  namespace: openshift-cluster-api
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: capi-node-cleanup
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "list", "patch", "delete"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["pods/eviction"]
+  verbs: ["create"]
+- apiGroups: ["apps"]
+  resources: ["daemonsets"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: capi-node-cleanup
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: capi-node-cleanup
+subjects:
+- kind: ServiceAccount
+  name: capi-node-cleanup
+  namespace: openshift-cluster-api
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-node-cleanup
+  namespace: openshift-cluster-api
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: capi-node-cleanup
+  egress:
+  - {}
+  policyTypes:
+  - Egress
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: capi-node-cleanup
+  namespace: openshift-cluster-api
+spec:
+  schedule: "* * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 300
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: capi-node-cleanup
+        spec:
+          serviceAccountName: capi-node-cleanup
+          restartPolicy: Never
+          nodeSelector:
+            node-role.kubernetes.io/control-plane: ""
+          tolerations:
+          - key: node-role.kubernetes.io/master
+            operator: Exists
+            effect: NoSchedule
+          containers:
+          - name: cleanup
+            image: registry.redhat.io/openshift4/ose-cli:latest
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                cpu: 100m
+                memory: 64Mi
+            command: ["/bin/bash", "-euo", "pipefail", "-c"]
+            args:
+            - |
+              NS=openshift-cluster-api
+              HOOK=pre-terminate.delete.hook.machine.cluster.x-k8s.io/node-cleanup
+
+              echo "Listing deleting machines in $NS ..."
+              deleting=$(oc get machine.cluster.x-k8s.io -n "$NS" \
+                -o go-template='{{range .items}}{{if .metadata.deletionTimestamp}}{{.metadata.name}}{{"\n"}}{{end}}{{end}}' 2>&1) || {
+                echo "Failed to list machines: $deleting"
+                exit 0
+              }
+
+              [ -z "$deleting" ] && echo "No deleting machines." && exit 0
+
+              echo "$deleting" | while read -r machine; do
+                [ -z "$machine" ] && continue
+                echo "--- Machine/$machine ---"
+
+                hook_val=$(oc get machine.cluster.x-k8s.io/"$machine" -n "$NS" \
+                  -o go-template='{{if .metadata.annotations}}{{index .metadata.annotations "pre-terminate.delete.hook.machine.cluster.x-k8s.io/node-cleanup"}}{{end}}' 2>&1) || {
+                  echo "  Failed to read annotations: $hook_val"
+                  continue
+                }
+                if [ -z "$hook_val" ]; then
+                  echo "  No hook annotation, skipping."
+                  continue
+                fi
+                echo "  Hook present (value: $hook_val)"
+
+                node=$(oc get machine.cluster.x-k8s.io/"$machine" -n "$NS" \
+                  -o go-template='{{if .status}}{{if .status.nodeRef}}{{.status.nodeRef.name}}{{end}}{{end}}' 2>&1) || true
+
+                if [ -n "$node" ] && [[ "$node" != *"no value"* ]]; then
+                  echo "  Cordoning Node/$node"
+                  oc adm cordon "$node" 2>&1 || true
+
+                  echo "  Draining Node/$node"
+                  oc adm drain "$node" \
+                    --ignore-daemonsets \
+                    --delete-emptydir-data \
+                    --force \
+                    --timeout=120s 2>&1 || true
+
+                  echo "  Deleting Node/$node"
+                  oc delete node "$node" --ignore-not-found --wait=false 2>&1
+                else
+                  echo "  No nodeRef found, skipping node operations."
+                fi
+
+                echo "  Releasing pre-terminate hook on Machine/$machine"
+                oc annotate machine.cluster.x-k8s.io/"$machine" -n "$NS" "$HOOK-" 2>&1
+              done
+
+              echo "Done"

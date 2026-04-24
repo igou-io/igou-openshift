@@ -1,0 +1,88 @@
+---
+# Upstream cluster-autoscaler with --cloud-provider=clusterapi. The OpenShift
+# cluster-autoscaler-operator's autoscaler runs with --cloud-provider=
+# openshift-machine-api and won't see CAPI MachineSets, so a separate
+# instance is required.
+#
+# Image tag tracks the management cluster's k8s minor (currently 1.34).
+# Bump when the cluster moves to 1.35+.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cluster-api-autoscaler
+  namespace: cluster-api-autoscaler-system
+  labels:
+    app: cluster-api-autoscaler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cluster-api-autoscaler
+  template:
+    metadata:
+      labels:
+        app: cluster-api-autoscaler
+    spec:
+      serviceAccountName: cluster-api-autoscaler
+      priorityClassName: system-cluster-critical
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: cluster-api-autoscaler
+          image: registry.k8s.io/autoscaling/cluster-autoscaler:v1.34.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - /cluster-autoscaler
+          args:
+            - --cloud-provider=clusterapi
+            # Discover MachineSets in the same namespace as the casval-worker
+            # set, scoped to the local CAPI cluster. The clusterName is the
+            # same value as cluster-api-cluster-config.data.clusterName in
+            # clusters/ocp/cluster-api/. Update both on cluster reprovision.
+            - --node-group-auto-discovery=clusterapi:namespace=openshift-cluster-api,clusterName=ocp-hb42r
+            - --leader-elect=true
+            - --leader-elect-resource-name=cluster-api-autoscaler
+            - --leader-elect-resource-namespace=cluster-api-autoscaler-system
+            - --logtostderr=true
+            - --stderrthreshold=info
+            - --v=2
+            # Scaling behavior — tuned for slow bare-metal provisioning and
+            # to actually power down idle workers.
+            - --scale-down-enabled=true
+            - --scale-down-delay-after-add=10m
+            - --scale-down-delay-after-delete=1m
+            - --scale-down-delay-after-failure=3m
+            - --scale-down-unneeded-time=10m
+            - --scale-down-utilization-threshold=0.5
+            - --max-node-provision-time=30m
+            - --max-graceful-termination-sec=600
+            - --balance-similar-node-groups=false
+            - --skip-nodes-with-system-pods=false
+            - --skip-nodes-with-local-storage=false
+            - --expander=least-waste
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          ports:
+            - name: metrics
+              containerPort: 8085
+              protocol: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
