@@ -5,7 +5,7 @@ metadata:
   name: cluster-api
   namespace: capi-system
 spec:
-  version: v1.11.7
+  version: v1.12.7
   deployment:
     nodeSelector:
       node-role.kubernetes.io/control-plane: ""
@@ -23,7 +23,7 @@ metadata:
   name: metal3
   namespace: capm3-system
 spec:
-  version: v1.11.5
+  version: v1.12.4
   deployment:
     nodeSelector:
       node-role.kubernetes.io/control-plane: ""
@@ -43,7 +43,7 @@ metadata:
   name: metal3
   namespace: capm3-system
 spec:
-  version: v1.11.5
+  version: v1.12.4
   deployment:
     nodeSelector:
       node-role.kubernetes.io/control-plane: ""
