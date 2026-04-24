@@ -5,6 +5,7 @@ metadata:
   namespace: intel-device-plugins
   annotations:
     argocd.argoproj.io/sync-wave: '1'
+    operatorframework.io/bundle-unpack-timeout: 20m
 spec:
   channel: stable
   installPlanApproval: Automatic

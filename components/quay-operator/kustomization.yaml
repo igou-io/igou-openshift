@@ -7,3 +7,4 @@ resources:
 - quay-operator-subscription.yml
 - igou-registry-quayregistry.yml
 - config-bundle-secret-externalsecret.yml
+- servicemonitors/quay-servicemonitor.yaml
