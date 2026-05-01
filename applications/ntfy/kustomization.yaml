@@ -12,6 +12,7 @@ helmCharts:
   version: 4.6.2
   releaseName: ntfy
   repo: oci://ghcr.io/bjw-s-labs/helm
+  valuesFile: values-dummy.yaml
   valuesInline:
     controllers:
       ntfy:
