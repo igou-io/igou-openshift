@@ -1,0 +1,89 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: ntfy
+resources:
+  - ntfy-namespace.yaml
+  - ntfy-config-pvc.yaml
+  # Uncomment once the probe is populated via /add-probe https://ntfy.apps.sno.igou.systems
+  # - ntfy-probe.yaml
+helmCharts:
+- name: app-template
+  namespace: ntfy
+  version: 4.6.2
+  releaseName: ntfy
+  repo: oci://ghcr.io/bjw-s-labs/helm
+  valuesFile: values-dummy.yaml
+  valuesInline:
+    controllers:
+      ntfy:
+        type: deployment
+        replicas: 1
+        strategy: RollingUpdate
+        pod:
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+        containers:
+          app:
+            image:
+              repository: docker.io/binwiederhier/ntfy
+              tag: v2.22.0
+              pullPolicy: IfNotPresent
+            env: {}
+            probes:
+              liveness:
+                enabled: true
+                type: TCP
+              readiness:
+                enabled: true
+                type: TCP
+              startup:
+                enabled: true
+                type: TCP
+            resources: {}
+            securityContext:
+              allowPrivilegeEscalation: false
+              runAsNonRoot: true
+              capabilities:
+                drop:
+                  - ALL
+    persistence:
+      config:
+        type: persistentVolumeClaim
+        existingClaim: ntfy-config
+        advancedMounts:
+          ntfy:
+            app:
+              - path: /var/cache/ntfy
+    service:
+      app:
+        controller: ntfy
+        ports:
+          http:
+            port: 80
+            targetPort: 80
+    ingress:
+      app:
+        className: openshift-default
+        annotations:
+          route.openshift.io/termination: edge
+        hosts:
+          - host: ntfy.apps.sno.igou.systems
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: app
+                  port: http
+    serviceAccount:
+      ntfy:
+        enabled: true
+    serviceMonitor:
+      app:
+        serviceName: ntfy-app
+        endpoints:
+          - port: http
+            scheme: http
+            path: /metrics
+            interval: 60s
+            scrapeTimeout: 10s
