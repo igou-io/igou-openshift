@@ -10,4 +10,8 @@ helmCharts:
   version: 12.4.0
   releaseName: gitea
   repo: https://dl.gitea.com/charts/
-  valuesInline: {}
+  valuesInline:
+    gitea:
+      config:
+        server:
+          HTTP_PORT: 3000
