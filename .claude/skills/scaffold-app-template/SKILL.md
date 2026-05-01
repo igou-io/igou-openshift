@@ -159,6 +159,14 @@ Create directory `applications/<app-name>/` and generate the files below.
   for OpenShift `restricted-v2` SCC compatibility (`runAsNonRoot: true`,
   `allowPrivilegeEscalation: false`, drop ALL capabilities,
   seccompProfile `RuntimeDefault`)
+- **Always** generate a `values-dummy.yaml` alongside `kustomization.yaml` and
+  reference it via `valuesFile: values-dummy.yaml` in the `helmCharts` stanza.
+  This is a required workaround for
+  [bjw-s-labs/helm-charts#397](https://github.com/bjw-s-labs/helm-charts/issues/397):
+  Kustomize 5.4.2+ fails with `could not parse values file into rnode: EOF` when
+  `valuesInline` is used with a chart whose upstream `values.yaml` is empty
+  (which is the case for `app-template`). The dummy file satisfies Kustomize's
+  parser without affecting chart behaviour.
 
 ### 1. `<app-name>-namespace.yaml`
 
@@ -194,6 +202,7 @@ helmCharts:
   version: 4.6.2
   releaseName: <app-name>
   repo: oci://ghcr.io/bjw-s-labs/helm
+  valuesFile: values-dummy.yaml
   valuesInline:
     controllers:
       <app-name>:
@@ -302,7 +311,23 @@ When `persistence=pvc+nfs`, also add a `data` mount that references the NFS PVC:
             scrapeTimeout: 10s
 ```
 
-### 3. `<app-name>-config-pvc.yaml` (if `persistence` includes `pvc`)
+### 3. `values-dummy.yaml` (always)
+
+Required workaround for [bjw-s-labs/helm-charts#397](https://github.com/bjw-s-labs/helm-charts/issues/397).
+Create this file unconditionally — it is referenced by `valuesFile` in the
+`helmCharts` stanza and prevents Kustomize 5.4.2+ from failing with
+`could not parse values file into rnode: EOF`.
+
+```yaml
+foo: bar
+```
+
+Note: this file does **not** start with `---` and is **not** added to
+`resources:` — it is only referenced by `valuesFile:` and is invisible to
+Kubernetes.
+
+### 4. `<app-name>-config-pvc.yaml` (if `persistence` includes `pvc`)
+
 
 ```yaml
 ---
@@ -320,14 +345,14 @@ spec:
   # storageClassName: <pvc-storage-class>   # uncomment to override the default
 ```
 
-### 4. `<app-name>-data-nfs-pv.yaml` and `<app-name>-data-nfs-pvc.yaml` (if `persistence=pvc+nfs`)
+### 5. `<app-name>-data-nfs-pv.yaml` and `<app-name>-data-nfs-pvc.yaml` (if `persistence=pvc+nfs`)
 
 Model on `applications/jellyfin/jellyfin-media-nfs-pv.yaml` and
 `applications/jellyfin/jellyfin-media-nfs-pvc.yaml` — read those files with the
 Read tool first to copy the exact PV/PVC binding pattern (matching `volumeName`
 + unique `storageClassName` to keep the binding 1:1).
 
-### 5. ExternalSecret (if `external-secret=yes`)
+### 6. ExternalSecret (if `external-secret=yes`)
 
 Do **not** generate the ExternalSecret YAML inline in this skill. Instead,
 delegate to the existing `add-externalsecret` skill, which validates the
@@ -344,7 +369,7 @@ Secret into `valuesInline` (typically via
 `controllers.<app-name>.containers.app.envFrom` with a `secretRef` to
 `<app-name>-secrets`). Mention this in the completion report.
 
-### 6. `<app-name>-probe.yaml` (if `probe=yes`)
+### 7. `<app-name>-probe.yaml` (if `probe=yes`)
 
 Generate a minimal placeholder and immediately tell the user to run the
 `add-probe` skill (`/add-probe https://<hostname>`) to fill it in correctly:
