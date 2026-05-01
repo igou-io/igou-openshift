@@ -3,7 +3,7 @@ name: scaffold-app-template
 description: Scaffold a new user-facing application in applications/ that uses the bjw-s app-template Helm chart. Generates a Namespace, kustomization.yaml with a fully-populated helmCharts stanza (controllers, service, ingress as OpenShift Route, optional persistence/serviceMonitor/serviceAccount), and optional ExternalSecret, NFS PV+PVC, and Probe placeholder. Use when adding a self-hosted app that does not have its own Helm chart.
 argument-hint: <app-name>
 disable-model-invocation: true
-allowed-tools: Read, Write, Bash(kustomize build *), Bash(helm show values *), Bash(ls *), Bash(cat *), Bash(make lint), Bash(make validate-kustomize)
+allowed-tools: Read, Write, Bash(kustomize build *), Bash(helm show values *), Bash(curl *), Bash(ls *), Bash(cat *), Bash(make lint), Bash(make validate-kustomize)
 ---
 
 # Scaffold a new application using the bjw-s app-template chart
@@ -15,6 +15,98 @@ matching the convention used by every other app in this repo.
 
 If the user wants to scaffold an app whose vendor publishes its own Helm chart,
 use the existing `scaffold-app` skill instead.
+
+## Chart reference — where to find the values schema
+
+The `app-template` chart (`charts/other/app-template/`) is a thin wrapper with an
+**empty** `values.yaml`. All configuration keys are defined in the bundled
+`common` library chart. To look up available options, fetch the annotated
+`values.yaml` from the common library:
+
+```bash
+curl -sL https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.yaml
+```
+
+(`helm` is not available in this environment; use `curl` instead.)
+
+### Repository layout
+
+```
+https://github.com/bjw-s-labs/helm-charts
+  charts/
+    other/app-template/          ← the chart referenced by kustomization.yaml
+      values.yaml                  (empty — no defaults)
+      values.schema.json           (JSON Schema for validation)
+      Chart.yaml                   (declares dependency on common@4.x)
+    library/common/              ← the real implementation
+      values.yaml                  (full annotated schema — fetch this for reference)
+      values.schema.json
+```
+
+### Top-level keys (common library)
+
+| Key | Purpose |
+|-----|---------|
+| `global` | Name overrides, global labels/annotations, propagate metadata to pods |
+| `defaultPodOptionsStrategy` | `overwrite` (default) or `merge` — how per-controller pod options interact with defaults |
+| `defaultPodOptions` | Shared pod-level defaults: affinity, tolerations, nodeSelector, securityContext, imagePullSecrets, dnsPolicy, etc. |
+| `controllers` | Map of controllers (deployment/daemonset/statefulset/cronjob/job). Each has `containers`, `initContainers`, `pod`, `strategy`, `replicas`, etc. |
+| `serviceAccount` | Map of ServiceAccount objects |
+| `secrets` | Map of Secret objects (plain-text values, use ExternalSecret for real secrets) |
+| `configMaps` | Map of ConfigMap objects |
+| `configMapsFromFolder` | Auto-generate ConfigMaps from a folder in the chart filesystem |
+| `service` | Map of Service objects. Each references a `controller` and defines `ports` |
+| `ingress` | Map of Ingress objects. Each has `hosts`, `tls`, `className`, `annotations` |
+| `route` | Map of Gateway API route objects (HTTPRoute, TCPRoute, etc.) |
+| `serviceMonitor` | Map of Prometheus ServiceMonitor objects |
+| `persistence` | Map of volume mounts: `persistentVolumeClaim`, `emptyDir`, `nfs`, `hostPath`, `secret`, `configMap`, or `custom`. Supports `globalMounts` and `advancedMounts` |
+| `networkpolicies` | Map of NetworkPolicy objects |
+| `rbac` | Map of Role/ClusterRole and RoleBinding/ClusterRoleBinding objects |
+| `rawResources` | Escape hatch for arbitrary Kubernetes resources not covered above |
+
+### Container options (under `controllers.<name>.containers.<name>`)
+
+| Key | Notes |
+|-----|-------|
+| `image.repository` / `image.tag` / `image.digest` / `image.pullPolicy` | Image config |
+| `command` / `args` / `workingDir` | Override entrypoint |
+| `env` | Environment variables — plain value, `valueFrom`, or list syntax |
+| `envFrom` | Load from ConfigMap or Secret by identifier or name |
+| `probes.liveness` / `probes.readiness` / `probes.startup` | `enabled`, `custom`, `type` (TCP/HTTP/GRPC/exec), `spec` |
+| `resources` | Standard `requests`/`limits` |
+| `securityContext` | Container-level security context |
+| `lifecycle` | `postStart` / `preStop` hooks |
+
+### Persistence — `advancedMounts` vs `globalMounts`
+
+- `globalMounts`: mount the volume at the same path in **every** container of every controller.
+- `advancedMounts`: fine-grained — specify per-controller, per-container mounts with optional `subPath`, `readOnly`, `mountPropagation`.
+
+```yaml
+persistence:
+  config:
+    type: persistentVolumeClaim
+    existingClaim: my-app-config
+    advancedMounts:
+      my-app:        # controller name
+        app:         # container name
+          - path: /config
+```
+
+### `ingress` vs `route`
+
+This repo uses **`ingress`** with the `openshift-default` class and the
+`route.openshift.io/termination: edge` annotation to create an OpenShift Route
+via the Ingress operator. Do **not** use the `route` key (Gateway API) unless
+explicitly requested.
+
+### `serviceAccount` identifier vs controller assignment
+
+Each serviceAccount entry must have a unique identifier key. To assign it to a
+controller, set `controllers.<name>.serviceAccount.identifier: <sa-key>`.
+The default scaffold creates a serviceAccount with the same identifier as the
+app name and does not assign it explicitly (the controller inherits the default
+SA unless overridden).
 
 ## App name
 
@@ -67,6 +159,14 @@ Create directory `applications/<app-name>/` and generate the files below.
   for OpenShift `restricted-v2` SCC compatibility (`runAsNonRoot: true`,
   `allowPrivilegeEscalation: false`, drop ALL capabilities,
   seccompProfile `RuntimeDefault`)
+- **Always** generate a `values-dummy.yaml` alongside `kustomization.yaml` and
+  reference it via `valuesFile: values-dummy.yaml` in the `helmCharts` stanza.
+  This is a required workaround for
+  [bjw-s-labs/helm-charts#397](https://github.com/bjw-s-labs/helm-charts/issues/397):
+  Kustomize 5.4.2+ fails with `could not parse values file into rnode: EOF` when
+  `valuesInline` is used with a chart whose upstream `values.yaml` is empty
+  (which is the case for `app-template`). The dummy file satisfies Kustomize's
+  parser without affecting chart behaviour.
 
 ### 1. `<app-name>-namespace.yaml`
 
@@ -102,6 +202,7 @@ helmCharts:
   version: 4.6.2
   releaseName: <app-name>
   repo: oci://ghcr.io/bjw-s-labs/helm
+  valuesFile: values-dummy.yaml
   valuesInline:
     controllers:
       <app-name>:
@@ -210,7 +311,23 @@ When `persistence=pvc+nfs`, also add a `data` mount that references the NFS PVC:
             scrapeTimeout: 10s
 ```
 
-### 3. `<app-name>-config-pvc.yaml` (if `persistence` includes `pvc`)
+### 3. `values-dummy.yaml` (always)
+
+Required workaround for [bjw-s-labs/helm-charts#397](https://github.com/bjw-s-labs/helm-charts/issues/397).
+Create this file unconditionally — it is referenced by `valuesFile` in the
+`helmCharts` stanza and prevents Kustomize 5.4.2+ from failing with
+`could not parse values file into rnode: EOF`.
+
+```yaml
+foo: bar
+```
+
+Note: this file does **not** start with `---` and is **not** added to
+`resources:` — it is only referenced by `valuesFile:` and is invisible to
+Kubernetes.
+
+### 4. `<app-name>-config-pvc.yaml` (if `persistence` includes `pvc`)
+
 
 ```yaml
 ---
@@ -228,14 +345,14 @@ spec:
   # storageClassName: <pvc-storage-class>   # uncomment to override the default
 ```
 
-### 4. `<app-name>-data-nfs-pv.yaml` and `<app-name>-data-nfs-pvc.yaml` (if `persistence=pvc+nfs`)
+### 5. `<app-name>-data-nfs-pv.yaml` and `<app-name>-data-nfs-pvc.yaml` (if `persistence=pvc+nfs`)
 
 Model on `applications/jellyfin/jellyfin-media-nfs-pv.yaml` and
 `applications/jellyfin/jellyfin-media-nfs-pvc.yaml` — read those files with the
 Read tool first to copy the exact PV/PVC binding pattern (matching `volumeName`
 + unique `storageClassName` to keep the binding 1:1).
 
-### 5. ExternalSecret (if `external-secret=yes`)
+### 6. ExternalSecret (if `external-secret=yes`)
 
 Do **not** generate the ExternalSecret YAML inline in this skill. Instead,
 delegate to the existing `add-externalsecret` skill, which validates the
@@ -252,7 +369,7 @@ Secret into `valuesInline` (typically via
 `controllers.<app-name>.containers.app.envFrom` with a `secretRef` to
 `<app-name>-secrets`). Mention this in the completion report.
 
-### 6. `<app-name>-probe.yaml` (if `probe=yes`)
+### 7. `<app-name>-probe.yaml` (if `probe=yes`)
 
 Generate a minimal placeholder and immediately tell the user to run the
 `add-probe` skill (`/add-probe https://<hostname>`) to fill it in correctly:
