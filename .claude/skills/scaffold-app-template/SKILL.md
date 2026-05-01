@@ -3,7 +3,7 @@ name: scaffold-app-template
 description: Scaffold a new user-facing application in applications/ that uses the bjw-s app-template Helm chart. Generates a Namespace, kustomization.yaml with a fully-populated helmCharts stanza (controllers, service, ingress as OpenShift Route, optional persistence/serviceMonitor/serviceAccount), and optional ExternalSecret, NFS PV+PVC, and Probe placeholder. Use when adding a self-hosted app that does not have its own Helm chart.
 argument-hint: <app-name>
 disable-model-invocation: true
-allowed-tools: Read, Write, Bash(kustomize build *), Bash(helm show values *), Bash(ls *), Bash(cat *), Bash(make lint), Bash(make validate-kustomize)
+allowed-tools: Read, Write, Bash(kustomize build *), Bash(helm show values *), Bash(curl *), Bash(ls *), Bash(cat *), Bash(make lint), Bash(make validate-kustomize)
 ---
 
 # Scaffold a new application using the bjw-s app-template chart
@@ -15,6 +15,98 @@ matching the convention used by every other app in this repo.
 
 If the user wants to scaffold an app whose vendor publishes its own Helm chart,
 use the existing `scaffold-app` skill instead.
+
+## Chart reference — where to find the values schema
+
+The `app-template` chart (`charts/other/app-template/`) is a thin wrapper with an
+**empty** `values.yaml`. All configuration keys are defined in the bundled
+`common` library chart. To look up available options, fetch the annotated
+`values.yaml` from the common library:
+
+```bash
+curl -sL https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/library/common/values.yaml
+```
+
+(`helm` is not available in this environment; use `curl` instead.)
+
+### Repository layout
+
+```
+https://github.com/bjw-s-labs/helm-charts
+  charts/
+    other/app-template/          ← the chart referenced by kustomization.yaml
+      values.yaml                  (empty — no defaults)
+      values.schema.json           (JSON Schema for validation)
+      Chart.yaml                   (declares dependency on common@4.x)
+    library/common/              ← the real implementation
+      values.yaml                  (full annotated schema — fetch this for reference)
+      values.schema.json
+```
+
+### Top-level keys (common library)
+
+| Key | Purpose |
+|-----|---------|
+| `global` | Name overrides, global labels/annotations, propagate metadata to pods |
+| `defaultPodOptionsStrategy` | `overwrite` (default) or `merge` — how per-controller pod options interact with defaults |
+| `defaultPodOptions` | Shared pod-level defaults: affinity, tolerations, nodeSelector, securityContext, imagePullSecrets, dnsPolicy, etc. |
+| `controllers` | Map of controllers (deployment/daemonset/statefulset/cronjob/job). Each has `containers`, `initContainers`, `pod`, `strategy`, `replicas`, etc. |
+| `serviceAccount` | Map of ServiceAccount objects |
+| `secrets` | Map of Secret objects (plain-text values, use ExternalSecret for real secrets) |
+| `configMaps` | Map of ConfigMap objects |
+| `configMapsFromFolder` | Auto-generate ConfigMaps from a folder in the chart filesystem |
+| `service` | Map of Service objects. Each references a `controller` and defines `ports` |
+| `ingress` | Map of Ingress objects. Each has `hosts`, `tls`, `className`, `annotations` |
+| `route` | Map of Gateway API route objects (HTTPRoute, TCPRoute, etc.) |
+| `serviceMonitor` | Map of Prometheus ServiceMonitor objects |
+| `persistence` | Map of volume mounts: `persistentVolumeClaim`, `emptyDir`, `nfs`, `hostPath`, `secret`, `configMap`, or `custom`. Supports `globalMounts` and `advancedMounts` |
+| `networkpolicies` | Map of NetworkPolicy objects |
+| `rbac` | Map of Role/ClusterRole and RoleBinding/ClusterRoleBinding objects |
+| `rawResources` | Escape hatch for arbitrary Kubernetes resources not covered above |
+
+### Container options (under `controllers.<name>.containers.<name>`)
+
+| Key | Notes |
+|-----|-------|
+| `image.repository` / `image.tag` / `image.digest` / `image.pullPolicy` | Image config |
+| `command` / `args` / `workingDir` | Override entrypoint |
+| `env` | Environment variables — plain value, `valueFrom`, or list syntax |
+| `envFrom` | Load from ConfigMap or Secret by identifier or name |
+| `probes.liveness` / `probes.readiness` / `probes.startup` | `enabled`, `custom`, `type` (TCP/HTTP/GRPC/exec), `spec` |
+| `resources` | Standard `requests`/`limits` |
+| `securityContext` | Container-level security context |
+| `lifecycle` | `postStart` / `preStop` hooks |
+
+### Persistence — `advancedMounts` vs `globalMounts`
+
+- `globalMounts`: mount the volume at the same path in **every** container of every controller.
+- `advancedMounts`: fine-grained — specify per-controller, per-container mounts with optional `subPath`, `readOnly`, `mountPropagation`.
+
+```yaml
+persistence:
+  config:
+    type: persistentVolumeClaim
+    existingClaim: my-app-config
+    advancedMounts:
+      my-app:        # controller name
+        app:         # container name
+          - path: /config
+```
+
+### `ingress` vs `route`
+
+This repo uses **`ingress`** with the `openshift-default` class and the
+`route.openshift.io/termination: edge` annotation to create an OpenShift Route
+via the Ingress operator. Do **not** use the `route` key (Gateway API) unless
+explicitly requested.
+
+### `serviceAccount` identifier vs controller assignment
+
+Each serviceAccount entry must have a unique identifier key. To assign it to a
+controller, set `controllers.<name>.serviceAccount.identifier: <sa-key>`.
+The default scaffold creates a serviceAccount with the same identifier as the
+app name and does not assign it explicitly (the controller inherits the default
+SA unless overridden).
 
 ## App name
 
