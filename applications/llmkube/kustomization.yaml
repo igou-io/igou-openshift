@@ -115,7 +115,7 @@ helmCharts:
       enabled: true
       size: 100Gi
       storageClass: "freenas-nfs-fast-csi"
-      accessMode: ReadWriteOnce
+      accessMode: ReadWriteMany
       mountPath: /models
       annotations: {}
 
