@@ -123,6 +123,8 @@ Chart.lock
 
 **/.DS_store
 
+.claude/scheduled_tasks.lock
+
 # kube-burner generated log files
 kube-burner*.log
 

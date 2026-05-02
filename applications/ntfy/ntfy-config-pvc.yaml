@@ -10,4 +10,4 @@ spec:
   resources:
     requests:
       storage: 5Gi
-  # storageClassName: <pvc-storage-class>   # uncomment to override the default
+  storageClassName: freenas-nvmeof-ssd-csi
