@@ -222,6 +222,22 @@ applications:
     source:
       path: applications/jellyfin
 
+  llmkube:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/llmkube
+    # Replicas on InferenceService CRs are scaled manually (and by the
+    # cluster-autoscaler indirectly via casval) — leave them alone so ArgoCD
+    # doesn't revert scale-ups back to the value checked into git.
+    ignoreDifferences:
+      - group: inference.llmkube.dev
+        kind: InferenceService
+        jsonPointers:
+          - /spec/replicas
+
   ansible-automation-platform:
     project: cluster-apps
     annotations:

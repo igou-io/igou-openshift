@@ -6,6 +6,8 @@ metadata:
   namespace: llmkube-system
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,ServerSideApply=true
+    # Apply after the Helm-rendered chart (CRDs + controller) is in place.
+    argocd.argoproj.io/sync-wave: '5'
 spec:
   source: https://huggingface.co/bartowski/Qwen_Qwen3.6-35B-A3B-GGUF/resolve/main/Qwen_Qwen3.6-35B-A3B-Q4_K_M.gguf
   format: gguf
