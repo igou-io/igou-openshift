@@ -1,0 +1,34 @@
+---
+apiVersion: inference.llmkube.dev/v1alpha1
+kind: InferenceService
+metadata:
+  name: qwen3-35b-a3b
+  namespace: llmkube-system
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,ServerSideApply=true
+spec:
+  modelRef: qwen3-35b-a3b
+  runtime: llamacpp
+  replicas: 0
+  resources:
+    gpu: 2
+    cpu: "8"
+    memory: "32Gi"
+  contextSize: 32768
+  flashAttention: true
+  jinja: true
+  # Offload MoE expert layers to CPU to reduce VRAM pressure on this active-3B MoE model
+  moeCPUOffload: true
+  endpoint:
+    port: 8080
+    path: /v1/chat/completions
+    type: ClusterIP
+  priority: normal
+  # Schedule exclusively on the casval burst baremetal node
+  nodeSelector:
+    node-role.kubernetes.io/burst: ""
+  tolerations:
+    - key: workload
+      operator: Equal
+      value: burst
+      effect: NoSchedule
