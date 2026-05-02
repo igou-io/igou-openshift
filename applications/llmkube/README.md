@@ -223,6 +223,48 @@ spec:
 
 ---
 
+## Scaling and ArgoCD replica management
+
+`InferenceService` CRs in this repo default to `replicas: 0`. Scale up manually
+when you want to run inference:
+
+```bash
+oc patch inferenceservice qwen3-35b-a3b -n llmkube-system \
+  --type merge -p '{"spec":{"replicas":1}}'
+```
+
+### Preventing ArgoCD from resetting replicas
+
+ArgoCD's self-heal loop will revert `spec.replicas` back to `0` on the next
+sync unless you tell it to ignore that field. The `argocd-app-of-app` chart
+used by this cluster supports per-application `ignoreDifferences`; add the
+following to the llmkube entry in `clusters/ocp/values.yaml`:
+
+```yaml
+applications:
+  llmkube:
+    # ... existing fields ...
+    ignoreDifferences:
+      - group: inference.llmkube.dev
+        kind: InferenceService
+        jsonPointers:
+          - /spec/replicas
+```
+
+ArgoCD also needs `RespectIgnoreDifferences=true` in the Application's
+`syncOptions` for the ignore to take effect during a sync (not just for diff
+display). This option is already set as a global default in the cluster's
+`values.yaml`, so no extra work is needed.
+
+With both in place ArgoCD will:
+- Show the CR as **Synced** even when live replicas differ from git
+- Not overwrite `spec.replicas` during a sync or self-heal
+
+The same pattern is already used for the casval `MachineSet` replicas (managed
+by the cluster-autoscaler) in the `cluster-api` application entry.
+
+---
+
 ## Scheduling on casval
 
 The casval baremetal MachineSet (`clusters/ocp/cluster-api/casval-worker-machineset.yaml`)

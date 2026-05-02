@@ -9,7 +9,7 @@ metadata:
 spec:
   modelRef: qwen3-35b-a3b
   runtime: llamacpp
-  replicas: 1
+  replicas: 0
   resources:
     gpu: 2
     cpu: "8"
