@@ -114,7 +114,7 @@ helmCharts:
     modelCache:
       enabled: true
       size: 100Gi
-      storageClass: ""
+      storageClass: "freenas-nfs-fast-csi"
       accessMode: ReadWriteOnce
       mountPath: /models
       annotations: {}
