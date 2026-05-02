@@ -6,6 +6,8 @@ metadata:
   namespace: llmkube-system
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,ServerSideApply=true
+    # Apply after the Model CR (which is itself applied after the chart).
+    argocd.argoproj.io/sync-wave: '6'
 spec:
   modelRef: qwen3-35b-a3b
   runtime: llamacpp
