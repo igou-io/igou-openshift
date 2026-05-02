@@ -40,6 +40,9 @@ helmCharts:
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
+      - effect: NoSchedule
+        key: workload
+        operator: Exists
       rbac:
         openshift:
           privileged: true
@@ -99,6 +102,9 @@ helmCharts:
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
+      - effect: NoSchedule
+        key: workload
+        operator: Exists
       rbac:
         openshift:
           privileged: true
@@ -158,6 +164,9 @@ helmCharts:
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
+      - effect: NoSchedule
+        key: workload
+        operator: Exists
       rbac:
         openshift:
           privileged: true
@@ -220,6 +229,9 @@ helmCharts:
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
+      - effect: NoSchedule
+        key: workload
+        operator: Exists
       driver:
         enabled: true
         image:
@@ -281,6 +293,9 @@ helmCharts:
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
+      - effect: NoSchedule
+        key: workload
+        operator: Exists
       driver:
         enabled: true
         image:
@@ -342,6 +357,9 @@ helmCharts:
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
+      - effect: NoSchedule
+        key: workload
+        operator: Exists
       driver:
         enabled: true
         image:
@@ -403,6 +421,9 @@ helmCharts:
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
+      - effect: NoSchedule
+        key: workload
+        operator: Exists
       driver:
         enabled: true
         image:
@@ -464,6 +485,9 @@ helmCharts:
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
+      - effect: NoSchedule
+        key: workload
+        operator: Exists
       driver:
         enabled: true
         image:
@@ -525,6 +549,9 @@ helmCharts:
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
+      - effect: NoSchedule
+        key: workload
+        operator: Exists
       driver:
         enabled: true
         image:
