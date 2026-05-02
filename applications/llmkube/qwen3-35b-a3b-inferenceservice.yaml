@@ -11,6 +11,10 @@ metadata:
 spec:
   modelRef: qwen3-35b-a3b
   runtime: llamacpp
+  # Default llamacpp image (ghcr.io/ggml-org/llama.cpp:server) is CPU-only and
+  # ignores --n-gpu-layers. Override with the CUDA build so the 2x RTX 4060 Ti
+  # on casval are actually used for inference.
+  image: ghcr.io/ggml-org/llama.cpp:server-cuda
   replicas: 0
   resources:
     gpu: 2
