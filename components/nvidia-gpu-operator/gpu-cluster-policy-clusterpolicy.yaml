@@ -35,6 +35,8 @@ spec:
     enabled: true
   driver:
     version: 595.71.05
+    image: driver
+    repository: nvcr.io/nvidia
     licensingConfig:
       nlsEnabled: true
       secretName: ''
