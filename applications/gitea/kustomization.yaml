@@ -34,6 +34,14 @@ helmCharts:
         global:
           valkey:
             password: ""
+          # Bitnami common chart strips runAsUser/runAsGroup/fsGroup and
+          # the empty seLinuxOptions object when set to force, letting
+          # OpenShift admission pick UIDs and SELinux levels from the
+          # namespace range. auto-detect can't see the SCC API at
+          # template time (offline helm), so use force.
+          compatibility:
+            openshift:
+              adaptSecurityContext: force
         primary:
           persistence:
             enabled: true
