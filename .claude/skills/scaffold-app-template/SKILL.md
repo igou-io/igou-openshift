@@ -128,7 +128,7 @@ one question at a time.
 | `image-repo` | Container image repository (e.g. `ghcr.io/foo/bar`) | — (required) |
 | `image-tag` | Image tag, ideally `<tag>@sha256:<digest>` for Renovate pinning | — (required) |
 | `container-port` | Port the container listens on | `8080` |
-| `hostname` | Public hostname for the OpenShift Route | `<app-name>.apps.sno.igou.systems` |
+| `hostname` | Public hostname for the OpenShift Route | `<app-name>.apps.ocp.igou.systems` |
 
 ### Optional (default `no` unless noted)
 

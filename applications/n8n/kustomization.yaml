@@ -54,7 +54,7 @@ helmCharts:
       # define a custom ingress class Name, like "traefik" or "nginx"
       className: "openshift-default"
       hosts:
-        - host: n8n.apps.sno.igou.systems
+        - host: n8n.apps.ocp.igou.systems
           paths:
             - /
         # - hosts:

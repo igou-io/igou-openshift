@@ -1,4 +1,4 @@
-base-url: https://ntfy.apps.sno.igou.systems
+base-url: https://ntfy.apps.ocp.igou.systems
 listen-http: ":8080"
 behind-proxy: true
 cache-file: "/var/cache/ntfy/cache.db"
