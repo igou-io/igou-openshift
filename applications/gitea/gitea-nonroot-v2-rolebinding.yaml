@@ -12,3 +12,6 @@ subjects:
   - kind: ServiceAccount
     name: gitea
     namespace: gitea
+  - kind: ServiceAccount
+    name: gitea-valkey-primary
+    namespace: gitea
