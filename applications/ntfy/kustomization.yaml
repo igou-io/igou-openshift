@@ -6,6 +6,12 @@ resources:
   - ntfy-config-pvc.yaml
   # Uncomment once the probe is populated via /add-probe https://ntfy.apps.sno.igou.systems
   # - ntfy-probe.yaml
+configMapGenerator:
+  - name: ntfy-server-config
+    files:
+      - server.yml
+generatorOptions:
+  disableNameSuffixHash: true
 helmCharts:
 - name: app-template
   namespace: ntfy
@@ -25,6 +31,7 @@ helmCharts:
               type: RuntimeDefault
         containers:
           app:
+            args: ["serve"]
             image:
               repository: docker.io/binwiederhier/ntfy
               tag: v2.21.0
@@ -48,20 +55,27 @@ helmCharts:
                 drop:
                   - ALL
     persistence:
-      config:
+      cache:
         type: persistentVolumeClaim
         existingClaim: ntfy-config
         advancedMounts:
           ntfy:
             app:
               - path: /var/cache/ntfy
+      config:
+        type: configMap
+        name: ntfy-server-config
+        globalMounts:
+          - path: /etc/ntfy/server.yml
+            subPath: server.yml
+            readOnly: true
     service:
       app:
         controller: ntfy
         ports:
           http:
             port: 80
-            targetPort: 80
+            targetPort: 8080
     ingress:
       app:
         className: openshift-default
