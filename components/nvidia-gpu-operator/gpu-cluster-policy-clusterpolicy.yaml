@@ -34,7 +34,7 @@ spec:
     default: false
     enabled: true
   driver:
-    version: 595.71.05
+    version: 595.58.03
     image: driver
     repository: nvcr.io/nvidia
     licensingConfig:
