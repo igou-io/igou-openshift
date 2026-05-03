@@ -12,8 +12,10 @@ secretGenerator:
 generatorOptions:
   disableNameSuffixHash: true
   annotations:
-    # ServerSideApply=true is required because alertmanager-main is co-owned by
-    # the cluster-monitoring-operator. Force=true tells ArgoCD's SSA to use
-    # --force-conflicts so we win field ownership of data.alertmanager.yaml
-    # instead of silently merging with stale CMO defaults.
-    argocd.argoproj.io/sync-options: ServerSideApply=true,Force=true
+    # alertmanager-main is co-created by the cluster-monitoring-operator. SSA
+    # silently loses field-ownership conflicts with the operator's stale
+    # managedFields entries, so we use Replace=true: ArgoCD applies via
+    # `kubectl replace`, which clears all managedFields and writes the full
+    # Secret. The operator does not actively reconcile this Secret once it
+    # has user content (verified empirically, hash stable across reconciles).
+    argocd.argoproj.io/sync-options: Replace=true
