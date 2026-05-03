@@ -127,7 +127,8 @@ one question at a time.
 | `app-name` | Directory name under `applications/`, namespace, controller/service name, Helm release name | from `$ARGUMENTS` |
 | `image-repo` | Container image repository (e.g. `ghcr.io/foo/bar`) | — (required) |
 | `image-tag` | Image tag, ideally `<tag>@sha256:<digest>` for Renovate pinning | — (required) |
-| `container-port` | Port the container listens on | `8080` |
+| `container-port` | Port the container listens on (becomes `service.app.ports.http.targetPort`) | `8080` |
+| `service-port` | External port exposed by the Service (becomes `service.app.ports.http.port`). Defaults to `80` so the Route can reach the Service on a well-known port regardless of the container port. | `80` |
 | `hostname` | Public hostname for the OpenShift Route | `<app-name>.apps.ocp.igou.systems` |
 
 ### Optional (default `no` unless noted)
@@ -136,8 +137,9 @@ one question at a time.
 |-------|-------------|
 | `persistence` | `none` / `pvc` (config PVC) / `pvc+nfs` (config PVC plus an NFS PV+PVC for read-only data) |
 | `pvc-size` | Size of the config PVC, only if `persistence` includes `pvc` (default `5Gi`) |
-| `pvc-storage-class` | StorageClass name (default empty — cluster default) |
+| `pvc-storage-class` | StorageClass name. Default `freenas-nvmeof-ssd-csi` — match what other apps in this repo use. Always set explicitly; do not rely on the cluster default. |
 | `pvc-mount-path` | Where to mount the config PVC inside the container (default `/config`) |
+| `pvc-purpose` | Semantic name for the PVC: `config` for read-mostly app config, `data` for stateful runtime data (sqlite, uploads, cache). Affects file name and `persistence.<key>` (e.g. `<app-name>-config-pvc.yaml` vs `<app-name>-data-pvc.yaml`). Default `config`. |
 | `nfs-server` / `nfs-path` / `nfs-mount-path` | Only if `persistence=pvc+nfs` |
 | `external-secret` | `yes` / `no` — if `yes`, this skill does NOT write the ExternalSecret itself; it points the user at `/add-externalsecret applications/<app-name>` after scaffolding |
 | `service-monitor` | `yes` / `no` — adds a Prometheus ServiceMonitor stanza scraping `/metrics` on the http port |
@@ -190,11 +192,11 @@ kind: Kustomization
 namespace: <app-name>
 resources:
   - <app-name>-namespace.yaml
-  # Uncomment the lines below as the corresponding files are generated:
-  # - <app-name>-config-pvc.yaml
+  # Uncomment the lines below as the corresponding files are generated/populated:
+  # - <app-name>-<pvc-purpose>-pvc.yaml
   # - <app-name>-data-nfs-pv.yaml
   # - <app-name>-data-nfs-pvc.yaml
-  # - <app-name>-probe.yaml
+  # - <app-name>-probe.yaml         # uncomment after `/add-probe https://<hostname>` populates it
   # (the ExternalSecret entry is added by /add-externalsecret if you run it)
 helmCharts:
 - name: app-template
@@ -208,7 +210,7 @@ helmCharts:
       <app-name>:
         type: deployment
         replicas: 1
-        strategy: RollingUpdate
+        strategy: RollingUpdate    # use Recreate if persistence is configured (RWO PVC + RollingUpdate deadlocks on single-node)
         pod:
           securityContext:
             seccompProfile:
@@ -242,8 +244,8 @@ helmCharts:
         controller: <app-name>
         ports:
           http:
-            port: <container-port>
-            targetPort: <container-port>
+            port: <service-port>          # external Service port, default 80
+            targetPort: <container-port>  # port the container listens on
     ingress:
       app:
         className: openshift-default
@@ -265,24 +267,32 @@ helmCharts:
 #### Optional valuesInline blocks
 
 Append the following blocks under `valuesInline` only when the corresponding
-option was selected. Keep keys alphabetised at the top level when adding more
-than one (e.g. `persistence` before `service`, `serviceMonitor` after
-`serviceAccount`).
+option was selected. Match the de-facto top-level key order used by every
+existing app in this repo (resource lifecycle, not alphabetical):
+
+```
+controllers → persistence → service → ingress → serviceAccount → serviceMonitor
+```
 
 ##### Persistence (config PVC + optional NFS data volume)
 
-When `persistence` includes `pvc`:
+When `persistence` includes `pvc` (the persistence key uses the same `<pvc-purpose>`
+identifier as the PVC file name):
 
 ```yaml
     persistence:
-      config:
+      <pvc-purpose>:
         type: persistentVolumeClaim
-        existingClaim: <app-name>-config
+        existingClaim: <app-name>-<pvc-purpose>
         advancedMounts:
           <app-name>:
             app:
               - path: <pvc-mount-path>
 ```
+
+If the persistence above uses `ReadWriteOnce`, also change the controller
+`strategy` to `Recreate` — `RollingUpdate` deadlocks on single-node clusters
+because the new pod can't mount the PVC until the old pod releases it.
 
 When `persistence=pvc+nfs`, also add a `data` mount that references the NFS PVC:
 
@@ -319,22 +329,29 @@ Create this file unconditionally — it is referenced by `valuesFile` in the
 `could not parse values file into rnode: EOF`.
 
 ```yaml
+---
+# Intentionally empty — required by kustomize helmCharts to point at a values file.
+# All values are inlined in kustomization.yaml under valuesInline.
 foo: bar
 ```
 
-Note: this file does **not** start with `---` and is **not** added to
-`resources:` — it is only referenced by `valuesFile:` and is invisible to
-Kubernetes.
+The annotated header is required: future readers should not have to dig through
+issue trackers to understand why a file with `foo: bar` exists in the repo.
+The file is **not** added to `resources:` — it is only referenced by
+`valuesFile:` and is invisible to Kubernetes.
 
-### 4. `<app-name>-config-pvc.yaml` (if `persistence` includes `pvc`)
+### 4. `<app-name>-<pvc-purpose>-pvc.yaml` (if `persistence` includes `pvc`)
 
+File name and `<purpose>` follow the `pvc-purpose` input (`config` or `data`).
+The PVC `metadata.name` is `<app-name>-<purpose>` and the matching `persistence`
+key in `valuesInline` uses the same `<purpose>` as its identifier.
 
 ```yaml
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: <app-name>-config
+  name: <app-name>-<pvc-purpose>
   namespace: <app-name>
 spec:
   accessModes:
@@ -342,7 +359,7 @@ spec:
   resources:
     requests:
       storage: <pvc-size>
-  # storageClassName: <pvc-storage-class>   # uncomment to override the default
+  storageClassName: <pvc-storage-class>   # always set explicitly; default freenas-nvmeof-ssd-csi
 ```
 
 ### 5. `<app-name>-data-nfs-pv.yaml` and `<app-name>-data-nfs-pvc.yaml` (if `persistence=pvc+nfs`)
@@ -380,9 +397,70 @@ Generate a minimal placeholder and immediately tell the user to run the
 # Until then, this file intentionally contains no Probe resources.
 ```
 
-If you generate this file, do **not** add it to `kustomization.yaml` until it
-contains an actual Probe — kustomize will fail on an empty/comment-only resource.
-Mention this trade-off in the completion report.
+When you generate this file, add a **commented-out** reference to it in
+`kustomization.yaml` under `resources:`, with a one-line hint pointing at
+`/add-probe`:
+
+```yaml
+resources:
+  - <app-name>-namespace.yaml
+  # Uncomment once the probe is populated via `/add-probe https://<hostname>`
+  # - <app-name>-probe.yaml
+```
+
+Do **not** uncomment the line — kustomize will fail on an empty/comment-only
+resource. The commented-out reference is a reminder for the user; running
+`/add-probe` will populate the file, and the user uncomments the line at that
+point. Mention this in the completion report.
+
+## Patterns beyond the basic scaffold
+
+These patterns are not part of the default scaffold but are common enough that
+they're worth recognising. Apply them only when the user explicitly asks; do
+not pull them in pre-emptively.
+
+### Companion services (multiple `app-template` releases in one kustomization)
+
+When an app needs a sidecar that is logically a separate workload (e.g. an
+alertmanager-to-gotify bridge living next to the gotify server), prefer two
+`helmCharts` entries in the same `kustomization.yaml` over a single controller
+with multiple containers. Each entry has its own `releaseName` and an
+independent `valuesInline`. See `applications/gotify/kustomization.yaml` for
+the canonical example: the second entry omits `persistence` and `ingress` and
+keeps just `controllers`, `service`, `serviceAccount`.
+
+### File-backed config (ConfigMap from a real file)
+
+When an app expects its config as a file mounted into the container (e.g.
+`ntfy`'s `server.yml`), commit the real config file alongside
+`kustomization.yaml` and generate a ConfigMap from it:
+
+```yaml
+configMapGenerator:
+  - name: <app-name>-server-config
+    files:
+      - server.yml
+generatorOptions:
+  disableNameSuffixHash: true   # stable name so persistence.<key>.name can reference it
+```
+
+Then mount it via `persistence` using `type: configMap`:
+
+```yaml
+    persistence:
+      config:
+        type: configMap
+        name: <app-name>-server-config
+        globalMounts:
+          - path: /etc/<app-name>/server.yml
+            subPath: server.yml
+            readOnly: true
+```
+
+`disableNameSuffixHash: true` is required so the `name:` in `persistence`
+matches the rendered ConfigMap; without it, kustomize appends a content hash
+and the mount references a non-existent name. See
+`applications/ntfy/kustomization.yaml` for the canonical example.
 
 ## After generating files
 

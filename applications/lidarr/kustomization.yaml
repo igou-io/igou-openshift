@@ -8,6 +8,6 @@ helmCharts:
   namespace: lidarr
   version: 4.6.2
   releaseName: lidarr
-  repo: https://bjw-s-labs.github.io/helm-charts
+  repo: oci://ghcr.io/bjw-s-labs/helm
   valuesFile: values-dummy.yaml
   valuesInline: {}
