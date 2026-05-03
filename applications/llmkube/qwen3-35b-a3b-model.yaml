@@ -17,8 +17,6 @@ spec:
     gpu:
       enabled: true
       count: 2
-      vendor: nvidia
-      layers: -1
   resources:
     cpu: "8"
     memory: "32Gi"
