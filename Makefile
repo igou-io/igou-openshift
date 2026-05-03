@@ -16,8 +16,13 @@ validate-kustomize: ## Validate all kustomization.yaml files build successfully
 			exit 1; \
 		fi'
 
+# CoreProvider/InfrastructureProvider/IPAMProvider skipped: the
+# datreeio catalog ships the deprecated `manifestPatches` field but
+# not the newer `patches` field that v1alpha2 actually supports
+# (verified against the live CRD on cluster). Re-enable when
+# datreeio/CRDs-catalog catches up.
 KUBECONFORM_FLAGS := -strict -ignore-missing-schemas \
-	-skip ClusterSecretStore,MachineSet \
+	-skip ClusterSecretStore,MachineSet,CoreProvider,InfrastructureProvider,IPAMProvider \
 	-schema-location default \
 	-schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
 	-summary
