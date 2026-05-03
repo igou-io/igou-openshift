@@ -4,6 +4,4 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
   name: cloudnative-pg
-spec:
-  targetNamespaces:
-  - cloudnative-pg
+spec: {}
