@@ -16,6 +16,9 @@ spec:
   # on casval are actually used for inference.
   # image: ghcr.io/ggml-org/llama.cpp:server-cuda
   replicas: 0
+  accelerator:
+    type: nvidia
+    gpuCount: 2
   resources:
     gpu: 2
     cpu: "8"
