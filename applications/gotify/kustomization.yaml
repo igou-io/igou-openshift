@@ -107,7 +107,7 @@ helmCharts:
     valuesFile: values-dummy.yaml
     valuesInline:
       controllers:
-        bridge:
+        alertmanager-gotify-bridge:
           type: deployment
           replicas: 1
           strategy: RollingUpdate
@@ -149,11 +149,11 @@ helmCharts:
                     - ALL
       service:
         app:
-          controller: bridge
+          controller: alertmanager-gotify-bridge
           ports:
             http:
               port: 8080
               targetPort: 8080
       serviceAccount:
-        bridge:
+        alertmanager-gotify-bridge:
           enabled: true
