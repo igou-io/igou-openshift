@@ -26,7 +26,7 @@ metadata:
     # node simulation matches what the real node will advertise — otherwise
     # the validator DaemonSet's 1-GPU reservation makes larger pod requests
     # (e.g. ollama requesting 2) fail NodeResourcesFit in the simulation.
-    capacity.cluster-autoscaler.kubernetes.io/gpu-count: "8"
+    capacity.cluster-autoscaler.kubernetes.io/gpu-count: "2"
     capacity.cluster-autoscaler.kubernetes.io/gpu-type: "nvidia.com/gpu"
     capacity.cluster-autoscaler.kubernetes.io/labels: "node-role.kubernetes.io/burst="
     capacity.cluster-autoscaler.kubernetes.io/taints: "workload=burst:NoSchedule"
