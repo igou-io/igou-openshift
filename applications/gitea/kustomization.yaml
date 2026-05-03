@@ -31,9 +31,11 @@ helmCharts:
       valkey:
         enabled: true
         architecture: standalone
-        global:
-          valkey:
-            password: ""
+        # In-cluster cache only; Service is ClusterIP and the chart applies a
+        # NetworkPolicy that limits ingress to gitea pods. Auth disabled so
+        # the gitea side doesn't need to plumb a chart-generated password.
+        auth:
+          enabled: false
           # Bitnami common chart strips runAsUser/runAsGroup/fsGroup and
           # the empty seLinuxOptions object when set to force, letting
           # OpenShift admission pick UIDs and SELinux levels from the
