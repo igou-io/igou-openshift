@@ -86,11 +86,12 @@ spec:
   schedule: "* * * * *"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 1
-  failedJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
       activeDeadlineSeconds: 60
       backoffLimit: 0
+      ttlSecondsAfterFinished: 300
       template:
         metadata:
           labels:
@@ -116,7 +117,7 @@ spec:
                 memory: 32Mi
               limits:
                 cpu: 100m
-                memory: 64Mi
+                memory: 128Mi
             command: ["/bin/bash", "-euo", "pipefail", "-c"]
             args:
             - |
