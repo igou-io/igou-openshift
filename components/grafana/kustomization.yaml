@@ -14,6 +14,7 @@ resources:
   - grafana-thanos-datasource.yaml
   - grafana-dashboard-7587.yaml
   - grafana-dashboard-20340.yaml
+  - grafana-dashboard-12239.yaml
   - grafana-dashboard-external-secrets.yaml
 commonAnnotations:
   argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
