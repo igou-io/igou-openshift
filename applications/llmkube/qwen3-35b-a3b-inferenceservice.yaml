@@ -14,18 +14,14 @@ spec:
   # Default llamacpp image (ghcr.io/ggml-org/llama.cpp:server) is CPU-only and
   # ignores --n-gpu-layers. Override with the CUDA build so the 2x RTX 4060 Ti
   # on casval are actually used for inference.
-  # image: ghcr.io/ggml-org/llama.cpp:server-cuda
-  replicas: 0
-  accelerator:
-    type: nvidia
-    gpuCount: 2
+  image: ghcr.io/ggml-org/llama.cpp:server-cuda13
+  replicas: 1
   resources:
     gpu: 2
     cpu: "8"
     memory: "32Gi"
+    gpuMemory: "16Gi"
   contextSize: 32768
-  flashAttention: true
-  jinja: true
   endpoint:
     port: 8080
     type: ClusterIP
