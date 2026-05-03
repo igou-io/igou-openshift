@@ -24,6 +24,19 @@ route:
     - matchers:
         - alertname = AlertmanagerReceiversNotConfigured
       receiver: 'null'
+    # Suppress self-referential delivery-failure alerts when the failing
+    # integration is the gotify-bridge webhook. Bridge v2.3.2 has a bug:
+    # with --dispatch_errors it does send a debug notification to Gotify
+    # but still returns HTTP 400 for alerts missing the `description`
+    # annotation, which Alertmanager treats as a permanent client error.
+    # Several upstream OpenShift alerts (CDIDataImportCronOutdated,
+    # CDIDefaultStorageClassDegraded, KubeJobFailed, ...) ship without a
+    # description annotation and trigger this. Remove this matcher once
+    # the bridge is patched or replaced.
+    - matchers:
+        - alertname =~ "Alertmanager(Cluster)?FailedToSendAlerts"
+        - integration = webhook
+      receiver: 'null'
     - matchers:
         - severity = critical
       receiver: gotify-and-slack-critical
