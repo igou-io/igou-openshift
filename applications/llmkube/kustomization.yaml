@@ -5,6 +5,7 @@ resources:
   - llmkube-system-namespace.yaml
   - qwen3-35b-a3b-model.yaml
   - qwen3-35b-a3b-inferenceservice.yaml
+  - qwen3-35b-a3b-route.yaml
 helmCharts:
 - name: llmkube
   namespace: llmkube-system

@@ -16,12 +16,36 @@ spec:
   # on casval are actually used for inference.
   image: ghcr.io/ggml-org/llama.cpp:server-cuda13
   replicas: 0
+  # Tuning targets: Qwen3.6-35B-A3B Q4_K_M (~20 GiB) on 2x RTX 4060 Ti 16 GiB.
+  # Weights fit fully in VRAM with room for a 64k Q8 KV cache; no MoE offload.
+  flashAttention: true
+  jinja: true                # Qwen3.6 chat template is jinja-only (thinking tags)
+  cacheTypeK: q8_0
+  cacheTypeV: q8_0           # q8/q8 KV is ~lossless and roughly halves KV VRAM
+  batchSize: 2048
+  uBatchSize: 512
+  parallelSlots: 1           # single coding-assistant user; >1 splits ctx across slots
+  extraArgs:
+    - "--alias"
+    - "qwen3.6-35b-a3b"
+    - "--reasoning-format"
+    - "deepseek"             # parses <think> into OpenAI `reasoning_content` field
+    - "--temp"
+    - "0.7"
+    - "--top-p"
+    - "0.8"
+    - "--top-k"
+    - "20"
+    - "--min-p"
+    - "0.0"
+    - "--presence-penalty"
+    - "1.5"
   resources:
     gpu: 2
     cpu: "8"
     memory: "32Gi"
     gpuMemory: "16Gi"
-  contextSize: 32768
+  contextSize: 65536
   endpoint:
     port: 8080
     type: ClusterIP

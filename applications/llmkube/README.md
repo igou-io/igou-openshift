@@ -10,7 +10,8 @@ applications/llmkube/
 ├── kustomization.yaml                    # Helm chart + inline values + CR references
 ├── llmkube-system-namespace.yaml         # Namespace
 ├── qwen3-35b-a3b-model.yaml             # Model CR (downloads GGUF from HuggingFace)
-└── qwen3-35b-a3b-inferenceservice.yaml  # InferenceService CR (deploys llama.cpp server)
+├── qwen3-35b-a3b-inferenceservice.yaml  # InferenceService CR (deploys llama.cpp server)
+└── qwen3-35b-a3b-route.yaml             # OpenShift Route exposing the model externally
 ```
 
 ## CRD Reference
@@ -292,3 +293,85 @@ Casval node capacity (used for autoscaler simulation):
 | CPU | 192 cores |
 | Memory | 428 Gi |
 | `nvidia.com/gpu` | 8 slots (2 physical × 4 time-sliced) |
+
+---
+
+## Using the Qwen3.6-35B-A3B endpoint with opencode
+
+The `qwen3-35b-a3b` Route exposes the OpenAI-compatible llama.cpp server at:
+
+```
+https://qwen3-35b-a3b-llmkube-system.apps.ocp.igou.systems/v1
+```
+
+(verify with `oc get route qwen3-35b-a3b -n llmkube-system -o jsonpath='{.spec.host}'`)
+
+### Server-side tuning summary
+
+The InferenceService is configured for the model + hardware combination
+(2x RTX 4060 Ti 16 GiB, MoE A3B Q4_K_M):
+
+| Setting | Value | Why |
+|---|---|---|
+| `flashAttention` | `true` | Required to enable V-cache quantization; ~30% attention VRAM savings |
+| `cacheTypeK` / `cacheTypeV` | `q8_0` / `q8_0` | Essentially lossless, ~halves KV VRAM, lets us run 64k ctx |
+| `contextSize` | `65536` | Fits comfortably in remaining VRAM after 20 GiB weights + Q8 KV |
+| `jinja` | `true` | Qwen3.6 chat template is jinja-only (thinking tags) |
+| `parallelSlots` | `1` | Single coding-assistant user; more slots split ctx across slots |
+| `batchSize` / `uBatchSize` | `2048` / `512` | llama.cpp defaults, balanced for prompt eval throughput |
+| `--split-mode layer` + `--tensor-split 1,1` | (operator-default) | `row` mode hurts MoE; equal layer split across both GPUs |
+| `--reasoning-format deepseek` | extraArgs | Parses `<think>` into OpenAI `reasoning_content` field |
+| Sampler | `temp=0.7 top_p=0.8 top_k=20 min_p=0 presence=1.5` | Unsloth Qwen3 non-thinking defaults |
+
+### opencode configuration
+
+Add the following to your `~/.config/opencode/opencode.jsonc` (or `opencode.jsonc`
+at the project root). It uses the OpenAI-compatible adapter as documented at
+[opencode.ai/docs/providers/#llamacpp](https://opencode.ai/docs/providers/#llamacpp):
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "llama.cpp": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "llama-server (igou.systems)",
+      "options": {
+        "baseURL": "https://qwen3-35b-a3b-llmkube-system.apps.ocp.igou.systems/v1"
+      },
+      "models": {
+        "qwen3.6-35b-a3b": {
+          "name": "Qwen3.6-35B-A3B (local)",
+          "limit": { "context": 65536, "output": 32768 },
+          "reasoning": true,
+          "tools": true,
+          "temperature": 0.7,
+          "options": { "top_p": 0.8 }
+        }
+      }
+    }
+  }
+}
+```
+
+Key points:
+- The model id (`qwen3.6-35b-a3b`) must match the `--alias` set in
+  `qwen3-35b-a3b-inferenceservice.yaml` `extraArgs`.
+- `reasoning: true` paired with the server's `--reasoning-format deepseek`
+  causes opencode to render `<think>...</think>` blocks as collapsible reasoning
+  rather than leaking them into the chat output.
+- `tools: true` enables function/tool calling, which Qwen3.6 supports.
+- The Route uses `edge` TLS termination — opencode talks plain HTTPS to the
+  router, the router talks HTTP to the in-cluster service.
+- The Route has a `haproxy.router.openshift.io/timeout: 10m` annotation so
+  long thinking-mode generations don't hit the default 30s router timeout.
+
+### Quick sanity check
+
+```bash
+ROUTE=$(oc get route qwen3-35b-a3b -n llmkube-system -o jsonpath='{.spec.host}')
+curl -sS "https://${ROUTE}/v1/models" | jq
+curl -sS "https://${ROUTE}/v1/chat/completions" \
+  -H 'content-type: application/json' \
+  -d '{"model":"qwen3.6-35b-a3b","messages":[{"role":"user","content":"hello"}]}' | jq
+```
