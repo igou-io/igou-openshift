@@ -10,3 +10,6 @@ metadata:
 data:
   config.yaml: |
     enableUserWorkload: true
+    alertmanagerMain:
+      secrets:
+        - alertmanager-slack

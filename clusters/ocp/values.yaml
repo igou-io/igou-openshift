@@ -246,6 +246,15 @@ applications:
     source:
       path: applications/gotify
 
+  alertmanager-config:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '25'
+    destination:
+      namespace: openshift-monitoring
+    source:
+      path: components/alertmanager-config
+
   ansible-automation-platform:
     project: cluster-apps
     annotations:
