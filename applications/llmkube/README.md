@@ -325,6 +325,11 @@ The InferenceService is configured for the model + hardware combination
 
 ### opencode configuration
 
+Recommended invocation is via the hardened `opencode` container shipped from
+`igou-containers` and launched by `opencode-run` (in `igou-devenv/bin/`). The
+launcher bind-mounts `~/.config/opencode/` from the host into the container,
+so you only need to write the config once.
+
 Add the following to your `~/.config/opencode/opencode.jsonc` (or `opencode.jsonc`
 at the project root). It uses the OpenAI-compatible adapter as documented at
 [opencode.ai/docs/providers/#llamacpp](https://opencode.ai/docs/providers/#llamacpp):
@@ -345,8 +350,8 @@ at the project root). It uses the OpenAI-compatible adapter as documented at
           "limit": { "context": 65536, "output": 32768 },
           "reasoning": true,
           "tools": true,
-          "temperature": 0.7,
-          "options": { "top_p": 0.8 }
+          "temperature": true,
+          "options": { "temperature": 0.7, "top_p": 0.8 }
         }
       }
     }
@@ -365,6 +370,22 @@ Key points:
   router, the router talks HTTP to the in-cluster service.
 - The Route has a `haproxy.router.openshift.io/timeout: 10m` annotation so
   long thinking-mode generations don't hit the default 30s router timeout.
+
+### Launching opencode
+
+From inside the devcontainer:
+
+```bash
+make -C ~/igou-devenv opencode-build   # one-time (or after a Containerfile change)
+opencode-run                           # launches against the configured provider
+opencode-run --shell                   # drop into bash inside the container
+```
+
+`opencode-run` is on `$PATH` via `~/bin` (see igou-devenv `post-create.sh`). It
+applies the same hardening profile as `claude-run` / `cursor-run`
+(`--cap-drop=ALL`, noexec /tmp, rootless `--userns=keep-id`) and resolves
+1Password environments via `-e ENV` for cluster credentials. See
+`igou-devenv/README.md` for the full opencode container reference.
 
 ### Quick sanity check
 
