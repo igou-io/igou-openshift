@@ -75,6 +75,18 @@ External storage is a TrueNAS box exposing three ZFS pools, fronted by democrati
 
 Each pool is exposed via three protocols (iSCSI, NFS, NVMe-oF) as separate democratic-csi releases — see `components/democratic-csi/kustomization.yaml`. Default StorageClass is `freenas-nvmeof-ssd-csi` (note: this is NVMe-oF *protocol* on the `ssd` *pool*, not the `fast` pool).
 
+### Bare metal scaling (Cluster API)
+
+Worker scaling on this cluster is done via **upstream Cluster API + CAPM3**, not OpenShift's native Machine API. The OCP Machine API (`machine.openshift.io/v1beta1` MachineSets in `openshift-machine-api`) **cannot manage workers on a single-control-plane-node cluster** — it assumes a separate worker MachineSet topology, and a SNO-style cluster has no MAPI seam to attach extra workers to. Upstream CAPI is the only path that works for "one control plane host + on-demand bare metal workers".
+
+Layout:
+
+- **`components/cluster-api-operator/`** installs the upstream `cluster-api-operator` Helm chart, which deploys CAPI CoreProvider, CAPM3 InfrastructureProvider, and CAPM3 IPAMProvider into `capi-system` / `capm3-system` / `capi-operator-system`. Do **not** replace this with OCP-native MAPI — that's been considered and rejected for the topology reason above.
+- **`clusters/ocp/cluster-api/`** contains the per-cluster CAPI workload: `Cluster`, `Metal3Cluster`, `MachineSet` (in `openshift-cluster-api` namespace), `Metal3MachineTemplate`, `BareMetalHost`, BMC secret, and the CSR-approver / node-cleanup cronjobs.
+- The CAPI cluster-autoscaler runs from `cluster-api-autoscaler-system`.
+
+**Known conflict**: OCP 4.21's payload also ships the upstream CAPI IPAM CRDs (`ipaddressclaims.ipam.cluster.x-k8s.io`, `ipaddresses.ipam.cluster.x-k8s.io`) because OCP itself is migrating to CAPI. Both CVO and `capi-operator` write to those CRDs, which can cause `ClusterOperatorDegraded` (`Failing=True`, `UpdatePayloadResourceInvalid`) on `clusterversion/version`. Resolution lives in the IPAMProvider config, not by removing the upstream CAPI install.
+
 ## Cluster Inspection
 
 Use the kubernetes MCP tools as the primary method for inspecting cluster state. Prefer MCP over `oc` CLI when possible — it avoids shell overhead and provides structured output.
