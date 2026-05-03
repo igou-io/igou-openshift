@@ -63,6 +63,18 @@ Each cluster uses its own `values.yaml` to define managed applications. Each ent
 - NMState NNCP in `clusters/ocp/nmstate/` manages interface and bridge config
 - OVS bridges require `allow-extra-patch-ports: true` when OVN adds patch ports
 
+### Storage
+
+External storage is a TrueNAS box exposing three ZFS pools, fronted by democratic-csi. Pool names map literally to the `freenas-<protocol>-<pool>-csi` StorageClasses — e.g. `freenas-nvmeof-fast-csi` is the NVMe-oF protocol over the `fast` pool.
+
+| Pool | Hardware | Notes |
+|------|----------|-------|
+| `fast` | 4× NVMe (PCIe Gen 3), mirrored (2× 2-way mirror vdevs) | Highest IOPS / lowest latency. VM disks, hot DBs. |
+| `ssd`  | 4× SATA SSD, mirrored (2× 2-way mirror vdevs) | Mid-tier. General-purpose RWX/RWO. |
+| `cold` | 6× spinning disk, RAIDZ2 (single vdev) | Bulk / archival. Avoid for latency-sensitive or write-amplifying workloads. |
+
+Each pool is exposed via three protocols (iSCSI, NFS, NVMe-oF) as separate democratic-csi releases — see `components/democratic-csi/kustomization.yaml`. Default StorageClass is `freenas-nvmeof-ssd-csi` (note: this is NVMe-oF *protocol* on the `ssd` *pool*, not the `fast` pool).
+
 ## Cluster Inspection
 
 Use the kubernetes MCP tools as the primary method for inspecting cluster state. Prefer MCP over `oc` CLI when possible — it avoids shell overhead and provides structured output.
