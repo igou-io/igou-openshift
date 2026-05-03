@@ -5,6 +5,9 @@ resources:
 - kubevirt-hyperconverged-group-operatorgroup.yml
 - kubevirt-hyperconverged.yml
 - openshift-cnv-namespace.yml
+- freenas-nvmeof-ssd-csi-storageprofile.yaml
+- freenas-nvmeof-fast-csi-storageprofile.yaml
+- freenas-nfs-fast-csi-storageprofile.yaml
 # - virtualmachine-deployer-clusterrolebinding.yaml
 # - virtualmachine-deployer-clusterrole.yaml
 # - virtualmachine-deployer-serviceaccount.yaml
