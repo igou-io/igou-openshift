@@ -15,7 +15,7 @@ spec:
   # ignores --n-gpu-layers. Override with the CUDA build so the 2x RTX 4060 Ti
   # on casval are actually used for inference.
   image: ghcr.io/ggml-org/llama.cpp:server-cuda13
-  replicas: 1
+  replicas: 0
   resources:
     gpu: 2
     cpu: "8"
