@@ -12,4 +12,5 @@ data:
     enableUserWorkload: true
     alertmanagerMain:
       secrets:
-        - alertmanager-slack
+        - alertmanager-slack-critical
+        - alertmanager-slack-warning
