@@ -7,7 +7,13 @@ resources:
 - openshift-cnv-namespace.yml
 - freenas-nvmeof-ssd-csi-storageprofile.yaml
 - freenas-nvmeof-fast-csi-storageprofile.yaml
+- freenas-nvmeof-cold-csi-storageprofile.yaml
+- freenas-iscsi-fast-csi-storageprofile.yaml
+- freenas-iscsi-ssd-csi-storageprofile.yaml
+- freenas-iscsi-cold-csi-storageprofile.yaml
 - freenas-nfs-fast-csi-storageprofile.yaml
+- freenas-nfs-ssd-csi-storageprofile.yaml
+- freenas-nfs-cold-csi-storageprofile.yaml
 # - virtualmachine-deployer-clusterrolebinding.yaml
 # - virtualmachine-deployer-clusterrole.yaml
 # - virtualmachine-deployer-serviceaccount.yaml

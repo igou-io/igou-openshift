@@ -1,0 +1,9 @@
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: StorageProfile
+metadata:
+  name: freenas-nvmeof-cold-csi
+spec:
+  claimPropertySets:
+    - accessModes: [ReadWriteOnce]
+      volumeMode: Block

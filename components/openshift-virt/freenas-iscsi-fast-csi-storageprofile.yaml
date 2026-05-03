@@ -1,0 +1,10 @@
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: StorageProfile
+metadata:
+  name: freenas-iscsi-fast-csi
+spec:
+  claimPropertySets:
+    - accessModes: [ReadWriteOnce]
+      volumeMode: Block
+  cloneStrategy: snapshot
