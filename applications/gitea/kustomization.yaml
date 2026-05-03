@@ -1,17 +1,100 @@
+---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: gitea
 resources:
   - gitea-namespace.yaml
-  # - gitea-secrets-externalsecret.yaml
+  - gitea-pg-cluster.yaml
+  - gitea-admin-secret-externalsecret.yaml
+  - use-scc-nonroot-v2-role.yaml
+  - gitea-nonroot-v2-rolebinding.yaml
 helmCharts:
-- name: gitea
-  namespace: gitea
-  version: 12.5.3
-  releaseName: gitea
-  repo: https://dl.gitea.com/charts/
-  valuesInline:
-    gitea:
-      config:
-        server:
-          HTTP_PORT: 3000
+  - name: gitea
+    namespace: gitea
+    version: 12.5.3
+    releaseName: gitea
+    repo: https://dl.gitea.com/charts/
+    valuesInline:
+      openshift:
+        enabled: true
+
+      test:
+        enabled: false
+
+      postgresql:
+        enabled: false
+      postgresql-ha:
+        enabled: false
+
+      valkey-cluster:
+        enabled: false
+      valkey:
+        enabled: true
+        architecture: standalone
+        global:
+          valkey:
+            password: ""
+        primary:
+          persistence:
+            enabled: true
+            storageClass: freenas-nvmeof-ssd-csi
+            size: 2Gi
+
+      persistence:
+        enabled: true
+        storageClass: freenas-nvmeof-ssd-csi
+        size: 10Gi
+
+      ingress:
+        enabled: false
+      route:
+        enabled: true
+        host: gitea.apps.ocp.igou.systems
+        tls:
+          termination: edge
+
+      service:
+        http:
+          port: 3000
+        ssh:
+          port: 22
+
+      serviceAccount:
+        create: true
+        name: gitea
+
+      gitea:
+        admin:
+          existingSecret: gitea-admin-secret
+          passwordMode: initialOnlyRequireReset
+        config:
+          database:
+            DB_TYPE: postgres
+            SCHEMA: public
+          server:
+            HTTP_PORT: 3000
+        additionalConfigFromEnvs:
+          - name: GITEA__database__HOST
+            valueFrom:
+              secretKeyRef:
+                name: gitea-pg-app
+                key: host
+          - name: GITEA__database__NAME
+            valueFrom:
+              secretKeyRef:
+                name: gitea-pg-app
+                key: dbname
+          - name: GITEA__database__USER
+            valueFrom:
+              secretKeyRef:
+                name: gitea-pg-app
+                key: username
+          - name: GITEA__database__PASSWD
+            valueFrom:
+              secretKeyRef:
+                name: gitea-pg-app
+                key: password
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true

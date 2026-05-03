@@ -246,6 +246,14 @@ applications:
     source:
       path: applications/gotify
 
+  gitea:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '21'
+    source:
+      path: applications/gitea
+
   alertmanager-config:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
