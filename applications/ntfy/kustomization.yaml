@@ -4,7 +4,7 @@ namespace: ntfy
 resources:
   - ntfy-namespace.yaml
   - ntfy-config-pvc.yaml
-  # Uncomment once the probe is populated via /add-probe https://ntfy.apps.sno.igou.systems
+  # Uncomment once the probe is populated via /add-probe https://ntfy.apps.ocp.igou.systems
   # - ntfy-probe.yaml
 configMapGenerator:
   - name: ntfy-server-config
@@ -82,7 +82,7 @@ helmCharts:
         annotations:
           route.openshift.io/termination: edge
         hosts:
-          - host: ntfy.apps.sno.igou.systems
+          - host: ntfy.apps.ocp.igou.systems
             paths:
               - path: /
                 pathType: Prefix
