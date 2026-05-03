@@ -90,6 +90,18 @@ This is a warning, not a blocker — the user may plan to add the field later.
 
 ## Step 4: Generate the ExternalSecret
 
+> **CRD-defaulting drift — important.** The ExternalSecret CRD has four
+> string-enum fields under `dataFrom.extract` (and `data.remoteRef`) that the
+> API server fills in with defaults if omitted: `conversionStrategy: Default`,
+> `decodingStrategy: None`, `metadataPolicy: None`, `nullBytePolicy: Ignore`.
+> If git omits any of them, ArgoCD will show a perpetual diff against the
+> live object — every reconcile, forever. **Always emit all four explicitly,
+> even though they look redundant.** This is also why the templates below
+> use `dataFrom.extract`: the 1Password SDK provider in this cluster rejects
+> `data.remoteRef` (both bare key+property and op:// URI forms), so extract
+> is the only working pattern here. Use `target.template` to remap field names
+> when you need them.
+
 ### Standard ExternalSecret (use-template=no):
 
 ```yaml
@@ -113,10 +125,11 @@ spec:
     deletionPolicy: Retain
   dataFrom:
     - extract:
-        key: <onepassword-key>
         conversionStrategy: Default
         decodingStrategy: None
+        key: <onepassword-key>
         metadataPolicy: None
+        nullBytePolicy: Ignore
 ```
 
 If `skip-dry-run=no`, omit the `argocd.argoproj.io/sync-options` annotation.
@@ -148,10 +161,11 @@ spec:
         <key2>: <template-value2>
   dataFrom:
     - extract:
-        key: <onepassword-key>
         conversionStrategy: Default
         decodingStrategy: None
+        key: <onepassword-key>
         metadataPolicy: None
+        nullBytePolicy: Ignore
 ```
 
 ### File naming
