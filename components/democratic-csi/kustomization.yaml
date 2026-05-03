@@ -70,7 +70,11 @@ helmCharts:
         node-stage-secret:
         node-publish-secret:
         controller-expand-secret:
-    volumeSnapshotClasses: []
+    volumeSnapshotClasses:
+      - name: freenas-iscsi-fast-csi
+        deletionPolicy: Delete
+        parameters:
+          detachedSnapshots: "false"
     driver:
       existingConfigSecret: "democratic-csi-iscsi-fast-config"
       config:
@@ -132,7 +136,11 @@ helmCharts:
         node-stage-secret:
         node-publish-secret:
         controller-expand-secret:
-    volumeSnapshotClasses: []
+    volumeSnapshotClasses:
+      - name: freenas-iscsi-ssd-csi
+        deletionPolicy: Delete
+        parameters:
+          detachedSnapshots: "false"
     driver:
       existingConfigSecret: "democratic-csi-iscsi-ssd-config"
       config:
@@ -326,7 +334,11 @@ helmCharts:
         node-stage-secret:
         node-publish-secret:
         controller-expand-secret:
-    volumeSnapshotClasses: []
+    volumeSnapshotClasses:
+      - name: freenas-nfs-ssd-csi
+        deletionPolicy: Delete
+        parameters:
+          detachedSnapshots: "false"
     driver:
       existingConfigSecret: "democratic-csi-nfs-ssd-config"
       config:
