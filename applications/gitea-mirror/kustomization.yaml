@@ -1,0 +1,89 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: gitea-mirror
+resources:
+  - gitea-mirror-namespace.yaml
+  - gitea-mirror-config-pvc.yaml
+  # Uncomment the lines below as the corresponding files are populated:
+  # - gitea-mirror-probe.yaml
+  # (the ExternalSecret entry is added by /add-externalsecret if you run it)
+helmCharts:
+- name: app-template
+  namespace: gitea-mirror
+  version: 4.6.2
+  releaseName: gitea-mirror
+  repo: oci://ghcr.io/bjw-s-labs/helm
+  valuesFile: values-dummy.yaml
+  valuesInline:
+    controllers:
+      gitea-mirror:
+        type: deployment
+        replicas: 1
+        strategy: RollingUpdate
+        pod:
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+        containers:
+          app:
+            image:
+              repository: ghcr.io/raylabshq/gitea-mirror
+              tag: v3.15.6@sha256:ad2d7f59d2616edd7e0907c8feb07e6e08199b4818c711ee9c7b06df9600b442
+              pullPolicy: IfNotPresent
+            env:
+              NODE_ENV: production
+              HOST: 0.0.0.0
+              PORT: "4321"
+              DATABASE_URL: file:/app/data/gitea-mirror.db
+            # Once /add-externalsecret has been run, wire the resulting Secret in here, e.g.:
+            # envFrom:
+            #   - secretRef:
+            #       name: gitea-mirror-secrets
+            probes:
+              liveness:
+                enabled: true
+                type: TCP
+              readiness:
+                enabled: true
+                type: TCP
+              startup:
+                enabled: true
+                type: TCP
+            resources: {}
+            securityContext:
+              allowPrivilegeEscalation: false
+              runAsNonRoot: true
+              capabilities:
+                drop:
+                  - ALL
+    persistence:
+      config:
+        type: persistentVolumeClaim
+        existingClaim: gitea-mirror-config
+        advancedMounts:
+          gitea-mirror:
+            app:
+              - path: /app/data
+    service:
+      app:
+        controller: gitea-mirror
+        ports:
+          http:
+            port: 4321
+            targetPort: 4321
+    ingress:
+      app:
+        className: openshift-default
+        annotations:
+          route.openshift.io/termination: edge
+        hosts:
+          - host: gitea-mirror.apps.sno.igou.systems
+            paths:
+              - path: /
+                pathType: Prefix
+                service:
+                  identifier: app
+                  port: http
+    serviceAccount:
+      gitea-mirror:
+        enabled: true
