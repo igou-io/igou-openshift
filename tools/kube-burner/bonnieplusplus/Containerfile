@@ -1,3 +1,3 @@
-FROM fedora:latest@sha256:781b7642e8bf256e9cf75d2aa58d86f5cc695fd2df113517614e181a5eee9138
+FROM fedora:latest@sha256:498c452f32a739b61f0ef215bce9924ebc4866cbe44710f58157d77723b7a6d2
 RUN dnf install -y bonnie++ && dnf clean all
 ENTRYPOINT ["/usr/sbin/bonnie++"]
