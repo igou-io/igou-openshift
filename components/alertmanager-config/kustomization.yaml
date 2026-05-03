@@ -3,7 +3,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: openshift-monitoring
 resources:
-  - alertmanager-slack-externalsecret.yaml
+  - alertmanager-slack-critical-externalsecret.yaml
+  - alertmanager-slack-warning-externalsecret.yaml
 secretGenerator:
   - name: alertmanager-main
     namespace: openshift-monitoring
