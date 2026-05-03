@@ -238,14 +238,13 @@ applications:
         jsonPointers:
           - /spec/replicas
 
-  # Removed while looking at other options
-  # ntfy:
-  #   project: cluster-apps
-  #   annotations:
-  #     argocd.argoproj.io/compare-options: IgnoreExtraneous
-  #     argocd.argoproj.io/sync-wave: '20'
-  #   source:
-  #     path: applications/ntfy
+  gotify:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/gotify
 
   ansible-automation-platform:
     project: cluster-apps
