@@ -52,7 +52,7 @@ spec:
             - --leader-elect-resource-namespace=cluster-api-autoscaler-system
             - --logtostderr=true
             - --stderrthreshold=info
-            - --v=2
+            - --v=4
             # Scaling behavior — tuned for slow bare-metal provisioning and
             # to actually power down idle workers.
             # Proactively scale node groups up to their min-size annotation
