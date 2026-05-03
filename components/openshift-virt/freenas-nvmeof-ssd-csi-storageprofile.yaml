@@ -1,0 +1,16 @@
+# StorageProfile spec override for the default VM storage class.
+# CDI auto-creates the StorageProfile from the StorageClass, but
+# democratic-csi doesn't expose accessMode/volumeMode in CSI capabilities,
+# so claimPropertySets must be set manually. cloneStrategy: snapshot
+# enables CDI smart-clone via the matching VolumeSnapshotClass — required
+# for fast golden-image cloning into VM disks.
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: StorageProfile
+metadata:
+  name: freenas-nvmeof-ssd-csi
+spec:
+  claimPropertySets:
+    - accessModes: [ReadWriteOnce]
+      volumeMode: Block
+  cloneStrategy: snapshot
