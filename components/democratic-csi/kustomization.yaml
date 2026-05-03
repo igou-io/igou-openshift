@@ -26,8 +26,8 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next"
-          pullPolicy: Always
+          # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
+          tag: "next@sha256:0f308ae601474cb9633f90dc96f59dbd23440b0ed0e77d70e224465246a12dfa"
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
@@ -50,8 +50,8 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next"
-          pullPolicy: Always
+          # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
+          tag: "next@sha256:0f308ae601474cb9633f90dc96f59dbd23440b0ed0e77d70e224465246a12dfa"
         localtimeHostPath: null
     csiDriver:
       name: "org.democratic-csi.iscsi-fast"
@@ -88,8 +88,8 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next"
-          pullPolicy: Always
+          # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
+          tag: "next@sha256:0f308ae601474cb9633f90dc96f59dbd23440b0ed0e77d70e224465246a12dfa"
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
@@ -112,8 +112,8 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next"
-          pullPolicy: Always
+          # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
+          tag: "next@sha256:0f308ae601474cb9633f90dc96f59dbd23440b0ed0e77d70e224465246a12dfa"
         localtimeHostPath: null
     csiDriver:
       name: "org.democratic-csi.iscsi-ssd"
@@ -150,8 +150,8 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next"
-          pullPolicy: Always
+          # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
+          tag: "next@sha256:0f308ae601474cb9633f90dc96f59dbd23440b0ed0e77d70e224465246a12dfa"
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
@@ -174,8 +174,8 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next"
-          pullPolicy: Always
+          # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
+          tag: "next@sha256:0f308ae601474cb9633f90dc96f59dbd23440b0ed0e77d70e224465246a12dfa"
         localtimeHostPath: null
     csiDriver:
       name: "org.democratic-csi.iscsi-cold"
@@ -212,8 +212,8 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next"
-          pullPolicy: Always
+          # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
+          tag: "next@sha256:0f308ae601474cb9633f90dc96f59dbd23440b0ed0e77d70e224465246a12dfa"
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
@@ -236,8 +236,8 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next"
-          pullPolicy: Always
+          # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
+          tag: "next@sha256:0f308ae601474cb9633f90dc96f59dbd23440b0ed0e77d70e224465246a12dfa"
         localtimeHostPath: null
     csiDriver:
       name: "org.democratic-csi.nfs-fast"
@@ -280,8 +280,8 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next"
-          pullPolicy: Always
+          # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
+          tag: "next@sha256:0f308ae601474cb9633f90dc96f59dbd23440b0ed0e77d70e224465246a12dfa"
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
@@ -304,8 +304,8 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next"
-          pullPolicy: Always
+          # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
+          tag: "next@sha256:0f308ae601474cb9633f90dc96f59dbd23440b0ed0e77d70e224465246a12dfa"
         localtimeHostPath: null
     csiDriver:
       name: "org.democratic-csi.nfs-ssd"
@@ -344,8 +344,8 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next"
-          pullPolicy: Always
+          # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
+          tag: "next@sha256:0f308ae601474cb9633f90dc96f59dbd23440b0ed0e77d70e224465246a12dfa"
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
@@ -368,8 +368,8 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next"
-          pullPolicy: Always
+          # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
+          tag: "next@sha256:0f308ae601474cb9633f90dc96f59dbd23440b0ed0e77d70e224465246a12dfa"
         localtimeHostPath: null
     csiDriver:
       name: "org.democratic-csi.nfs-cold"
@@ -408,8 +408,8 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next"
-          pullPolicy: Always
+          # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
+          tag: "next@sha256:0f308ae601474cb9633f90dc96f59dbd23440b0ed0e77d70e224465246a12dfa"
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
@@ -432,8 +432,8 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next"
-          pullPolicy: Always
+          # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
+          tag: "next@sha256:0f308ae601474cb9633f90dc96f59dbd23440b0ed0e77d70e224465246a12dfa"
         localtimeHostPath: null
     csiDriver:
       name: "org.democratic-csi.nvmeof-fast"
@@ -476,8 +476,8 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next"
-          pullPolicy: Always
+          # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
+          tag: "next@sha256:0f308ae601474cb9633f90dc96f59dbd23440b0ed0e77d70e224465246a12dfa"
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
@@ -500,8 +500,8 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next"
-          pullPolicy: Always
+          # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
+          tag: "next@sha256:0f308ae601474cb9633f90dc96f59dbd23440b0ed0e77d70e224465246a12dfa"
         localtimeHostPath: null
     csiDriver:
       name: "org.democratic-csi.nvmeof-ssd"
@@ -544,8 +544,8 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next"
-          pullPolicy: Always
+          # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
+          tag: "next@sha256:0f308ae601474cb9633f90dc96f59dbd23440b0ed0e77d70e224465246a12dfa"
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
@@ -568,8 +568,8 @@ helmCharts:
         enabled: true
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
-          tag: "next"
-          pullPolicy: Always
+          # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
+          tag: "next@sha256:0f308ae601474cb9633f90dc96f59dbd23440b0ed0e77d70e224465246a12dfa"
         localtimeHostPath: null
     csiDriver:
       name: "org.democratic-csi.nvmeof-cold"
