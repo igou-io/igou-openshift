@@ -123,6 +123,15 @@ helmCharts:
                 GOTIFY_ENDPOINT: http://gotify.gotify.svc:80/message
                 BIND_ADDRESS: 0.0.0.0
                 PORT: "8080"
+                # Dispatch alerts even when summary/description annotations
+                # are missing — substitute a debug message instead of returning
+                # 400. Required because several OpenShift platform alerts
+                # (KubeJobFailed, ClusterNotUpgradeable, CDIStorageProfiles*)
+                # ship without a `description` annotation.
+                DISPATCH_ERRORS: "true"
+                # Render notifications in Markdown with FIR/RES status,
+                # start time, and (when present) a generator URL.
+                EXTENDED_DETAILS: "true"
                 GOTIFY_TOKEN:
                   valueFrom:
                     secretKeyRef:
