@@ -1,3 +1,4 @@
+---
 apiVersion: quay.redhat.com/v1
 kind: QuayRegistry
 metadata:
@@ -12,28 +13,27 @@ spec:
         replicas: 1
         resources:
           requests:
-            cpu: 10m
-            memory: 10Mi
+            cpu: 500m
+            memory: 1Gi
+    # Postgres provided by the CNPG quay-pg cluster (see quay-pg-cluster.yaml).
+    # DB_URI is rendered into config-bundle-secret by ExternalSecret.
     - kind: postgres
-      managed: true
-      overrides:
-        replicas: 1
-        resources:
-          requests:
-            cpu: 10m
-            memory: 10Mi
+      managed: false
     - kind: clair
       managed: true
       overrides:
         replicas: 1
         resources:
           requests:
-            cpu: 10m
-            memory: 10Mi
+            cpu: 500m
+            memory: 512Mi
+    # Clair's database shares the CNPG quay-pg cluster (see clair-database.yaml
+    # + Cluster.spec.managed.roles in quay-pg-cluster.yaml). connstrings are
+    # rendered into the config bundle alongside DB_URI.
+    - kind: clairpostgres
+      managed: false
     - kind: redis
       managed: true
-      overrides:
-        replicas: 1
     - kind: horizontalpodautoscaler
       managed: false
     - kind: objectstorage
@@ -46,17 +46,9 @@ spec:
         replicas: 1
         resources:
           requests:
-            cpu: 10m
-            memory: 10Mi
+            cpu: 500m
+            memory: 512Mi
     - kind: monitoring
       managed: true
     - kind: tls
       managed: true
-    - kind: clairpostgres
-      managed: true
-      overrides:
-        replicas: 1
-        resources:
-          requests:
-            cpu: 10m
-            memory: 10Mi

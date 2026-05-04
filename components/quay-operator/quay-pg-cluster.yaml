@@ -1,0 +1,46 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: quay-pg
+  namespace: quay-enterprise
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  instances: 1
+  # Single-instance Postgres on SNO has no HA value to preserve and CNPG's
+  # auto-PDB fires PodDisruptionBudgetAtLimit. Disable it. Re-enable only
+  # if you raise instances to >= 2.
+  enablePDB: false
+  imagePullPolicy: IfNotPresent
+  bootstrap:
+    initdb:
+      database: quay
+      owner: quay
+      # Owner password sourced from 1Password via ExternalSecret. Same Secret
+      # is referenced by the config-bundle template so DB_URI stays in sync.
+      secret:
+        name: quay-pg-credentials
+      # pg_trgm is required by Quay's catalog search.
+      postInitApplicationSQL:
+        - CREATE EXTENSION IF NOT EXISTS pg_trgm
+  # The clair role lives on the same cluster but owns its own database (managed
+  # via the Database CR in clair-database.yaml). CNPG keeps the role's password
+  # in sync with the password key of quay-clair-pg-credentials.
+  managed:
+    roles:
+      - name: clair
+        login: true
+        ensure: present
+        passwordSecret:
+          name: quay-clair-pg-credentials
+        comment: Owner role for the clair database
+  storage:
+    size: 20Gi
+    storageClass: freenas-nvmeof-ssd-csi
+  monitoring:
+    enablePodMonitor: true
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
