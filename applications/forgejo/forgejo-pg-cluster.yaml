@@ -8,6 +8,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
   instances: 1
+  enablePDB: false
   imagePullPolicy: IfNotPresent
   bootstrap:
     initdb:
