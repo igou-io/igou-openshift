@@ -16,5 +16,4 @@ data:
       # alerts route through the gotify/slack receivers configured here.
       enableUserAlertmanagerConfig: true
       secrets:
-        - alertmanager-slack-critical
-        - alertmanager-slack-warning
+        - alertmanager-slack-bot-token
