@@ -4,6 +4,7 @@ namespace: forgejo
 resources:
   - forgejo-namespace.yaml
   - forgejo-pg-cluster.yaml
+  - forgejo-pg-podmonitor.yaml
   - forgejo-secrets-externalsecret.yaml
   - use-scc-nonroot-v2-role.yaml
   - forgejo-nonroot-v2-rolebinding.yaml

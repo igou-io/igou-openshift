@@ -17,8 +17,6 @@ spec:
   storage:
     size: 10Gi
     storageClass: freenas-nvmeof-ssd-csi
-  monitoring:
-    enablePodMonitor: true
   resources:
     requests:
       cpu: 100m

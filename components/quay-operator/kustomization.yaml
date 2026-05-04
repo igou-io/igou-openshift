@@ -9,6 +9,7 @@ resources:
   - quay-pg-credentials-externalsecret.yaml
   - quay-clair-pg-credentials-externalsecret.yaml
   - quay-pg-cluster.yaml
+  - quay-pg-podmonitor.yaml
   - clair-database.yaml
   - config-bundle-secret-externalsecret.yaml
   - igou-registry-quayregistry.yaml
