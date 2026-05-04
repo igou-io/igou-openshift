@@ -50,6 +50,8 @@ helmCharts:
             enabled: true
             storageClass: freenas-nvmeof-ssd-csi
             size: 2Gi
+          pdb:
+            create: false
 
       persistence:
         enabled: true
