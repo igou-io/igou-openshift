@@ -1,0 +1,19 @@
+---
+# Hand-managed replacement for the PodMonitor that CNPG used to generate via
+# spec.monitoring.enablePodMonitor (deprecated in 1.29). Distinct name from the
+# operator's `quay-pg` so the two can coexist briefly during the cutover.
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: quay-pg-metrics
+  namespace: quay-enterprise
+  labels:
+    cnpg.io/cluster: quay-pg
+spec:
+  namespaceSelector: {}
+  podMetricsEndpoints:
+    - port: metrics
+  selector:
+    matchLabels:
+      cnpg.io/cluster: quay-pg
+      cnpg.io/podRole: instance
