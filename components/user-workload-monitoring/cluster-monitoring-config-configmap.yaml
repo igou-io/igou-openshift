@@ -11,6 +11,10 @@ data:
   config.yaml: |
     enableUserWorkload: true
     alertmanagerMain:
+      # Receive alerts from user-workload Prometheus too (UWM AM is
+      # disabled in user-workload-monitoring-config) so user-namespace
+      # alerts route through the gotify/slack receivers configured here.
+      enableUserAlertmanagerConfig: true
       secrets:
         - alertmanager-slack-critical
         - alertmanager-slack-warning
