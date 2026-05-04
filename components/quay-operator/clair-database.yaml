@@ -1,0 +1,17 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: clair
+  namespace: quay-enterprise
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  cluster:
+    name: quay-pg
+  name: clair
+  owner: clair
+  databaseReclaimPolicy: retain
+  extensions:
+    - name: pg_trgm
+      ensure: present

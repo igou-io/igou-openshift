@@ -1,0 +1,12 @@
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: quay-operator-group
+  namespace: quay-operator
+# AllNamespaces mode: the Quay operator does not support MultiNamespace
+# OperatorGroups — OLM passes WATCH_NAMESPACE as a comma-separated string
+# which the operator then passes verbatim into single-namespace RBAC calls,
+# producing errors like `in the namespace "quay-enterprise,quay-operator"`.
+# Use AllNamespaces (or OwnNamespace) per Red Hat Quay install docs.
+spec: {}
