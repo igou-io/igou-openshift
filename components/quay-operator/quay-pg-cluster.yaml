@@ -32,6 +32,10 @@ spec:
       - name: clair
         login: true
         ensure: present
+        # CNPG's defaulting webhook sets these on the managed role —
+        # spelling them out keeps Argo from reporting drift on every refresh.
+        inherit: true
+        connectionLimit: -1
         passwordSecret:
           name: quay-clair-pg-credentials
         comment: Owner role for the clair database
