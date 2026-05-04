@@ -38,7 +38,7 @@ spec:
     staticConfig:
       static:
         - https://homepage.biscuit.igou.systems/
-        - https://igou-registry-quay-quay-enterprise.apps.ocp.igou.systems
+        - https://quay.apps.ocp.igou.systems
         - https://igounas.igou.systems/
         - https://unifi.igounas.igou.systems
         - https://prowlarr.biscuit.igou.systems/ping
