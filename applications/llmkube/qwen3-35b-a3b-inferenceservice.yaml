@@ -14,7 +14,7 @@ spec:
   # Default llamacpp image (ghcr.io/ggml-org/llama.cpp:server) is CPU-only and
   # ignores --n-gpu-layers. Override with the CUDA build so the 2x RTX 4060 Ti
   # on casval are actually used for inference.
-  image: ghcr.io/ggml-org/llama.cpp:server-cuda13
+  image: ghcr.io/ggml-org/llama.cpp:server-cuda13@sha256:525eb47c5d3403b4ae2087186771ecaa4a7e1059b413930eea8aa7c2db4b1195
   replicas: 0
   # Tuning targets: Qwen3.6-35B-A3B Q4_K_M (~20 GiB) on 2x RTX 4060 Ti 16 GiB.
   # Weights fit fully in VRAM with room for a 64k Q8 KV cache; no MoE offload.

@@ -29,7 +29,7 @@ helmCharts:
             app:
               image:
                 repository: docker.io/gotify/server
-                tag: "2.9.1"
+                tag: "2.9.1@sha256:a3af47067ce6aad76aadf5ba32d6ddfecd1ae576a961359f039fd1831e8b7652"
                 pullPolicy: IfNotPresent
               env:
                 GOTIFY_SERVER_PORT: "8080"
@@ -117,7 +117,7 @@ helmCharts:
             app:
               image:
                 repository: ghcr.io/druggeri/alertmanager_gotify_bridge
-                tag: "2.3.2"
+                tag: "2.3.2@sha256:242441023c6a7956fc7bcdd30350a8fed38f791e703d670aa286fc0465f88b41"
                 pullPolicy: IfNotPresent
               env:
                 GOTIFY_ENDPOINT: http://gotify.gotify.svc:80/message

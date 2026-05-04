@@ -36,7 +36,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: cluster-api-autoscaler
-          image: registry.k8s.io/autoscaling/cluster-autoscaler:v1.34.0
+          image: registry.k8s.io/autoscaling/cluster-autoscaler:v1.34.0@sha256:7b172f42533cf1de0738ec18e154845e71e3bc022e072c0cf55489c1d4ac2216
           imagePullPolicy: IfNotPresent
           command:
             - /cluster-autoscaler
