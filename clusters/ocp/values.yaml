@@ -254,6 +254,14 @@ applications:
     source:
       path: applications/gitea
 
+  forgejo:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '22'
+    source:
+      path: applications/forgejo
+
   alertmanager-config:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous

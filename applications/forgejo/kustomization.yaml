@@ -1,0 +1,86 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: forgejo
+resources:
+  - forgejo-namespace.yaml
+  - forgejo-pg-cluster.yaml
+  - forgejo-secrets-externalsecret.yaml
+  - use-scc-nonroot-v2-role.yaml
+  - forgejo-nonroot-v2-rolebinding.yaml
+helmCharts:
+  - name: forgejo
+    namespace: forgejo
+    version: 17.0.1
+    releaseName: forgejo
+    repo: oci://code.forgejo.org/forgejo-helm
+    valuesInline:
+      service:
+        http:
+          type: ClusterIP
+          port: 3000
+        ssh:
+          type: ClusterIP
+          port: 22
+
+      ingress:
+        enabled: false
+
+      route:
+        enabled: true
+        host: forgejo.apps.ocp.igou.systems
+        tls:
+          termination: edge
+          insecureEdgeTerminationPolicy: Redirect
+
+      persistence:
+        enabled: true
+        create: true
+        storageClass: freenas-nvmeof-ssd-csi
+        size: 10Gi
+        claimName: forgejo-shared-storage
+
+      replicaCount: 1
+
+      serviceAccount:
+        create: true
+        name: forgejo
+
+      gitea:
+        admin:
+          existingSecret: forgejo-secrets
+          passwordMode: initialOnlyRequireReset
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+        config:
+          database:
+            DB_TYPE: postgres
+            SCHEMA: public
+          server:
+            ROOT_URL: https://forgejo.apps.ocp.igou.systems/
+            SSH_DOMAIN: forgejo.apps.ocp.igou.systems
+        additionalConfigFromEnvs:
+          - name: GITEA__database__HOST
+            valueFrom:
+              secretKeyRef:
+                name: forgejo-pg-app
+                key: host
+          - name: GITEA__database__NAME
+            valueFrom:
+              secretKeyRef:
+                name: forgejo-pg-app
+                key: dbname
+          - name: GITEA__database__USER
+            valueFrom:
+              secretKeyRef:
+                name: forgejo-pg-app
+                key: username
+          - name: GITEA__database__PASSWD
+            valueFrom:
+              secretKeyRef:
+                name: forgejo-pg-app
+                key: password
+
+      test:
+        enabled: false
