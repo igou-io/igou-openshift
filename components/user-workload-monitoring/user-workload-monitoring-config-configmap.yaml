@@ -27,6 +27,10 @@ data:
           resources:
             requests:
               storage: 10Gi
+    # UWM Alertmanager is disabled so user-workload Prometheus forwards
+    # alerts to the platform Alertmanager (alertmanager-main), which has
+    # the gotify/slack receivers configured. Pairs with
+    # alertmanagerMain.enableUserAlertmanagerConfig in
+    # cluster-monitoring-config.
     alertmanager:
-      enabled: true
-      enableAlertmanagerConfig: true
+      enabled: false

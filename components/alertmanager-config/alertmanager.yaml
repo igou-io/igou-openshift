@@ -52,14 +52,15 @@ receivers:
     webhook_configs:
       - url: http://alertmanager-gotify-bridge.gotify.svc:8080/gotify_webhook
         send_resolved: true
-  # NOTE: gotify-bridge webhook intentionally omitted from severity
-  # receivers. Bridge v2.3.2 returns HTTP 400 on alerts missing the
-  # `description` annotation (CDIDataImportCronOutdated et al.) even
-  # with --dispatch_errors enabled, which trips
-  # AlertmanagerFailedToSendAlerts. Slack covers severity-routed alerts;
-  # Gotify push only fires via the catch-all `gotify` default receiver.
-  # Restore the webhook here once the bridge is patched or replaced.
+  # Severity receivers fan out to both Gotify (push) and Slack. Bridge
+  # v2.3.2 still returns HTTP 400 on alerts missing the `description`
+  # annotation, but the `Alertmanager(Cluster)?FailedToSendAlerts
+  # integration=webhook` route above null-routes the resulting flap, and
+  # --dispatch_errors makes the bridge push a debug notification anyway.
   - name: gotify-and-slack-critical
+    webhook_configs:
+      - url: http://alertmanager-gotify-bridge.gotify.svc:8080/gotify_webhook
+        send_resolved: true
     slack_configs:
       - api_url_file: /etc/alertmanager/secrets/alertmanager-slack-critical/password
         channel: '#igoucloud-alerts-critical'
@@ -70,6 +71,9 @@ receivers:
           {{ .Annotations.description }}
           {{ end }}
   - name: gotify-and-slack-warning
+    webhook_configs:
+      - url: http://alertmanager-gotify-bridge.gotify.svc:8080/gotify_webhook
+        send_resolved: true
     slack_configs:
       - api_url_file: /etc/alertmanager/secrets/alertmanager-slack-warning/password
         channel: '#igoucloud-alerts-warning'
