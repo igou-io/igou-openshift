@@ -11,35 +11,6 @@ data:
     app:
       title: Red Hat Developer Hub
       baseUrl: https://rhdh.apps.ocp.igou.systems
-    # RHDH's frontend SignInPage hardcodes `github` as the default
-    # provider when `signInPage` isn't set, and only honors `guest` in
-    # dev mode. `oauth2Proxy` is the supported "proxied provider" that
-    # tells the frontend to trust upstream proxy headers — exactly
-    # what our oauth-proxy sidecar publishes via --pass-user-headers
-    # (X-Forwarded-User, X-Forwarded-Email).
-    signInPage: oauth2Proxy
-    auth:
-      environment: production
-      providers:
-        oauth2Proxy:
-          signIn:
-            resolvers:
-              # Map oauth-proxy's X-Forwarded-User header to a Backstage
-              # User entity by name. With no catalog seed yet, allow
-              # sign-in without a matching entity (synthetic identity).
-              - resolver: forwardedUserMatchingUserEntityName
-                dangerouslyAllowSignInWithoutUserInCatalog: true
-    catalog:
-      locations:
-        # User entities for OpenShift cluster users so the
-        # forwardedUserMatchingUserEntityName resolver can find them
-        # via X-Forwarded-User from oauth-proxy. Mounted from the
-        # rhdh-catalog-users ConfigMap via the Backstage CR's
-        # application.extraFiles.
-        - type: file
-          target: /opt/catalog-entities/users.yaml
-          rules:
-            - allow: [User]
     backend:
       baseUrl: https://rhdh.apps.ocp.igou.systems
       cors:
