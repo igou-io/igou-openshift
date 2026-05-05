@@ -1,0 +1,33 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: rhdh-pg
+  namespace: rhdh
+  annotations:
+    argocd.argoproj.io/sync-wave: '10'
+spec:
+  instances: 1
+  # Single-instance Postgres on SNO has no HA value to preserve and CNPG's
+  # auto-PDB fires PodDisruptionBudgetAtLimit. Disable it. Re-enable only
+  # if you raise instances to >= 2.
+  enablePDB: false
+  imagePullPolicy: IfNotPresent
+  bootstrap:
+    initdb:
+      database: backstage
+      owner: backstage
+      # BYO credentials (managed by ESO from 1Password) so the rhdh-operator
+      # and CNPG agree on a password we control. CNPG reads `username` and
+      # `password` keys from this Secret to create the role.
+      secret:
+        name: rhdh-postgres-credentials
+  storage:
+    size: 10Gi
+    storageClass: freenas-nvmeof-ssd-csi
+  monitoring:
+    enablePodMonitor: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi

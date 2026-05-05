@@ -1,0 +1,23 @@
+---
+apiVersion: rhdh.redhat.com/v1alpha5
+kind: Backstage
+metadata:
+  name: rhdh-developer-hub
+  namespace: rhdh
+  annotations:
+    argocd.argoproj.io/sync-wave: '11'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  database:
+    enableLocalDb: false
+  application:
+    appConfig:
+      configMaps:
+        - name: app-config-rhdh
+    route:
+      enabled: true
+      host: rhdh.apps.ocp.igou.systems
+    extraEnvs:
+      secrets:
+        - name: rhdh-postgres-credentials
+        - name: rhdh-backend-secret

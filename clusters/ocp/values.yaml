@@ -261,6 +261,13 @@ applications:
     source:
       path: components/quay-operator
 
+  rhdh:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '22'
+    source:
+      path: components/rhdh
+
   alertmanager-config:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
