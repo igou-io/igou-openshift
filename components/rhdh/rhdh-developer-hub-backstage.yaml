@@ -29,6 +29,12 @@ spec:
         template:
           spec:
             serviceAccountName: rhdh-oauth-proxy
+            # rhdh-operator defaults this to false. oauth-proxy needs the
+            # SA token at /var/run/secrets/kubernetes.io/serviceaccount/token
+            # so it can act as the OAuth client (client_id is the SA's
+            # `system:serviceaccount:...` identity, client_secret is the
+            # SA token). Re-enable.
+            automountServiceAccountToken: true
             volumes:
               - name: rhdh-tls
                 secret:
