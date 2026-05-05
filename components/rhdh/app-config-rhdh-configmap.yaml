@@ -23,6 +23,13 @@ data:
               secret: "${BACKEND_SECRET}"
       database:
         client: pg
+        # Backstage's default `database` plugin-division mode runs
+        # CREATE DATABASE per plugin, which requires CREATEDB on the
+        # role. CNPG's bootstrap-created role doesn't have it. Switch
+        # to `schema` so each plugin gets its own schema inside the
+        # already-owned `backstage` database — no extra privileges
+        # needed.
+        pluginDivisionMode: schema
         connection:
           host: ${POSTGRES_HOST}
           port: ${POSTGRES_PORT}
