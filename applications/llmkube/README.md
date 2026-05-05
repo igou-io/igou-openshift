@@ -376,9 +376,9 @@ Key points:
 From inside the devcontainer:
 
 ```bash
-make -C ~/igou-devenv opencode-build   # one-time (or after a Containerfile change)
-opencode-run                           # launches against the configured provider
-opencode-run --shell                   # drop into bash inside the container
+make -C /workspace/igou-devenv opencode-build   # one-time (or after a Containerfile change)
+opencode-run                                    # launches against the configured provider
+opencode-run --shell                            # drop into bash inside the container
 ```
 
 `opencode-run` is on `$PATH` via `~/bin` (see igou-devenv `post-create.sh`). It
