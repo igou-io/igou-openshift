@@ -5,3 +5,8 @@ resources:
   - rhdh-namespace.yaml
   - rhdh-operatorgroup.yaml
   - rhdh-subscription.yaml
+  - rhdh-postgres-credentials-externalsecret.yaml
+  - rhdh-backend-secret-externalsecret.yaml
+  - rhdh-pg-cluster.yaml
+  - app-config-rhdh-configmap.yaml
+  - rhdh-developer-hub-backstage.yaml
