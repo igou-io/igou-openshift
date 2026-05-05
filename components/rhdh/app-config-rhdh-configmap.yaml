@@ -11,6 +11,16 @@ data:
     app:
       title: Red Hat Developer Hub
       baseUrl: https://rhdh.apps.ocp.igou.systems
+    auth:
+      environment: production
+      providers:
+        # The OpenShift oauth-proxy sidecar enforces the actual auth
+        # perimeter (redirect to OpenShift OAuth, validate via
+        # TokenReview). Backstage itself runs in guest mode for the
+        # single-user case. `dangerouslyAllowOutsideDevelopment: true`
+        # is required because the guest provider is dev-only by default.
+        guest:
+          dangerouslyAllowOutsideDevelopment: true
     backend:
       baseUrl: https://rhdh.apps.ocp.igou.systems
       cors:
