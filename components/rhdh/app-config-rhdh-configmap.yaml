@@ -29,6 +29,17 @@ data:
               # sign-in without a matching entity (synthetic identity).
               - resolver: forwardedUserMatchingUserEntityName
                 dangerouslyAllowSignInWithoutUserInCatalog: true
+    catalog:
+      locations:
+        # User entities for OpenShift cluster users so the
+        # forwardedUserMatchingUserEntityName resolver can find them
+        # via X-Forwarded-User from oauth-proxy. Mounted from the
+        # rhdh-catalog-users ConfigMap via the Backstage CR's
+        # application.extraFiles.
+        - type: file
+          target: /opt/catalog-entities/users.yaml
+          rules:
+            - allow: [User]
     backend:
       baseUrl: https://rhdh.apps.ocp.igou.systems
       cors:

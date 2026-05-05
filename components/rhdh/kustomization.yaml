@@ -15,4 +15,5 @@ resources:
   - rhdh-tls-service.yaml
   - rhdh-route.yaml
   - app-config-rhdh-configmap.yaml
+  - rhdh-catalog-users-configmap.yaml
   - rhdh-developer-hub-backstage.yaml

@@ -14,6 +14,10 @@ spec:
     appConfig:
       configMaps:
         - name: app-config-rhdh
+    extraFiles:
+      mountPath: /opt/catalog-entities
+      configMaps:
+        - name: rhdh-catalog-users
     # Operator-rendered Route is replaced by rhdh-route.yaml so traffic
     # lands on the oauth-proxy sidecar (port 8443, reencrypt) instead of
     # going straight to backstage-backend.
