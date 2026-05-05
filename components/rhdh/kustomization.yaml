@@ -8,5 +8,11 @@ resources:
   - rhdh-postgres-credentials-externalsecret.yaml
   - rhdh-backend-secret-externalsecret.yaml
   - rhdh-pg-cluster.yaml
+  - rhdh-oauth-proxy-cookie-password.yaml
+  - rhdh-oauth-proxy-cookie-externalsecret.yaml
+  - rhdh-oauth-proxy-serviceaccount.yaml
+  - rhdh-oauth-proxy-rbac.yaml
+  - rhdh-tls-service.yaml
+  - rhdh-route.yaml
   - app-config-rhdh-configmap.yaml
   - rhdh-developer-hub-backstage.yaml

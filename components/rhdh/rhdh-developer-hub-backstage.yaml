@@ -14,10 +14,53 @@ spec:
     appConfig:
       configMaps:
         - name: app-config-rhdh
+    # Operator-rendered Route is replaced by rhdh-route.yaml so traffic
+    # lands on the oauth-proxy sidecar (port 8443, reencrypt) instead of
+    # going straight to backstage-backend.
     route:
-      enabled: true
-      host: rhdh.apps.ocp.igou.systems
+      enabled: false
     extraEnvs:
       secrets:
         - name: rhdh-postgres-credentials
         - name: rhdh-backend-secret
+  deployment:
+    patch:
+      spec:
+        template:
+          spec:
+            serviceAccountName: rhdh-oauth-proxy
+            volumes:
+              - name: rhdh-tls
+                secret:
+                  secretName: rhdh-tls
+              - name: rhdh-oauth-proxy-cookie
+                secret:
+                  secretName: rhdh-oauth-proxy-cookie
+            containers:
+              - name: oauth-proxy
+                image: quay.io/openshift/origin-oauth-proxy:4.21@sha256:aa5fa4391d948c048a89ced2706d6e4540f122170dbfda80c091792e9638c65e
+                imagePullPolicy: IfNotPresent
+                ports:
+                  - name: https
+                    containerPort: 8443
+                    protocol: TCP
+                args:
+                  - '--provider=openshift'
+                  - '--https-address=:8443'
+                  - '--http-address='
+                  - '--email-domain=*'
+                  - '--upstream=http://127.0.0.1:7007'
+                  - '--openshift-service-account=rhdh-oauth-proxy'
+                  - '--openshift-sar={"namespace":"rhdh","resource":"services","name":"backstage-rhdh-developer-hub","verb":"get"}'
+                  - '--tls-cert=/etc/tls/private/tls.crt'
+                  - '--tls-key=/etc/tls/private/tls.key'
+                  - '--cookie-secret-file=/etc/proxy/cookie/cookie-secret'
+                  - '--pass-user-headers=true'
+                  - '--skip-provider-button=true'
+                volumeMounts:
+                  - name: rhdh-tls
+                    mountPath: /etc/tls/private
+                    readOnly: true
+                  - name: rhdh-oauth-proxy-cookie
+                    mountPath: /etc/proxy/cookie
+                    readOnly: true
