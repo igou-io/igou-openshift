@@ -12,3 +12,14 @@ spec:
     enableCommonBootImageImport: true
   #   nonRoot: true
   #   withHostPassthroughCPU: true
+  # Allow virt-handler (and virt-launcher pods it spawns) onto the casval burst
+  # worker, which carries workload=burst:NoSchedule from the CAPI MachineSet.
+  # HCO propagates this to the virt-handler DaemonSet so VMs that opt in via
+  # matching nodeSelector + toleration can run there.
+  workloads:
+    nodePlacement:
+      tolerations:
+        - key: workload
+          operator: Equal
+          value: burst
+          effect: NoSchedule
