@@ -51,17 +51,17 @@ helmCharts:
                 enabled: true
                 type: HTTP
                 path: /api/health
-                port: http
+                port: 4321
               readiness:
                 enabled: true
                 type: HTTP
                 path: /api/health
-                port: http
+                port: 4321
               startup:
                 enabled: true
                 type: HTTP
                 path: /api/health
-                port: http
+                port: 4321
                 spec:
                   failureThreshold: 30
                   periodSeconds: 10
