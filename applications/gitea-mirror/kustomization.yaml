@@ -4,9 +4,8 @@ namespace: gitea-mirror
 resources:
   - gitea-mirror-namespace.yaml
   - gitea-mirror-config-pvc.yaml
-  # Uncomment the lines below as the corresponding files are populated:
-  # - gitea-mirror-probe.yaml
-  # (the ExternalSecret entry is added by /add-externalsecret if you run it)
+  - gitea-mirror-secrets-externalsecret.yaml
+  - gitea-mirror-probe.yaml
 helmCharts:
 - name: app-template
   namespace: gitea-mirror
@@ -35,20 +34,37 @@ helmCharts:
               HOST: 0.0.0.0
               PORT: "4321"
               DATABASE_URL: file:/app/data/gitea-mirror.db
-            # Once /add-externalsecret has been run, wire the resulting Secret in here, e.g.:
-            # envFrom:
-            #   - secretRef:
-            #       name: gitea-mirror-secrets
+              BETTER_AUTH_URL: https://gitea-mirror.apps.ocp.igou.systems
+              PUBLIC_BETTER_AUTH_URL: https://gitea-mirror.apps.ocp.igou.systems
+              BETTER_AUTH_TRUSTED_ORIGINS: https://gitea-mirror.apps.ocp.igou.systems
+              AUTO_IMPORT_REPOS: "true"
+              SCHEDULE_ENABLED: "true"
+              SCHEDULE_INTERVAL: "0 4 * * *"
+              CLEANUP_DELETE_IF_NOT_IN_GITHUB: "true"
+              CLEANUP_ORPHANED_REPO_ACTION: archive
+              CLEANUP_DRY_RUN: "false"
+            envFrom:
+              - secretRef:
+                  name: gitea-mirror-secrets
             probes:
               liveness:
                 enabled: true
-                type: TCP
+                type: HTTP
+                path: /api/health
+                port: http
               readiness:
                 enabled: true
-                type: TCP
+                type: HTTP
+                path: /api/health
+                port: http
               startup:
                 enabled: true
-                type: TCP
+                type: HTTP
+                path: /api/health
+                port: http
+                spec:
+                  failureThreshold: 30
+                  periodSeconds: 10
             resources: {}
             securityContext:
               allowPrivilegeEscalation: false
@@ -77,7 +93,7 @@ helmCharts:
         annotations:
           route.openshift.io/termination: edge
         hosts:
-          - host: gitea-mirror.apps.sno.igou.systems
+          - host: gitea-mirror.apps.ocp.igou.systems
             paths:
               - path: /
                 pathType: Prefix
