@@ -1,4 +1,20 @@
 ---
-# Placeholder - populate via `/add-probe https://gitea-mirror.apps.sno.igou.systems` (skill: add-probe).
-# Until then, this file intentionally contains no Probe resources.
-# Note: gitea-mirror exposes /api/health for health checks.
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: gitea-mirror-biscuit
+  labels:
+    app.kubernetes.io/name: blackbox-exporter
+spec:
+  interval: 60s
+  module: http_2xx
+  prober:
+    url: blackbox-exporter.blackbox-exporter.svc:9115
+  targets:
+    staticConfig:
+      static:
+        - https://gitea-mirror.apps.ocp.igou.systems/api/health
+      labels:
+        tier: standard
+        category: gitea-mirror
+        owner: platform
