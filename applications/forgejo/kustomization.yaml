@@ -37,7 +37,7 @@ helmCharts:
         enabled: true
         create: true
         storageClass: freenas-nvmeof-ssd-csi
-        size: 10Gi
+        size: 100Gi
         claimName: forgejo-shared-storage
 
       replicaCount: 1
