@@ -47,9 +47,9 @@ spec:
         enable: true
         settings:
           application-name: OpenShift Pipelines (homelab)
-          auto-configure-new-github-repo: false
-          secret-auto-create: true
-          remote-tasks: true
+          auto-configure-new-github-repo: "false"
+          secret-auto-create: "true"
+          remote-tasks: "true"
           max-keep-runs: "10"
           enable-cancel-in-progress: "true"
           custom-console-name: OpenShift Console
