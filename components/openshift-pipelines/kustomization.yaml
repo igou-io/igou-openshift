@@ -3,7 +3,6 @@ kind: Kustomization
 resources:
   - openshift-pipelines-operator-subscription.yaml
   - tekton-ci-low-priorityclass.yaml
-  - tekton-chains-namespace.yaml
   - tektonconfig.yaml
   - pac-github-app-externalsecret.yaml
   - chains-signing-externalsecret.yaml
