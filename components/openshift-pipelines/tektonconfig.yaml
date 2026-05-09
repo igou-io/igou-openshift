@@ -1,0 +1,60 @@
+---
+apiVersion: operator.tekton.dev/v1alpha1
+kind: TektonConfig
+metadata:
+  name: config
+  annotations:
+    argocd.argoproj.io/sync-wave: "11"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,ServerSideApply=true
+spec:
+  profile: all
+  targetNamespace: openshift-pipelines
+  pruner:
+    disabled: false
+    schedule: "0 4 * * *"
+    keep: 20
+    keep-since: 10080
+    resources:
+      - pipelinerun
+      - taskrun
+  pipeline:
+    enable-bundles-resolver: true
+    enable-cluster-resolver: true
+    enable-git-resolver: true
+    enable-hub-resolver: true
+    default-service-account: pipeline-sa
+    default-timeout-minutes: 60
+    enable-step-actions: true
+    default-pod-template:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      priorityClassName: tekton-ci-low
+  chain:
+    artifacts.taskrun.format: in-toto
+    artifacts.taskrun.storage: oci
+    artifacts.pipelinerun.format: in-toto
+    artifacts.pipelinerun.storage: oci
+    artifacts.oci.storage: oci
+    transparency.enabled: false
+    signers.x509.fulcio.enabled: false
+  platforms:
+    openshift:
+      pipelinesAsCode:
+        enable: true
+        settings:
+          application-name: OpenShift Pipelines (homelab)
+          auto-configure-new-github-repo: false
+          secret-auto-create: true
+          remote-tasks: true
+          max-keep-runs: "10"
+          enable-cancel-in-progress: "true"
+          custom-console-name: OpenShift Console
+          custom-console-url: https://console-openshift-console.apps.ocp.igou.systems
+          custom-console-url-pr-details: |
+            {{.openshift_console_url}}/k8s/ns/{{.namespace}}/tekton.dev~v1~PipelineRun/{{.pr}}
+          custom-console-url-pr-tasklog: |
+            {{.openshift_console_url}}/k8s/ns/{{.namespace}}/tekton.dev~v1~PipelineRun/{{.pr}}/logs/{{.task}}
