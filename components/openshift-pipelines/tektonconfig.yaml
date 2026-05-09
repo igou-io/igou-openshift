@@ -53,7 +53,5 @@ spec:
           enable-cancel-in-progress: "true"
           custom-console-name: OpenShift Console
           custom-console-url: https://console-openshift-console.apps.ocp.igou.systems
-          custom-console-url-pr-details: |
-            {{.openshift_console_url}}/k8s/ns/{{.namespace}}/tekton.dev~v1~PipelineRun/{{.pr}}
-          custom-console-url-pr-tasklog: |
-            {{.openshift_console_url}}/k8s/ns/{{.namespace}}/tekton.dev~v1~PipelineRun/{{.pr}}/logs/{{.task}}
+          custom-console-url-pr-details: https://console-openshift-console.apps.ocp.igou.systems/k8s/ns/{{.namespace}}/tekton.dev~v1~PipelineRun/{{.pr}}
+          custom-console-url-pr-tasklog: https://console-openshift-console.apps.ocp.igou.systems/k8s/ns/{{.namespace}}/tekton.dev~v1~PipelineRun/{{.pr}}/logs/{{.task}}
