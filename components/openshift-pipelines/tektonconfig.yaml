@@ -13,7 +13,6 @@ spec:
     disabled: false
     schedule: "0 4 * * *"
     keep: 20
-    keep-since: 10080
     resources:
       - pipelinerun
       - taskrun
