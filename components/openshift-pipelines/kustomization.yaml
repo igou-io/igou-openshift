@@ -1,4 +1,9 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- openshift-pipelines-operator-subscription.yaml
+  - openshift-pipelines-operator-subscription.yaml
+  - tekton-ci-low-priorityclass.yaml
+  - tektonconfig.yaml
+  - pac-github-app-externalsecret.yaml
+  - chains-signing-externalsecret.yaml
+  - pac-controller-funnel-service.yaml
