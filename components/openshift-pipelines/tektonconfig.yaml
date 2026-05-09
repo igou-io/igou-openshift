@@ -25,7 +25,7 @@ spec:
     default-service-account: pipeline-sa
     default-timeout-minutes: 60
     enable-step-actions: true
-    default-pod-template:
+    default-pod-template: |
       securityContext:
         runAsNonRoot: true
         seccompProfile:
