@@ -38,7 +38,7 @@ spec:
     artifacts.pipelinerun.format: in-toto
     artifacts.pipelinerun.storage: oci
     artifacts.oci.storage: oci
-    transparency.enabled: false
+    transparency.enabled: "false"
     signers.x509.fulcio.enabled: false
   platforms:
     openshift:
@@ -49,8 +49,9 @@ spec:
           auto-configure-new-github-repo: "false"
           secret-auto-create: "true"
           remote-tasks: "true"
-          max-keep-runs: "10"
-          enable-cancel-in-progress: "true"
+          default-max-keep-runs: "10"
+          enable-cancel-in-progress-on-pull-requests: "true"
+          enable-cancel-in-progress-on-push: "true"
           custom-console-name: OpenShift Console
           custom-console-url: https://console-openshift-console.apps.ocp.igou.systems
           custom-console-url-pr-details: https://console-openshift-console.apps.ocp.igou.systems/k8s/ns/{{.namespace}}/tekton.dev~v1~PipelineRun/{{.pr}}
