@@ -13,6 +13,13 @@ spec:
   storage:
     deviceClasses:
     - name: lvm-local-storage
+      # nodeSelector is immutable per lvm-operator webhook (ErrNodeSelectorCannotBeChanged).
+      # Changing this field requires deleting and recreating the LVMCluster.
+      nodeSelector:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: node-role.kubernetes.io/master
+            operator: Exists
       deviceSelector:
         forceWipeDevicesAndDestroyAllData: true
         paths:
