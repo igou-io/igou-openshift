@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - mapping-nodenetworkconfigurationpolicy.yaml
   - mapping-casval-nodenetworkconfigurationpolicy.yaml
+  - mapping-hpg5-nodenetworkconfigurationpolicy.yaml
   - ../../../components/nmstate/
 
 commonAnnotations:
