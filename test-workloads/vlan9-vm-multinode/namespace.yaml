@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vlan9-vm-multinode
+  labels:
+    # Selected by the vlan9-no-ipam ClusterUserDefinedNetwork, which
+    # auto-materializes a NetworkAttachmentDefinition into any namespace
+    # carrying this label.
+    network.igou.systems/vlan9: "true"

@@ -1,0 +1,79 @@
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: vm-casval
+  namespace: vlan9-vm-multinode
+spec:
+  dataVolumeTemplates:
+    - metadata:
+        name: vm-casval-volume
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: centos-stream10
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: 30Gi
+  instancetype:
+    kind: virtualmachineclusterinstancetype
+    name: u1.small
+  preference:
+    kind: virtualmachineclusterpreference
+    name: centos.stream10
+  runStrategy: Always
+  template:
+    spec:
+      # Pattern C — burst. The selector targets the burst role label (set by
+      # CAPI propagation from the MachineSet template). DO NOT use
+      # kubernetes.io/hostname=casval — the autoscaler's synthetic template
+      # node only carries labels declared in
+      # capacity.cluster-autoscaler.kubernetes.io/labels on the MachineSet,
+      # which can't include a per-node hostname.
+      nodeSelector:
+        node-role.kubernetes.io/burst: ""
+      tolerations:
+        - key: workload
+          operator: Equal
+          value: burst
+          effect: NoSchedule
+      architecture: amd64
+      domain:
+        devices:
+          autoattachPodInterface: false
+          disks:
+            - name: rootdisk
+              bootOrder: 1
+            - name: cloudinitdisk
+          interfaces:
+            - name: vlan9
+              bridge: {}
+              model: virtio
+              state: up
+        machine:
+          type: pc-q35-rhel9.6.0
+        resources: {}
+      networks:
+        - name: vlan9
+          multus:
+            networkName: vlan9-no-ipam
+      volumes:
+        - name: rootdisk
+          dataVolume:
+            name: vm-casval-volume
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              hostname: vm-casval
+              users:
+                - default
+                - name: igou
+                  lock_passwd: true
+                  sudo: ALL=(ALL) NOPASSWD:ALL
+                  ssh_authorized_keys:
+                    - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOWgNfV1zdod84sj28d+z7YBLkaD5ZImElWt8zHw+u7/
+              runcmd:
+                - ["systemctl", "enable", "--now", "qemu-guest-agent"]
