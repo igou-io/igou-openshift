@@ -1,0 +1,37 @@
+---
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: mapping-hpg5
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: '3'
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: hpg5.igou.systems
+  desiredState:
+    interfaces:
+      - name: enp2s0.45
+        type: vlan
+        state: up
+        vlan:
+          base-iface: enp2s0
+          id: 45
+      - name: br-secondary
+        type: ovs-bridge
+        state: up
+        bridge:
+          allow-extra-patch-ports: true
+          options:
+            stp:
+              enabled: false
+          port:
+            - name: enp2s0
+    ovn:
+      bridge-mappings:
+        - bridge: br-ex
+          localnet: physical-network
+          state: present
+        - bridge: br-secondary
+          localnet: trunk-network
+          state: present
