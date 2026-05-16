@@ -27,7 +27,7 @@ spec:
               enabled: false
           port:
             - name: eno2np1
-      - name: enp129s0f0np0
+      - name: enp1s0f0np0
         description: Mellanox CX4 port 0 — TrueNAS storage path
         type: ethernet
         state: up
@@ -50,4 +50,4 @@ spec:
       config:
         - destination: 10.10.9.213/32
           next-hop-address: 10.199.0.1
-          next-hop-interface: enp129s0f0np0
+          next-hop-interface: enp1s0f0np0
