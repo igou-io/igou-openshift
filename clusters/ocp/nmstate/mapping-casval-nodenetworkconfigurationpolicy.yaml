@@ -1,0 +1,53 @@
+---
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: mapping-casval
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: '3'
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: casval
+  desiredState:
+    interfaces:
+      - name: eno2np1.45
+        type: vlan
+        state: up
+        vlan:
+          base-iface: eno2np1
+          id: 45
+      - name: br-secondary
+        type: ovs-bridge
+        state: up
+        bridge:
+          allow-extra-patch-ports: true
+          options:
+            stp:
+              enabled: false
+          port:
+            - name: eno2np1
+      - name: enp129s0f0np0
+        description: Mellanox CX4 port 0 — TrueNAS storage path
+        type: ethernet
+        state: up
+        mtu: 9000
+        ipv4:
+          enabled: true
+          dhcp: false
+          address:
+            - ip: 10.199.0.2
+              prefix-length: 24
+    ovn:
+      bridge-mappings:
+        - bridge: br-ex
+          localnet: physical-network
+          state: present
+        - bridge: br-secondary
+          localnet: trunk-network
+          state: present
+    routes:
+      config:
+        - destination: 10.10.9.213/32
+          next-hop-address: 10.199.0.1
+          next-hop-interface: enp129s0f0np0
