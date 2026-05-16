@@ -1,0 +1,30 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: trunk-test
+  namespace: multus-trunk-casval
+  annotations:
+    k8s.v1.cni.cncf.io/networks: |-
+      [
+        {
+          "name": "vlan45-trunk",
+          "ips": ["10.10.45.226/24"],
+          "interface": "vlan45"
+        }
+      ]
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: casval
+  tolerations:
+    - key: nvidia.com/gpu
+      operator: Exists
+      effect: NoSchedule
+  restartPolicy: Never
+  containers:
+    - name: net
+      image: registry.access.redhat.com/ubi9/ubi-minimal:latest
+      command: ["sleep", "infinity"]
+      securityContext:
+        capabilities:
+          add: ["NET_ADMIN", "NET_RAW"]
