@@ -31,7 +31,23 @@ metadata:
     # scale-to-zero / scale-from-zero works normally.
     capacity.cluster-autoscaler.kubernetes.io/gpu-count: "2"
     capacity.cluster-autoscaler.kubernetes.io/gpu-type: "nvidia.com/gpu"
-    capacity.cluster-autoscaler.kubernetes.io/labels: "node-role.kubernetes.io/burst="
+    # Labels the *real* casval node will advertise once it joins. The
+    # autoscaler builds a synthetic template node from this list to evaluate
+    # whether a Pending pod would fit if we scaled up — anything the pod's
+    # nodeSelector relies on must be declared here. The CAPI provider does
+    # NOT auto-inject kubelet baseline labels, so list them explicitly:
+    #   - kubernetes.io/arch, kubernetes.io/os: kubelet baseline; KubeVirt
+    #       virt-controller adds kubernetes.io/arch=amd64 to every launcher
+    #       pod's nodeSelector.
+    #   - node-role.kubernetes.io/burst, node-role.kubernetes.io/worker:
+    #       propagated by CAPI from the MachineSet template labels.
+    #   - kubevirt.io/schedulable: set by virt-handler once it lands; required
+    #       because KubeVirt's mutating admission webhook adds it as a
+    #       nodeSelector on every virt-launcher pod.
+    #   - machine-type.node.kubevirt.io/pc-q35-rhel9.6.0: set by KubeVirt's
+    #       node-labeller; required for VMs that pin spec.domain.machine.type
+    #       (the default for RHEL/CentOS VirtualMachines).
+    capacity.cluster-autoscaler.kubernetes.io/labels: "node-role.kubernetes.io/burst=,node-role.kubernetes.io/worker=,kubernetes.io/arch=amd64,kubernetes.io/os=linux,kubevirt.io/schedulable=true,machine-type.node.kubevirt.io/pc-q35-rhel9.6.0=true"
     capacity.cluster-autoscaler.kubernetes.io/taints: "workload=burst:NoSchedule"
 spec:
   clusterName: ocp-hb42r
