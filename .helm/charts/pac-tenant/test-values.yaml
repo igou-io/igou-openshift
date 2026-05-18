@@ -25,3 +25,14 @@ tenants:
   - name: custom-1p-tenant
     url: https://forgejo.apps.ocp.igou.systems/igou-io/custom-1p-tenant
     onepasswordItem: legacy-named-forgejo-item
+
+  - name: container-builder
+    url: https://forgejo.apps.ocp.igou.systems/igou-io/container-builder
+    imageStreams:
+      - name: ee-minimal-rhel9
+        from: registry.redhat.io/ansible-automation-platform-26/ee-minimal-rhel9:latest
+    secrets:
+      pushSecrets:
+        - name: quay-push-config
+          onepasswordItem: ci-quay-container-builder
+          registry: https://quay.io

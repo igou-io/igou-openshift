@@ -58,10 +58,19 @@ defaults:
 #     quota: { ... }                                   # optional, full ResourceQuota.spec.hard map
 #     limitRange: { ... }                              # optional
 #     egressBlockedCIDRs: [<cidr>, ...]                # optional
+#     imageStreams:                                    # optional, OpenShift ImageStream(s) for this tenant.
+#       - name: <imagestream-name>                     # e.g. ee-minimal-rhel9
+#         from: <upstream-image:tag>                   # e.g. registry.redhat.io/.../ee-minimal-rhel9:latest
+#         # scheduled: true                            # optional, default true — re-import on schedule
+#         # referencePolicy: Source                    # optional, default Source — keeps signed chain
 #     secrets:
-#       imagePullSecrets:                              # attached to pipeline-sa.imagePullSecrets
+#       imagePullSecrets:                              # attached to pipeline-sa.imagePullSecrets (kubelet)
 #         - name: <k8s-secret-name>
-#           onepasswordItem: <1pwd-item-name>
+#           onepasswordItem: <1pwd-item-name>          # 1P item must contain a 'dockerconfigjson' field
+#       pushSecrets:                                   # attached to pipeline-sa.secrets with tekton.dev/docker-0
+#         - name: <k8s-secret-name>                    #  → Tekton cred-helper exposes to all steps as /tekton/creds/.docker/config.json
+#           onepasswordItem: <1pwd-item-name>          # 1P item must contain a 'dockerconfigjson' field
+#           registry: <https://registry-url>           # e.g. https://quay.io — sets the tekton.dev/docker-0 annotation
 #       workspaceSecrets:                              # available to PipelineRun via workspace mount
 #         - name: <k8s-secret-name>
 #           onepasswordItem: <1pwd-item-name>

@@ -1,0 +1,28 @@
+{{- range $tenant := .Values.tenants }}
+{{- $ns := include "pac-tenant.namespace" (dict "root" $ "tenant" $tenant) }}
+{{- range $is := ($tenant.imageStreams | default list) }}
+{{- $tag := default "latest" (regexFind ":[^:]+$" $is.from | trimPrefix ":") }}
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: {{ $is.name | quote }}
+  namespace: {{ $ns | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+  labels:
+    {{- include "pac-tenant.labels" (dict "tenant" $tenant) | nindent 4 }}
+spec:
+  lookupPolicy:
+    local: false
+  tags:
+    - name: {{ $tag | quote }}
+      from:
+        kind: DockerImage
+        name: {{ $is.from | quote }}
+      importPolicy:
+        scheduled: {{ $is.scheduled | default true }}
+      referencePolicy:
+        type: {{ $is.referencePolicy | default "Source" | quote }}
+{{- end }}
+{{- end }}
