@@ -3,4 +3,6 @@
 # Schema and defaults: see .helm/charts/pac-tenant/values.yaml
 #
 # Tenants are added/removed via the /scaffold-pac-tenant skill.
-tenants: []
+tenants:
+  - name: igou-ansible
+    url: https://forgejo.apps.ocp.igou.systems/igou-io/igou-ansible
