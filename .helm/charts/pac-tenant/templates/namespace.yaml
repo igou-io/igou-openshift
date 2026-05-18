@@ -1,0 +1,16 @@
+{{- range $tenant := .Values.tenants }}
+{{- $ns := include "pac-tenant.namespace" (dict "root" $ "tenant" $tenant) }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ $ns | quote }}
+  labels:
+    igou.systems/tenant-type: pac-ci
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    {{- include "pac-tenant.labels" (dict "tenant" $tenant) | nindent 4 }}
+  annotations:
+    openshift.io/description: "PaC CI tenant for {{ $tenant.url }}"
+    argocd.argoproj.io/sync-wave: "20"
+{{- end }}

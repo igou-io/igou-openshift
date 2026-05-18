@@ -1,0 +1,23 @@
+{{- range $tenant := .Values.tenants }}
+{{- $ns := include "pac-tenant.namespace" (dict "root" $ "tenant" $tenant) }}
+{{- $cfg := include "pac-tenant.merged" (dict "root" $ "tenant" $tenant) | fromYaml }}
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: ci-limits
+  namespace: {{ $ns | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+  labels:
+    {{- include "pac-tenant.labels" (dict "tenant" $tenant) | nindent 4 }}
+spec:
+  limits:
+    - type: Container
+      defaultRequest:
+{{- toYaml $cfg.limitRange.defaultRequest | nindent 8 }}
+      default:
+{{- toYaml $cfg.limitRange.default | nindent 8 }}
+      max:
+{{- toYaml $cfg.limitRange.max | nindent 8 }}
+{{- end }}

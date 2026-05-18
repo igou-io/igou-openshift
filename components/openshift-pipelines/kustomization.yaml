@@ -4,6 +4,4 @@ resources:
   - openshift-pipelines-operator-subscription.yaml
   - tekton-ci-low-priorityclass.yaml
   - tektonconfig.yaml
-  - pac-github-app-externalsecret.yaml
   - chains-signing-externalsecret.yaml
-  - pac-controller-funnel-service.yaml
