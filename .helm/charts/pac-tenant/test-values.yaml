@@ -1,0 +1,27 @@
+---
+tenants:
+  - name: simple-tenant
+    url: https://forgejo.apps.ocp.igou.systems/igou-io/simple-tenant
+
+  - name: secrets-tenant
+    url: https://forgejo.apps.ocp.igou.systems/igou-io/secrets-tenant
+    secrets:
+      imagePullSecrets:
+        - name: ghcr-readonly
+          onepasswordItem: ci-ghcr-readonly
+      workspaceSecrets:
+        - name: snyk-org-token
+          onepasswordItem: ci-snyk-org
+
+  - name: heavy-tenant
+    url: https://forgejo.apps.ocp.igou.systems/igou-io/heavy-tenant
+    quota:
+      requests.cpu: "16"
+      requests.memory: 32Gi
+      limits.cpu: "32"
+      limits.memory: 64Gi
+    concurrencyLimit: 1
+
+  - name: custom-1p-tenant
+    url: https://forgejo.apps.ocp.igou.systems/igou-io/custom-1p-tenant
+    onepasswordItem: legacy-named-forgejo-item

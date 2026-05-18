@@ -46,7 +46,6 @@ spec:
         enable: true
         settings:
           application-name: OpenShift Pipelines (homelab)
-          auto-configure-new-github-repo: "false"
           secret-auto-create: "true"
           remote-tasks: "true"
           default-max-keep-runs: "10"

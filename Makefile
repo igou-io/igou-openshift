@@ -35,8 +35,15 @@ validate-schemas: ## Validate rendered manifests against K8s/OpenShift schemas
 		kustomize build --enable-helm "$$dir" 2>/dev/null | \
 		kubeconform $(KUBECONFORM_FLAGS) || exit 1'
 
+.PHONY: lint-helm
+lint-helm: ## Lint all Helm charts under .helm/charts/
+	@for chart in $(REPO_ROOT)/.helm/charts/*/; do \
+		echo "--- $$chart ---"; \
+		helm lint "$$chart" || exit 1; \
+	done
+
 .PHONY: test
-test: lint validate-kustomize validate-schemas ## Run all tests (lint, validate-kustomize, validate-schemas)
+test: lint lint-helm validate-kustomize validate-schemas ## Run all tests (lint, lint-helm, validate-kustomize, validate-schemas)
 
 .PHONY: clean
 clean: ## Remove charts/ directories left behind by kustomize build (excludes .helm/charts)

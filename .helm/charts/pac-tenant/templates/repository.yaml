@@ -1,0 +1,39 @@
+{{- range $tenant := .Values.tenants }}
+{{- $ns := include "pac-tenant.namespace" (dict "root" $ "tenant" $tenant) }}
+{{- $cfg := include "pac-tenant.merged" (dict "root" $ "tenant" $tenant) | fromYaml }}
+{{- $okToTest := include "pac-tenant.okToTest" (dict "root" $ "tenant" $tenant) | fromYamlArray }}
+---
+apiVersion: pipelinesascode.tekton.dev/v1alpha1
+kind: Repository
+metadata:
+  name: {{ $tenant.name | quote }}
+  namespace: {{ $ns | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "22"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+  labels:
+    {{- include "pac-tenant.labels" (dict "tenant" $tenant) | nindent 4 }}
+spec:
+  url: {{ $tenant.url | quote }}
+  git_provider:
+    type: forgejo
+    url: {{ $.Values.forgejo.url | quote }}
+    secret:
+      name: forgejo-webhook-config
+      key: provider.token
+    webhook_secret:
+      name: forgejo-webhook-config
+      key: webhook.secret
+  concurrency_limit: {{ $cfg.concurrencyLimit }}
+  policy:
+    pull_request:
+{{- range $user := $cfg.policy.pullRequest }}
+      - {{ $user | quote }}
+{{- end }}
+    ok_to_test:
+{{- range $user := $okToTest }}
+      - {{ $user | quote }}
+{{- end }}
+  settings:
+    cancel-in-progress: {{ $cfg.cancelInProgress }}
+{{- end }}

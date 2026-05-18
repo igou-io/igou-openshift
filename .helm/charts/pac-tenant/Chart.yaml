@@ -1,0 +1,8 @@
+apiVersion: v2
+name: pac-tenant
+version: 0.1.0
+description: Per-repository OpenShift Pipelines as Code tenant resources — namespace, ServiceAccount, NetworkPolicies, ResourceQuota, LimitRange, Repository CR, and optional ExternalSecrets, defined declaratively as a list in values.tenants.
+type: application
+kubeVersion: '>=1.28.0'
+maintainers:
+  - name: David Igou

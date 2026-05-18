@@ -1,0 +1,72 @@
+---
+# forgejo — the upstream Pipelines-as-Code git provider for every tenant in
+# this chart. PaC needs the instance URL on every Repository CR's
+# spec.git_provider.url to know where to POST commit statuses / read content.
+forgejo:
+  url: https://forgejo.apps.ocp.igou.systems
+
+defaults:
+  concurrencyLimit: 2
+  cancelInProgress: true
+
+  policy:
+    pullRequest:
+      - igou-david
+    okToTest:
+      - igou-david
+
+  quota:
+    requests.cpu: "8"
+    requests.memory: 16Gi
+    limits.cpu: "16"
+    limits.memory: 32Gi
+    pods: "20"
+    persistentvolumeclaims: "5"
+    requests.storage: 50Gi
+
+  limitRange:
+    defaultRequest:
+      cpu: 100m
+      memory: 256Mi
+    default:
+      cpu: 500m
+      memory: 1Gi
+    max:
+      cpu: "4"
+      memory: 8Gi
+
+  egressBlockedCIDRs:
+    - 10.128.0.0/14
+    - 172.30.0.0/16
+    - 169.254.169.254/32
+    - 192.168.0.0/16
+    - 10.0.0.0/8
+
+# tenants is the list of onboarded repositories. Each entry can override
+# any field from defaults; unspecified fields inherit defaults.
+#
+# Schema:
+#   - name: <slug used for namespace name>             # required, matches ^[a-z0-9-]+$
+#     url:  <full https Forgejo URL of the repo>       # required
+#     onepasswordItem: <1pwd-item-name>                # optional, defaults to ci-forgejo-<name>;
+#                                                        item must contain fields provider.token + webhook.secret
+#     concurrencyLimit: <int>                          # optional, defaults to 2
+#     cancelInProgress: <bool>                         # optional
+#     policy:
+#       pullRequest: [<forgejo-username>, ...]         # optional
+#       okToTest:    [<forgejo-username>, ...]         # optional; auto-collapsed to pullRequest when secrets present
+#     quota: { ... }                                   # optional, full ResourceQuota.spec.hard map
+#     limitRange: { ... }                              # optional
+#     egressBlockedCIDRs: [<cidr>, ...]                # optional
+#     secrets:
+#       imagePullSecrets:                              # attached to pipeline-sa.imagePullSecrets
+#         - name: <k8s-secret-name>
+#           onepasswordItem: <1pwd-item-name>
+#       workspaceSecrets:                              # available to PipelineRun via workspace mount
+#         - name: <k8s-secret-name>
+#           onepasswordItem: <1pwd-item-name>
+tenants: []
+
+# Cluster constants — usually no need to override.
+clusterSecretStore: onepassword-sdk-ocp-pull
+namespacePrefix: ci-
