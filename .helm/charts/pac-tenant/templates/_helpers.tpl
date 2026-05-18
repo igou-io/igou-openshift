@@ -22,7 +22,7 @@ pac-tenant.hasSecrets — returns "true" if the tenant declares any secrets, "" 
 */}}
 {{- define "pac-tenant.hasSecrets" -}}
 {{- $s := .tenant.secrets | default dict -}}
-{{- if or (and $s.imagePullSecrets (gt (len $s.imagePullSecrets) 0)) (and $s.workspaceSecrets (gt (len $s.workspaceSecrets) 0)) -}}
+{{- if or (and $s.imagePullSecrets (gt (len $s.imagePullSecrets) 0)) (and $s.workspaceSecrets (gt (len $s.workspaceSecrets) 0)) (and $s.pushSecrets (gt (len $s.pushSecrets) 0)) -}}
 true
 {{- end -}}
 {{- end -}}
