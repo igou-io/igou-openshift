@@ -69,4 +69,5 @@ tenants: []
 
 # Cluster constants — usually no need to override.
 clusterSecretStore: onepassword-sdk-ocp-pull
+onepasswordVault: ocp-pull
 namespacePrefix: ci-
