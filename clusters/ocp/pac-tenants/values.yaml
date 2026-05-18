@@ -6,3 +6,11 @@
 tenants:
   - name: igou-ansible
     url: https://forgejo.apps.ocp.igou.systems/igou-io/igou-ansible
+    imageStreams:
+      - name: ee-minimal-rhel9
+        from: registry.redhat.io/ansible-automation-platform-26/ee-minimal-rhel9:latest
+    secrets:
+      pushSecrets:
+        - name: quay-push-config
+          onepasswordItem: ci-quay-shared
+          registry: https://quay.apps.ocp.igou.systems
