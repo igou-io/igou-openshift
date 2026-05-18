@@ -61,6 +61,8 @@ helmCharts:
           server:
             ROOT_URL: https://forgejo.apps.ocp.igou.systems/
             SSH_DOMAIN: forgejo.apps.ocp.igou.systems
+          webhook:
+            ALLOWED_HOST_LIST: private
         additionalConfigFromEnvs:
           - name: GITEA__database__HOST
             valueFrom:
