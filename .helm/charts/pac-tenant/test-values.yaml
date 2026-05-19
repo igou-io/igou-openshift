@@ -32,7 +32,7 @@ tenants:
       - name: ee-minimal-rhel9
         from: registry.redhat.io/ansible-automation-platform-26/ee-minimal-rhel9:latest
     secrets:
-      pushSecrets:
+      serviceAccountSecrets:
         - name: quay-push-config
           onepasswordItem: ci-quay-container-builder
-          registry: https://quay.io
+          asImagePullSecret: true
