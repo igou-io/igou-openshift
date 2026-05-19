@@ -58,6 +58,12 @@ defaults:
 #     quota: { ... }                                   # optional, full ResourceQuota.spec.hard map
 #     limitRange: { ... }                              # optional
 #     egressBlockedCIDRs: [<cidr>, ...]                # optional
+#     extraEgress:                                     # optional list of extra egress NetworkPolicies.
+#       - name: <netpol-name>                          # must be a valid NetworkPolicy name (unique per ns)
+#         cidr: <cidr>                                 # e.g. 10.10.9.10/32 for the cluster apps router IP
+#         ports:                                       # optional; omit to allow all ports to the cidr
+#           - port: <int>
+#             protocol: TCP|UDP
 #     imageStreams:                                    # optional, OpenShift ImageStream(s) for this tenant.
 #       - name: <imagestream-name>                     # e.g. ee-minimal-rhel9
 #         from: <upstream-image:tag>                   # e.g. registry.redhat.io/.../ee-minimal-rhel9:latest
