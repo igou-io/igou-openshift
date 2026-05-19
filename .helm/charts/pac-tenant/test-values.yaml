@@ -36,6 +36,18 @@ tenants:
         - name: quay-push-config
           onepasswordItem: ci-quay-container-builder
           asImagePullSecret: true
+      workspaceSecrets:
+        - name: automationhub-credentials
+          onepasswordItem: ci-automationhub-token
+    params:
+      - name: ansible_galaxy_server_list
+        value: "published,validated,certified,community"
+      - name: ansible_galaxy_server_published_url
+        value: "https://automation.apps.ocp.igou.systems/api/galaxy/content/published/"
+      - name: ansible_galaxy_server_published_token
+        secret_ref:
+          name: automationhub-credentials
+          key: token
     extraEgress:
       # CIDR form — for Route-mediated traffic.
       - name: allow-quay-push
