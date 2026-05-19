@@ -80,11 +80,24 @@ spec:
         - port: 80
           protocol: TCP
 {{- range $rule := ($tenant.extraEgress | default list) }}
+{{- /* Build the NetworkPolicy peer dict from the rule. Exactly one peer
+       shape per entry: cidr (ipBlock) OR namespaceSelector and/or
+       podSelector. cidr is mutually exclusive with the selectors. */ -}}
+{{- $peer := dict }}
+{{- if $rule.cidr }}
+  {{- $peer = dict "ipBlock" (dict "cidr" $rule.cidr) }}
+{{- else }}
+  {{- if $rule.namespaceSelector }}{{- $peer = set $peer "namespaceSelector" $rule.namespaceSelector }}{{- end }}
+  {{- if $rule.podSelector }}{{- $peer = set $peer "podSelector" $rule.podSelector }}{{- end }}
+{{- end }}
+{{- if not $peer }}
+  {{- fail (printf "extraEgress[%s] in tenant %s: must set cidr OR (namespaceSelector and/or podSelector)" $rule.name $tenant.name) }}
+{{- end }}
 ---
 # Tenant-specific extra egress allowance. Adds to (does not replace) the
 # default deny + allow-external-egress combo above. NetworkPolicy rules
 # are additive across resources, so each entry just opens an extra hole
-# for the specified CIDR + ports.
+# for one peer + port set.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -100,8 +113,7 @@ spec:
     - Egress
   egress:
     - to:
-        - ipBlock:
-            cidr: {{ $rule.cidr | quote }}
+        - {{- toYaml $peer | nindent 10 }}
       {{- if $rule.ports }}
       ports:
         {{- toYaml $rule.ports | nindent 8 }}
