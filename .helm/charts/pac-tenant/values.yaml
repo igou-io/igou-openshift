@@ -83,6 +83,14 @@ defaults:
 #         from: <upstream-image:tag>                   # e.g. registry.redhat.io/.../ee-minimal-rhel9:latest
 #         # scheduled: true                            # optional, default true — re-import on schedule
 #         # referencePolicy: Source                    # optional, default Source — keeps signed chain
+#     params:                                          # optional, passed through to Repository.spec.params.
+#       - name: <param-name>                           # PipelineRuns reference via {{ name }} template syntax.
+#         value: <string>                              # plain value; mutually exclusive with secret_ref
+#         # OR
+#         secret_ref:                                  # secret-backed value; mutually exclusive with value.
+#           name: <k8s-secret-in-tenant-ns>            # Secret must already exist in the tenant namespace
+#           key: <key-in-secret>                         (typically created via workspaceSecrets)
+#         # filter: "..."                              # optional CEL expression to scope the param to specific events
 #     secrets:
 #       imagePullSecrets:                              # attached to pipeline-sa.imagePullSecrets (kubelet)
 #         - name: <k8s-secret-name>
