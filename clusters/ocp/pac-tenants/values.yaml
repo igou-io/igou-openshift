@@ -14,11 +14,19 @@ tenants:
         - name: quay-push-config
           onepasswordItem: ci-quay-shared
           asImagePullSecret: true
-    # Default allow-external-egress blocks 10.0.0.0/8 (LAN). The cluster's
-    # own apps router lives at 10.10.9.10 — Tekton needs to reach it to push
-    # to internal Quay and clone from internal Forgejo.
+    # Quay push + Forgejo clone both traverse the cluster apps router
+    # (10.10.9.10:443). The router runs hostNetwork, so a namespaceSelector
+    # for openshift-ingress won't match — has to be by IP. Default
+    # allow-external-egress excepts 10.0.0.0/8, so without this rule the
+    # tenant can't reach the cluster's own apps. Naming them separately
+    # documents intent even though they share the same CIDR + port.
     extraEgress:
-      - name: allow-cluster-apps-router
+      - name: allow-quay-push
+        cidr: 10.10.9.10/32
+        ports:
+          - port: 443
+            protocol: TCP
+      - name: allow-forgejo-clone
         cidr: 10.10.9.10/32
         ports:
           - port: 443

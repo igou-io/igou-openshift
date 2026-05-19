@@ -36,3 +36,29 @@ tenants:
         - name: quay-push-config
           onepasswordItem: ci-quay-container-builder
           asImagePullSecret: true
+    extraEgress:
+      # CIDR form — for Route-mediated traffic.
+      - name: allow-quay-push
+        cidr: 10.10.9.10/32
+        ports:
+          - port: 443
+            protocol: TCP
+      # namespaceSelector only — allow anything in that namespace.
+      - name: allow-aap-controller
+        namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: aap
+        ports:
+          - port: 8443
+            protocol: TCP
+      # namespaceSelector + podSelector — narrow to specific pods.
+      - name: allow-internal-quay-direct
+        namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: quay-enterprise
+        podSelector:
+          matchLabels:
+            quay-component: quay-app
+        ports:
+          - port: 8443
+            protocol: TCP

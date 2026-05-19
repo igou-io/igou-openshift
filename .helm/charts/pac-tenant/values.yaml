@@ -60,10 +60,24 @@ defaults:
 #     egressBlockedCIDRs: [<cidr>, ...]                # optional
 #     extraEgress:                                     # optional list of extra egress NetworkPolicies.
 #       - name: <netpol-name>                          # must be a valid NetworkPolicy name (unique per ns)
-#         cidr: <cidr>                                 # e.g. 10.10.9.10/32 for the cluster apps router IP
-#         ports:                                       # optional; omit to allow all ports to the cidr
+#         # Exactly one peer shape — either cidr OR namespaceSelector and/or podSelector:
+#         cidr: <cidr>                                 # e.g. 10.10.9.10/32 for the cluster apps router IP.
+#                                                        Required for traffic that traverses a Route (e.g.
+#                                                        Quay or Forgejo over apps.<domain>) — selectors don't
+#                                                        match the apps router because it runs hostNetwork.
+#         namespaceSelector:                           # standard NetworkPolicy NamespaceSelector
+#           matchLabels:
+#             kubernetes.io/metadata.name: <ns>
+#         podSelector:                                 # standard NetworkPolicy PodSelector; ANDed with
+#           matchLabels:                                 namespaceSelector when both are set
+#             <label>: <value>
+#         ports:                                       # optional; omit to allow all ports
 #           - port: <int>
 #             protocol: TCP|UDP
+#
+#       Note: Quay/Forgejo access for container builds must be declared per
+#       tenant via cidr (the cluster apps router IP) — there is no chart
+#       default for it. Tenants that don't push images get no extra egress.
 #     imageStreams:                                    # optional, OpenShift ImageStream(s) for this tenant.
 #       - name: <imagestream-name>                     # e.g. ee-minimal-rhel9
 #         from: <upstream-image:tag>                   # e.g. registry.redhat.io/.../ee-minimal-rhel9:latest
