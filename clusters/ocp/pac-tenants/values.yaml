@@ -14,6 +14,40 @@ tenants:
         - name: quay-push-config
           onepasswordItem: ci-quay-shared
           asImagePullSecret: true
+      # Red Hat Automation Hub offline token (from console.redhat.com/openshift/token).
+      # 1Password item must contain a field `token` with the SSO offline token.
+      workspaceSecrets:
+        - name: rh-automationhub-credentials
+          onepasswordItem: rh-automationhub-credentials
+    # Galaxy servers exposed to ansible-builder PipelineRuns. Repository params
+    # are interpolated into PipelineRun YAML at trigger time (PaC {{ name }}
+    # syntax); the pipeline turns them into ANSIBLE_GALAXY_SERVER_<NAME>_*
+    # env vars consumed by ansible-builder. Server names use underscores
+    # because shell env vars can't have hyphens.
+    params:
+      - name: ansible_galaxy_server_list
+        value: "rh_certified,validated,community"
+      # rh-certified collections from RH Automation Hub.
+      - name: ansible_galaxy_server_rh_certified_url
+        value: "https://console.redhat.com/api/automation-hub/content/published/"
+      - name: ansible_galaxy_server_rh_certified_auth_url
+        value: "https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token"
+      - name: ansible_galaxy_server_rh_certified_token
+        secret_ref:
+          name: rh-automationhub-credentials
+          key: token
+      # RH-validated content.
+      - name: ansible_galaxy_server_validated_url
+        value: "https://console.redhat.com/api/automation-hub/content/validated/"
+      - name: ansible_galaxy_server_validated_auth_url
+        value: "https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token"
+      - name: ansible_galaxy_server_validated_token
+        secret_ref:
+          name: rh-automationhub-credentials
+          key: token
+      # Public community Galaxy — no auth.
+      - name: ansible_galaxy_server_community_url
+        value: "https://galaxy.ansible.com/api/"
     # Quay push + Forgejo clone both traverse the cluster apps router
     # (10.10.9.10:443). The router runs hostNetwork, so a namespaceSelector
     # for openshift-ingress won't match — has to be by IP. Default
