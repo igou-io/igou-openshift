@@ -1,20 +1,39 @@
 ---
+# These values exercise the chart against a generic ESO secret store.
+# Set secretStore.name to whatever ClusterSecretStore exists on the test
+# cluster; the chart works with any ESO provider (1Password, Vault, AWS SM,
+# GCP SM, Azure KV).
+secretStore:
+  kind: ClusterSecretStore
+  name: onepassword-sdk-ocp-pull
+
 tenants:
   - name: simple-tenant
     url: https://forgejo.apps.ocp.igou.systems/igou-io/simple-tenant
+    gitProvider:
+      remoteRef:
+        key: ci-forgejo-simple-tenant
 
   - name: secrets-tenant
     url: https://forgejo.apps.ocp.igou.systems/igou-io/secrets-tenant
+    gitProvider:
+      remoteRef:
+        key: ci-forgejo-secrets-tenant
     secrets:
       imagePullSecrets:
         - name: ghcr-readonly
-          onepasswordItem: ci-ghcr-readonly
+          remoteRef:
+            key: ci-ghcr-readonly
       workspaceSecrets:
         - name: snyk-org-token
-          onepasswordItem: ci-snyk-org
+          remoteRef:
+            key: ci-snyk-org
 
   - name: heavy-tenant
     url: https://forgejo.apps.ocp.igou.systems/igou-io/heavy-tenant
+    gitProvider:
+      remoteRef:
+        key: ci-forgejo-heavy-tenant
     quota:
       requests.cpu: "16"
       requests.memory: 32Gi
@@ -22,23 +41,36 @@ tenants:
       limits.memory: 64Gi
     concurrencyLimit: 1
 
-  - name: custom-1p-tenant
-    url: https://forgejo.apps.ocp.igou.systems/igou-io/custom-1p-tenant
-    onepasswordItem: legacy-named-forgejo-item
+  - name: custom-key-tenant
+    url: https://forgejo.apps.ocp.igou.systems/igou-io/custom-key-tenant
+    # Tenant-specific remote key; demonstrates the explicit override.
+    gitProvider:
+      remoteRef:
+        key: legacy-named-forgejo-item
+        # property: provider-token-and-webhook   # optional Vault KV property
+        # version: "3"                           # optional pinned version
 
   - name: container-builder
     url: https://forgejo.apps.ocp.igou.systems/igou-io/container-builder
+    gitProvider:
+      remoteRef:
+        key: ci-forgejo-container-builder
     imageStreams:
       - name: ee-minimal-rhel9
         from: registry.redhat.io/ansible-automation-platform-26/ee-minimal-rhel9:latest
     secrets:
       serviceAccountSecrets:
         - name: quay-push-config
-          onepasswordItem: ci-quay-container-builder
+          remoteRef:
+            key: ci-quay-container-builder
           asImagePullSecret: true
+          # Demonstrate the dockerconfigField override — Vault users may
+          # have stored the dockerconfig JSON under a different field name.
+          dockerconfigField: dockerconfigjson
       workspaceSecrets:
         - name: automationhub-credentials
-          onepasswordItem: ci-automationhub-token
+          remoteRef:
+            key: ci-automationhub-token
     params:
       - name: ansible_galaxy_server_list
         value: "published,validated,certified,community"

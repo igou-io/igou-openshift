@@ -22,9 +22,46 @@ pac-tenant.hasSecrets — returns "true" if the tenant declares any secrets, "" 
 */}}
 {{- define "pac-tenant.hasSecrets" -}}
 {{- $s := .tenant.secrets | default dict -}}
-{{- if or (and $s.imagePullSecrets (gt (len $s.imagePullSecrets) 0)) (and $s.workspaceSecrets (gt (len $s.workspaceSecrets) 0)) (and $s.pushSecrets (gt (len $s.pushSecrets) 0)) -}}
+{{- if or (and $s.imagePullSecrets (gt (len $s.imagePullSecrets) 0)) (and $s.workspaceSecrets (gt (len $s.workspaceSecrets) 0)) (and $s.serviceAccountSecrets (gt (len $s.serviceAccountSecrets) 0)) -}}
 true
 {{- end -}}
+{{- end -}}
+
+{{/*
+pac-tenant.secretStoreRef — renders the spec.secretStoreRef block for an
+ExternalSecret using the chart-level secretStore.{kind,name} config.
+Usage:
+  spec:
+    secretStoreRef:
+      {{- include "pac-tenant.secretStoreRef" $ | nindent 6 }}
+*/}}
+{{- define "pac-tenant.secretStoreRef" -}}
+kind: {{ .Values.secretStore.kind | quote }}
+name: {{ .Values.secretStore.name | quote }}
+{{- end -}}
+
+{{/*
+pac-tenant.dataFromExtract — renders a dataFrom[].extract block from a
+remoteRef dict ({key, property?, version?}). Bakes in the four CRD
+default fields so rendered ExternalSecrets match the post-defaulted live
+state (avoids permanent OutOfSync drift).
+Usage:
+  dataFrom:
+    {{- include "pac-tenant.dataFromExtract" $remoteRef | nindent 4 }}
+*/}}
+{{- define "pac-tenant.dataFromExtract" -}}
+- extract:
+    key: {{ .key | quote }}
+    {{- with .property }}
+    property: {{ . | quote }}
+    {{- end }}
+    {{- with .version }}
+    version: {{ . | quote }}
+    {{- end }}
+    conversionStrategy: Default
+    decodingStrategy: None
+    metadataPolicy: None
+    nullBytePolicy: Ignore
 {{- end -}}
 
 {{/*

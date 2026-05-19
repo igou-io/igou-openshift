@@ -1,7 +1,7 @@
 ---
 name: scaffold-pac-tenant
 description: Add a new PaC tenant entry to clusters/ocp/pac-tenants/values.yaml. Verifies the Forgejo repo exists, derives a name from the URL, applies defaults, supports optional --imagePullSecret and --workspaceSecret flags. Validates the rendered chart with helm template + kubeconform before reporting completion. Does NOT commit — user reviews diffs first.
-argument-hint: <forgejo-url-or-owner/repo> [--imagePullSecret name:1pwd-item] [--workspaceSecret name:1pwd-item ...] [--onepasswordItem <item>]
+argument-hint: <forgejo-url-or-owner/repo> [--imagePullSecret name:remote-key] [--workspaceSecret name:remote-key ...] [--gitProviderKey <remote-key>]
 disable-model-invocation: true
 allowed-tools: Read, Edit, Bash(curl *), Bash(yq *), Bash(helm template *), Bash(kubeconform *), Bash(grep *), Bash(cat *), Bash(ls *), Bash(git diff *)
 ---
@@ -16,9 +16,9 @@ Forgejo instance: `https://forgejo.apps.ocp.igou.systems` (read from `.helm/char
 
 `$ARGUMENTS` may contain:
 - A Forgejo URL (`https://forgejo.apps.ocp.igou.systems/<owner>/<repo>`) or `<owner>/<repo>` shorthand. Required.
-- Zero or more `--imagePullSecret <name>:<1pwd-item>` flags.
-- Zero or more `--workspaceSecret <name>:<1pwd-item>` flags.
-- Optional `--onepasswordItem <item>` — overrides the default `ci-forgejo-<name>` for the per-tenant Forgejo PAT + webhook secret.
+- Zero or more `--imagePullSecret <name>:<remote-key>` flags. The remote key is the lookup key in the configured ESO secret store (e.g. 1Password item name, Vault path, AWS secret ID).
+- Zero or more `--workspaceSecret <name>:<remote-key>` flags.
+- Optional `--gitProviderKey <remote-key>` — the remote key for the per-tenant Forgejo PAT + webhook secret. Defaults to `ci-forgejo-<name>`.
 
 Examples:
 - `https://forgejo.apps.ocp.igou.systems/igou-io/igou-openshift`
@@ -47,11 +47,23 @@ Construct the entry. Minimum:
 ```yaml
 - name: <tenant-name>
   url: <full-https-forgejo-url>
+  gitProvider:
+    remoteRef:
+      key: <gitProviderKey>          # defaults to ci-forgejo-<name>
 ```
 
-If `--onepasswordItem <item>` was passed, add `onepasswordItem: <item>`. Otherwise leave it off — the chart defaults to `ci-forgejo-<name>`.
+Default the `gitProvider.remoteRef.key` to `ci-forgejo-<name>` if `--gitProviderKey` was not supplied. The chart itself requires this field — there is no auto-default at the chart level.
 
-If `--imagePullSecret name:1pwd-item` flags were passed, add a `secrets.imagePullSecrets:` list. If `--workspaceSecret` flags, add `secrets.workspaceSecrets:`.
+If `--imagePullSecret name:remote-key` flags were passed, add a `secrets.imagePullSecrets:` list using the per-secret shape:
+```yaml
+secrets:
+  imagePullSecrets:
+    - name: <secret-name>
+      remoteRef:
+        key: <remote-key>
+```
+
+If `--workspaceSecret` flags, use the same shape under `secrets.workspaceSecrets:`.
 
 Tell the user explicitly: "This tenant has secrets — `okToTest` will be auto-collapsed to the `pullRequest` allowlist by the chart. Adding contributors will require a kustomization commit, not a PR comment."
 
@@ -84,10 +96,10 @@ Print to the user:
      oc get route -n openshift-pipelines pipelines-as-code-controller -o jsonpath='https://{.spec.host}'
      ```
   3. HTTP method `POST`, content type `application/json`.
-  4. Secret: same value stored in 1Password item `<onepasswordItem>` under field `webhook.secret`. Must be non-empty (PaC validates HMAC-SHA256).
+  4. Secret: same value stored in the remote-store secret `<gitProviderKey>` under field `webhook.secret`. Must be non-empty (PaC validates HMAC-SHA256).
   5. Custom events — tick: **Push**, **PR Opened / Reopened / Synchronized / Label updated / Closed**, **Issue Comment** (PaC only acts on comments on open PRs).
   6. Save the webhook.
-- A **1Password reminder**: the item `<onepasswordItem>` (default `ci-forgejo-<name>`) must exist in the `ocp-pull` vault with fields:
+- A **secret store reminder**: the remote secret keyed `<gitProviderKey>` (default `ci-forgejo-<name>`) must exist in whichever ESO store backs `secretStore.name` in `clusters/ocp/pac-tenants/values.yaml`, with fields:
   - `provider.token` — a Forgejo PAT with `repository:write` + `issue:write` scopes (add `organization:read` only if you'll use team-based ok-to-test policies).
   - `webhook.secret` — the same secret you typed into the Forgejo webhook form.
 - "User must review and commit. Skill does not auto-commit."

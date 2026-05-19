@@ -3,22 +3,35 @@
 # Schema and defaults: see .helm/charts/pac-tenant/values.yaml
 #
 # Tenants are added/removed via the /scaffold-pac-tenant skill.
+
+# This cluster uses the 1Password SDK as its ESO provider. Any other
+# ESO-compatible store would work the same — point secretStore.name at
+# whichever ClusterSecretStore exists and the chart is provider-agnostic.
+secretStore:
+  kind: ClusterSecretStore
+  name: onepassword-sdk-ocp-pull
+
 tenants:
   - name: igou-ansible
     url: https://forgejo.apps.ocp.igou.systems/igou-io/igou-ansible
+    gitProvider:
+      remoteRef:
+        key: ci-forgejo-igou-ansible
     imageStreams:
       - name: ee-minimal-rhel9
         from: registry.redhat.io/ansible-automation-platform-26/ee-minimal-rhel9:latest
     secrets:
       serviceAccountSecrets:
         - name: quay-push-config
-          onepasswordItem: ci-quay-shared
+          remoteRef:
+            key: ci-quay-shared
           asImagePullSecret: true
       # Red Hat Automation Hub offline token (from console.redhat.com/openshift/token).
-      # 1Password item must contain a field `token` with the SSO offline token.
+      # The remote secret must contain a field `token` with the SSO offline token.
       workspaceSecrets:
         - name: rh-automationhub-credentials
-          onepasswordItem: rh-automationhub-credentials
+          remoteRef:
+            key: rh-automationhub-credentials
     # Galaxy servers exposed to ansible-builder PipelineRuns. Repository params
     # are interpolated into PipelineRun YAML at trigger time (PaC {{ name }}
     # syntax); the pipeline turns them into ANSIBLE_GALAXY_SERVER_<NAME>_*

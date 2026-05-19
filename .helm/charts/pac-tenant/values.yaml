@@ -48,8 +48,11 @@ defaults:
 # Schema:
 #   - name: <slug used for namespace name>             # required, matches ^[a-z0-9-]+$
 #     url:  <full https Forgejo URL of the repo>       # required
-#     onepasswordItem: <1pwd-item-name>                # optional, defaults to ci-forgejo-<name>;
-#                                                        item must contain fields provider.token + webhook.secret
+#     gitProvider:                                     # required — backing remote secret for the Forgejo
+#       remoteRef:                                       webhook config. Remote secret must contain fields
+#         key: <remote-secret-key>                       `provider.token` (Forgejo PAT) and `webhook.secret`
+#         # property: <field>                          # optional, provider-specific (e.g. Vault KV property)
+#         # version: <version>                         # optional, provider-specific
 #     concurrencyLimit: <int>                          # optional, defaults to 2
 #     cancelInProgress: <bool>                         # optional
 #     policy:
@@ -94,18 +97,31 @@ defaults:
 #     secrets:
 #       imagePullSecrets:                              # attached to pipeline-sa.imagePullSecrets (kubelet)
 #         - name: <k8s-secret-name>
-#           onepasswordItem: <1pwd-item-name>          # 1P item must contain a 'dockerconfigjson' field
+#           remoteRef:                                 # generic ESO remoteRef — works with any provider
+#             key: <remote-secret-key>                   (1Password, Vault, AWS SM, GCP SM, ...).
+#             # property: <field>                      # optional
+#             # version: <version>                     # optional
+#           # dockerconfigField: dockerconfigjson      # optional, source-side field name to project as
+#                                                        .dockerconfigjson; defaults to "dockerconfigjson".
 #       serviceAccountSecrets:                         # attached to pipeline-sa.secrets
 #         - name: <k8s-secret-name>                    #  → Tekton cred-helper picks up dockerconfigjson creds for push
-#           onepasswordItem: <1pwd-item-name>          # 1P item must contain a 'dockerconfigjson' field
+#           remoteRef:
+#             key: <remote-secret-key>
 #           asImagePullSecret: true                    # optional, default false — also append to pipeline-sa.imagePullSecrets
 #                                                        (set true when the same robot account also pulls base images)
-#       workspaceSecrets:                              # available to PipelineRun via workspace mount
-#         - name: <k8s-secret-name>
-#           onepasswordItem: <1pwd-item-name>
+#           # dockerconfigField: dockerconfigjson      # optional, see imagePullSecrets above
+#       workspaceSecrets:                              # available to PipelineRun via workspace mount;
+#         - name: <k8s-secret-name>                      Opaque Secret, all remote fields projected as-is.
+#           remoteRef:
+#             key: <remote-secret-key>
 tenants: []
 
-# Cluster constants — usually no need to override.
-clusterSecretStore: onepassword-sdk-ocp-pull
-onepasswordVault: ocp-pull
+# secretStore is the ESO store backing every ExternalSecret this chart
+# creates. Anything that implements the ESO SecretStore/ClusterSecretStore
+# CRD works — 1Password, HashiCorp Vault, AWS Secrets Manager, GCP Secret
+# Manager, Azure Key Vault, etc.
+secretStore:
+  kind: ClusterSecretStore                            # or SecretStore (namespaced)
+  name: ""                                            # required; site-specific
+
 namespacePrefix: ci-
