@@ -14,3 +14,12 @@ tenants:
         - name: quay-push-config
           onepasswordItem: ci-quay-shared
           asImagePullSecret: true
+    # Default allow-external-egress blocks 10.0.0.0/8 (LAN). The cluster's
+    # own apps router lives at 10.10.9.10 — Tekton needs to reach it to push
+    # to internal Quay and clone from internal Forgejo.
+    extraEgress:
+      - name: allow-cluster-apps-router
+        cidr: 10.10.9.10/32
+        ports:
+          - port: 443
+            protocol: TCP

@@ -79,4 +79,32 @@ spec:
           protocol: TCP
         - port: 80
           protocol: TCP
+{{- range $rule := ($tenant.extraEgress | default list) }}
+---
+# Tenant-specific extra egress allowance. Adds to (does not replace) the
+# default deny + allow-external-egress combo above. NetworkPolicy rules
+# are additive across resources, so each entry just opens an extra hole
+# for the specified CIDR + ports.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $rule.name | quote }}
+  namespace: {{ $ns | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+  labels:
+    {{- include "pac-tenant.labels" (dict "tenant" $tenant) | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            cidr: {{ $rule.cidr | quote }}
+      {{- if $rule.ports }}
+      ports:
+        {{- toYaml $rule.ports | nindent 8 }}
+      {{- end }}
+{{- end }}
 {{- end }}
