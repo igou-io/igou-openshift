@@ -24,11 +24,15 @@ spec:
     default-service-account: pipeline
     default-timeout-minutes: 60
     enable-step-actions: true
+    # Note: don't set securityContext.seccompProfile here. The downstream
+    # OCP Pipelines controller translates it into legacy
+    # `seccomp.security.alpha.kubernetes.io/*` annotations on every step
+    # container, which OCP's SCC validator rejects (pipelines-scc has an
+    # empty seccompProfiles list → "no seccomp may be set"). Seccomp
+    # filtering on TaskRun pods is left to the SCC + kubelet defaults.
     default-pod-template: |
       securityContext:
         runAsNonRoot: true
-        seccompProfile:
-          type: RuntimeDefault
       automountServiceAccountToken: false
       enableServiceLinks: false
       priorityClassName: tekton-ci-low
