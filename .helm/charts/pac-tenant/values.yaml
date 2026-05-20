@@ -95,7 +95,8 @@ defaults:
 #           key: <key-in-secret>                         (typically created via workspaceSecrets)
 #         # filter: "..."                              # optional CEL expression to scope the param to specific events
 #     secrets:
-#       imagePullSecrets:                              # attached to pipeline-sa.imagePullSecrets (kubelet)
+#       imagePullSecrets:                              # SSA-patched onto the operator-managed `pipeline` SA's
+#                                                        imagePullSecrets (consumed by the kubelet).
 #         - name: <k8s-secret-name>
 #           remoteRef:                                 # generic ESO remoteRef — works with any provider
 #             key: <remote-secret-key>                   (1Password, Vault, AWS SM, GCP SM, ...).
@@ -103,11 +104,11 @@ defaults:
 #             # version: <version>                     # optional
 #           # dockerconfigField: dockerconfigjson      # optional, source-side field name to project as
 #                                                        .dockerconfigjson; defaults to "dockerconfigjson".
-#       serviceAccountSecrets:                         # attached to pipeline-sa.secrets
+#       serviceAccountSecrets:                         # SSA-patched onto the operator-managed `pipeline` SA's secrets
 #         - name: <k8s-secret-name>                    #  → Tekton cred-helper picks up dockerconfigjson creds for push
 #           remoteRef:
 #             key: <remote-secret-key>
-#           asImagePullSecret: true                    # optional, default false — also append to pipeline-sa.imagePullSecrets
+#           asImagePullSecret: true                    # optional, default false — also append to pipeline.imagePullSecrets
 #                                                        (set true when the same robot account also pulls base images)
 #           # dockerconfigField: dockerconfigjson      # optional, see imagePullSecrets above
 #       workspaceSecrets:                              # available to PipelineRun via workspace mount;
