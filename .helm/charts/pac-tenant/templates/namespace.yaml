@@ -7,8 +7,14 @@ metadata:
   name: {{ $ns | quote }}
   labels:
     igou.systems/tenant-type: pac-ci
-    pod-security.kubernetes.io/enforce: restricted
-    pod-security.kubernetes.io/enforce-version: latest
+    # Tekton's step orchestration emits deprecated
+    # `seccomp.security.alpha.kubernetes.io/*` annotations on its init/step
+    # containers, which PSA-restricted rejects unconditionally. Real security
+    # boundary here is SCC (pipelines-scc) + NetworkPolicy + ResourceQuota,
+    # so opt PSA out via `privileged` and let scc.podSecurityLabelSync keep
+    # the warn/audit labels honest to what SCCs are actually in use.
+    pod-security.kubernetes.io/enforce: privileged
+    security.openshift.io/scc.podSecurityLabelSync: "true"
     {{- include "pac-tenant.labels" (dict "tenant" $tenant) | nindent 4 }}
   annotations:
     openshift.io/description: "PaC CI tenant for {{ $tenant.url }}"
