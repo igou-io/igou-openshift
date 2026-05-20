@@ -21,7 +21,7 @@ spec:
     enable-cluster-resolver: true
     enable-git-resolver: true
     enable-hub-resolver: true
-    default-service-account: pipeline-sa
+    default-service-account: pipeline
     default-timeout-minutes: 60
     enable-step-actions: true
     default-pod-template: |
