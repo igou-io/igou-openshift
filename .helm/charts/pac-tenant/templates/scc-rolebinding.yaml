@@ -1,0 +1,25 @@
+{{- range $tenant := .Values.tenants }}
+{{- $ns := include "pac-tenant.namespace" (dict "root" $ "tenant" $tenant) }}
+---
+# Tekton-injected PipelineRun pods set runAsUser outside the namespace's
+# default UID range and carry seccomp annotations that restricted-v2 rejects.
+# pipelines-scc (shipped by the OpenShift Pipelines operator) permits both;
+# bind it to the tenant's pipeline-sa so its TaskRun pods can admit.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pipeline-sa-pipelines-scc
+  namespace: {{ $ns | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+  labels:
+    {{- include "pac-tenant.labels" (dict "tenant" $tenant) | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:openshift:scc:pipelines-scc
+subjects:
+  - kind: ServiceAccount
+    name: pipeline-sa
+    namespace: {{ $ns | quote }}
+{{- end }}
