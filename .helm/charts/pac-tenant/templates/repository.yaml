@@ -24,7 +24,9 @@ spec:
     webhook_secret:
       name: forgejo-webhook-config
       key: webhook.secret
+{{- if $cfg.concurrencyLimit }}
   concurrency_limit: {{ $cfg.concurrencyLimit }}
+{{- end }}
 {{- if $tenant.params }}
   params:
     {{- toYaml $tenant.params | nindent 4 }}

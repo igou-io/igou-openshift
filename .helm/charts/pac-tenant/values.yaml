@@ -6,8 +6,14 @@ forgejo:
   url: https://forgejo.apps.ocp.igou.systems
 
 defaults:
-  concurrencyLimit: 2
-  cancelInProgress: true
+  # concurrencyLimit is intentionally unset by default. PaC's
+  # `enable-cancel-in-progress-on-*` is enabled cluster-wide, and the
+  # two features are mutually exclusive — a Repository with both ends up
+  # leaking PipelineRuns (and their workspace PVCs) because PaC's per-PR
+  # cleanup (max-keep-runs) short-circuits when the conflict is detected.
+  # Tenants that want sequential builds can still opt in by setting
+  # concurrencyLimit on their tenant entry; that takes precedence over
+  # the global cancel-in-progress for that Repository only.
 
   policy:
     pullRequest:
@@ -53,8 +59,11 @@ defaults:
 #         key: <remote-secret-key>                       `provider.token` (Forgejo PAT) and `webhook.secret`
 #         # property: <field>                          # optional, provider-specific (e.g. Vault KV property)
 #         # version: <version>                         # optional, provider-specific
-#     concurrencyLimit: <int>                          # optional, defaults to 2
-#     cancelInProgress: <bool>                         # optional
+#     concurrencyLimit: <int>                          # optional; unset by default. Mutually
+#                                                        exclusive with the cluster's global
+#                                                        enable-cancel-in-progress-on-* setting —
+#                                                        only set this when you actually want
+#                                                        queued sequential builds for this repo.
 #     policy:
 #       pullRequest: [<forgejo-username>, ...]         # optional
 #       okToTest:    [<forgejo-username>, ...]         # optional; auto-collapsed to pullRequest when secrets present
