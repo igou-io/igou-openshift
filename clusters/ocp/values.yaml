@@ -96,6 +96,13 @@ applications:
     source:
       path: clusters/ocp/ocp-base-config
 
+  image-registry:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '8'
+    source:
+      path: clusters/ocp/image-registry
+
   apiserver-certs:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
