@@ -68,6 +68,18 @@ tenants:
     # tenant can't reach the cluster's own apps. Naming them separately
     # documents intent even though they share the same CIDR + port.
     extraEgress:
+      # Buildah pulls the FROM base image from the in-cluster registry
+      # (image-registry.openshift-image-registry.svc:5000/...) which the
+      # ImageStream above resolves to. Default allow-external-egress
+      # excepts 172.30.0.0/16 (service network) and only opens 80/443, so
+      # the registry SVC IP is unreachable without this rule.
+      - name: allow-internal-registry
+        namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: openshift-image-registry
+        ports:
+          - port: 5000
+            protocol: TCP
       - name: allow-quay-push
         cidr: 10.10.9.10/32
         ports:
