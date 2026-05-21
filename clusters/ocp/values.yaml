@@ -204,6 +204,16 @@ applications:
       argocd.argoproj.io/sync-wave: '20'
     source:
       path: clusters/ocp/pac-tenants
+    # OpenShift's image-registry-pull-secrets controller injects the
+    # auto-generated `<sa>-dockercfg-*` entry into the operator-owned
+    # `pipeline` SA's imagePullSecrets/secrets. SSA prevents us from
+    # overwriting it, but ArgoCD's diff still flags it as OutOfSync.
+    # Defer those fields to that controller via field-manager scoping.
+    ignoreDifferences:
+      - group: ""
+        kind: ServiceAccount
+        managedFieldsManagers:
+          - openshift.io/image-registry-pull-secrets_service-account-controller
 
   intel-device-plugins-operator:
     annotations:
