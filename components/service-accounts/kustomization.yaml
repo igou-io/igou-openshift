@@ -15,6 +15,14 @@ resources:
   - ansible-molecule-serviceaccount.yaml
   - ansible-molecule-token-secret.yaml
   - ansible-molecule-clusterrole.yaml
+  - virtualmachine-reader-serviceaccount.yaml
+  - virtualmachine-reader-token-secret.yaml
+  - virtualmachine-reader-clusterrole.yaml
+  - virtualmachine-reader-clusterrolebinding.yaml
+  - virtualmachine-deployer-serviceaccount.yaml
+  - virtualmachine-deployer-token-secret.yaml
+  - virtualmachine-deployer-clusterrole.yaml
+  - virtualmachine-deployer-clusterrolebinding.yaml
 
 helmGlobals:
   chartHome: ../../.helm/charts
