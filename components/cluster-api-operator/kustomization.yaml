@@ -16,7 +16,7 @@ helmCharts:
   - name: cluster-api-operator
     releaseName: capi-operator
     namespace: capi-operator-system
-    version: 0.26.0
+    version: 0.27.0
     repo: https://kubernetes-sigs.github.io/cluster-api-operator
     includeCRDs: true
     valuesInline:
