@@ -9,7 +9,7 @@ resources:
 helmCharts:
 - name: llmkube
   namespace: llmkube-system
-  version: 0.7.6
+  version: 0.7.8
   releaseName: llmkube
   repo: https://defilantech.github.io/LLMKube
   valuesInline:
