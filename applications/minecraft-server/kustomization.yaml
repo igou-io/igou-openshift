@@ -486,7 +486,7 @@ helmCharts:
       enabled: true
       image:
         repository: itzg/mc-backup
-        tag: latest@sha256:7ffba80d2c6752df8d1669451de928f9e7b2d94866cd84951af6e7bc5bed1496
+        tag: latest@sha256:7daffa089a0daba5b4f11bad23a5750ebc88a237b798d1fd2c2378ad28fa9842
         pullPolicy: IfNotPresent
       #  wait 2 minutes before starting
       initialDelay: 2m
