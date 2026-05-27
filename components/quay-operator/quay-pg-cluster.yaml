@@ -45,4 +45,11 @@ spec:
   resources:
     requests:
       cpu: 500m
-      memory: 512Mi
+      memory: 2Gi
+  postgresql:
+    parameters:
+      # shared_buffers is auto-derived by CNPG to ~25% of the memory request
+      # (≈ 512 MB at 2Gi). Left unset to avoid drift.
+      effective_cache_size: 3GB
+      work_mem: 16MB
+      maintenance_work_mem: 256MB
