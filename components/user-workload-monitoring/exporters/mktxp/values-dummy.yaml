@@ -1,0 +1,5 @@
+---
+# Intentionally empty - required by kustomize helmCharts to point at a values file.
+# All values are inlined in kustomization.yaml under valuesInline.
+# See https://github.com/bjw-s-labs/helm-charts/issues/397
+foo: bar
