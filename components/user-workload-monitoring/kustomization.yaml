@@ -5,6 +5,7 @@ resources:
   - cluster-monitoring-config-configmap.yaml
   - user-workload-monitoring-config-configmap.yaml
   - exporters/blackbox-exporter
+  - exporters/mktxp
   - servicemonitors/argocd-servicemonitor.yaml
   - servicemonitors/cert-manager-servicemonitor.yaml
   - servicemonitors/external-secrets-podmonitor.yaml
