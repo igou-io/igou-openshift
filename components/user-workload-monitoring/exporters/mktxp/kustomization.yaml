@@ -82,7 +82,8 @@ helmCharts:
               targetPort: 49090
       serviceMonitor:
         app:
-          serviceName: mktxp-app
+          service:
+            identifier: app
           labels:
             app.kubernetes.io/part-of: mktxp
             release: mktxp
