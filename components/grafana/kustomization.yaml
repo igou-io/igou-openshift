@@ -17,6 +17,7 @@ resources:
   - grafana-dashboard-12239.yaml
   - grafana-dashboard-14584.yaml
   - grafana-dashboard-20417.yaml
+  - grafana-dashboard-13679.yaml
   - grafana-dashboard-kubevirt-control-plane.yaml
   - grafana-dashboard-kubevirt-top-consumers.yaml
   - grafana-dashboard-external-secrets.yaml
