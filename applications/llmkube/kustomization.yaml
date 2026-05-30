@@ -20,8 +20,8 @@ helmCharts:
         registry: ""
         repository: ghcr.io/defilantech/llmkube-controller
         pullPolicy: IfNotPresent
-        tag: "@sha256:79969f614ea6a7c96347e6f38638eb3a4e72bbc7b37d9ca8e184c032479feea6"
-        digest: "sha256:79969f614ea6a7c96347e6f38638eb3a4e72bbc7b37d9ca8e184c032479feea6"
+        tag: "@sha256:f49fe18a348cc2687c4aafd4060f0ecf173b6327dbc7a044b4e0eef67597cd4f"
+        digest: "sha256:f49fe18a348cc2687c4aafd4060f0ecf173b6327dbc7a044b4e0eef67597cd4f"
       replicaCount: 1
       leaderElection:
         enabled: true
