@@ -123,11 +123,18 @@ helmCharts:
                 GOTIFY_ENDPOINT: http://gotify.gotify.svc:80/message
                 BIND_ADDRESS: 0.0.0.0
                 PORT: "8080"
-                # Dispatch alerts even when summary/description annotations
-                # are missing — substitute a debug message instead of returning
-                # 400. Required because several OpenShift platform alerts
-                # (KubeJobFailed, ClusterNotUpgradeable, CDIStorageProfiles*)
-                # ship without a `description` annotation.
+                # Read the Gotify message body from the `summary` annotation
+                # rather than the default `description`. Many platform alerts
+                # (OutdatedVirtualMachineInstanceWorkloads, KubeJobFailed,
+                # ClusterNotUpgradeable, CDIStorageProfiles*, …) ship summary
+                # only; the bridge returns HTTP 400 when its message
+                # annotation is absent, regardless of DISPATCH_ERRORS, which
+                # causes AlertmanagerFailedToSendAlerts to fire.
+                MESSAGE_ANNOTATION: summary
+                # Still attempt to dispatch a debug message on any other
+                # missing/templating issue (priority annotation, etc.) — the
+                # bridge will also return 400, but Gotify still gets the
+                # error notification for visibility.
                 DISPATCH_ERRORS: "true"
                 # Render notifications in Markdown with FIR/RES status,
                 # start time, and (when present) a generator URL.
