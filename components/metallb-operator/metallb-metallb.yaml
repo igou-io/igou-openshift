@@ -9,3 +9,9 @@ metadata:
 spec:
   logLevel: info
   bgpBackend: frr
+  # Tolerate casval's burst taint so the speaker DaemonSet covers all
+  # nodes — required for externalTrafficPolicy: Local services.
+  speakerTolerations:
+    - key: workload
+      value: burst
+      effect: NoSchedule
