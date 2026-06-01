@@ -10,3 +10,4 @@ spec:
   addresses:
     - 10.10.150.0/24
   autoAssign: false
+  avoidBuggyIPs: true
