@@ -6,7 +6,6 @@ resources:
   - jellyfin-media-nfs-pv.yaml
   - jellyfin-media-nfs-pvc.yaml
   - jellyfin-config-pvc.yaml
-  - jellyfin-nad-vlan45.yaml
   - jellyfin-probe.yaml
 helmCharts:
 - name: jellyfin
@@ -20,14 +19,6 @@ helmCharts:
       repository: docker.io/jellyfin/jellyfin
       tag: 10.11.9@sha256:bc9fa8e1462fffe3d8d4255fc62af478602641f4c0e5f4875fea8563d1189837
       pullPolicy: IfNotPresent
-    podAnnotations:
-      k8s.v1.cni.cncf.io/networks: |-
-        [
-          {
-            "name": "vlan45-jellyfin",
-            "ips": ["10.10.45.221/24"]
-          }
-        ]
     serviceAccount:
       create: true
       automount: true
@@ -52,8 +43,10 @@ helmCharts:
     deploymentStrategy:
       type: Recreate
     service:
-      type: ClusterIP
+      type: LoadBalancer
       port: 8096
+      annotations:
+        metallb.universe.tf/address-pool: guest-dmz
     ingress:
       enabled: false
     persistence:
