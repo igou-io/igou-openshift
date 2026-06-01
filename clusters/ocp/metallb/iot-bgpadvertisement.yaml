@@ -1,0 +1,14 @@
+apiVersion: metallb.io/v1beta1
+kind: BGPAdvertisement
+metadata:
+  name: iot
+  namespace: metallb-system
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,ServerSideApply=true
+    argocd.argoproj.io/sync-wave: '1'
+spec:
+  ipAddressPools:
+    - iot
+  aggregationLength: 32
+  communities:
+    - iot

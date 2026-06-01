@@ -1,0 +1,16 @@
+apiVersion: metallb.io/v1beta1
+kind: Community
+metadata:
+  name: tier
+  namespace: metallb-system
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,ServerSideApply=true
+    argocd.argoproj.io/sync-wave: '0'
+spec:
+  communities:
+    - name: trusted-lan
+      value: 64513:150
+    - name: iot
+      value: 64513:151
+    - name: guest-dmz
+      value: 64513:152

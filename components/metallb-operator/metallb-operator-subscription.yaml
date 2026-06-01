@@ -1,0 +1,13 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: metallb-operator
+  namespace: metallb-system
+  annotations:
+    argocd.argoproj.io/sync-wave: '1'
+spec:
+  channel: stable
+  installPlanApproval: Automatic
+  name: metallb-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
