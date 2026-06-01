@@ -1,0 +1,14 @@
+apiVersion: metallb.io/v1beta2
+kind: BGPPeer
+metadata:
+  name: mikrotik
+  namespace: metallb-system
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,ServerSideApply=true
+    argocd.argoproj.io/sync-wave: '0'
+spec:
+  peerAddress: 10.10.9.1
+  peerASN: 64512
+  myASN: 64513
+  holdTime: 180s
+  keepaliveTime: 60s

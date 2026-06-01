@@ -1,0 +1,14 @@
+apiVersion: metallb.io/v1beta1
+kind: BGPAdvertisement
+metadata:
+  name: trusted-lan
+  namespace: metallb-system
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,ServerSideApply=true
+    argocd.argoproj.io/sync-wave: '1'
+spec:
+  ipAddressPools:
+    - trusted-lan
+  aggregationLength: 32
+  communities:
+    - trusted-lan
