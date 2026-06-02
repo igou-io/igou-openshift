@@ -19,7 +19,7 @@ tenants:
         key: ci-forgejo-igou-ansible
     imageStreams:
       - name: ee-minimal-rhel9
-        from: registry.redhat.io/ansible-automation-platform-26/ee-minimal-rhel9:latest
+        from: registry.redhat.io/ansible-automation-platform-27/ee-minimal-rhel9:latest
     secrets:
       serviceAccountSecrets:
         - name: quay-push-config
