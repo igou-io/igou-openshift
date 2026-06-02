@@ -11,7 +11,7 @@ resources:
 helmCharts:
   - name: gitea
     namespace: gitea
-    version: 12.5.3
+    version: 12.6.0
     releaseName: gitea
     repo: https://dl.gitea.com/charts/
     valuesInline:
