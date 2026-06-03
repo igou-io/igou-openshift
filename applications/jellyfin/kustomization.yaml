@@ -45,6 +45,11 @@ helmCharts:
     service:
       type: LoadBalancer
       port: 8096
+      # Local preserves the client source IP and, because this workload is
+      # pinned to a single node (ocp, for the iGPU), causes MetalLB to
+      # advertise the VIP from only that node — eliminating the multi-node
+      # BGP ECMP spray that otherwise stalls flows with ~6.5s TCP retransmits.
+      externalTrafficPolicy: Local
       annotations:
         metallb.universe.tf/address-pool: guest-dmz
     ingress:
