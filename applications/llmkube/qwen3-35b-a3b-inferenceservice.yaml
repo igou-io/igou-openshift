@@ -16,12 +16,14 @@ spec:
   # on casval are actually used for inference.
   image: ghcr.io/ggml-org/llama.cpp:server-cuda13@sha256:39f1ce159666dbd338da47674eb2667b28c1410d6c51a0e3f78839446f7aace0
   replicas: 0
-  # Tuning targets: Qwen3.6-35B-A3B Q4_K_M (~20 GiB) on 2x RTX 4060 Ti 16 GiB.
-  # Weights fit fully in VRAM with room for a 64k Q8 KV cache; no MoE offload.
+  # Tuning targets: Qwen3.6-35B-A3B UD-Q5_K_XL (~25 GiB) on 2x RTX 4060 Ti 16 GiB.
+  # Hybrid linear-attn MoE: only 10/40 layers hold a KV cache (2 KV heads), so the
+  # 64k KV is ~1.25 GiB at f16 and weights+KV fit fully in VRAM; no MoE offload.
   flashAttention: true
   jinja: true                # Qwen3.6 chat template is jinja-only (thinking tags)
-  cacheTypeK: q8_0
-  cacheTypeV: q8_0           # q8/q8 KV is ~lossless and roughly halves KV VRAM
+  cacheTypeK: f16
+  cacheTypeV: f16            # f16 KV is cheap here (small hybrid KV) and avoids the
+                             # quantized-KV gibberish edge case unsloth flags for 3.6
   batchSize: 2048
   uBatchSize: 512
   parallelSlots: 1           # single coding-assistant user; >1 splits ctx across slots
@@ -30,16 +32,19 @@ spec:
     - "qwen3.6-35b-a3b"
     - "--reasoning-format"
     - "deepseek"             # parses <think> into OpenAI `reasoning_content` field
+    # Qwen-recommended "thinking, precise coding/agentic" sampling preset (the model
+    # runs thinking-by-default). presence-penalty 0 avoids the language-mixing the
+    # high-penalty general preset can cause; clients may still override per-request.
     - "--temp"
-    - "0.7"
+    - "0.6"
     - "--top-p"
-    - "0.8"
+    - "0.95"
     - "--top-k"
     - "20"
     - "--min-p"
     - "0.0"
     - "--presence-penalty"
-    - "1.5"
+    - "0.0"
   resources:
     gpu: 2
     cpu: "8"
