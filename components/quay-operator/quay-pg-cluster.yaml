@@ -40,7 +40,7 @@ spec:
           name: quay-clair-pg-credentials
         comment: Owner role for the clair database
   storage:
-    size: 20Gi
+    size: 40Gi
     storageClass: freenas-nvmeof-ssd-csi
   resources:
     requests:
