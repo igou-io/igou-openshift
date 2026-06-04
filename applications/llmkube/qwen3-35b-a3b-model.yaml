@@ -9,9 +9,12 @@ metadata:
     # Apply after the Helm-rendered chart (CRDs + controller) is in place.
     argocd.argoproj.io/sync-wave: '5'
 spec:
-  source: https://huggingface.co/bartowski/Qwen_Qwen3.6-35B-A3B-GGUF/resolve/main/Qwen_Qwen3.6-35B-A3B-Q4_K_M.gguf
+  # unsloth UD ("dynamic") quant keeps router/attention/down_proj tensors at higher
+  # precision and only aggressively quantizes the bulk routed-expert FFNs — best
+  # quality-per-byte for this MoE. UD-Q5_K_XL (~25 GiB) fits fully in 32 GiB VRAM.
+  source: https://huggingface.co/unsloth/Qwen3.6-35B-A3B-GGUF/resolve/main/Qwen3.6-35B-A3B-UD-Q5_K_XL.gguf
   format: gguf
-  quantization: Q4_K_M
+  quantization: Q5_K_XL
   hardware:
     accelerator: cuda
     gpu:

@@ -9,7 +9,7 @@ resources:
 helmCharts:
 - name: llmkube
   namespace: llmkube-system
-  version: 0.7.9
+  version: 0.8.1
   releaseName: llmkube
   repo: https://defilantech.github.io/LLMKube
   valuesInline:
@@ -20,8 +20,8 @@ helmCharts:
         registry: ""
         repository: ghcr.io/defilantech/llmkube-controller
         pullPolicy: IfNotPresent
-        tag: "@sha256:f49fe18a348cc2687c4aafd4060f0ecf173b6327dbc7a044b4e0eef67597cd4f"
-        digest: "sha256:f49fe18a348cc2687c4aafd4060f0ecf173b6327dbc7a044b4e0eef67597cd4f"
+        tag: "@sha256:d7abfb6cfd11358db2416cf8f17af6d10001f9d88c3c64553ea93c2be3494080"
+        digest: "sha256:d7abfb6cfd11358db2416cf8f17af6d10001f9d88c3c64553ea93c2be3494080"
       replicaCount: 1
       leaderElection:
         enabled: true
