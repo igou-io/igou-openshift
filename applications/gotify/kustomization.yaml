@@ -120,7 +120,7 @@ helmCharts:
                 tag: "2.3.2@sha256:242441023c6a7956fc7bcdd30350a8fed38f791e703d670aa286fc0465f88b41"
                 pullPolicy: IfNotPresent
               env:
-                GOTIFY_ENDPOINT: http://gotify.gotify.svc:80/message
+                GOTIFY_ENDPOINT: https://gotify.igou.io/message
                 BIND_ADDRESS: 0.0.0.0
                 PORT: "8080"
                 # Read the Gotify message body from the `summary` annotation
