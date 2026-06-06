@@ -16,3 +16,18 @@ kind: Kustomization
 namespace: cloudnative-pg
 resources:
   - https://github.com/cloudnative-pg/plugin-barman-cloud/releases/download/v0.12.0/manifest.yaml
+# The upstream Deployment hardcodes runAsUser/runAsGroup 10001, which OpenShift's
+# restricted-v2 SCC rejects (UID must fall in the namespace's assigned range).
+# Strip both so the SCC injects a compliant UID; the rest of the securityContext
+# (runAsNonRoot, drop ALL caps, readOnlyRootFilesystem) already satisfies it.
+patches:
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: barman-cloud
+    patch: |-
+      - op: remove
+        path: /spec/template/spec/containers/0/securityContext/runAsUser
+      - op: remove
+        path: /spec/template/spec/containers/0/securityContext/runAsGroup
