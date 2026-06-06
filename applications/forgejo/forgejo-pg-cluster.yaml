@@ -21,3 +21,11 @@ spec:
     requests:
       cpu: 100m
       memory: 256Mi
+  # Barman Cloud Plugin: enables continuous WAL archiving + backups to the
+  # forgejo-pg-backup ObjectStore. serverName defaults to the cluster name
+  # (forgejo-pg) and is the key used by restore (bootstrap.recovery).
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: forgejo-pg-backup

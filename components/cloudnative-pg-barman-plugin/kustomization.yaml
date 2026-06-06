@@ -1,0 +1,18 @@
+# CloudNativePG Barman Cloud Plugin — the first-party, CNPG-maintained replacement
+# for the deprecated in-tree `.spec.backup.barmanObjectStore`.
+#
+# The upstream release manifest hardcodes namespace `cnpg-system` (the upstream
+# operator's namespace). Our operator runs in `cloudnative-pg`, and the plugin
+# MUST live in the operator's namespace for gRPC/mTLS discovery to work. The
+# `namespace:` transformer below retargets every namespaced resource (and the
+# ClusterRoleBinding subjects) to `cloudnative-pg`. The plugin's server
+# Certificate uses the relative dnsName `barman-cloud` (no hardcoded
+# `.cnpg-system.svc` SAN), so the retarget is mTLS-safe.
+#
+# Prereqs: CNPG >= 1.26 (live: 1.29.1) and cert-manager (both present).
+# To bump: change the release tag in the resource URL below.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: cloudnative-pg
+resources:
+  - https://github.com/cloudnative-pg/plugin-barman-cloud/releases/download/v0.12.0/manifest.yaml

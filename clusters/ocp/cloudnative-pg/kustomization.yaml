@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - cloudnative-pg-namespace.yaml
   - ../../../components/cloudnative-pg
+  - ../../../components/cloudnative-pg-barman-plugin

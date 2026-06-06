@@ -1,0 +1,36 @@
+---
+# Barman Cloud Plugin object store for forgejo-pg backups + WAL archiving.
+# Must be in the same namespace as the Cluster (referenced by name only).
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: forgejo-pg-backup
+  namespace: forgejo
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  # Retention is a recovery-window duration and lives ONLY here (not on the
+  # Cluster/Backup/ScheduledBackup). Implemented via barman-cloud-backup-delete.
+  retentionPolicy: "30d"
+  configuration:
+    # serverName is intentionally OMITTED here — it defaults to the cluster name
+    # (forgejo-pg) and is set on the Cluster's plugin parameters. This is the
+    # key used at restore time.
+    destinationPath: s3://cnpg-backups/forgejo-pg
+    endpointURL: https://truenas.igou.systems:20292
+    # If the TrueNAS S3 endpoint presents a private-CA cert, create a CA-bundle
+    # secret in this namespace and uncomment:
+    # endpointCA:
+    #   name: truenas-ca-bundle
+    #   key: ca.crt
+    s3Credentials:
+      accessKeyId:
+        name: cnpg-s3-credentials
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: cnpg-s3-credentials
+        key: ACCESS_SECRET_KEY
+    wal:
+      compression: gzip
+    data:
+      compression: gzip
