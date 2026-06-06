@@ -205,6 +205,14 @@ This only works if the **bucket survived** — see the DR limitation in §1.
 - The upstream plugin Deployment hardcodes `runAsUser: 10001`; OpenShift's
   `restricted-v2` SCC rejects it (`FailedCreate`, pod never created). The plugin
   component strips it so the SCC assigns a namespace-range UID.
+- **Declare operator/API-defaulted fields in git or ArgoCD stays OutOfSync**
+  (ServerSideApply owns those fields, the webhook re-adds defaults → perpetual
+  diff). On the Cluster plugin entry add `enabled: true`; on the S3-creds
+  ExternalSecret add `template.mergePolicy: Replace` and the extract's
+  `conversionStrategy/decodingStrategy/metadataPolicy/nullBytePolicy`.
+- A node-moving CNPG rolling restart can trip the NVMe-oF Multi-Attach bug
+  (`docs/runbooks/nvmeof-stuck-multiattach.md`): pod stuck `Init:0/2` with a
+  `FailedAttachVolume` event → restart kubelet on the old holding node.
 
 ## References
 

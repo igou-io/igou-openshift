@@ -26,6 +26,7 @@ spec:
   # (forgejo-pg) and is the key used by restore (bootstrap.recovery).
   plugins:
     - name: barman-cloud.cloudnative-pg.io
+      enabled: true # operator-defaulted; declared so ArgoCD (SSA) stays Synced
       isWALArchiver: true
       parameters:
         barmanObjectName: forgejo-pg-backup
