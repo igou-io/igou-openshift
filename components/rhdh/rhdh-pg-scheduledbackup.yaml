@@ -1,0 +1,19 @@
+---
+# Nightly full backup of rhdh-pg via the Barman Cloud Plugin (staggered 03:45).
+# Wave 11 so it lands after the Cluster (wave 10) it references.
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: rhdh-pg-daily
+  namespace: rhdh
+  annotations:
+    argocd.argoproj.io/sync-wave: "11"
+spec:
+  schedule: "0 45 3 * * *"
+  immediate: true
+  backupOwnerReference: self
+  cluster:
+    name: rhdh-pg
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io

@@ -8,6 +8,9 @@ resources:
   - quay-operator-subscription.yaml
   - quay-pg-credentials-externalsecret.yaml
   - quay-clair-pg-credentials-externalsecret.yaml
+  - cnpg-s3-credentials-externalsecret.yaml
+  - quay-pg-objectstore.yaml
+  - quay-pg-scheduledbackup.yaml
   - quay-pg-cluster.yaml
   - quay-pg-podmonitor.yaml
   - clair-database.yaml

@@ -1,0 +1,25 @@
+---
+# Barman Cloud Plugin object store for rhdh-pg backups + WAL archiving.
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: rhdh-pg-backup
+  namespace: rhdh
+  annotations:
+    argocd.argoproj.io/sync-wave: "9"
+spec:
+  retentionPolicy: "30d"
+  configuration:
+    destinationPath: s3://cnpg-backups/rhdh-pg
+    endpointURL: https://truenas.igou.systems:20292
+    s3Credentials:
+      accessKeyId:
+        name: cnpg-s3-credentials
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: cnpg-s3-credentials
+        key: ACCESS_SECRET_KEY
+    wal:
+      compression: gzip
+    data:
+      compression: gzip
