@@ -1,0 +1,19 @@
+---
+# Nightly full backup of forgejo-pg via the Barman Cloud Plugin.
+# Combined with WAL archiving (enabled on the Cluster's plugins entry), this
+# gives crash-consistent restores. Retention is enforced on the ObjectStore.
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: forgejo-pg-daily
+  namespace: forgejo
+spec:
+  # 6-field cron (sec min hour dom mon dow) -> 03:00 daily.
+  schedule: "0 0 3 * * *"
+  immediate: true
+  backupOwnerReference: self
+  cluster:
+    name: forgejo-pg
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io
