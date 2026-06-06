@@ -42,6 +42,19 @@ helmCharts:
 
       replicaCount: 1
 
+      # forgejo's process footprint is ~300Mi; the rest of what shows up as
+      # "memory" is reclaimable git page cache. A limit makes the kernel reclaim
+      # that cache instead of letting it grow unbounded (it reached 21Gi with no
+      # limit) and protects the node from a genuine spike. Safe because git's
+      # own heap is capped via gitea.config.[git.config] pack.* below, so gc /
+      # repack / upload-pack of the large repos can't exceed the limit.
+      resources:
+        requests:
+          cpu: 100m
+          memory: 512Mi
+        limits:
+          memory: 2Gi
+
       serviceAccount:
         create: true
         name: forgejo
@@ -63,6 +76,14 @@ helmCharts:
             SSH_DOMAIN: forgejo.apps.ocp.igou.systems
           webhook:
             ALLOWED_HOST_LIST: private
+          # Cap git's own memory so gc/repack/upload-pack of the large mirror
+          # repos (k8s-at-home-search is ~13Gi) stay well under the cgroup
+          # memory limit above. Bounds total git heap to ~threads*windowMemory
+          # + deltaCacheSize (~0.4Gi worst case) regardless of repo size.
+          "git.config":
+            pack.windowMemory: 128m
+            pack.deltaCacheSize: 128m
+            pack.threads: 2
         additionalConfigFromEnvs:
           - name: GITEA__database__HOST
             valueFrom:
