@@ -198,6 +198,13 @@ This only works if the **bucket survived** — see the DR limitation in §1.
 - **Plugin must live in the operator's namespace** (`cloudnative-pg`, not the upstream
   default `cnpg-system`) — handled by the kustomize namespace retarget.
 - A restored cluster **does not** re-enable WAL archiving automatically (§5).
+- **The S3-creds ExternalSecret must sync before the Cluster** (`sync-wave: "-2"`).
+  Enabling the plugin on a Cluster triggers a rolling restart whose barman sidecar
+  needs the secret to archive; if the secret is gated *behind* the (now
+  archiving-blocked, unhealthy) Cluster, ArgoCD deadlocks at the cluster's wave.
+- The upstream plugin Deployment hardcodes `runAsUser: 10001`; OpenShift's
+  `restricted-v2` SCC rejects it (`FailedCreate`, pod never created). The plugin
+  component strips it so the SCC assigns a namespace-range UID.
 
 ## References
 
