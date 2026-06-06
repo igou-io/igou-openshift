@@ -7,6 +7,9 @@ resources:
   - rhdh-subscription.yaml
   - rhdh-postgres-credentials-externalsecret.yaml
   - rhdh-backend-secret-externalsecret.yaml
+  - cnpg-s3-credentials-externalsecret.yaml
+  - rhdh-pg-objectstore.yaml
+  - rhdh-pg-scheduledbackup.yaml
   - rhdh-pg-cluster.yaml
   - app-config-rhdh-configmap.yaml
   - rhdh-developer-hub-backstage.yaml

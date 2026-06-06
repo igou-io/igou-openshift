@@ -10,6 +10,13 @@ spec:
   instances: 1
   enablePDB: false
   imagePullPolicy: IfNotPresent
+  # Pin to the always-present control-plane host so a rolling restart never
+  # migrates the RWO NVMe-oF PVC to an (ephemeral CAPI) worker node and trips the
+  # democratic-csi Multi-Attach bug. See docs/runbooks/nvmeof-stuck-multiattach.md.
+  affinity:
+    nodeSelector:
+      node-role.kubernetes.io/control-plane: ""
+    podAntiAffinityType: preferred # CNPG default; declared to avoid ArgoCD drift
   bootstrap:
     initdb:
       database: forgejo

@@ -212,7 +212,13 @@ This only works if the **bucket survived** — see the DR limitation in §1.
   `conversionStrategy/decodingStrategy/metadataPolicy/nullBytePolicy`.
 - A node-moving CNPG rolling restart can trip the NVMe-oF Multi-Attach bug
   (`docs/runbooks/nvmeof-stuck-multiattach.md`): pod stuck `Init:0/2` with a
-  `FailedAttachVolume` event → restart kubelet on the old holding node.
+  `FailedAttachVolume` event → restart kubelet on the old holding node. **All
+  CNPG clusters are pinned to the control-plane host** via
+  `spec.affinity.nodeSelector: {node-role.kubernetes.io/control-plane: ""}` (plus
+  `podAntiAffinityType: preferred`, the CNPG default, declared to avoid SSA drift)
+  so restarts no longer migrate the pod between the ephemeral CAPI workers —
+  removing the trigger going forward. The one-time migration *onto* the
+  control-plane host may still trip it once per cluster currently on a worker.
 
 ## References
 
