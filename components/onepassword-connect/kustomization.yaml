@@ -1,0 +1,32 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - onepassword-connect-namespace.yaml
+
+helmCharts:
+  - name: connect
+    repo: https://1password.github.io/connect-helm-charts
+    version: 2.4.1
+    skipTests: true                # drop the helm.sh/hook:test health-check Pod
+    releaseName: onepassword-connect
+    namespace: onepassword-connect
+    valuesInline:
+      operator:
+        create: false                 # ESO is the consumer — no 1Password operator
+      connect:
+        create: true
+        serviceType: ClusterIP
+        credentialsName: op-credentials            # pre-seeded out-of-band (Task 4)
+        credentialsKey: 1password-credentials.json
+        tls:
+          enabled: false                           # edge Route terminates TLS; pod serves HTTP :8080
+        nodeSelector:
+          node-role.kubernetes.io/control-plane: ""
+        tolerations:
+          - key: node-role.kubernetes.io/master
+            operator: Exists
+            effect: NoSchedule
+          - key: node-role.kubernetes.io/control-plane
+            operator: Exists
+            effect: NoSchedule
