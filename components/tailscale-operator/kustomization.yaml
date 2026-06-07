@@ -8,7 +8,7 @@ helmCharts:
 - name: tailscale-operator
   includeCRDs: true
   releaseName: tailscale
-  version: 1.96.5
+  version: 1.98.3
   repo: https://pkgs.tailscale.com/helmcharts
   valuesInline:
     oauth: {}
