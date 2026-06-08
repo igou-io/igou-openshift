@@ -36,8 +36,10 @@ helmCharts:
     resources:
       limits:
         gpu.intel.com/i915: "1"
-    # Pin to the hub node: only this node has the Intel iGPU (i915) that
-    # jellyfin uses for hardware-accelerated transcoding.
+    # Pin to ocp (the Minisforum MS-01): jellyfin uses its Intel iGPU (i915)
+    # for hardware-accelerated transcoding. More than one node now advertises
+    # gpu.intel.com/i915, so this nodeSelector — not the GPU request — is what
+    # keeps the workload on the MS-01.
     nodeSelector:
       kubernetes.io/hostname: ocp.igou.systems
     deploymentStrategy:
