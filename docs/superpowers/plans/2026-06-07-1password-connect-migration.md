@@ -542,7 +542,7 @@ vars_prompt:
     private: true
 ```
 
-Then find the task `- name: Create 1password-token secrets` (the one looping over `onepassword_tokens` and writing `stringData: { token: ... }` into `external-secrets-operator`) and replace that single task with the following. Both reads authenticate as the scoped SA via the prompted token using `environment:` (not a `lookup()`, because Ansible `environment:` applies to tasks but not to lookups):
+Then find the task `- name: Create 1password-token secrets` (the one looping over `onepassword_tokens` and writing `stringData: { token: ... }` into `external-secrets-operator`) and replace that single task with the following. Each Secret is seeded directly from a `community.general` 1Password **lookup**, passing the prompted token as `service_account_token=` (the lookup parameter — Ansible `environment:` doesn't reach lookups). Needs community.general ≥ 7.1.0 and the `op` CLI on the control node:
 ```yaml
 - name: Create onepassword-connect namespace
   kubernetes.core.k8s:
@@ -553,22 +553,6 @@ Then find the task `- name: Create 1password-token secrets` (the one looping ove
       metadata:
         name: onepassword-connect
 
-- name: Fetch Connect credentials document
-  ansible.builtin.command: op document get ocp-connect-credentials --vault ocp-connect-bootstrap
-  environment:
-    OP_SERVICE_ACCOUNT_TOKEN: "{{ op_bootstrap_sa_token }}"
-  register: op_creds
-  no_log: true
-  changed_when: false
-
-- name: Fetch Connect access token
-  ansible.builtin.command: op item get ocp-connect-token --vault ocp-connect-bootstrap --fields label=token --reveal
-  environment:
-    OP_SERVICE_ACCOUNT_TOKEN: "{{ op_bootstrap_sa_token }}"
-  register: op_token
-  no_log: true
-  changed_when: false
-
 - name: Seed the Connect server credentials Secret
   kubernetes.core.k8s:
     state: present
@@ -578,7 +562,7 @@ Then find the task `- name: Create 1password-token secrets` (the one looping ove
       metadata: { name: op-credentials, namespace: onepassword-connect }
       type: Opaque
       stringData:
-        1password-credentials.json: "{{ op_creds.stdout }}"
+        1password-credentials.json: "{{ lookup('community.general.onepassword_doc', 'ocp-connect-credentials', vault='ocp-connect-bootstrap', service_account_token=op_bootstrap_sa_token) }}"
   no_log: true
 
 - name: Seed the Connect access token Secret (for ESO)
@@ -590,7 +574,7 @@ Then find the task `- name: Create 1password-token secrets` (the one looping ove
       metadata: { name: onepassword-connect-token, namespace: external-secrets-operator }
       type: Opaque
       stringData:
-        token: "{{ op_token.stdout | trim }}"
+        token: "{{ lookup('community.general.onepassword', 'ocp-connect-token', field='token', vault='ocp-connect-bootstrap', service_account_token=op_bootstrap_sa_token) }}"
   no_log: true
 ```
 
