@@ -169,7 +169,7 @@ Chicken-egg: ESO needs Connect; Connect needs its credentials Secret; that Secre
 
 - Remove the `onepassword_tokens` loop that creates `1password-token` SDK Secrets.
 - Create namespace `onepassword-connect`.
-- Phase-1 client (`op` CLI, authenticated as the **read-only `ocp-connect-bootstrap` service account** via `OP_SERVICE_ACCOUNT_TOKEN` **prompted at runtime with `vars_prompt`**) reads the `ocp-connect-credentials` document + `ocp-connect-token` from that dedicated vault and creates:
+- Phase-1 client (`community.general.onepassword(_doc)` **lookups** with `service_account_token=` the **`vars_prompt`-supplied** read-only `ocp-bootstrap` SA token) reads the `ocp-connect-credentials` document + `ocp-connect-token` from that dedicated vault and creates:
   - `op-credentials` (`1password-credentials.json`) in `onepassword-connect`,
   - `onepassword-connect-token` (`token`) in `external-secrets-operator`.
 - Connect comes up at wave 0/1 (serves HTTP :8080 — no cert dependency), ESO stores go Ready.
