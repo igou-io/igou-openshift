@@ -148,12 +148,18 @@ All 3 reference the same token Secret; the token's per-vault scopes (`ocp-pull:r
 
 ### One-time operator setup (human)
 
+The Connect server's own credentials live in a **dedicated, isolated vault** (`ocp-connect-bootstrap`) — deliberately NOT a vault Connect serves and NOT in the Connect token's scope — read by a **service account scoped read-only to only that vault** for the bootstrap playbook. This keeps the keys-to-Connect out of the operational vaults Connect distributes.
+
 ```
 op connect server create ocp-hub --vaults ocp-pull,ocp-push,claude
 op connect token create eso --server ocp-hub \
   --vault ocp-pull:read --vault ocp-push:read_write --vault claude:read_write
-op document create 1password-credentials.json --vault ocp-pull --title 1password-connect-credentials
-op item create --category password --vault ocp-pull --title 1password-connect-token token=<TOKEN>
+# Store the Connect server's OWN credentials in a SEPARATE privileged vault
+# (not ocp-pull/ocp-push/claude, and not in the Connect token scope above):
+op document create 1password-credentials.json --vault ocp-connect-bootstrap --title 1password-connect-credentials
+op item create --category password --vault ocp-connect-bootstrap --title 1password-connect-token token=<TOKEN>
+# Then on 1Password.com → Developer → service accounts: create an SA scoped
+# READ-ONLY to ocp-connect-bootstrap only. Its token is the bootstrap root.
 ```
 
 ### Bootstrap changes (`igou-ansible` `playbooks/openshift/hub-cluster/bootstrap_gitops.yaml`)
@@ -162,7 +168,7 @@ Chicken-egg: ESO needs Connect; Connect needs its credentials Secret; that Secre
 
 - Remove the `onepassword_tokens` loop that creates `1password-token` SDK Secrets.
 - Create namespace `onepassword-connect`.
-- Phase-1 client (op CLI / `community.general.onepassword(_doc)`) reads the Connect credentials file + access token from 1Password (`ocp-pull`) and creates:
+- Phase-1 client (op CLI / `community.general.onepassword(_doc)`, authenticated as the **service account scoped read-only to `ocp-connect-bootstrap`** via `OP_SERVICE_ACCOUNT_TOKEN`) reads the Connect credentials file + access token from that dedicated vault and creates:
   - `op-credentials` (`1password-credentials.json`) in `onepassword-connect`,
   - `onepassword-connect-token` (`token`) in `external-secrets-operator`.
 - Connect comes up at wave 0/1 (serves HTTP :8080 — no cert dependency), ESO stores go Ready.
@@ -174,7 +180,7 @@ Chicken-egg: ESO needs Connect; Connect needs its credentials Secret; that Secre
 
 ## Migration runbook (big-bang)
 
-0. One-time `op connect server/token create`; store credentials + token in `ocp-pull`.
+0. One-time `op connect server/token create`; store credentials + token in a dedicated `ocp-connect-bootstrap` vault and create a read-only service account scoped to only that vault.
 1. Add `components/onepassword-connect/`; wire into app-of-apps at an early wave. Resolve SCC (1b).
 2. Rewrite the 3 ClusterSecretStores in place.
 3. Edit `bootstrap_gitops.yaml` (seed creds/token; drop SDK seed + SDK health-check override).
