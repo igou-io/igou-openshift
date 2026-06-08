@@ -34,6 +34,12 @@
       "matchDatasources": ["docker"],
       "matchDepTypes": ["HelmChart"],
       "pinDigests": false
+    },
+    {
+      "description": "llmkube-controller is locked to chart 0.8.1's manager args; newer builds drop --default-fsgroup and crash-loop (exit 2). Bump applications/llmkube chart version + image digest together, not via Renovate.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/defilantech/llmkube-controller"],
+      "enabled": false
     }
   ],
   "customManagers": [
