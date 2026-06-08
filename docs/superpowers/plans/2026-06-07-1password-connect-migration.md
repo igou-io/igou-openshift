@@ -49,14 +49,14 @@ Expected: prints the token (a JWT). Copy it.
 Create a SEPARATE privileged vault `ocp-connect-bootstrap` — NOT a vault Connect serves, and NOT in the Connect token scope from Step 2 — so the Connect server's own credentials never sit in a vault Connect distributes:
 ```bash
 op vault create ocp-connect-bootstrap
-op document create 1password-credentials.json --vault ocp-connect-bootstrap --title 1password-connect-credentials
-op item create --category password --vault ocp-connect-bootstrap --title 1password-connect-token token=<PASTE_TOKEN_FROM_STEP_2>
+op document create 1password-credentials.json --vault ocp-connect-bootstrap --title ocp-connect-credentials
+op item create --category password --vault ocp-connect-bootstrap --title ocp-connect-token token=<PASTE_TOKEN_FROM_STEP_2>
 ```
 Expected: vault created; two items in `ocp-connect-bootstrap`.
 
 - [ ] **Step 3b: Create a read-only service account scoped to ONLY that vault**
 
-On 1Password.com → Developer → service accounts, create an SA (e.g. `ocp-bootstrap`) granted **read on `ocp-connect-bootstrap` only** (no access to ocp-pull/ocp-push/claude). Save its token — this is the bootstrap root, supplied to the playbook as `OP_SERVICE_ACCOUNT_TOKEN`. It is the single service account retained for bootstrap/break-glass (Task 9).
+On 1Password.com → Developer → service accounts, create an SA (e.g. `ocp-bootstrap`) granted **read on `ocp-connect-bootstrap` only** (no access to ocp-pull/ocp-push/claude). Save its token somewhere only your *user* account reaches (admin/personal vault) — you paste it at the playbook's `vars_prompt` at runtime as `OP_SERVICE_ACCOUNT_TOKEN`; it is **not** stored in `ocp-connect-bootstrap` (the vault it unlocks). This is the single service account retained for bootstrap/break-glass (Task 9).
 
 - [ ] **Step 4: Shred the local credentials file**
 
@@ -267,7 +267,7 @@ Expected: `namespace/onepassword-connect created` (or `configured`).
 
 Run:
 ```bash
-op document get 1password-connect-credentials --vault ocp-connect-bootstrap --out-file /tmp/1password-credentials.json
+op document get ocp-connect-credentials --vault ocp-connect-bootstrap --out-file /tmp/1password-credentials.json
 oc -n onepassword-connect create secret generic op-credentials \
   --from-file=1password-credentials.json=/tmp/1password-credentials.json
 shred -u /tmp/1password-credentials.json
@@ -279,7 +279,7 @@ Expected: `secret/op-credentials created`.
 Run:
 ```bash
 oc -n external-secrets-operator create secret generic onepassword-connect-token \
-  --from-literal=token="$(op item get 1password-connect-token --vault ocp-connect-bootstrap --fields label=token --reveal)"
+  --from-literal=token="$(op item get ocp-connect-token --vault ocp-connect-bootstrap --fields label=token --reveal)"
 ```
 Expected: `secret/onepassword-connect-token created`.
 
@@ -532,9 +532,17 @@ Makes a future from-scratch bootstrap seed Connect instead of the SDK token. Thi
 **Files:**
 - Modify: `igou-ansible/playbooks/openshift/hub-cluster/bootstrap_gitops.yaml`
 
-- [ ] **Step 1: Replace the SDK token seed task**
+- [ ] **Step 1: Add the SA-token prompt, and replace the SDK token seed task**
 
-Find the task `- name: Create 1password-token secrets` (the one looping over `onepassword_tokens` and writing `stringData: { token: ... }` into `external-secrets-operator`). Replace that single task with:
+At the **play level** (sibling of `tasks:` / `vars:`), add a prompt so the bootstrap SA token is typed at runtime and never stored where the playbook reads:
+```yaml
+vars_prompt:
+  - name: op_bootstrap_sa_token
+    prompt: "1Password ocp-bootstrap service-account token (ops_...)"
+    private: true
+```
+
+Then find the task `- name: Create 1password-token secrets` (the one looping over `onepassword_tokens` and writing `stringData: { token: ... }` into `external-secrets-operator`) and replace that single task with the following. Both reads authenticate as the scoped SA via the prompted token using `environment:` (not a `lookup()`, because Ansible `environment:` applies to tasks but not to lookups):
 ```yaml
 - name: Create onepassword-connect namespace
   kubernetes.core.k8s:
@@ -545,17 +553,21 @@ Find the task `- name: Create 1password-token secrets` (the one looping over `on
       metadata:
         name: onepassword-connect
 
-- name: Fetch Connect credentials file (document)
-  ansible.builtin.command: op document get 1password-connect-credentials --vault ocp-connect-bootstrap
+- name: Fetch Connect credentials document
+  ansible.builtin.command: op document get ocp-connect-credentials --vault ocp-connect-bootstrap
+  environment:
+    OP_SERVICE_ACCOUNT_TOKEN: "{{ op_bootstrap_sa_token }}"
   register: op_creds
   no_log: true
   changed_when: false
 
 - name: Fetch Connect access token
-  ansible.builtin.set_fact:
-    op_connect_token: "{{ lookup('community.general.onepassword',
-                          '1password-connect-token', field='token', vault='ocp-connect-bootstrap') }}"
+  ansible.builtin.command: op item get ocp-connect-token --vault ocp-connect-bootstrap --fields label=token --reveal
+  environment:
+    OP_SERVICE_ACCOUNT_TOKEN: "{{ op_bootstrap_sa_token }}"
+  register: op_token
   no_log: true
+  changed_when: false
 
 - name: Seed the Connect server credentials Secret
   kubernetes.core.k8s:
@@ -578,7 +590,7 @@ Find the task `- name: Create 1password-token secrets` (the one looping over `on
       metadata: { name: onepassword-connect-token, namespace: external-secrets-operator }
       type: Opaque
       stringData:
-        token: "{{ op_connect_token }}"
+        token: "{{ op_token.stdout | trim }}"
   no_log: true
 ```
 

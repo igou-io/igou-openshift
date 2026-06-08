@@ -156,10 +156,11 @@ op connect token create eso --server ocp-hub \
   --vault ocp-pull:read --vault ocp-push:read_write --vault claude:read_write
 # Store the Connect server's OWN credentials in a SEPARATE privileged vault
 # (not ocp-pull/ocp-push/claude, and not in the Connect token scope above):
-op document create 1password-credentials.json --vault ocp-connect-bootstrap --title 1password-connect-credentials
-op item create --category password --vault ocp-connect-bootstrap --title 1password-connect-token token=<TOKEN>
+op document create 1password-credentials.json --vault ocp-connect-bootstrap --title ocp-connect-credentials
+op item create --category password --vault ocp-connect-bootstrap --title ocp-connect-token token=<TOKEN>
 # Then on 1Password.com → Developer → service accounts: create an SA scoped
-# READ-ONLY to ocp-connect-bootstrap only. Its token is the bootstrap root.
+# READ-ONLY to ocp-connect-bootstrap only. You paste its token at the playbook's
+# vars_prompt at runtime — it is NOT stored in any vault the playbook reads.
 ```
 
 ### Bootstrap changes (`igou-ansible` `playbooks/openshift/hub-cluster/bootstrap_gitops.yaml`)
@@ -168,7 +169,7 @@ Chicken-egg: ESO needs Connect; Connect needs its credentials Secret; that Secre
 
 - Remove the `onepassword_tokens` loop that creates `1password-token` SDK Secrets.
 - Create namespace `onepassword-connect`.
-- Phase-1 client (op CLI / `community.general.onepassword(_doc)`, authenticated as the **service account scoped read-only to `ocp-connect-bootstrap`** via `OP_SERVICE_ACCOUNT_TOKEN`) reads the Connect credentials file + access token from that dedicated vault and creates:
+- Phase-1 client (`op` CLI, authenticated as the **read-only `ocp-connect-bootstrap` service account** via `OP_SERVICE_ACCOUNT_TOKEN` **prompted at runtime with `vars_prompt`**) reads the `ocp-connect-credentials` document + `ocp-connect-token` from that dedicated vault and creates:
   - `op-credentials` (`1password-credentials.json`) in `onepassword-connect`,
   - `onepassword-connect-token` (`token`) in `external-secrets-operator`.
 - Connect comes up at wave 0/1 (serves HTTP :8080 — no cert dependency), ESO stores go Ready.
