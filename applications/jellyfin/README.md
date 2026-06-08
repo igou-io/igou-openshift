@@ -12,12 +12,13 @@ Jellyfin media server deployed via the upstream Helm chart (vendored under
 
 ## Node placement
 
-The deployment is pinned to `ocp.igou.systems` via `nodeSelector:
-kubernetes.io/hostname: ocp.igou.systems`. Rationale: the Intel iGPU
-(`gpu.intel.com/i915`) used for hardware transcoding is only exposed on that
-node by the Intel Device Plugin Operator. The GPU request alone would
-gate scheduling, but the explicit nodeSelector makes the intent obvious and
-prevents admission-retry churn when the device plugin flaps.
+The deployment is pinned to `ocp.igou.systems` (the Minisforum MS-01) via
+`nodeSelector: kubernetes.io/hostname: ocp.igou.systems`. Rationale: jellyfin
+must run on the MS-01, whose Intel iGPU (`gpu.intel.com/i915`) is used for
+hardware transcoding. Note that more than one node now advertises
+`gpu.intel.com/i915` (e.g. `hpg5.igou.systems`), so the GPU request alone no
+longer gates scheduling to the MS-01 — the explicit `nodeSelector` is what
+enforces placement on this node.
 
 ## Networking — MetalLB LoadBalancer (BGP, no Route/Ingress)
 
