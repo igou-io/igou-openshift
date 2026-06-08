@@ -44,14 +44,19 @@ op connect token create eso --server ocp-hub \
 ```
 Expected: prints the token (a JWT). Copy it.
 
-- [ ] **Step 3: Store both back in 1Password so bootstrap/operators can fetch them**
+- [ ] **Step 3: Create a dedicated bootstrap vault and store both Connect credentials there**
 
-Run:
+Create a SEPARATE privileged vault `ocp-connect-bootstrap` — NOT a vault Connect serves, and NOT in the Connect token scope from Step 2 — so the Connect server's own credentials never sit in a vault Connect distributes:
 ```bash
-op document create 1password-credentials.json --vault ocp-pull --title 1password-connect-credentials
-op item create --category password --vault ocp-pull --title 1password-connect-token token=<PASTE_TOKEN_FROM_STEP_2>
+op vault create ocp-connect-bootstrap
+op document create 1password-credentials.json --vault ocp-connect-bootstrap --title 1password-connect-credentials
+op item create --category password --vault ocp-connect-bootstrap --title 1password-connect-token token=<PASTE_TOKEN_FROM_STEP_2>
 ```
-Expected: two items created in the `ocp-pull` vault.
+Expected: vault created; two items in `ocp-connect-bootstrap`.
+
+- [ ] **Step 3b: Create a read-only service account scoped to ONLY that vault**
+
+On 1Password.com → Developer → service accounts, create an SA (e.g. `ocp-bootstrap`) granted **read on `ocp-connect-bootstrap` only** (no access to ocp-pull/ocp-push/claude). Save its token — this is the bootstrap root, supplied to the playbook as `OP_SERVICE_ACCOUNT_TOKEN`. It is the single service account retained for bootstrap/break-glass (Task 9).
 
 - [ ] **Step 4: Shred the local credentials file**
 
@@ -262,7 +267,7 @@ Expected: `namespace/onepassword-connect created` (or `configured`).
 
 Run:
 ```bash
-op document get 1password-connect-credentials --vault ocp-pull --out-file /tmp/1password-credentials.json
+op document get 1password-connect-credentials --vault ocp-connect-bootstrap --out-file /tmp/1password-credentials.json
 oc -n onepassword-connect create secret generic op-credentials \
   --from-file=1password-credentials.json=/tmp/1password-credentials.json
 shred -u /tmp/1password-credentials.json
@@ -274,7 +279,7 @@ Expected: `secret/op-credentials created`.
 Run:
 ```bash
 oc -n external-secrets-operator create secret generic onepassword-connect-token \
-  --from-literal=token="$(op item get 1password-connect-token --vault ocp-pull --fields label=token --reveal)"
+  --from-literal=token="$(op item get 1password-connect-token --vault ocp-connect-bootstrap --fields label=token --reveal)"
 ```
 Expected: `secret/onepassword-connect-token created`.
 
@@ -541,7 +546,7 @@ Find the task `- name: Create 1password-token secrets` (the one looping over `on
         name: onepassword-connect
 
 - name: Fetch Connect credentials file (document)
-  ansible.builtin.command: op document get 1password-connect-credentials --vault ocp-pull
+  ansible.builtin.command: op document get 1password-connect-credentials --vault ocp-connect-bootstrap
   register: op_creds
   no_log: true
   changed_when: false
@@ -549,7 +554,7 @@ Find the task `- name: Create 1password-token secrets` (the one looping over `on
 - name: Fetch Connect access token
   ansible.builtin.set_fact:
     op_connect_token: "{{ lookup('community.general.onepassword',
-                          '1password-connect-token', field='token', vault='ocp-pull') }}"
+                          '1password-connect-token', field='token', vault='ocp-connect-bootstrap') }}"
   no_log: true
 
 - name: Seed the Connect server credentials Secret
@@ -640,7 +645,7 @@ Expected: the old `onepassword-sdk-*-token` Secrets removed; `onepassword-connec
 
 - [ ] **Step 5: Retire surplus service accounts (keep one)**
 
-In 1Password, revoke all but one service account; keep one for the bootstrap seed + break-glass. Verify ESO is unaffected: `oc get clustersecretstore -o custom-columns=NAME:.metadata.name,READY:.status.conditions[0].status` → all still `True`.
+In 1Password, revoke all but one service account; keep **only** the `ocp-bootstrap` SA (read-only on `ocp-connect-bootstrap`, from Task 1 Step 3b) for the bootstrap seed + break-glass. Verify ESO is unaffected: `oc get clustersecretstore -o custom-columns=NAME:.metadata.name,READY:.status.conditions[0].status` → all still `True`.
 
 ---
 
