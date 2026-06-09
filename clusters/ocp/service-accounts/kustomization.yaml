@@ -8,3 +8,4 @@ resources:
   - cluster-edit-token-push-pushsecret.yaml
   - claude-edit-token-push-pushsecret.yaml
   - ansible-molecule-token-push-pushsecret.yaml
+  - virtualmachine-ops-token-pushsecret.yaml

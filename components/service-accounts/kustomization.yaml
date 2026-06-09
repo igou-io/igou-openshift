@@ -24,6 +24,10 @@ resources:
   - virtualmachine-deployer-token-secret.yaml
   - virtualmachine-deployer-clusterrole.yaml
   - virtualmachine-deployer-clusterrolebinding.yaml
+  - virtualmachine-ops-serviceaccount.yaml
+  - virtualmachine-ops-token-secret.yaml
+  - virtualmachine-ops-clusterrole.yaml
+  - virtualmachine-ops-clusterrolebinding.yaml
 
 helmGlobals:
   chartHome: ../../.helm/charts
