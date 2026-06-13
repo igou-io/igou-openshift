@@ -1,0 +1,18 @@
+{{- range $tenant := .Values.tenants }}
+{{- $ns := include "remote-tenant.namespace" (dict "root" $ "tenant" $tenant) }}
+{{- $cfg := include "remote-tenant.merged" (dict "root" $ "tenant" $tenant) | fromYaml }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ $ns | quote }}
+  labels:
+    igou.systems/tenant-type: remote-user
+    pod-security.kubernetes.io/enforce: {{ $cfg.psa | quote }}
+    security.openshift.io/scc.podSecurityLabelSync: "true"
+    {{- include "remote-tenant.labels" (dict "tenant" $tenant) | nindent 4 }}
+  annotations:
+    openshift.io/description: {{ printf "Remote tenant namespace for %s" (join ", " ($tenant.members | default (list $tenant.name))) | quote }}
+    openshift.io/node-selector: {{ $cfg.nodeSelector | quote }}
+    argocd.argoproj.io/sync-wave: "20"
+{{- end }}
