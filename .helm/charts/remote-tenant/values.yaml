@@ -1,0 +1,69 @@
+---
+# remote-tenant — see README.md. Cluster tenants live in
+# clusters/ocp/remote-tenants/values.yaml, not here.
+
+# Prepended to each tenant.name to form the namespace. "" → namespace == name.
+namespacePrefix: ""
+
+defaults:
+  # Pod Security Admission enforce level for the tenant namespace.
+  psa: restricted
+  # Node pinning — tenants run only on nodes carrying this label (hpg5, p330).
+  # The master and the casval burst node do NOT carry it.
+  nodeSelector: "node-role.kubernetes.io/tenant="
+  # ClusterRole bound to the tenant's impersonated group:
+  # remote-tenant-operator (custom, default) | edit | view.
+  role: remote-tenant-operator
+  # Allow openshift-monitoring to scrape tenant pods.
+  allowMonitoring: false
+  # CIDRs carved OUT of the allow-external-egress 0.0.0.0/0 rule — blocks the
+  # pod network, service network, metadata IP, and RFC1918 (incl. the LAN).
+  # Matches pac-tenant so the two charts agree.
+  egressBlockedCIDRs:
+    - 10.128.0.0/14
+    - 172.30.0.0/16
+    - 169.254.169.254/32
+    - 192.168.0.0/16
+    - 10.0.0.0/8
+  quota:
+    requests.cpu: "1"
+    requests.memory: 2Gi
+    limits.cpu: "2"
+    limits.memory: 4Gi
+    pods: "20"
+    persistentvolumeclaims: "5"
+    requests.storage: 20Gi
+    services: "10"
+    secrets: "30"
+    configmaps: "30"
+  limitRange:
+    defaultRequest:
+      cpu: 50m
+      memory: 128Mi
+    default:
+      cpu: 500m
+      memory: 512Mi
+    max:
+      cpu: "2"
+      memory: 4Gi
+
+# tenants — onboarded users. Each entry overrides any default; unspecified
+# fields inherit. Schema:
+#   - name: <slug>                  # required, ^[a-z0-9-]+$ → namespace name
+#     members: [<tailnet-identity>] # documentation only → emitted grant block (NOTES)
+#     grantGroup: <group>           # optional, default "<name>-operator"; RBAC binds `role` to this group (the proxy impersonates it)
+#     role: edit|view|remote-tenant-operator   # optional
+#     psa: restricted|baseline|privileged       # optional, PSA enforce level
+#     quota: { ... }                # optional, deep-merged
+#     limitRange: { ... }           # optional
+#     nodeSelector: "<k=v>"         # optional, override node pinning
+#     allowMonitoring: true|false   # optional
+#     egressBlockedCIDRs: [ ... ]   # optional
+#     extraEgress:                  # optional — additive egress NetworkPolicies
+#       - name: <netpol-name>
+#         cidr: <cidr>              # XOR namespaceSelector/podSelector
+#         # namespaceSelector: {matchLabels: {...}}
+#         # podSelector: {matchLabels: {...}}
+#         ports: [{port: <int>, protocol: TCP|UDP}]   # optional
+#     extraIngress:                 # optional — additive ingress NetworkPolicies (same shape)
+tenants: []

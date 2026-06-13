@@ -1,0 +1,14 @@
+---
+tenants:
+  - name: alice-dev
+    members: ["alice@example.com"]
+    extraEgress:
+      - name: allow-pg
+        cidr: 10.10.9.20/32
+        ports:
+          - port: 5432
+            protocol: TCP
+  - name: bob-view
+    members: ["bob@example.com"]
+    role: view
+    allowMonitoring: true
