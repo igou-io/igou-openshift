@@ -6,6 +6,7 @@ resources:
   - blackbox-exporter-prometheusrule.yaml
   - probes/infra-https-probe.yaml
   - probes/saas-https-probe.yaml
+  - probes/igou-io-probe.yaml
 helmCharts:
   - name: prometheus-blackbox-exporter
     namespace: blackbox-exporter
