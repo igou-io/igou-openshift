@@ -1,0 +1,18 @@
+{{- if .Values.tenants }}
+remote-tenant rendered {{ len .Values.tenants }} tenant namespace(s).
+
+For EACH tenant: (1) add the grant below to the Tailscale ACL policy
+(admin console -> Access controls -> "grants" array), and (2) ensure the
+worker pool is labeled (one-time): see README.md.
+{{ range $tenant := .Values.tenants }}
+{{- $ns := include "remote-tenant.namespace" (dict "root" $ "tenant" $tenant) }}
+{{- $group := $tenant.grantGroup | default (printf "%s-operator" $tenant.name) }}
+== {{ $tenant.name }}  (namespace: {{ $ns }}) ==
+  {
+    "src": [{{ range $i, $m := ($tenant.members | default list) }}{{ if $i }}, {{ end }}{{ $m | quote }}{{ end }}],
+    "dst": ["tag:k8s-operator"],
+    "app": { "tailscale.com/cap/kubernetes": [ { "impersonate": { "groups": [{{ $group | quote }}] } } ] }
+  }
+  user: tailscale configure kubeconfig tailscale-operator && oc -n {{ $ns }} get pods
+{{ end }}
+{{- end }}
