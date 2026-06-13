@@ -1,0 +1,28 @@
+---
+# External (public-internet) uptime + TLS probe of the personal website. The
+# in-cluster blackbox-exporter reaches https://igou.io over egress, a true
+# outside-in check of the VPS site, independent of the tailnet path used for
+# node_exporter. tier=critical enrolls it in BlackboxProbeFailedCritical and
+# the BlackboxSSLCertExpiring* alerts (the LE cert is auto-renewed weekly by
+# AAP; this catches a renewal that did not land). http_2xx follows the apex
+# 80->443 redirect and asserts a 2xx over TLS.
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: igou-io
+  namespace: blackbox-exporter
+  labels:
+    app.kubernetes.io/name: blackbox-exporter
+spec:
+  interval: 60s
+  module: http_2xx
+  prober:
+    url: blackbox-exporter.blackbox-exporter.svc:9115
+  targets:
+    staticConfig:
+      static:
+        - https://igou.io
+      labels:
+        tier: critical
+        category: website
+        owner: platform
