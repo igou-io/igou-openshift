@@ -1,5 +1,9 @@
 # Rendered once. Scoped to remote-tenant namespaces via the bindings'
 # namespaceSelector.
+# The burst taint/label literals below (workload=burst,
+# node-role.kubernetes.io/burst) mirror
+# clusters/ocp/cluster-api/casval-worker-machineset.yaml — keep in sync if the
+# burst taint or node-role label is ever renamed.
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingAdmissionPolicy
 metadata:
