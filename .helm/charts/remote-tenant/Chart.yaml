@@ -1,0 +1,12 @@
+apiVersion: v2
+name: remote-tenant
+version: 0.1.0
+description: >-
+  Per-user locked-down OpenShift namespace with guardrails (RBAC,
+  NetworkPolicy, ResourceQuota, LimitRange, PSA, node-pinning, burst-node
+  + secondary-network admission blocks), reachable over the tailnet via the
+  Tailscale API-server proxy. Tenants are defined as a list in values.tenants.
+type: application
+kubeVersion: '>=1.30.0'
+maintainers:
+  - name: David Igou
