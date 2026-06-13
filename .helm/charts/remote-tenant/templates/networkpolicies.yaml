@@ -1,0 +1,162 @@
+{{- range $tenant := .Values.tenants }}
+{{- $ns := include "remote-tenant.namespace" (dict "root" $ "tenant" $tenant) }}
+{{- $cfg := include "remote-tenant.merged" (dict "root" $ "tenant" $tenant) | fromYaml }}
+---
+# Default-deny all ingress and egress.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: {{ $ns | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+  labels:
+    {{- include "remote-tenant.labels" (dict "tenant" $tenant) | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+# Allow DNS to openshift-dns. OVN-K evaluates the egress port against the
+# destination containerPort (post-NAT): dns-default exposes 53 -> targetPort
+# 5353, so 5353 must be allowed; 53 kept for any Service-bypass path.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns
+  namespace: {{ $ns | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+  labels:
+    {{- include "remote-tenant.labels" (dict "tenant" $tenant) | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - {port: 5353, protocol: UDP}
+        - {port: 5353, protocol: TCP}
+        - {port: 53, protocol: UDP}
+        - {port: 53, protocol: TCP}
+---
+# Allow pods within the namespace to talk to each other.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-intra-namespace
+  namespace: {{ $ns | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+  labels:
+    {{- include "remote-tenant.labels" (dict "tenant" $tenant) | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - podSelector: {}
+  egress:
+    - to:
+        - podSelector: {}
+---
+# Allow external HTTPS/HTTP egress; carve out intra-cluster + LAN via except.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-external-egress
+  namespace: {{ $ns | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+  labels:
+    {{- include "remote-tenant.labels" (dict "tenant" $tenant) | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            {{- with $cfg.egressBlockedCIDRs }}
+            except:
+              {{- range . }}
+              - {{ . | quote }}
+              {{- end }}
+            {{- end }}
+      ports:
+        - {port: 443, protocol: TCP}
+        - {port: 80, protocol: TCP}
+{{- if $cfg.allowMonitoring }}
+---
+# Allow openshift-monitoring to scrape tenant pods.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-monitoring
+  namespace: {{ $ns | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+  labels:
+    {{- include "remote-tenant.labels" (dict "tenant" $tenant) | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-monitoring
+{{- end }}
+{{- range $rule := ($tenant.extraEgress | default list) }}
+{{- $peer := dict }}
+{{- if $rule.cidr }}{{- $peer = dict "ipBlock" (dict "cidr" $rule.cidr) }}{{- else }}{{- if $rule.namespaceSelector }}{{- $peer = set $peer "namespaceSelector" $rule.namespaceSelector }}{{- end }}{{- if $rule.podSelector }}{{- $peer = set $peer "podSelector" $rule.podSelector }}{{- end }}{{- end }}
+{{- if not $peer }}{{- fail (printf "extraEgress[%s] in tenant %s: set cidr OR (namespaceSelector and/or podSelector)" $rule.name $tenant.name) }}{{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $rule.name | quote }}
+  namespace: {{ $ns | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+  labels:
+    {{- include "remote-tenant.labels" (dict "tenant" $tenant) | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - {{- toYaml $peer | nindent 10 }}
+      {{- with $rule.ports }}
+      ports:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
+{{- range $rule := ($tenant.extraIngress | default list) }}
+{{- $peer := dict }}
+{{- if $rule.cidr }}{{- $peer = dict "ipBlock" (dict "cidr" $rule.cidr) }}{{- else }}{{- if $rule.namespaceSelector }}{{- $peer = set $peer "namespaceSelector" $rule.namespaceSelector }}{{- end }}{{- if $rule.podSelector }}{{- $peer = set $peer "podSelector" $rule.podSelector }}{{- end }}{{- end }}
+{{- if not $peer }}{{- fail (printf "extraIngress[%s] in tenant %s: set cidr OR (namespaceSelector and/or podSelector)" $rule.name $tenant.name) }}{{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $rule.name | quote }}
+  namespace: {{ $ns | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+  labels:
+    {{- include "remote-tenant.labels" (dict "tenant" $tenant) | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - {{- toYaml $peer | nindent 10 }}
+      {{- with $rule.ports }}
+      ports:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
+{{- end }}
