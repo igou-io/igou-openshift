@@ -216,6 +216,13 @@ applications:
     source:
       path: components/openshift-pipelines
 
+  remote-tenants:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: clusters/ocp/remote-tenants
+
   pac-tenants:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
