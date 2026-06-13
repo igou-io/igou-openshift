@@ -262,6 +262,16 @@ applications:
       namespace: tailscale
     source:
       path: components/tailscale-operator
+    # The operator rewrites the igou-io-node-exporter egress Service's
+    # spec.externalName from the git placeholder to its proxy FQDN. Defer that
+    # field to the operator so the app doesn't sit permanently OutOfSync.
+    ignoreDifferences:
+      - group: ""
+        kind: Service
+        name: igou-io-node-exporter
+        namespace: tailscale
+        jsonPointers:
+          - /spec/externalName
 
   cloudnative-pg:
     annotations:

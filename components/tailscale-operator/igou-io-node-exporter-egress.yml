@@ -54,5 +54,8 @@ spec:
       interval: 30s
       relabelings:
         # The target address is the in-cluster proxy; name the real source.
-        - targetLabel: instance
+        # action:replace is the CRD default — set it explicitly so the rendered
+        # manifest matches the live object and ArgoCD stays Synced.
+        - action: replace
+          targetLabel: instance
           replacement: igou.io
