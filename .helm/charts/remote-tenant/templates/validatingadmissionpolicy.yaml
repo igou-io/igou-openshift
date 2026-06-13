@@ -1,0 +1,116 @@
+# Rendered once. Scoped to remote-tenant namespaces via the bindings'
+# namespaceSelector.
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: remote-tenant-no-burst
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["pods", "replicationcontrollers"]
+      - apiGroups: ["apps"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["deployments", "replicasets", "statefulsets", "daemonsets"]
+      - apiGroups: ["batch"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["jobs", "cronjobs"]
+      - apiGroups: ["apps.openshift.io"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["deploymentconfigs"]
+  variables:
+    - name: podSpec
+      expression: >
+        object.kind == 'Pod' ? object.spec :
+        (object.kind == 'CronJob' ? object.spec.jobTemplate.spec.template.spec : object.spec.template.spec)
+    - name: tolerations
+      expression: "has(variables.podSpec.tolerations) ? variables.podSpec.tolerations : []"
+    - name: nodeSelector
+      expression: "has(variables.podSpec.nodeSelector) ? variables.podSpec.nodeSelector : {}"
+    - name: affinityTerms
+      expression: >
+        (has(variables.podSpec.affinity) && has(variables.podSpec.affinity.nodeAffinity)
+         && has(variables.podSpec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution)
+         && has(variables.podSpec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms))
+        ? variables.podSpec.affinity.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.nodeSelectorTerms : []
+  validations:
+    - expression: >
+        !variables.tolerations.exists(t,
+          (!has(t.effect) || t.effect == '' || t.effect == 'NoSchedule') &&
+          (
+            ((has(t.operator) && t.operator == 'Exists') && (!has(t.key) || t.key == '' || t.key == 'workload'))
+            ||
+            ((!has(t.operator) || t.operator == '' || t.operator == 'Equal') && has(t.key) && t.key == 'workload' && has(t.value) && t.value == 'burst')
+          )
+        )
+      reason: Forbidden
+      message: "remote tenants may not tolerate the burst taint (workload=burst:NoSchedule)"
+    - expression: "!('node-role.kubernetes.io/burst' in variables.nodeSelector)"
+      reason: Forbidden
+      message: "remote tenants may not target the burst node via nodeSelector"
+    - expression: >
+        !variables.affinityTerms.exists(term,
+          (has(term.matchExpressions) && term.matchExpressions.exists(e, e.key == 'node-role.kubernetes.io/burst')) ||
+          (has(term.matchFields) && term.matchFields.exists(f, f.key == 'node-role.kubernetes.io/burst'))
+        )
+      reason: Forbidden
+      message: "remote tenants may not target the burst node via nodeAffinity"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: remote-tenant-no-burst
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  policyName: remote-tenant-no-burst
+  validationActions: ["Deny"]
+  matchResources:
+    namespaceSelector:
+      matchLabels:
+        igou.systems/tenant-type: remote-user
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: remote-tenant-no-secondary-net
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ["k8s.cni.cncf.io"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["network-attachment-definitions"]
+      - apiGroups: ["k8s.ovn.org"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["userdefinednetworks"]
+  validations:
+    - expression: "false"
+      reason: Forbidden
+      message: "remote tenants may not create NetworkAttachmentDefinitions or UserDefinedNetworks (secondary networks bypass NetworkPolicy isolation)"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: remote-tenant-no-secondary-net
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+spec:
+  policyName: remote-tenant-no-secondary-net
+  validationActions: ["Deny"]
+  matchResources:
+    namespaceSelector:
+      matchLabels:
+        igou.systems/tenant-type: remote-user
