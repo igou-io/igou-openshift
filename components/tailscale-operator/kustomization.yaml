@@ -76,6 +76,6 @@ helmCharts:
     # Kubernetes API server.
     # https://tailscale.com/kb/1236/kubernetes-operator/#accessing-the-kubernetes-control-plane-using-an-api-server-proxy
     apiServerProxyConfig:
-      mode: "false" # "true", "false", "noauth"
+      mode: "true" # "true" = operator authenticates the tailnet identity and impersonates it (grants -> k8s groups)
 
     imagePullSecrets: []
