@@ -1,0 +1,19 @@
+{{- range $tenant := .Values.tenants }}
+{{- $ns := include "remote-tenant.namespace" (dict "root" $ "tenant" $tenant) }}
+{{- $cfg := include "remote-tenant.merged" (dict "root" $ "tenant" $tenant) | fromYaml }}
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: tenant-quota
+  namespace: {{ $ns | quote }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "21"
+  labels:
+    {{- include "remote-tenant.labels" (dict "tenant" $tenant) | nindent 4 }}
+spec:
+  hard:
+{{- range $key, $value := $cfg.quota }}
+    {{ $key }}: {{ $value | quote }}
+{{- end }}
+{{- end }}
