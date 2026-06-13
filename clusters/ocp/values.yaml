@@ -247,6 +247,15 @@ applications:
     source:
       path: components/grafana
 
+  tailscale-operator:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '10'
+    destination:
+      namespace: tailscale
+    source:
+      path: components/tailscale-operator
+
   cloudnative-pg:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
