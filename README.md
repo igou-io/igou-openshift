@@ -1,6 +1,6 @@
 # igou-openshift
 
-Manifests and chart I use to configure my single node Openshift machine
+Manifests and chart I use to configure my single-master Openshift cluster
 
 Running on a minisforum MS-01
 

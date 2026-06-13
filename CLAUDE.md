@@ -24,7 +24,7 @@ Multi-cluster GitOps repository for OpenShift/OKD managed by ArgoCD. The hub clu
 
 ### Clusters
 
-- **clusters/ocp/** — Primary cluster (single-node OKD). Runs ArgoCD, ACM, and all platform operators. App-of-apps root.
+- **clusters/ocp/** — Primary cluster (single-master OpenShift; control-plane on the MS-01, plus an on-demand CAPI burst worker `casval` scaled 0→1). Runs ArgoCD, ACM, and all platform operators. App-of-apps root.
 
 ### Layout
 
@@ -52,7 +52,7 @@ Each cluster uses its own `values.yaml` to define managed applications. Each ent
 - **Sync policy defaults**: auto-sync enabled, auto-prune disabled, unlimited retry with exponential backoff
 - **Secrets**: externalized via External Secrets Operator + 1Password ClusterSecretStore — never stored in git
 - **Container images**: pinned to digest where possible (Renovate manages updates)
-- **Single-node tolerations**: many components explicitly tolerate/schedule on master nodes
+- **Control-plane tolerations**: many components explicitly tolerate/schedule on the master node (the only always-on node; the `casval` burst worker is 0 replicas at rest)
 - **File naming**: YAML files should be named `<metadata.name>-<kind>.yaml` whenever possible (e.g. `my-app-deployment.yaml`, `cluster-read-only-serviceaccount.yaml`)
 
 ### Networking
