@@ -1,0 +1,15 @@
+---
+# Remote-access tenants for the OCP cluster.
+# Schema and defaults: see .helm/charts/remote-tenant/values.yaml
+#
+# Each tenant also needs a one-time Tailscale ACL grant (impersonate group
+# "<name>-operator") — see the chart NOTES / README.
+#
+# Example:
+# tenants:
+#   - name: alice-dev
+#     members: ["alice@example.com"]
+#     # role: view
+#     # extraEgress:
+#     #   - { name: allow-pg, cidr: 10.10.9.20/32, ports: [{ port: 5432, protocol: TCP }] }
+tenants: []
