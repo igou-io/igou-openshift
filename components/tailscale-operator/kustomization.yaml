@@ -4,6 +4,7 @@ resources:
   - tailscale-operator-anyuid-clusterrolebinding.yaml
   - tailscale-proxies-privileged-clusterrolebinding.yaml
   - operator-oauth-externalsecret.yml
+  - igou-io-node-exporter-egress.yml
 helmCharts:
 - name: tailscale-operator
   includeCRDs: true
