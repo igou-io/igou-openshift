@@ -1,0 +1,48 @@
+---
+apiVersion: inference.llmkube.dev/v1alpha1
+kind: InferenceService
+metadata:
+  name: qwen35-2b
+  namespace: llmkube-system
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,ServerSideApply=true
+    argocd.argoproj.io/sync-wave: '6'
+spec:
+  modelRef: qwen35-2b
+  runtime: llamacpp
+  # CUDA-12.8 build (CMAKE arch list includes 610 = Pascal sm_61). NOT
+  # server-cuda13 (CUDA 13 drops Pascal -> CPU fallback). Pinned by digest.
+  # The new Qwen3.5 Gated-DeltaNet+MoE hybrid arch loads and runs on the P620
+  # with this mainline build.
+  image: ghcr.io/ggml-org/llama.cpp:server-cuda@sha256:c9a2287423b13a13f69c980a45e6c62994f26dffe393cfce7c20bd8feba226c9
+  replicas: 1
+  # 4096 is the benchmarked-safe context (~1.38 GB used, ~670 MiB headroom).
+  # Qwen3.5's linear-attention layers make larger context cheap — raise after
+  # testing (FlashAttention / quantized-KV unverified on Pascal sm_61).
+  contextSize: 4096
+  flashAttention: false
+  jinja: true                 # apply the Qwen3.5 chat template (tool-calling + reasoning)
+  parallelSlots: 1
+  podSecurityContext:
+    fsGroup: 1001030000       # OpenShift restricted-v2 SCC range (llmkube default 102 is rejected)
+    seccompProfile:
+      type: RuntimeDefault
+  extraArgs:
+    - "--alias"
+    - "qwen3.5-2b"
+    # Qwen3.5 is a heavy reasoner (ignores /no_think); parse <think> into the
+    # OpenAI reasoning_content field. Sampling left at model/server defaults.
+    - "--reasoning-format"
+    - "deepseek"
+  resources:
+    gpu: 1
+    cpu: "4"
+    memory: "8Gi"
+    gpuMemory: "2Gi"
+  endpoint:
+    port: 8080
+    type: ClusterIP
+  # Pin to the P620 host (the only Pascal GPU). No toleration — p330 is untainted.
+  nodeSelector:
+    kubernetes.io/hostname: p330.igou.systems
+  priority: normal

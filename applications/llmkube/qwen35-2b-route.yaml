@@ -2,7 +2,7 @@
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: qwen3-1-7b
+  name: qwen35-2b
   namespace: llmkube-system
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,ServerSideApply=true
@@ -11,7 +11,7 @@ metadata:
 spec:
   to:
     kind: Service
-    name: qwen3-1-7b
+    name: qwen35-2b
   port:
     targetPort: 8080
   tls:
