@@ -16,6 +16,8 @@ spec:
         resources:
           - virtualmachines
   validations:
+    - expression: "has(object.spec.template.spec.domain.devices.interfaces) && size(object.spec.template.spec.domain.devices.interfaces) > 0"
+      message: "hermes VMs must declare at least one (masquerade) network interface"
     - expression: "object.spec.template.spec.domain.devices.interfaces.all(i, has(i.masquerade))"
       message: "hermes VMs must use masquerade networking so EgressFirewall/NetworkPolicy apply"
     - expression: "!has(object.spec.template.spec.domain.devices.hostDevices) || size(object.spec.template.spec.domain.devices.hostDevices) == 0"

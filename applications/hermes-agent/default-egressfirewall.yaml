@@ -11,6 +11,8 @@ spec:
       to:
         dnsName: api.telegram.org
     # everything else external is denied (cluster DNS + qwen3 + Quay are east-west, see NetworkPolicy)
+    # NOTE: 0.0.0.0/0 also blocks the LAN and the OpenShift API server (10.10.9.10).
+    # That is intended: the Hermes VM guest needs neither LAN nor API-server access.
     - type: Deny
       to:
         cidrSelector: 0.0.0.0/0
