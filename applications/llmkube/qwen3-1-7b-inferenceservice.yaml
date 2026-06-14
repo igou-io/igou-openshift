@@ -16,8 +16,11 @@ spec:
   # moving tag that could later rebase onto CUDA 13).
   image: ghcr.io/ggml-org/llama.cpp:server-cuda@sha256:c9a2287423b13a13f69c980a45e6c62994f26dffe393cfce7c20bd8feba226c9
   replicas: 1
-  contextSize: 8192
-  # FlashAttention / quantized-KV are unverified on Pascal sm_61 — keep f16 KV.
+  # 4096 is the benchmarked-safe context on the 2 GB P620 (~1.56 GB used). ctx
+  # 8192 OOMs the card during compute-buffer allocation. To push higher you'd
+  # need q8_0 K-cache (FlashAttention / quantized V-cache is unverified on
+  # Pascal sm_61) — test before raising.
+  contextSize: 4096
   flashAttention: false
   jinja: true                 # apply the Qwen3 chat template (tool-calling + thinking)
   parallelSlots: 1
