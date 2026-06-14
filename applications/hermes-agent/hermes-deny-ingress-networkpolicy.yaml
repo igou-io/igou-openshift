@@ -7,4 +7,13 @@ spec:
   podSelector: {}
   policyTypes:
     - Ingress
-  # no ingress rules => deny all ingress
+  ingress:
+    # SSH from the AAP namespace only, so Ansible can converge the guest over
+    # the masquerade pod IP. All other inbound is still denied.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ansible-automation-platform
+      ports:
+        - protocol: TCP
+          port: 22

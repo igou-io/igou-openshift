@@ -6,6 +6,16 @@ metadata:
   namespace: hermes
 spec:
   egress:
+    # === Phase-2b install window (MANUAL operator toggle — no Ansible touches this file) ===
+    # Hermes's installer + dnf need broad internet. To run the convergence's
+    # install phase, PREPEND an allow-all rule here (OVN evaluates in order,
+    # first match wins), commit, let Argo sync, run the workflow's install
+    # nodes, then REVERT it to re-lock:
+    #   - type: Allow
+    #     to:
+    #       cidrSelector: 0.0.0.0/0
+    # The committed default below stays LOCKED.
+    #
     # the one messaging channel enabled in POC (swap dnsName for your channel)
     - type: Allow
       to:
