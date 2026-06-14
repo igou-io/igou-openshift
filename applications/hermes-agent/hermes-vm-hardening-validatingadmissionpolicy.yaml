@@ -18,8 +18,12 @@ spec:
   validations:
     - expression: "has(object.spec.template.spec.domain.devices.interfaces) && size(object.spec.template.spec.domain.devices.interfaces) > 0"
       message: "hermes VMs must declare at least one (masquerade) network interface"
-    - expression: "object.spec.template.spec.domain.devices.interfaces.all(i, has(i.masquerade))"
-      message: "hermes VMs must use masquerade networking so EgressFirewall/NetworkPolicy apply"
+    # masquerade must be the EXCLUSIVE binding on every interface: has(masquerade)
+    # alone is presence-only and admits an interface that sets masquerade AND bridge
+    # (etc.), which would escape EgressFirewall/NetworkPolicy. Forbid every other
+    # binding sibling so the interface can only ride the pod network via masquerade.
+    - expression: "object.spec.template.spec.domain.devices.interfaces.all(i, has(i.masquerade) && !has(i.bridge) && !has(i.slirp) && !has(i.sriov) && !has(i.macvtap) && !has(i.passt) && !has(i.binding))"
+      message: "hermes VMs must use masquerade networking exclusively (no bridge/slirp/sriov/macvtap/passt/binding) so EgressFirewall/NetworkPolicy apply"
     - expression: "!has(object.spec.template.spec.domain.devices.hostDevices) || size(object.spec.template.spec.domain.devices.hostDevices) == 0"
       message: "hermes VMs must not attach host devices"
     - expression: "!has(object.spec.template.spec.domain.devices.gpus) || size(object.spec.template.spec.domain.devices.gpus) == 0"

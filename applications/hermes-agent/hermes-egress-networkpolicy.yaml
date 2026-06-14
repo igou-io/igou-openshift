@@ -22,14 +22,20 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
-    # qwen3 inference service (east-west default LLM)
+    # in-cluster LLM inference (east-west). Allowlist the specific model pods by
+    # label: qwen3-35b-a3b (intended default) and qwen35-2b (currently Ready).
+    # Least-privilege: only these named models are reachable on 8080.
     - to:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: llmkube-system
           podSelector:
-            matchLabels:
-              app: qwen3-35b-a3b
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - qwen3-35b-a3b
+                  - qwen35-2b
       ports:
         - protocol: TCP
           port: 8080
