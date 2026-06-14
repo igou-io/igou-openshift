@@ -1,0 +1,58 @@
+---
+apiVersion: inference.llmkube.dev/v1alpha1
+kind: InferenceService
+metadata:
+  name: qwen3-1-7b
+  namespace: llmkube-system
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,ServerSideApply=true
+    argocd.argoproj.io/sync-wave: '6'
+spec:
+  modelRef: qwen3-1-7b
+  runtime: llamacpp
+  # CUDA-12.8 build — its CMAKE arch list includes 610 (Pascal sm_61), so it runs
+  # on the P620. Do NOT use server-cuda13 (CUDA 13 drops Pascal -> silent CPU
+  # fallback). Pinned by digest to lock the CUDA-12/sm_61 build (server-cuda is a
+  # moving tag that could later rebase onto CUDA 13).
+  image: ghcr.io/ggml-org/llama.cpp:server-cuda@sha256:c9a2287423b13a13f69c980a45e6c62994f26dffe393cfce7c20bd8feba226c9
+  replicas: 1
+  contextSize: 8192
+  # FlashAttention / quantized-KV are unverified on Pascal sm_61 — keep f16 KV.
+  flashAttention: false
+  jinja: true                 # apply the Qwen3 chat template (tool-calling + thinking)
+  parallelSlots: 1
+  podSecurityContext:
+    # llmkube 0.8.1 defaults fsGroup to 102, which OpenShift restricted-v2 rejects;
+    # pin into the namespace's allocated range so the model-cache PVC is writable.
+    fsGroup: 1001030000
+    seccompProfile:
+      type: RuntimeDefault
+  extraArgs:
+    - "--alias"
+    - "qwen3-1.7b"
+    # Parse <think> into OpenAI reasoning_content. Thinking is on by default;
+    # clients can send "/no_think" per-request for fast direct answers (~28 tok/s).
+    - "--reasoning-format"
+    - "deepseek"
+    # Qwen3 recommended thinking-mode sampling preset.
+    - "--temp"
+    - "0.6"
+    - "--top-p"
+    - "0.95"
+    - "--top-k"
+    - "20"
+    - "--min-p"
+    - "0.0"
+  resources:
+    gpu: 1
+    cpu: "4"
+    memory: "8Gi"
+    gpuMemory: "2Gi"
+  endpoint:
+    port: 8080
+    type: ClusterIP
+  # Pin to the P620 host (the only Pascal GPU). No toleration — p330 is untainted
+  # (unlike the casval burst node, which runs the 595 driver for newer GPUs).
+  nodeSelector:
+    kubernetes.io/hostname: p330.igou.systems
+  priority: normal
