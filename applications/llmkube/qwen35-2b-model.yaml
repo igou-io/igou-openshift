@@ -1,0 +1,29 @@
+---
+apiVersion: inference.llmkube.dev/v1alpha1
+kind: Model
+metadata:
+  name: qwen35-2b
+  namespace: llmkube-system
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,ServerSideApply=true
+    argocd.argoproj.io/sync-wave: '5'
+spec:
+  # Qwen3.5-2B: newest-gen hybrid (Gated-DeltaNet linear-attention + sparse MoE),
+  # 256K native context. Q4_K_M (~1.28 GB) is fully GPU-resident on the 2 GB P620;
+  # benchmarked ~21 tok/s / 1.38 GB at ctx 4096. The linear-attention layers barely
+  # grow KV with context, so it can scale context far cheaper than a dense model
+  # (untested above 4096 on this card).
+  source: https://huggingface.co/unsloth/Qwen3.5-2B-GGUF/resolve/main/Qwen3.5-2B-Q4_K_M.gguf
+  format: gguf
+  quantization: Q4_K_M
+  hardware:
+    accelerator: cuda
+    gpu:
+      enabled: true
+      count: 1
+      layers: -1
+      memory: "2Gi"
+      vendor: nvidia
+  resources:
+    cpu: "2"
+    memory: "6Gi"
