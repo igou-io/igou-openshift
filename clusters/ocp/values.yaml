@@ -282,6 +282,14 @@ applications:
     source:
       path: clusters/ocp/cloudnative-pg
 
+  hermes-agent:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/hermes-agent
+
   jellyfin:
     project: cluster-apps
     annotations:

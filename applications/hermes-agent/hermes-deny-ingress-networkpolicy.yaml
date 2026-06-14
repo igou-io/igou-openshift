@@ -1,0 +1,10 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hermes-deny-ingress
+  namespace: hermes
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  # no ingress rules => deny all ingress
