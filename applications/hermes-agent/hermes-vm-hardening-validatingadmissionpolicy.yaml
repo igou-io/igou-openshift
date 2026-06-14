@@ -1,0 +1,39 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: hermes-vm-hardening
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups:
+          - kubevirt.io
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - virtualmachines
+  validations:
+    - expression: "has(object.spec.template.spec.domain.devices.interfaces) && size(object.spec.template.spec.domain.devices.interfaces) > 0"
+      message: "hermes VMs must declare at least one (masquerade) network interface"
+    - expression: "object.spec.template.spec.domain.devices.interfaces.all(i, has(i.masquerade))"
+      message: "hermes VMs must use masquerade networking so EgressFirewall/NetworkPolicy apply"
+    - expression: "!has(object.spec.template.spec.domain.devices.hostDevices) || size(object.spec.template.spec.domain.devices.hostDevices) == 0"
+      message: "hermes VMs must not attach host devices"
+    - expression: "!has(object.spec.template.spec.domain.devices.gpus) || size(object.spec.template.spec.domain.devices.gpus) == 0"
+      message: "hermes VMs must not attach GPUs"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: hermes-vm-hardening
+spec:
+  policyName: hermes-vm-hardening
+  validationActions:
+    - Deny
+  matchResources:
+    namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: hermes
