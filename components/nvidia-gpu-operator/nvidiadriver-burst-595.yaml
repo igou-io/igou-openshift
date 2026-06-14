@@ -1,0 +1,29 @@
+---
+# casval — on-demand CAPI bare-metal burst worker (scaled 0->1, see
+# clusters/ocp/cluster-api/). Newest-generation GPU that requires the 595.xx
+# driver branch. casval is tainted workload=burst:NoSchedule, so the driver
+# DaemonSet must tolerate it.
+#
+# NOTE: casval joins as casval.igou.systems (DHCP/DNS, matching the cluster's
+# <name>.igou.systems convention). It is scaled to 0 at rest, so this selector
+# has no live effect until casval bursts up — confirm the node name on first
+# burst (`oc get nodes`) and update the hostname here if it differs.
+apiVersion: nvidia.com/v1alpha1
+kind: NVIDIADriver
+metadata:
+  name: burst-595
+  annotations:
+    argocd.argoproj.io/sync-wave: '3'
+spec:
+  driverType: gpu
+  repository: nvcr.io/nvidia
+  image: driver
+  version: 595.58.03
+  kernelModuleType: auto
+  nodeSelector:
+    kubernetes.io/hostname: casval.igou.systems
+  tolerations:
+    - key: workload
+      operator: Equal
+      value: burst
+      effect: NoSchedule

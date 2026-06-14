@@ -5,5 +5,7 @@ resources:
   - nvidia-gpu-operator-operatorgroup.yaml
   - gpu-operator-certified-subscription.yaml
   - gpu-cluster-policy-clusterpolicy.yaml
+  - nvidiadriver-pascal-580.yaml
+  - nvidiadriver-burst-595.yaml
 commonAnnotations:
   argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true

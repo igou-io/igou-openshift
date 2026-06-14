@@ -34,7 +34,9 @@ spec:
     default: false
     enabled: true
   driver:
-    version: 595.58.03
+    # Unused while useNvidiaDriverCRD: true — per-node driver versions are set
+    # in the NVIDIADriver CRs (nvidiadriver-*.yaml). Kept as a sane default.
+    version: 580.105.08
     image: driver
     repository: nvcr.io/nvidia
     licensingConfig:
@@ -65,7 +67,10 @@ spec:
     virtualTopology:
       config: ''
     enabled: true
-    useNvidiaDriverCRD: false
+    # Multi-driver: drivers are managed per-node via NVIDIADriver CRs —
+    # nvidiadriver-pascal-580.yaml (p330/Quadro P620) and
+    # nvidiadriver-burst-595.yaml (casval burst node).
+    useNvidiaDriverCRD: true
   devicePlugin:
     mps:
       root: /run/nvidia/mps

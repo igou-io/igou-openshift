@@ -1,0 +1,19 @@
+---
+# p330.igou.systems — NVIDIA Quadro P620 (GP107, Pascal). The 580.xx driver
+# branch is the LAST to support Pascal; 590/595+ ignore the GPU, so the driver
+# refuses to load (NVRM "will ignore this GPU" / modprobe: No such device) and
+# crash-loops. Pin to the 580 branch (operator v25.10.1 default = 580.105.08).
+apiVersion: nvidia.com/v1alpha1
+kind: NVIDIADriver
+metadata:
+  name: pascal-580
+  annotations:
+    argocd.argoproj.io/sync-wave: '3'
+spec:
+  driverType: gpu
+  repository: nvcr.io/nvidia
+  image: driver
+  version: 580.105.08
+  kernelModuleType: auto              # resolves to 'proprietary' on Pascal
+  nodeSelector:
+    kubernetes.io/hostname: p330.igou.systems
