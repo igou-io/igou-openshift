@@ -16,13 +16,15 @@ validate-kustomize: ## Validate all kustomization.yaml files build successfully
 			exit 1; \
 		fi'
 
-# CoreProvider/InfrastructureProvider/IPAMProvider skipped: the
-# datreeio catalog ships the deprecated `manifestPatches` field but
-# not the newer `patches` field that v1alpha2 actually supports
-# (verified against the live CRD on cluster). Re-enable when
-# datreeio/CRDs-catalog catches up.
+# Kinds skipped because the datreeio CRDs-catalog schema is stale vs the live CRD:
+#  - CoreProvider/InfrastructureProvider/IPAMProvider: catalog ships the deprecated
+#    `manifestPatches` field but not the newer `patches` field that v1alpha2 supports.
+#  - NVIDIADriver: catalog's nvidiadriver_v1alpha1.json lacks the `kernelModuleType`
+#    field the operator added (used by the 580/595 side-by-side drivers; valid on the
+#    live CRD), so `-strict` rejects it as an additional property.
+# All verified against the live CRDs on cluster. Re-enable each when datreeio catches up.
 KUBECONFORM_FLAGS := -strict -ignore-missing-schemas \
-	-skip ClusterSecretStore,MachineSet,CoreProvider,InfrastructureProvider,IPAMProvider \
+	-skip ClusterSecretStore,MachineSet,CoreProvider,InfrastructureProvider,IPAMProvider,NVIDIADriver \
 	-schema-location default \
 	-schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
 	-summary
