@@ -1,0 +1,16 @@
+---
+# Nightly full backup of temporalio-pg via the Barman Cloud Plugin (staggered 03:30).
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: temporalio-pg-daily
+  namespace: temporalio
+spec:
+  schedule: "0 30 3 * * *"
+  immediate: true
+  backupOwnerReference: self
+  cluster:
+    name: temporalio-pg
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io

@@ -1,0 +1,112 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: temporalio
+resources:
+  - temporalio-namespace.yaml
+  - cnpg-s3-credentials-externalsecret.yaml
+  - temporalio-pg-objectstore.yaml
+  - temporalio-pg-scheduledbackup.yaml
+  - temporalio-pg-cluster.yaml
+  - temporal-visibility-database.yaml
+  - temporalio-web-route.yaml
+patches:
+  # Drop the Helm `test` hook Pod — it has no meaning under kustomize-rendered
+  # Helm + ArgoCD and would be applied as a bare, never-healthy Pod.
+  - target:
+      kind: Pod
+      name: temporalio-test-cluster-health
+    patch: |
+      $patch: delete
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: temporalio-test-cluster-health
+  # OpenShift: the chart bakes server.securityContext.{fsGroup,runAsUser}=1000
+  # into every server Deployment. restricted-v2 SCC rejects uid 1000 (outside the
+  # namespace's allocated range). Nulling via valuesInline fails (kustomize drops
+  # null keys when serializing values), so strip them here instead — leaving the
+  # SCC to inject a valid fsGroup/runAsUser.
+  - target:
+      kind: Deployment
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: placeholder
+      spec:
+        template:
+          spec:
+            securityContext:
+              fsGroup: null
+              runAsUser: null
+helmCharts:
+- name: temporal
+  namespace: temporalio
+  version: 1.2.0
+  releaseName: temporalio
+  repo: https://go.temporal.io/helm-charts/
+  valuesInline:
+    server:
+      # OpenShift: the chart hardcodes securityContext.{fsGroup,runAsUser}=1000,
+      # which restricted-v2 SCC rejects (1000 is outside the namespace UID range).
+      # Null them out so the `{{- with ... }}` guard drops the block and the SCC
+      # injects a valid fsGroup/runAsUser from the namespace's allocated range.
+      securityContext:
+        fsGroup: null
+        runAsUser: null
+      config:
+        logLevel: info
+        # Register Temporal-level namespaces via an idempotent Job
+        # (`namespace describe || create`). Without `default`, the UI opens a
+        # non-existent namespace and errors "namespace default not found".
+        namespaces:
+          create: true
+          namespace:
+            - name: default
+              retention: 3d
+        persistence:
+          defaultStore: default
+          visibilityStore: visibility
+          # Cannot be changed after the initial deployment.
+          numHistoryShards: 512
+          datastores:
+            # Core history/matching store -> CNPG database `temporal`.
+            default:
+              sql:
+                pluginName: postgres12_pgx
+                databaseName: temporal
+                connectAddr: "temporalio-pg-rw:5432"
+                connectProtocol: tcp
+                user: temporal
+                # CNPG-generated owner credentials.
+                existingSecret: temporalio-pg-app
+                secretKey: password
+                maxConns: 20
+                maxIdleConns: 20
+                maxConnLifetime: 1h
+                # CNPG creates the database; the chart's schema job builds/migrates schema.
+                createDatabase: false
+                manageSchema: true
+            # Standard (SQL) visibility store -> CNPG database `temporal_visibility`.
+            visibility:
+              sql:
+                pluginName: postgres12_pgx
+                databaseName: temporal_visibility
+                connectAddr: "temporalio-pg-rw:5432"
+                connectProtocol: tcp
+                user: temporal
+                existingSecret: temporalio-pg-app
+                secretKey: password
+                maxConns: 10
+                maxIdleConns: 10
+                maxConnLifetime: 1h
+                createDatabase: false
+                manageSchema: true
+    schema:
+      # Helm hooks don't translate to the kustomize-rendered-Helm + ArgoCD flow.
+      # Let Argo order the schema job (wave 0) after CNPG (wave -1) instead.
+      useHelmHooks: false
+    shims:
+      # appVersion is 1.31 (>= 1.30), so the 1.29 compatibility shims are off.
+      dockerize: false
+      elasticsearchTool: false

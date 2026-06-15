@@ -1,0 +1,54 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: temporalio-pg
+  namespace: temporalio
+  annotations:
+    # Provision the DB before the Temporal schema job / server resources (wave 0).
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  instances: 1
+  # Single-instance Postgres on SNO has no HA value to preserve and CNPG's
+  # auto-PDB fires PodDisruptionBudgetAtLimit. Disable it. Re-enable only
+  # if you raise instances to >= 2.
+  enablePDB: false
+  imagePullPolicy: IfNotPresent
+  # Pin to the always-present control-plane host so a rolling restart never
+  # migrates the RWO NVMe-oF PVC to an (ephemeral CAPI) worker node and trips the
+  # democratic-csi Multi-Attach bug. See docs/runbooks/nvmeof-stuck-multiattach.md.
+  affinity:
+    nodeSelector:
+      node-role.kubernetes.io/control-plane: ""
+    podAntiAffinityType: preferred # CNPG default; declared to avoid ArgoCD drift
+  bootstrap:
+    initdb:
+      # Core "default store" database + owning role. No secret is specified, so
+      # CNPG generates the owner credentials in Secret `temporalio-pg-app`
+      # (keys: username/password). Temporal references that Secret via
+      # existingSecret/secretKey in kustomization.yaml. Nothing outside the
+      # cluster needs this password, so it is not sourced from 1Password.
+      database: temporal
+      owner: temporal
+  storage:
+    size: 10Gi
+    storageClass: freenas-nvmeof-ssd-csi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+  postgresql:
+    parameters:
+      # shared_buffers is auto-derived by CNPG to ~25% of the memory request.
+      # Left unset to avoid drift.
+      effective_cache_size: 1536MB
+      work_mem: 16MB
+      maintenance_work_mem: 128MB
+  # Barman Cloud Plugin: continuous WAL archiving + backups to the
+  # temporalio-pg-backup ObjectStore. serverName defaults to the cluster name.
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      enabled: true # operator-defaulted; declared so ArgoCD (SSA) stays Synced
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: temporalio-pg-backup
