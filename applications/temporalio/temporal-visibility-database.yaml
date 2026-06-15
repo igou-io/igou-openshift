@@ -1,0 +1,17 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: temporal-visibility
+  namespace: temporalio
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  cluster:
+    name: temporalio-pg
+  # Second database for Temporal's visibility store, owned by the same role
+  # CNPG bootstrapped for the default store (temporal). Standard (SQL)
+  # visibility — no Elasticsearch.
+  name: temporal_visibility
+  owner: temporal
+  databaseReclaimPolicy: retain
