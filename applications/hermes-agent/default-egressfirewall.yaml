@@ -6,12 +6,6 @@ metadata:
   namespace: hermes
 spec:
   egress:
-    # === TEMPORARY INSTALL WINDOW (re-opened 2026-06-15) — allow-all for the
-    # Hermes installer + dnf during the convergence install phase. REVERT to
-    # re-lock as soon as install completes. First match wins. ===
-    - type: Allow
-      to:
-        cidrSelector: 0.0.0.0/0
     # === Phase-2b install window (MANUAL operator toggle — no Ansible touches this file) ===
     # Hermes's installer + dnf need broad internet. To run the convergence's
     # install phase, PREPEND an allow-all rule here (OVN evaluates in order,
