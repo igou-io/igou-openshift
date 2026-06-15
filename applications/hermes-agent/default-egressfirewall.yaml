@@ -6,6 +6,11 @@ metadata:
   namespace: hermes
 spec:
   egress:
+    # === DEBUG WINDOW (open, operator-held until go-live) — allow-all egress for
+    # ongoing convergence/debug work. Re-lock (remove this rule) at go-live. ===
+    - type: Allow
+      to:
+        cidrSelector: 0.0.0.0/0
     # === Phase-2b install window (MANUAL operator toggle — no Ansible touches this file) ===
     # Hermes's installer + dnf need broad internet. To run the convergence's
     # install phase, PREPEND an allow-all rule here (OVN evaluates in order,
