@@ -1,0 +1,19 @@
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: gemma-4-e2b
+  namespace: llmkube-system
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,ServerSideApply=true
+    argocd.argoproj.io/sync-wave: '7'
+    haproxy.router.openshift.io/timeout: 10m
+spec:
+  to:
+    kind: Service
+    name: gemma-4-e2b
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

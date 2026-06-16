@@ -1,0 +1,28 @@
+---
+apiVersion: inference.llmkube.dev/v1alpha1
+kind: Model
+metadata:
+  name: gemma-4-e2b
+  namespace: llmkube-system
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,ServerSideApply=true
+    argocd.argoproj.io/sync-wave: '5'
+spec:
+  # Gemma 4 E2B-it: 4.65B stored params (effective ~2B via Per-Layer Embeddings),
+  # 35 layers (28 sliding-window + 7 global, MQA / 1 KV head), 128K context.
+  # Q4_K_M is ~2.88 GB and does NOT fit the 2 GB P620 — even 2-bit overshoots — so
+  # this runs CPU-only on p330 (8-core Coffee Lake, AVX2). Benchmarked on that node:
+  # ~17.7 tok/s decode, ~286 tok/s prefill at -ngl 0. GPU partial-offload gained only
+  # ~10% (and OOMs past ~16 layers), so the card is not worth using here; the P620
+  # stays dedicated to qwen35-2b. MQA + sliding-window attention keep KV tiny
+  # (~0.9 GB even at full 128K), so context is cheap in host RAM.
+  source: https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-Q4_K_M.gguf
+  format: gguf
+  quantization: Q4_K_M
+  hardware:
+    accelerator: cpu
+    gpu:
+      enabled: false
+  resources:
+    cpu: "2"
+    memory: "6Gi"

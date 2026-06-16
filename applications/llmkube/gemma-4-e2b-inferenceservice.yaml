@@ -1,0 +1,48 @@
+---
+apiVersion: inference.llmkube.dev/v1alpha1
+kind: InferenceService
+metadata:
+  name: gemma-4-e2b
+  namespace: llmkube-system
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,ServerSideApply=true
+    argocd.argoproj.io/sync-wave: '6'
+spec:
+  modelRef: gemma-4-e2b
+  runtime: llamacpp
+  # CPU-only llama.cpp server (NOT server-cuda — this model doesn't fit the 2 GB
+  # P620, so no GPU is requested and llama.cpp runs everything on CPU). Pinned by
+  # digest. This digest is build b9664, the same mainline build verified to load
+  # the gemma4 architecture. Renovate may bump it; keep it on the CPU `server`
+  # image (no `-cuda` suffix).
+  image: ghcr.io/ggml-org/llama.cpp:server@sha256:56748401de963c5bb3efb421721bcdbb22b327207897c9dce02b1e22a6442441
+  replicas: 1
+  # Full 128K trained window. No GPU, so the KV cache lives in host RAM natively
+  # (noKvOffload is a GPU->RAM flag and is irrelevant here). MQA + sliding-window
+  # attention keep KV ~0.9 GB even at 131072 — sized into resources.memory below.
+  # The cost of 128K is prefill latency on CPU (~286 tok/s), not memory.
+  contextSize: 131072
+  flashAttention: false
+  jinja: true                 # apply the Gemma chat template
+  parallelSlots: 1
+  podSecurityContext:
+    fsGroup: 1001030000       # OpenShift restricted-v2 SCC range (llmkube default 102 is rejected)
+    seccompProfile:
+      type: RuntimeDefault
+  extraArgs:
+    - "--alias"
+    - "gemma-4-e2b"
+  resources:
+    # No gpu / gpuMemory keys -> CPU-only pod, no nvidia.com/gpu request.
+    # 12Gi covers weights (~2.88 GB) + 128K KV (~0.9 GB) + compute buffers.
+    cpu: "4"
+    memory: "12Gi"
+  endpoint:
+    port: 8080
+    type: ClusterIP
+  # Co-locate with qwen35-2b on p330: both then share the RWO llmkube-model-cache
+  # PVC on the SAME node (RWO permits multiple pods per node), which avoids the
+  # cross-node Multi-Attach deadlock. CPU-only, so it doesn't contend for the P620.
+  nodeSelector:
+    kubernetes.io/hostname: p330.igou.systems
+  priority: normal
