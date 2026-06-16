@@ -32,6 +32,14 @@ spec:
   extraArgs:
     - "--alias"
     - "gemma-4-e2b"
+    # Gemma 4 E2B is NOT a <think>-tag reasoner. llama.cpp's default
+    # --reasoning-format=auto misclassifies its plain output as reasoning and
+    # routes it to OpenAI `reasoning_content`, leaving `content` EMPTY (verified:
+    # raw /completions returns a clean "Hello there, how are you?" but the chat
+    # endpoint returned content=''). `none` disables the parser so the answer
+    # lands in `content` where OpenAI clients expect it.
+    - "--reasoning-format"
+    - "none"
   resources:
     # No gpu / gpuMemory keys -> CPU-only pod, no nvidia.com/gpu request.
     # 12Gi covers weights (~2.88 GB) + 128K KV (~0.9 GB) + compute buffers.
