@@ -11,11 +11,12 @@ spec:
   # Gemma 4 E2B-it: 4.65B stored params (effective ~2B via Per-Layer Embeddings),
   # 35 layers (28 sliding-window + 7 global, MQA / 1 KV head), 128K context.
   # Q4_K_M is ~2.88 GB and does NOT fit the 2 GB P620 — even 2-bit overshoots — so
-  # this runs CPU-only on p330 (8-core Coffee Lake, AVX2). Benchmarked on that node:
-  # ~17.7 tok/s decode, ~286 tok/s prefill at -ngl 0. GPU partial-offload gained only
-  # ~10% (and OOMs past ~16 layers), so the card is not worth using here; the P620
-  # stays dedicated to qwen35-2b. MQA + sliding-window attention keep KV tiny
-  # (~0.9 GB even at full 128K), so context is cheap in host RAM.
+  # this runs CPU-only on a GPU-less worker (hpg5; same 8-core Coffee Lake / AVX2
+  # class as p330). Benchmarked on p330: ~17.7 tok/s decode, ~286 tok/s prefill at
+  # -ngl 0. GPU partial-offload gained only ~10% (and OOMs past ~16 layers), so the
+  # card is not worth using here; the P620 stays dedicated to qwen35-2b. MQA +
+  # sliding-window attention keep KV tiny (~0.9 GB even at full 128K), so context is
+  # cheap in host RAM.
   source: https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-Q4_K_M.gguf
   format: gguf
   quantization: Q4_K_M
