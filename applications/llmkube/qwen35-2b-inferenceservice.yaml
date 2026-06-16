@@ -16,16 +16,18 @@ spec:
   # with this mainline build.
   image: ghcr.io/ggml-org/llama.cpp:server-cuda@sha256:c9a2287423b13a13f69c980a45e6c62994f26dffe393cfce7c20bd8feba226c9
   replicas: 1
-  # Context cost on the 2 GB P620 (measured, n_ctx-verified): Qwen3.5's
-  # Gated-DeltaNet linear-attention layers carry a fixed-size recurrent state (no
-  # growing KV), so context is much cheaper than a dense model — but NOT free: the
-  # few full-attention layers' KV grows ~13 MiB per 1K tokens. ctx 4K ~1.37 GB,
-  # ctx 32K ~1.74 GB (fits, ~0.3 GB margin), ctx 64K OOMs. Practical ceiling
-  # ~48-56K. 32K is the best-fit for the Hermes agent: generous agentic working
-  # memory, safely below the OOM edge, within a 2B model's coherent-context range
-  # (it runs untrusted code, so output quality matters). Do NOT raise past ~48K
-  # without re-measuring.
-  contextSize: 32768
+  # 64K context via KV-cache offload to system RAM (noKvOffload). On the 2 GB
+  # P620 64K will NOT fit fully GPU-resident: f16 KV OOMs at load, q8_0-K-without-FA
+  # OOMs on the compute buffer, and FA + q8_0 KV fits at idle (~1.84 GB) but the
+  # server CRASHES during prefill of a large context (no margin left for the
+  # compute buffer). noKvOffload parks the KV in host RAM (VRAM stays ~1.43 GB) —
+  # the only stable path to 64K — at a speed cost, since attention then reads the
+  # KV over PCIe. Measured (Qwen3.5's hybrid KV is small, so it's tolerable):
+  # prefill ~218 tok/s, decode ~7.6 tok/s at ~34K occupancy (vs ~21 tok/s
+  # fully-resident at 32K). For the faster but smaller config, set contextSize
+  # 32768 + noKvOffload false (~1.74 GB VRAM, ~21 tok/s).
+  contextSize: 65536
+  noKvOffload: true            # KV cache -> system RAM; the only stable 64K on a 2 GB card
   flashAttention: false
   jinja: true                 # apply the Qwen3.5 chat template (tool-calling + reasoning)
   parallelSlots: 1
@@ -43,7 +45,8 @@ spec:
   resources:
     gpu: 1
     cpu: "4"
-    memory: "8Gi"
+    memory: "12Gi"
+    hostMemory: "12Gi"         # headroom for the RAM-resident KV cache at 64K
     gpuMemory: "2Gi"
   endpoint:
     port: 8080
