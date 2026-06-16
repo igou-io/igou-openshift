@@ -120,8 +120,19 @@ helmCharts:
       install: true
       keep: true
 
+    # Shared model cache for ALL InferenceServices (the llmkube controller mounts
+    # one fixed-name `llmkube-model-cache` PVC into every model pod). It MUST be
+    # ReadWriteMany: qwen35-2b is pinned to p330 and qwen3-35b-a3b to the casval
+    # burst node, so an RWO cache can only attach to one node and the second model
+    # deadlocks on a Multi-Attach error. RWX requires an NFS class (the iscsi/nvmeof
+    # block classes are RWO-only); nfs-ssd only slows one-time pod startup (weights
+    # load into VRAM), not inference. Enabling this makes the chart own the PVC
+    # (RWX) instead of the controller's RWO fallback.
     modelCache:
-      enabled: false
+      enabled: true
+      accessMode: ReadWriteMany
+      storageClass: freenas-nfs-ssd-csi
+      size: 100Gi
 
     priorityClasses:
       enabled: true
