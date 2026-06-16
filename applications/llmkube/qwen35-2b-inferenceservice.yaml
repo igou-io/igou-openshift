@@ -16,14 +16,15 @@ spec:
   # with this mainline build.
   image: ghcr.io/ggml-org/llama.cpp:server-cuda@sha256:c9a2287423b13a13f69c980a45e6c62994f26dffe393cfce7c20bd8feba226c9
   replicas: 1
-  # Qwen3.5's Gated-DeltaNet linear-attention layers carry a fixed-size recurrent
-  # state instead of a growing KV cache, so context is essentially FREE in VRAM on
-  # the 2 GB P620: ~1.38 GB used at 4K AND at 128K (both measured). The card is NOT
-  # the context limiter (model native max is 256K). 32K is the best-fit for the
-  # Hermes agent (server-driven context): generous agentic working memory while
-  # staying within a 2B model's coherent-context range (Hermes runs untrusted code,
-  # so output quality matters) and keeping Pascal prompt-eval bounded. Raising
-  # toward 128K is free VRAM-wise if Hermes' loops need it.
+  # Context cost on the 2 GB P620 (measured, n_ctx-verified): Qwen3.5's
+  # Gated-DeltaNet linear-attention layers carry a fixed-size recurrent state (no
+  # growing KV), so context is much cheaper than a dense model — but NOT free: the
+  # few full-attention layers' KV grows ~13 MiB per 1K tokens. ctx 4K ~1.37 GB,
+  # ctx 32K ~1.74 GB (fits, ~0.3 GB margin), ctx 64K OOMs. Practical ceiling
+  # ~48-56K. 32K is the best-fit for the Hermes agent: generous agentic working
+  # memory, safely below the OOM edge, within a 2B model's coherent-context range
+  # (it runs untrusted code, so output quality matters). Do NOT raise past ~48K
+  # without re-measuring.
   contextSize: 32768
   flashAttention: false
   jinja: true                 # apply the Qwen3.5 chat template (tool-calling + reasoning)
