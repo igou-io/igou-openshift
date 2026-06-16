@@ -15,7 +15,7 @@ spec:
   # ignores --n-gpu-layers. Override with the CUDA build so the 2x RTX 4060 Ti
   # on casval are actually used for inference.
   image: ghcr.io/ggml-org/llama.cpp:server-cuda13@sha256:bcaea1933502ea758ec43bb6068e82f106d9417a669dc82357c7f86aa8460b8e
-  replicas: 0
+  replicas: 1
   # Tuning targets: Qwen3.6-35B-A3B UD-Q5_K_XL (~25 GiB) on 2x RTX 4060 Ti 16 GiB.
   # Hybrid linear-attn MoE: only 10/40 layers hold a KV cache (2 KV heads), so the
   # 64k KV is ~1.25 GiB at f16 and weights+KV fit fully in VRAM; no MoE offload.
