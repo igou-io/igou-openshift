@@ -40,9 +40,14 @@ spec:
   endpoint:
     port: 8080
     type: ClusterIP
-  # Co-locate with qwen35-2b on p330: both then share the RWO llmkube-model-cache
-  # PVC on the SAME node (RWO permits multiple pods per node), which avoids the
-  # cross-node Multi-Attach deadlock. CPU-only, so it doesn't contend for the P620.
+  # Placement: target hpg5, a GPU-less worker, to keep this CPU model OFF the
+  # control-plane node (ocp) and away from p330's qwen/GPU + hermes VM.
+  # CAVEAT: this llmkube controller build STRIPS nodeSelector for CPU-accelerator
+  # models (only GPU models honor it), so this field is currently DECLARATIVE ONLY.
+  # Actual placement is enforced operationally (cordon-nudge) and is NOT durable
+  # across pod reschedules until the controller honors it. The shared model-cache
+  # PVC is RWX (freenas-nfs-ssd-csi), so any node is correct — this is only about
+  # which CPU bears the load.
   nodeSelector:
-    kubernetes.io/hostname: p330.igou.systems
+    kubernetes.io/hostname: hpg5.igou.systems
   priority: normal
