@@ -23,7 +23,8 @@ spec:
         - protocol: TCP
           port: 53
     # in-cluster LLM inference (east-west). Allowlist the specific model pods by
-    # label: qwen3-35b-a3b (intended default) and qwen35-2b (currently Ready).
+    # label: qwen3-35b-a3b (primary), qwen35-2b + gemma-4-e2b (fallback chain
+    # configured in the Hermes playbook's `hermes_config.fallback_model`).
     # Least-privilege: only these named models are reachable on 8080.
     - to:
         - namespaceSelector:
@@ -36,6 +37,7 @@ spec:
                 values:
                   - qwen3-35b-a3b
                   - qwen35-2b
+                  - gemma-4-e2b
       ports:
         - protocol: TCP
           port: 8080
