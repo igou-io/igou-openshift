@@ -41,6 +41,19 @@ spec:
       ports:
         - protocol: TCP
           port: 8080
+    # in-cluster web search backend (east-west). Hermes reaches SearXNG over
+    # cluster DNS; SearXNG owns internet-facing search engine egress.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: searxng
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: searxng
+              app.kubernetes.io/name: searxng
+      ports:
+        - protocol: TCP
+          port: 8080
     # in-cluster Quay registry (image pull)
     - to:
         - namespaceSelector:
