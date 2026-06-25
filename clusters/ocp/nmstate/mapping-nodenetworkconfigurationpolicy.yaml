@@ -6,6 +6,7 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/sync-wave: '3'
 spec:
+  maxUnavailable: 2
   desiredState:
     ovn:
       bridge-mappings:
