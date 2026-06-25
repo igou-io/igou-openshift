@@ -2,37 +2,10 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-resources:
-  - service-accounts-namespace.yaml
-  - cluster-read-only-serviceaccount.yaml
-  - cluster-read-only-token-secret.yaml
-  - cluster-read-only-clusterrolebinding.yaml
-  - cluster-read-only-monitoring-clusterrolebinding.yaml
-  - cluster-edit-serviceaccount.yaml
-  - cluster-edit-token-secret.yaml
-  - claude-edit-serviceaccount.yaml
-  - claude-edit-token-secret.yaml
-  - ansible-molecule-serviceaccount.yaml
-  - ansible-molecule-token-secret.yaml
-  - ansible-molecule-clusterrole.yaml
-  - ansible-molecule-node-reader-clusterrolebinding.yaml
-  - virtualmachine-reader-serviceaccount.yaml
-  - virtualmachine-reader-token-secret.yaml
-  - virtualmachine-reader-clusterrole.yaml
-  - virtualmachine-reader-clusterrolebinding.yaml
-  - virtualmachine-deployer-serviceaccount.yaml
-  - virtualmachine-deployer-token-secret.yaml
-  - virtualmachine-deployer-clusterrole.yaml
-  - virtualmachine-deployer-clusterrolebinding.yaml
-  - virtualmachine-ops-serviceaccount.yaml
-  - virtualmachine-ops-token-secret.yaml
-  - virtualmachine-ops-clusterrole.yaml
-  - virtualmachine-ops-clusterrolebinding.yaml
-
 helmGlobals:
   chartHome: ../../.helm/charts
 
 helmCharts:
-  - name: namespace-rolebindings
-    releaseName: cluster-edit
+  - name: service-account-access
+    releaseName: service-accounts
     valuesFile: values.yaml
