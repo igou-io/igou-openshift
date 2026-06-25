@@ -243,3 +243,18 @@ serviceAccounts:
               remoteRef:
                 remoteKey: ocp-virtualmachine-ops
                 property: token
+
+  - name: ns-agent
+    pushSecrets:
+      - name: ns-agent-token
+        refreshInterval: "0"
+        secretStoreRefs:
+          - name: onepassword-sdk-ocp-push
+            kind: ClusterSecretStore
+        data:
+          - conversionStrategy: None
+            match:
+              secretKey: token
+              remoteRef:
+                remoteKey: ns-agent
+                property: token
