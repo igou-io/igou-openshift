@@ -54,6 +54,21 @@ spec:
       ports:
         - protocol: TCP
           port: 8080
+    # in-cluster Firecrawl API (east-west). Hermes reaches the API for website
+    # extraction only; Redis, RabbitMQ, Postgres, Playwright, and worker pods
+    # remain unreachable (no egress rule and controller=api podSelector).
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: firecrawl
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/controller: api
+              app.kubernetes.io/instance: firecrawl
+              app.kubernetes.io/name: firecrawl
+      ports:
+        - protocol: TCP
+          port: 3002
     # in-cluster Quay registry (image pull)
     - to:
         - namespaceSelector:
