@@ -20,7 +20,7 @@ oc apply -k test-workloads/multus-macvlan-static-ip-nginx/
 
 ## Architecture
 
-Multi-cluster GitOps repository for OpenShift/OKD managed by ArgoCD. The hub cluster (`hub.igou.systems`) is the primary management cluster running ACM (Advanced Cluster Management), which provisions and manages spoke clusters.
+single-cluster GitOps repository for OpenShift managed by ArgoCD.
 
 ### Clusters
 
@@ -28,7 +28,7 @@ Multi-cluster GitOps repository for OpenShift/OKD managed by ArgoCD. The hub clu
 
 ### Layout
 
-- **clusters/** — Per-cluster config. Each cluster has its own `values.yaml` for the app-of-apps pattern.
+- **clusters/** — Per-cluster config. Each cluster has its own `values.yaml` for the app-of-apps pattern. This repository is single cluster
 - **components/** — Reusable operator/platform components (external-secrets, openshift-virt, cert-manager, etc.), each independently installable via kustomize. Shared across clusters.
 - **applications/** — User-facing apps (jellyfin, minecraft, n8n, ollama) deployed via kustomize with inline Helm charts.
 - **test-workloads/** — Networking test scenarios (multus-macvlan, multus-ovnk variants). Each has its own kustomization and README.
