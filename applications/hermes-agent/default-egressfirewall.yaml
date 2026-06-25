@@ -8,9 +8,9 @@ spec:
   egress:
     # === DEBUG WINDOW (open, operator-held until go-live) — allow-all egress for
     # ongoing convergence/debug work. Re-lock (remove this rule) at go-live. ===
-    - type: Allow
-      to:
-        cidrSelector: 0.0.0.0/0
+    # - type: Allow
+    #   to:
+    #     cidrSelector: 0.0.0.0/0
     # === Phase-2b install window (MANUAL operator toggle — no Ansible touches this file) ===
     # Hermes's installer + dnf need broad internet. To run the convergence's
     # install phase, PREPEND an allow-all rule here (OVN evaluates in order,
@@ -20,14 +20,16 @@ spec:
     #     to:
     #       cidrSelector: 0.0.0.0/0
     # The committed default below stays LOCKED.
-    #
-    # the one messaging channel enabled in POC (swap dnsName for your channel)
+    # OpenAI API
     - type: Allow
       to:
-        dnsName: api.telegram.org
+        dnsName: api.openai.com
+      ports:
+        - protocol: TCP
+          port: 443
     # everything else external is denied (cluster DNS + qwen3 + Quay are east-west, see NetworkPolicy)
     # NOTE: 0.0.0.0/0 also blocks the LAN and the OpenShift API server (10.10.9.10).
     # That is intended: the Hermes VM guest needs neither LAN nor API-server access.
-    # - type: Deny
-    #   to:
-    #     cidrSelector: 0.0.0.0/0
+    - type: Deny
+      to:
+        cidrSelector: 0.0.0.0/0
