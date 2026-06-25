@@ -290,6 +290,14 @@ applications:
     source:
       path: applications/hermes-agent
 
+  firecrawl:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '19'
+    source:
+      path: applications/firecrawl
+
   searxng:
     project: cluster-apps
     annotations:
