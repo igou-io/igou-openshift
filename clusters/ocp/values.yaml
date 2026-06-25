@@ -290,6 +290,14 @@ applications:
     source:
       path: applications/hermes-agent
 
+  searxng:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/searxng
+
   jellyfin:
     project: cluster-apps
     annotations:
