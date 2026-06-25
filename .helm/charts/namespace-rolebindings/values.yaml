@@ -1,8 +1,0 @@
-bindings: []
-# - serviceAccount:
-#     name: cluster-edit
-#     namespace: service-accounts
-#   clusterRole: edit
-#   namespaces:
-#     - default
-#     - my-app
