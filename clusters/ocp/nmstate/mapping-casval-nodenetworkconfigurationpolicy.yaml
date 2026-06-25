@@ -4,6 +4,7 @@ kind: NodeNetworkConfigurationPolicy
 metadata:
   name: mapping-casval
   annotations:
+    argocd.argoproj.io/ignore-healthcheck: 'true'
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/sync-wave: '3'
 spec:
