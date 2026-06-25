@@ -35,6 +35,6 @@ oc -n firecrawl run firecrawl-smoke --rm -i --restart=Never \
   http://firecrawl-api:3002/v0/health/liveness
 ```
 
-Hermes egress is intentionally not patched in this iteration. The follow-up is
-to allow the Hermes namespace to reach `firecrawl-api.firecrawl.svc.cluster.local`
-on TCP 3002 only.
+Hermes egress is patched in `applications/hermes-agent/hermes-egress-networkpolicy.yaml`
+to allow TCP 3002 to `firecrawl-api` pods only. See `applications/hermes-agent/README.md`
+for VM-side smoke-test commands.
