@@ -101,7 +101,36 @@ spec:
         - protocol: TCP
           port: 443
 
-    # GitHub / skills / source installs
+    # GitHub / skills / source installs. Keep DNS rules for readability, but
+    # also allow GitHub's published web/git IPv4 ranges: OVN DNS-name egress
+    # can admit only one resolved A record while git receives another valid
+    # GitHub address. Source: https://docs.github.com/en/authentication/
+    # keeping-your-account-and-data-secure/about-githubs-ip-addresses
+    # (the docs refer to the Meta API's `web`/`git` CIDR ranges).
+    - type: Allow
+      to:
+        cidrSelector: 192.30.252.0/22
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        cidrSelector: 185.199.108.0/22
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        cidrSelector: 140.82.112.0/20
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        cidrSelector: 143.55.64.0/20
+      ports:
+        - protocol: TCP
+          port: 443
     - type: Allow
       to:
         dnsName: github.com
@@ -141,6 +170,34 @@ spec:
     - type: Allow
       to:
         dnsName: modelcontextprotocol.io
+      ports:
+        - protocol: TCP
+          port: 443
+
+    # Python package downloads used by `uv pip install -e .[all]`.
+    # pypi.org and files.pythonhosted.org currently resolve through these
+    # Fastly edges from the cluster DNS path.
+    - type: Allow
+      to:
+        cidrSelector: 151.101.0.0/24
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        cidrSelector: 151.101.64.0/24
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        cidrSelector: 151.101.128.0/24
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        cidrSelector: 151.101.192.0/24
       ports:
         - protocol: TCP
           port: 443
