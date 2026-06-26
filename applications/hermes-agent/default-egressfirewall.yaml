@@ -94,6 +94,12 @@ spec:
       ports:
         - protocol: TCP
           port: 443
+    - type: Allow
+      to:
+        dnsName: models.dev
+      ports:
+        - protocol: TCP
+          port: 443
 
     # GitHub / skills / source installs
     - type: Allow
@@ -123,6 +129,18 @@ spec:
     - type: Allow
       to:
         dnsName: codeload.github.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: agentskills.io
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: modelcontextprotocol.io
       ports:
         - protocol: TCP
           port: 443
