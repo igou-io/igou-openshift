@@ -21,22 +21,229 @@ spec:
     #       cidrSelector: 0.0.0.0/0
     # The committed default below stays LOCKED.
     # OpenAI API
+    # OpenAI direct API
     - type: Allow
       to:
         dnsName: api.openai.com
       ports:
         - protocol: TCP
           port: 443
-    # Slack
+
+    # OpenAI OAuth / Codex-style provider, only needed if enabled
+    - type: Allow
+      to:
+        dnsName: auth.openai.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: chatgpt.com
+      ports:
+        - protocol: TCP
+          port: 443
+
+    # Slack API + Socket Mode
     - type: Allow
       to:
         dnsName: slack.com
       ports:
         - protocol: TCP
           port: 443
-    # everything else external is denied (cluster DNS + qwen3 + Quay are east-west, see NetworkPolicy)
-    # NOTE: 0.0.0.0/0 also blocks the LAN and the OpenShift API server (10.10.9.10).
-    # That is intended: the Hermes VM guest needs neither LAN nor API-server access.
+    - type: Allow
+      to:
+        dnsName: api.slack.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: wss-primary.slack.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: wss-backup.slack.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: wss-mobile.slack.com
+      ports:
+        - protocol: TCP
+          port: 443
+
+    # Hermes / Nous model catalog and provider metadata
+    - type: Allow
+      to:
+        dnsName: hermes-agent.nousresearch.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: portal.nousresearch.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: inference-api.nousresearch.com
+      ports:
+        - protocol: TCP
+          port: 443
+
+    # GitHub / skills / source installs
+    - type: Allow
+      to:
+        dnsName: github.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: api.github.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: raw.githubusercontent.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: objects.githubusercontent.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: codeload.github.com
+      ports:
+        - protocol: TCP
+          port: 443
+
+    # Optional providers: keep only the ones you actually use.
+    - type: Allow
+      to:
+        dnsName: openrouter.ai
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: api.anthropic.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: generativelanguage.googleapis.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: api.groq.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: api.deepseek.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: api.fireworks.ai
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: api.together.xyz
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: api.cerebras.ai
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: api.mistral.ai
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: integrate.api.nvidia.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: router.huggingface.co
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: api.x.ai
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: api.minimax.io
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: api.xiaomimimo.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: api.novita.ai
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: api.elevenlabs.io
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: browserbase.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: api.exa.ai
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: api.firecrawl.dev
+      ports:
+        - protocol: TCP
+          port: 443
+
+    # Default deny all other IPv4 egress.
     - type: Deny
       to:
         cidrSelector: 0.0.0.0/0
