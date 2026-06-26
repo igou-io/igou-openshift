@@ -319,7 +319,7 @@ spec:
           port: 443
     - type: Allow
       to:
-        dnsName: flippback.com
+        dnsName: flyer-ng.flippback.com
       ports:
         - protocol: TCP
           port: 443
