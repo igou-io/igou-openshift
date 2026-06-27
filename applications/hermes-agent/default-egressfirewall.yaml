@@ -29,6 +29,14 @@ spec:
         - protocol: TCP
           port: 443
 
+    # Opencode
+    - type: Allow
+      to:
+        dnsName: opencode.ai
+      ports:
+        - protocol: TCP
+          port: 443
+
     # OpenAI OAuth / Codex-style provider, only needed if enabled
     - type: Allow
       to:
