@@ -210,6 +210,16 @@ spec:
         - protocol: TCP
           port: 443
 
+    # CentOS Stream dnf mirrors (package installs/updates during Hermes VM convergence)
+    - type: Allow
+      to:
+        dnsName: mirror.stream.centos.org
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+
     # Optional providers: keep only the ones you actually use.
     - type: Allow
       to:
