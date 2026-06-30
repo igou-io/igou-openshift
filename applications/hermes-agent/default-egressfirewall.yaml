@@ -109,6 +109,146 @@ spec:
         - protocol: TCP
           port: 443
 
+    # Cursor Agent / CLI (https://cursor.com/docs/enterprise/network-configuration)
+    - type: Allow
+      to:
+        dnsName: api.cursor.sh
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: api2.cursor.sh
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: api2direct.cursor.sh
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: api3.cursor.sh
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: api5.cursor.sh
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: cursor.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: api.cursor.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: agent.api5.cursor.sh
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: agentn.api5.cursor.sh
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: agent.us.api5.cursor.sh
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: agentn.us.api5.cursor.sh
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: agent.global.api5.cursor.sh
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: agentn.global.api5.cursor.sh
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: authenticate.cursor.sh
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: authenticator.cursor.sh
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: authentication.cursor.sh
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: prod.authentication.cursor.sh
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: repo42.cursor.sh
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: downloads.cursor.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: cursor-cdn.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: marketplace.cursorapi.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: anysphere-binaries.s3.us-east-1.amazonaws.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: cloud-agent-artifacts.s3.us-east-1.amazonaws.com
+      ports:
+        - protocol: TCP
+          port: 443
+
     # GitHub / skills / source installs. Keep DNS rules for readability, but
     # also allow GitHub's published web/git IPv4 ranges: OVN DNS-name egress
     # can admit only one resolved A record while git receives another valid
