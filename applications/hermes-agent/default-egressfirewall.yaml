@@ -321,6 +321,18 @@ spec:
       ports:
         - protocol: TCP
           port: 443
+    - type: Allow
+      to:
+        dnsName: quay.io
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: ghcr.io
+      ports:
+        - protocol: TCP
+          port: 443
 
     # Python package downloads used by `uv pip install -e .[all]`.
     # pypi.org and files.pythonhosted.org currently resolve through these
