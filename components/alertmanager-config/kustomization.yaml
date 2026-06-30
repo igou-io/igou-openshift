@@ -3,6 +3,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: openshift-monitoring
 resources:
+  - alertmanager-eda-event-stream-externalsecret.yaml
   - alertmanager-slack-bot-token-externalsecret.yaml
 secretGenerator:
   - name: alertmanager-main
