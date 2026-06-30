@@ -8,7 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 make lint              # yamllint validation
 make validate-kustomize # build all kustomization.yaml files
 make validate-schemas  # kubeconform schema validation against K8s + CRD schemas
-make test              # run all three checks
+make lint-helm         # helm lint for charts under .helm/charts/
+make test              # run all local checks
 ```
 
 Apply a single component or application:
@@ -55,6 +56,16 @@ Each cluster uses its own `values.yaml` to define managed applications. Each ent
 - **Control-plane tolerations**: many components explicitly tolerate/schedule on the master node (the only always-on node; the `casval` burst worker is 0 replicas at rest)
 - **File naming**: YAML files should be named `<metadata.name>-<kind>.yaml` whenever possible (e.g. `my-app-deployment.yaml`, `cluster-read-only-serviceaccount.yaml`)
 
+### Agent Workflow
+
+- Start with the closest `README.md` or runbook in the component/application directory, then read that directory's `kustomization.yaml`.
+- For managed applications, check `clusters/ocp/values.yaml` to understand the ArgoCD Application name, destination namespace, source path, sync wave, and any `ignoreDifferences` rules.
+- For reusable platform pieces, expect a split between `components/<name>/` (installable building block) and `clusters/ocp/<name>/` (cluster-specific wiring and values).
+- Preserve controller-owned fields documented in `ignoreDifferences`; do not "fix" live-controller drift back into git unless that is the explicit intent.
+- Keep generated secrets and secret material out of git. Use External Secrets / 1Password references instead.
+- When adding or moving YAML manifests, update the nearest `kustomization.yaml` and prefer filenames of the form `<metadata.name>-<kind>.yaml`.
+- For image changes, preserve digest pinning where the manifest already uses it unless the Renovate rules below say otherwise.
+
 ### Networking
 
 - Primary CNI: OVN-Kubernetes
@@ -89,16 +100,56 @@ Layout:
 
 ## Cluster Inspection
 
-Use the kubernetes MCP tools as the primary method for inspecting cluster state. Prefer MCP over `oc` CLI when possible — it avoids shell overhead and provides structured output.
+Use the `oc` CLI for live cluster inspection. Prefer read-only commands first and use explicit namespaces/resources so command output stays scoped to the object being investigated.
 
-Available MCP tools (read-only):
-- `mcp__kubernetes__pods_list`, `pods_list_in_namespace`, `pods_get`, `pods_log`, `pods_top`
-- `mcp__kubernetes__resources_list`, `resources_get` — query any resource by apiVersion/kind (e.g. `apps/v1 Deployment`, `k8s.cni.cncf.io/v1 NetworkAttachmentDefinition`, `nmstate.io/v1 NodeNetworkConfigurationPolicy`)
-- `mcp__kubernetes__events_list` — filter by namespace for troubleshooting
-- `mcp__kubernetes__namespaces_list`, `nodes_top`, `nodes_log`, `nodes_stats_summary`
-- `mcp__kubernetes__configuration_view` — current kubeconfig context
+Useful commands:
+```bash
+oc config current-context
+oc get pods -n <namespace>
+oc describe <kind>/<name> -n <namespace>
+oc logs -n <namespace> <pod> [-c <container>]
+oc get events -n <namespace> --sort-by=.lastTimestamp
+oc api-resources | rg '<kind-or-group>'
+oc explain <resource>[.<field>]
+oc get crd <crd-name> -o yaml
+```
 
-Fall back to `oc` CLI for operations MCP doesn't cover (e.g. `oc explain`, `oc api-resources`, `oc exec`, `oc apply`).
+Use `oc apply -k <path>` only when intentionally applying a single component/application outside ArgoCD. For normal GitOps changes, update git and let ArgoCD reconcile.
+
+## Automation and Merge Guidelines
+
+### GitHub Workflows
+
+`.github/workflows/validate.yml` runs on pushes and pull requests targeting `main`.
+
+CI jobs:
+- **YAML Lint**: installs `yamllint`, then runs `make lint`.
+- **Kustomize Build**: installs `kustomize` and Helm, then runs `make validate-kustomize`.
+- **Schema Validation**: installs `kustomize`, Helm, and kubeconform v0.6.7, then runs `make validate-schemas`.
+
+Before merging non-trivial changes, run `make test` locally when possible. It includes the CI checks plus `make lint-helm`, which is not currently run by the GitHub workflow.
+
+### Renovate
+
+Renovate is configured in `renovate.json` and extends the shared base config from `github>igou-io/igou-devenv//renovate-base.json`, plus `:configMigration`, `:pinDevDependencies`, and `abandonments:recommended`.
+
+Repo-specific behavior:
+- Helm values and Kubernetes managers scan `*.yaml` and `*.yaml.j2` files.
+- `/charts/ocp-base-config/` is ignored by Renovate.
+- Docker major updates require manual merge by default.
+- Docker images whose package name matches `/igou/` are allowed to automerge, including majors.
+- OCI Helm charts managed by Kustomize do not get Docker digest pinning (`matchDepTypes: HelmChart`, `pinDigests: false`).
+- `ghcr.io/defilantech/llmkube-controller` is disabled in Renovate. Bump `applications/llmkube` chart version and image digest together manually because newer controller builds can drop required args and crash-loop.
+- `components/democratic-csi/kustomization.yaml` has a regex custom manager for inline `tag@sha256` image pins in the chart's nonstandard image schema.
+
+Merge policy for Renovate PRs:
+- Patch/minor chart or image PRs can usually merge after CI passes if rendered manifests are unchanged in risky areas or the change is clearly scoped.
+- Docker major updates require manual review even if CI passes. Check upstream release notes and whether values, probes, security context, CRDs, or storage behavior changed.
+- Major Helm chart updates require manual review of the chart changelog and values schema. CI confirms rendering/schema shape, not runtime compatibility.
+- Digest-only updates are usually low risk, but still check whether the workload is stateful, privileged, GPU-dependent, storage-critical, or cluster-networking-critical.
+- Do not merge Renovate PRs that combine unrelated ecosystem changes unless the combined blast radius is understood. Prefer one component/application per merge when possible.
+- For any operator, CRD, CNI, storage, MachineConfig, or Cluster API related update, verify ordering/sync-wave assumptions and CRD compatibility before merge.
+- If CI is green but `make test` fails locally, treat local failure as blocking unless the reason is a documented environment/tooling difference.
 
 ## Research Guidelines
 
@@ -177,4 +228,4 @@ authentication/                             — OAuth, identity providers, RBAC
 
 - Verify API group/version/kind against the live cluster using `oc api-resources` and `oc explain <resource>` before recommending usage
 - Check whether a feature is Tech Preview vs GA before recommending it
-- When examining CRDs, use `mcp__kubernetes__resources_get` with the appropriate apiVersion/kind, or fall back to `oc get crd <name> -o yaml` to confirm the schema on this cluster
+- When examining CRDs, use `oc get crd <name> -o yaml` to confirm the schema on this cluster
