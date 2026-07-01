@@ -379,6 +379,58 @@ spec:
       ports:
         - protocol: TCP
           port: 443
+    # Claude Code CLI (https://code.claude.com/docs/en/network-config)
+    # Anthropic publishes stable IP ranges for DNS-resolution robustness, same
+    # rationale as the GitHub CIDR rules above (OVN DNS-name egress may admit
+    # only one resolved A record). Source:
+    # https://platform.claude.com/docs/en/api/ip-addresses
+    - type: Allow
+      to:
+        cidrSelector: 160.79.104.0/23
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        cidrSelector: 160.79.104.0/21
+      ports:
+        - protocol: TCP
+          port: 443
+    # Claude Code account auth + Console auth
+    - type: Allow
+      to:
+        dnsName: claude.ai
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: platform.claude.com
+      ports:
+        - protocol: TCP
+          port: 443
+    # Plugin executable / native installer / auto-updater downloads
+    - type: Allow
+      to:
+        dnsName: downloads.claude.ai
+      ports:
+        - protocol: TCP
+          port: 443
+    # Auto-updater on versions prior to 2.1.116
+    - type: Allow
+      to:
+        dnsName: storage.googleapis.com
+      ports:
+        - protocol: TCP
+          port: 443
+    # Claude in Chrome extension WebSocket bridge
+    - type: Allow
+      to:
+        dnsName: bridge.claudeusercontent.com
+      ports:
+        - protocol: TCP
+          port: 443
+    # Anthropic API (direct model provider)
     - type: Allow
       to:
         dnsName: api.anthropic.com
