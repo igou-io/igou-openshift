@@ -338,6 +338,14 @@ applications:
     source:
       path: applications/gotify
 
+  squid-proxy:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/squid-proxy
+
   forgejo:
     project: cluster-apps
     annotations:
