@@ -16,4 +16,5 @@ data:
       # alerts route through the gotify/slack receivers configured here.
       enableUserAlertmanagerConfig: true
       secrets:
+        - alertmanager-eda-event-stream
         - alertmanager-slack-bot-token
