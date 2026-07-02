@@ -7,6 +7,14 @@ resources:
   - jellyfin-media-nfs-pvc.yaml
   - jellyfin-config-pvc.yaml
   - jellyfin-probe.yaml
+  - jellyfin-proxy-certificate.yaml
+  - jellyfin-proxy-deployment.yaml
+  - jellyfin-proxy-service.yaml
+configMapGenerator:
+  # Name-suffix hash makes config edits roll the proxy Deployment.
+  - name: jellyfin-proxy-nginx
+    files:
+      - jellyfin.conf=jellyfin-proxy-nginx.conf
 helmCharts:
 - name: jellyfin
   namespace: jellyfin
@@ -54,6 +62,10 @@ helmCharts:
       externalTrafficPolicy: Local
       annotations:
         metallb.universe.tf/address-pool: guest-dmz
+        # Pinned so the VIP survives Service recreation; LAN clients reach
+        # jellyfin over TLS via the jellyfin-proxy VIP (10.10.152.2:443),
+        # this direct HTTP endpoint stays for the admin VLANs.
+        metallb.universe.tf/loadBalancerIPs: 10.10.152.1
     ingress:
       enabled: false
     persistence:

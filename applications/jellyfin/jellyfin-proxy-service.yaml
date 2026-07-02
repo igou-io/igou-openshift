@@ -1,0 +1,25 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jellyfin-proxy
+  namespace: jellyfin
+  labels:
+    app.kubernetes.io/name: jellyfin-proxy
+  annotations:
+    metallb.universe.tf/address-pool: guest-dmz
+    # Pinned: this VIP is a contract with rb5009 (static DNS record for
+    # jellyfin.igou.systems and the per-VLAN firewall pinholes).
+    metallb.universe.tf/loadBalancerIPs: 10.10.152.2
+spec:
+  type: LoadBalancer
+  # Preserve the client source IP and advertise the VIP only from the node
+  # hosting the proxy pod (same rationale as the jellyfin Service).
+  externalTrafficPolicy: Local
+  selector:
+    app.kubernetes.io/name: jellyfin-proxy
+  ports:
+    - name: https
+      port: 443
+      targetPort: 8443
+      protocol: TCP
