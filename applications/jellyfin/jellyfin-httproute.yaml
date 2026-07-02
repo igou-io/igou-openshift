@@ -16,7 +16,11 @@ spec:
   hostnames:
     - jellyfin.dmz.igou.systems
   rules:
-    - backendRefs:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
         - name: jellyfin
           port: 8096
       timeouts:
