@@ -4,6 +4,13 @@ kind: HTTPRoute
 metadata:
   name: jellyfin
   namespace: jellyfin
+  annotations:
+    # ArgoCD's ServerSideDiff mis-diffs this CRD (live == git per the API
+    # server's own SSA dry-run, field ownership clean, yet the controller
+    # flags OutOfSync every cycle and selfHeal loops no-op syncs). Fall back
+    # to the legacy diff for this resource; all API-server-defaulted fields
+    # are stated explicitly below so the legacy diff is exact.
+    argocd.argoproj.io/compare-options: ServerSideDiff=false
 spec:
   # group/kind/weight below are API-server defaults, stated explicitly so
   # ArgoCD's server-side-apply diff doesn't report the route as forever
