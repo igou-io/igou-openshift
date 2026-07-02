@@ -1,0 +1,19 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: jellyfin
+  namespace: jellyfin
+spec:
+  parentRefs:
+    - name: guest-dmz
+      namespace: openshift-ingress
+  hostnames:
+    - jellyfin.dmz.igou.systems
+  rules:
+    - backendRefs:
+        - name: jellyfin
+          port: 8096
+      timeouts:
+        # Long-lived HLS/streaming sessions — never time the request out.
+        request: 0s

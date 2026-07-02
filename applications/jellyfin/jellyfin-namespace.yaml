@@ -2,3 +2,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: jellyfin
+  labels:
+    # Opts this namespace's HTTPRoutes into the shared guest-dmz Gateway
+    # (clusters/ocp/gateway-api).
+    gateway-access/guest-dmz: 'true'
