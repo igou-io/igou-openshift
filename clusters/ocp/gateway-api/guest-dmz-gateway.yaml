@@ -26,7 +26,12 @@ spec:
       tls:
         mode: Terminate
         certificateRefs:
+          # kind/group are API-server defaults, stated explicitly so ArgoCD's
+          # server-side-apply diff doesn't report the Gateway as forever
+          # OutOfSync.
           - name: gateway-guest-dmz-tls
+            kind: Secret
+            group: ""
       # Apps opt in by labelling their namespace and creating an HTTPRoute
       # with parentRefs to this Gateway. Exposure tier semantics: anything
       # routed here is reachable by every VLAN the rb5009 admits to the
