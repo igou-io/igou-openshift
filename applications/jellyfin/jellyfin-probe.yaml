@@ -13,8 +13,8 @@ spec:
   targets:
     staticConfig:
       static:
-        # Through the TLS proxy VIP — exercises the same path LAN clients use.
-        - https://jellyfin.igou.systems/health
+        # Through the guest-dmz Gateway — exercises the same path LAN clients use.
+        - https://jellyfin.dmz.igou.systems/health
       labels:
         tier: critical
         category: jellyfin
