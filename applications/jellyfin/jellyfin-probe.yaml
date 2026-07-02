@@ -2,7 +2,7 @@
 apiVersion: monitoring.coreos.com/v1
 kind: Probe
 metadata:
-  name: jellyfin-biscuit
+  name: jellyfin
   labels:
     app.kubernetes.io/name: blackbox-exporter
 spec:
@@ -13,7 +13,8 @@ spec:
   targets:
     staticConfig:
       static:
-        - https://jellyfintest.biscuit.igou.systems/health
+        # Through the TLS proxy VIP — exercises the same path LAN clients use.
+        - https://jellyfin.igou.systems/health
       labels:
         tier: critical
         category: jellyfin
