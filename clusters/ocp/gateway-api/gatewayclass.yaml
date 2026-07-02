@@ -1,0 +1,13 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: openshift-default
+  annotations:
+    argocd.argoproj.io/sync-wave: '0'
+spec:
+  # The only controllerName the Ingress Operator reconciles. Creating this
+  # resource makes the operator install and manage a lightweight OSSM 3 /
+  # Istio control plane (istiod-openshift-gateway) in openshift-ingress —
+  # first-party since OCP 4.19, no OSSM subscription involved.
+  controllerName: openshift.io/gateway-controller/v1
