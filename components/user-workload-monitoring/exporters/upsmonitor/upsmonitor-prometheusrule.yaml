@@ -1,0 +1,119 @@
+---
+# UPS alerts for both rack UPSes, from DRuggeri nut_exporter metrics
+# (network_ups_tools_*). Status flags arrive as
+# network_ups_tools_ups_status{flag="..."} 0/1 with inactive flags forced
+# to 0, so `== 1` expressions are safe. severity critical/warning routes to
+# the EDA GitHub-issue pipeline + Gotify/Slack via the platform Alertmanager.
+#
+# battery.runtime is only exported because the Pi-side unit enables it via
+# --nut.vars_enable (igou-ansible playbooks/upsmonitor/setup-exporter.yml).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: upsmonitor
+  labels:
+    app.kubernetes.io/name: upsmonitor
+    app.kubernetes.io/part-of: upsmonitor
+    openshift.io/prometheus-rule-evaluation-scope: leaf-prometheus
+spec:
+  groups:
+    - name: ups.power
+      rules:
+        - alert: UPSOnBattery
+          expr: network_ups_tools_ups_status{flag="OB"} == 1
+          for: 1m
+          labels:
+            severity: warning
+          annotations:
+            summary: UPS {{ $labels.ups }} is on battery
+            description: |
+              {{ $labels.ups }} on {{ $labels.instance }} has been running
+              on battery for more than 1 minute - utility power is out or
+              the input is out of tolerance.
+        - alert: UPSLowBattery
+          expr: network_ups_tools_ups_status{flag="LB"} == 1
+          labels:
+            severity: critical
+          annotations:
+            summary: UPS {{ $labels.ups }} battery is LOW
+            description: |
+              {{ $labels.ups }} on {{ $labels.instance }} reports low
+              battery. Attached loads are minutes from losing power.
+        - alert: UPSBatteryChargeLow
+          expr: network_ups_tools_battery_charge < 30
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: UPS {{ $labels.ups }} charge below 30%
+            description: |
+              {{ $labels.ups }} on {{ $labels.instance }} battery charge is
+              {{ $value | humanize }}%.
+        - alert: UPSRuntimeLow
+          expr: network_ups_tools_battery_runtime < 300
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: UPS {{ $labels.ups }} runtime under 5 minutes
+            description: |
+              {{ $labels.ups }} on {{ $labels.instance }} estimates only
+              {{ $value | humanizeDuration }} of battery runtime left.
+        - alert: UPSHighLoad
+          expr: network_ups_tools_ups_load > 80
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: UPS {{ $labels.ups }} load above 80%
+            description: |
+              {{ $labels.ups }} on {{ $labels.instance }} is at
+              {{ $value | humanize }}% load - little headroom, and runtime
+              on battery will be short.
+        - alert: UPSInputVoltageOutOfRange
+          expr: >-
+            network_ups_tools_input_voltage < 105
+            or network_ups_tools_input_voltage > 130
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: UPS {{ $labels.ups }} input voltage out of range
+            description: |
+              {{ $labels.ups }} on {{ $labels.instance }} reports input
+              voltage {{ $value | humanize }}V (expected 105-130V).
+        - alert: UPSReplaceBattery
+          expr: network_ups_tools_ups_status{flag="RB"} == 1
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: UPS {{ $labels.ups }} battery needs replacing
+            description: |
+              {{ $labels.ups }} on {{ $labels.instance }} has flagged its
+              battery for replacement.
+    - name: ups.scrape
+      rules:
+        # Also covers the known Pi usbhid-ups staleness bug (nut#2742): a
+        # wedged driver eventually fails the exporter scrape.
+        - alert: UPSExporterDown
+          expr: up{job="upsmonitor-nut-exporter"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: UPS metrics scrape failing for {{ $labels.ups }}
+            description: |
+              UWM Prometheus cannot scrape nut_exporter on
+              {{ $labels.instance }} (ups={{ $labels.ups }}) - UPS state is
+              invisible and power events will go unnoticed.
+        - alert: UPSMonitorNodeDown
+          expr: up{job="upsmonitor-node-exporter"} == 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: upsmonitor Pi node metrics scrape failing
+            description: |
+              node_exporter on {{ $labels.instance }} is not answering -
+              the UPS monitoring host itself may be down.

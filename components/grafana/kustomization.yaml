@@ -22,5 +22,16 @@ resources:
   - grafana-dashboard-kubevirt-control-plane.yaml
   - grafana-dashboard-kubevirt-top-consumers.yaml
   - grafana-dashboard-external-secrets.yaml
+  - grafana-dashboard-nut-exporter.yaml
+# Vendored dashboard JSON (see grafana-dashboard-nut-exporter.yaml for why
+# it cannot come from spec.grafanaCom). Stable name: the GrafanaDashboard
+# CR references the ConfigMap by name.
+configMapGenerator:
+  - name: grafana-dashboard-nut-exporter-json
+    namespace: grafana
+    files:
+      - dashboards/prometheus-nut-exporter-druggeri.json
+generatorOptions:
+  disableNameSuffixHash: true
 commonAnnotations:
   argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
