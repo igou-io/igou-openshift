@@ -18,6 +18,19 @@ spec:
   # matching nodeSelector + toleration can run there.
   workloads:
     nodePlacement:
+      # Keep virt-handler (and therefore VM scheduling) OFF truenas-w1:
+      # that worker is itself a KVM guest on the TrueNAS host — nested
+      # virtualization there is unsupported/unwanted, and its disk and
+      # the cluster's CSI storage share one failure domain.
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: NotIn
+                    values:
+                      - truenas-w1.igou.systems
       tolerations:
         - key: workload
           operator: Equal
