@@ -606,4 +606,4 @@ helmCharts:
     driver:
       existingConfigSecret: "democratic-csi-nvmeof-cold-config"
       config:
-        driver: freenas-nvmeof
+        driver: freenas-api-nvmeof
