@@ -546,6 +546,20 @@ spec:
         - protocol: TCP
           port: 443
 
+    # igou.io homelab sites
+    - type: Allow
+      to:
+        dnsName: igou.io
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: sandsoftime.igou.io
+      ports:
+        - protocol: TCP
+          port: 443
+
     # Default deny all other IPv4 egress.
     - type: Deny
       to:
