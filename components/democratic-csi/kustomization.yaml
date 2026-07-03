@@ -474,7 +474,7 @@ helmCharts:
     driver:
       existingConfigSecret: "democratic-csi-nvmeof-fast-config"
       config:
-        driver: freenas-nvmeof
+        driver: freenas-api-nvmeof
 # ---- NVMe-oF - ssd pool ----
 - name: democratic-csi
   namespace: democratic-csi
@@ -542,7 +542,7 @@ helmCharts:
     driver:
       existingConfigSecret: "democratic-csi-nvmeof-ssd-config"
       config:
-        driver: freenas-nvmeof
+        driver: freenas-api-nvmeof
 # ---- NVMe-oF - cold pool ----
 - name: democratic-csi
   namespace: democratic-csi
