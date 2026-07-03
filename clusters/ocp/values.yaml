@@ -52,19 +52,23 @@ applications:
     source:
       path: clusters/ocp/nmstate
 
-  openshift-nfd:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '5'
-    source:
-      path: components/openshift-nfd
+  # ── TEMPORARILY DISABLED 2026-07-03 (cluster rebuild) ─────────────────────
+  # Deferred to relieve single-node resource congestion while the reinstalled
+  # cluster converges and workers rejoin. Uncomment to restore; each block is
+  # unchanged. See igou-inventory#120 / the 2026-07-03 incident.
+  # openshift-nfd:
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '5'
+  # source:
+  # path: components/openshift-nfd
 
-  nvidia-gpu-operator:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '6'
-    source:
-      path: components/nvidia-gpu-operator
+  # nvidia-gpu-operator:
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '6'
+  # source:
+  # path: components/nvidia-gpu-operator
 
   udn:
     annotations:
@@ -95,12 +99,12 @@ applications:
     source:
       path: clusters/ocp/gateway-api
 
-  user-workload-monitoring:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '6'
-    source:
-      path: components/user-workload-monitoring
+  # user-workload-monitoring:
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '6'
+  # source:
+  # path: components/user-workload-monitoring
 
   cert-manager-config:
     annotations:
@@ -159,132 +163,132 @@ applications:
     source:
       path: clusters/ocp/apiserver
 
-  cluster-api-operator:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '10'
-    destination:
-      namespace: capi-operator-system
-    source:
-      path: components/cluster-api-operator
+  # cluster-api-operator:
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '10'
+  # destination:
+  # namespace: capi-operator-system
+  # source:
+  # path: components/cluster-api-operator
 
-  cluster-api:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '11'
-    destination:
-      namespace: openshift-cluster-api
-    source:
-      path: clusters/ocp/cluster-api
-    # Metal3/CAPM3 patches BMH spec fields when it claims the host (online,
-    # consumerRef, image, userData, customDeploy, preprovisioning*). Leave
-    # those to the controllers so ArgoCD doesn't fight them back to the
-    # minimal manifest checked into git.
-    ignoreDifferences:
-      - group: metal3.io
-        kind: BareMetalHost
-        jsonPointers:
-          - /spec/online
-          - /spec/consumerRef
-          - /spec/image
-          - /spec/userData
-          - /spec/customDeploy
-          - /spec/preprovisioningNetworkDataName
-          - /spec/networkData
-      # The cluster-autoscaler owns replicas for autoscaler-managed
-      # MachineSets — leave it to the autoscaler so ArgoCD doesn't revert
-      # scale-ups to 0 and trigger a delete/recreate loop.
-      - group: cluster.x-k8s.io
-        kind: MachineSet
-        jsonPointers:
-          - /spec/replicas
+  # cluster-api:
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '11'
+  # destination:
+  # namespace: openshift-cluster-api
+  # source:
+  # path: clusters/ocp/cluster-api
+  # # Metal3/CAPM3 patches BMH spec fields when it claims the host (online,
+  # # consumerRef, image, userData, customDeploy, preprovisioning*). Leave
+  # # those to the controllers so ArgoCD doesn't fight them back to the
+  # # minimal manifest checked into git.
+  # ignoreDifferences:
+  # - group: metal3.io
+  # kind: BareMetalHost
+  # jsonPointers:
+  # - /spec/online
+  # - /spec/consumerRef
+  # - /spec/image
+  # - /spec/userData
+  # - /spec/customDeploy
+  # - /spec/preprovisioningNetworkDataName
+  # - /spec/networkData
+  # # The cluster-autoscaler owns replicas for autoscaler-managed
+  # # MachineSets — leave it to the autoscaler so ArgoCD doesn't revert
+  # # scale-ups to 0 and trigger a delete/recreate loop.
+  # - group: cluster.x-k8s.io
+  # kind: MachineSet
+  # jsonPointers:
+  # - /spec/replicas
 
-  cluster-api-autoscaler:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '12'
-    destination:
-      namespace: cluster-api-autoscaler-system
-    source:
-      path: components/cluster-api-autoscaler
+  # cluster-api-autoscaler:
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '12'
+  # destination:
+  # namespace: cluster-api-autoscaler-system
+  # source:
+  # path: components/cluster-api-autoscaler
 
-  loki-operator:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '10'
-    source:
-      path: components/loki-operator
+  # loki-operator:
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '10'
+  # source:
+  # path: components/loki-operator
 
-  openshift-logging:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '10'
-    source:
-      path: components/openshift-logging
+  # openshift-logging:
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '10'
+  # source:
+  # path: components/openshift-logging
 
-  openshift-pipelines:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '10'
-    source:
-      path: components/openshift-pipelines
+  # openshift-pipelines:
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '10'
+  # source:
+  # path: components/openshift-pipelines
 
-  remote-tenants:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '20'
-    source:
-      path: clusters/ocp/remote-tenants
+  # remote-tenants:
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '20'
+  # source:
+  # path: clusters/ocp/remote-tenants
 
-  pac-tenants:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '20'
-    source:
-      path: clusters/ocp/pac-tenants
-    # OpenShift's image-registry-pull-secrets controller injects the
-    # auto-generated `<sa>-dockercfg-*` entry into the operator-owned
-    # `pipeline` SA's imagePullSecrets/secrets. SSA prevents us from
-    # overwriting it, but ArgoCD's diff still flags it as OutOfSync.
-    # Defer those fields to that controller via field-manager scoping.
-    ignoreDifferences:
-      - group: ""
-        kind: ServiceAccount
-        managedFieldsManagers:
-          - openshift.io/image-registry-pull-secrets_service-account-controller
+  # pac-tenants:
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '20'
+  # source:
+  # path: clusters/ocp/pac-tenants
+  # # OpenShift's image-registry-pull-secrets controller injects the
+  # # auto-generated `<sa>-dockercfg-*` entry into the operator-owned
+  # # `pipeline` SA's imagePullSecrets/secrets. SSA prevents us from
+  # # overwriting it, but ArgoCD's diff still flags it as OutOfSync.
+  # # Defer those fields to that controller via field-manager scoping.
+  # ignoreDifferences:
+  # - group: ""
+  # kind: ServiceAccount
+  # managedFieldsManagers:
+  # - openshift.io/image-registry-pull-secrets_service-account-controller
 
-  intel-device-plugins-operator:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '10'
-    source:
-      path: components/intel-device-plugins-operator
+  # intel-device-plugins-operator:
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '10'
+  # source:
+  # path: components/intel-device-plugins-operator
 
-  grafana:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '10'
-    source:
-      path: components/grafana
+  # grafana:
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '10'
+  # source:
+  # path: components/grafana
 
-  tailscale-operator:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '10'
-    destination:
-      namespace: tailscale
-    source:
-      path: components/tailscale-operator
-    # The operator rewrites the igou-io-node-exporter egress Service's
-    # spec.externalName from the git placeholder to its proxy FQDN. Defer that
-    # field to the operator so the app doesn't sit permanently OutOfSync.
-    ignoreDifferences:
-      - group: ""
-        kind: Service
-        name: igou-io-node-exporter
-        namespace: tailscale
-        jsonPointers:
-          - /spec/externalName
+  # tailscale-operator:
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '10'
+  # destination:
+  # namespace: tailscale
+  # source:
+  # path: components/tailscale-operator
+  # # The operator rewrites the igou-io-node-exporter egress Service's
+  # # spec.externalName from the git placeholder to its proxy FQDN. Defer that
+  # # field to the operator so the app doesn't sit permanently OutOfSync.
+  # ignoreDifferences:
+  # - group: ""
+  # kind: Service
+  # name: igou-io-node-exporter
+  # namespace: tailscale
+  # jsonPointers:
+  # - /spec/externalName
 
   cloudnative-pg:
     annotations:
@@ -295,116 +299,116 @@ applications:
     source:
       path: clusters/ocp/cloudnative-pg
 
-  hermes-agent:
-    project: cluster-apps
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '20'
-    source:
-      path: applications/hermes-agent
+  # hermes-agent:
+  # project: cluster-apps
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '20'
+  # source:
+  # path: applications/hermes-agent
 
-  firecrawl:
-    project: cluster-apps
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '19'
-    source:
-      path: applications/firecrawl
+  # firecrawl:
+  # project: cluster-apps
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '19'
+  # source:
+  # path: applications/firecrawl
 
-  searxng:
-    project: cluster-apps
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '20'
-    source:
-      path: applications/searxng
+  # searxng:
+  # project: cluster-apps
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '20'
+  # source:
+  # path: applications/searxng
 
-  jellyfin:
-    project: cluster-apps
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '20'
-    source:
-      path: applications/jellyfin
+  # jellyfin:
+  # project: cluster-apps
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '20'
+  # source:
+  # path: applications/jellyfin
 
-  llmkube:
-    project: cluster-apps
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '20'
-    source:
-      path: applications/llmkube
-    # Replicas on InferenceService CRs are scaled manually (and by the
-    # cluster-autoscaler indirectly via casval) — leave them alone so ArgoCD
-    # doesn't revert scale-ups back to the value checked into git.
-    ignoreDifferences:
-      - group: inference.llmkube.dev
-        kind: InferenceService
-        jsonPointers:
-          - /spec/replicas
+  # llmkube:
+  # project: cluster-apps
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '20'
+  # source:
+  # path: applications/llmkube
+  # # Replicas on InferenceService CRs are scaled manually (and by the
+  # # cluster-autoscaler indirectly via casval) — leave them alone so ArgoCD
+  # # doesn't revert scale-ups back to the value checked into git.
+  # ignoreDifferences:
+  # - group: inference.llmkube.dev
+  # kind: InferenceService
+  # jsonPointers:
+  # - /spec/replicas
 
-  gotify:
-    project: cluster-apps
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '20'
-    source:
-      path: applications/gotify
+  # gotify:
+  # project: cluster-apps
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '20'
+  # source:
+  # path: applications/gotify
 
-  forgejo:
-    project: cluster-apps
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '22'
-    source:
-      path: applications/forgejo
+  # forgejo:
+  # project: cluster-apps
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '22'
+  # source:
+  # path: applications/forgejo
 
-  gitea-mirror:
-    project: cluster-apps
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '23'
-    source:
-      path: applications/gitea-mirror
+  # gitea-mirror:
+  # project: cluster-apps
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '23'
+  # source:
+  # path: applications/gitea-mirror
 
-  quay-operator:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '22'
-    source:
-      path: components/quay-operator
+  # quay-operator:
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '22'
+  # source:
+  # path: components/quay-operator
 
-  rhdh:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '22'
-    source:
-      path: components/rhdh
+  # rhdh:
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '22'
+  # source:
+  # path: components/rhdh
 
-  alertmanager-config:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '25'
-    destination:
-      namespace: openshift-monitoring
-    source:
-      path: components/alertmanager-config
+  # alertmanager-config:
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '25'
+  # destination:
+  # namespace: openshift-monitoring
+  # source:
+  # path: components/alertmanager-config
 
-  ansible-automation-platform:
-    project: cluster-apps
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '30'
-    destination:
-      namespace: ansible-automation-platform
-    source:
-      path: clusters/ocp/ansible-automation-platform
+  # ansible-automation-platform:
+  # project: cluster-apps
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '30'
+  # destination:
+  # namespace: ansible-automation-platform
+  # source:
+  # path: clusters/ocp/ansible-automation-platform
 
-  molecule:
-    annotations:
-      argocd.argoproj.io/sync-wave: '39'
-    source:
-      path: components/molecule
+  # molecule:
+  # annotations:
+  # argocd.argoproj.io/sync-wave: '39'
+  # source:
+  # path: components/molecule
 
   service-accounts:
     annotations:
@@ -413,9 +417,9 @@ applications:
     source:
       path: clusters/ocp/service-accounts
 
-  openshift-virt:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '50'
-    source:
-      path: components/openshift-virt
+  # openshift-virt:
+  # annotations:
+  # argocd.argoproj.io/compare-options: IgnoreExtraneous
+  # argocd.argoproj.io/sync-wave: '50'
+  # source:
+  # path: components/openshift-virt
