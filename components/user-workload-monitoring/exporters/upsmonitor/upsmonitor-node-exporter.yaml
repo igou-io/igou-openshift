@@ -1,0 +1,60 @@
+---
+# node_exporter on the upsmonitor Pi (Raspberry Pi 4, VLAN9), scraped
+# DIRECTLY over the LAN - no Tailscale, no in-cluster proxy. Selectorless
+# Service + manual Endpoints point UWM Prometheus at the Pi's static
+# MAC-pinned address (rb5009 lease). Classic Endpoints (not EndpointSlice):
+# the mirroring controller derives the slice automatically, so discovery
+# works for both endpoint roles.
+apiVersion: v1
+kind: Service
+metadata:
+  name: upsmonitor-node-exporter
+  labels:
+    app.kubernetes.io/name: upsmonitor-node-exporter
+    app.kubernetes.io/part-of: upsmonitor
+spec:
+  clusterIP: None
+  ports:
+    - name: metrics
+      port: 9100
+      targetPort: 9100
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  # Must match the Service name for endpoint discovery.
+  name: upsmonitor-node-exporter
+  labels:
+    app.kubernetes.io/name: upsmonitor-node-exporter
+    app.kubernetes.io/part-of: upsmonitor
+subsets:
+  - addresses:
+      - ip: 10.10.9.32
+    ports:
+      - name: metrics
+        port: 9100
+        protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: upsmonitor-node-exporter
+  labels:
+    app.kubernetes.io/name: upsmonitor-node-exporter
+    app.kubernetes.io/part-of: upsmonitor
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: upsmonitor-node-exporter
+  endpoints:
+    - port: metrics
+      interval: 30s
+      scrapeTimeout: 10s
+      relabelings:
+        # The target address is a bare IP; name the real source.
+        # action: replace is the CRD default - set explicitly so the
+        # rendered manifest matches the live object and ArgoCD stays Synced.
+        - action: replace
+          targetLabel: instance
+          replacement: upsmonitor.igou.systems
