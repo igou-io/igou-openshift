@@ -78,7 +78,7 @@ helmCharts:
     driver:
       existingConfigSecret: "democratic-csi-iscsi-fast-config"
       config:
-        driver: freenas-iscsi
+        driver: freenas-api-iscsi
 # ---- iSCSI - ssd pool ----
 - name: democratic-csi
   namespace: democratic-csi
@@ -144,7 +144,7 @@ helmCharts:
     driver:
       existingConfigSecret: "democratic-csi-iscsi-ssd-config"
       config:
-        driver: freenas-iscsi
+        driver: freenas-api-iscsi
 # ---- iSCSI - cold pool ----
 - name: democratic-csi
   namespace: democratic-csi
@@ -206,7 +206,7 @@ helmCharts:
     driver:
       existingConfigSecret: "democratic-csi-iscsi-cold-config"
       config:
-        driver: freenas-iscsi
+        driver: freenas-api-iscsi
 # ---- NFS - fast pool ----
 - name: democratic-csi
   namespace: democratic-csi
@@ -274,7 +274,7 @@ helmCharts:
     driver:
       existingConfigSecret: "democratic-csi-nfs-fast-config"
       config:
-        driver: freenas-nfs
+        driver: freenas-api-nfs
 # ---- NFS - ssd pool ----
 - name: democratic-csi
   namespace: democratic-csi
@@ -342,7 +342,7 @@ helmCharts:
     driver:
       existingConfigSecret: "democratic-csi-nfs-ssd-config"
       config:
-        driver: freenas-nfs
+        driver: freenas-api-nfs
 # ---- NFS - cold pool ----
 - name: democratic-csi
   namespace: democratic-csi
@@ -406,7 +406,7 @@ helmCharts:
     driver:
       existingConfigSecret: "democratic-csi-nfs-cold-config"
       config:
-        driver: freenas-nfs
+        driver: freenas-api-nfs
 # ---- NVMe-oF - fast pool ----
 - name: democratic-csi
   namespace: democratic-csi
