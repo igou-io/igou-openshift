@@ -20,15 +20,25 @@ spec:
     nodeSelector:
       node-role.kubernetes.io/control-plane: ""
     podAntiAffinityType: preferred # CNPG default; declared to avoid ArgoCD drift
+  # 2026-07-03 disaster recovery: restore the backstage database from the Barman
+  # Cloud backup on RustFS (latest base 2026-07-02) instead of initdb. Revert to
+  # the initdb block below once recovered and verified.
+  #   bootstrap:
+  #     initdb:
+  #       database: backstage
+  #       owner: backstage
+  #       secret:
+  #         name: rhdh-postgres-credentials
   bootstrap:
-    initdb:
-      database: backstage
-      owner: backstage
-      # BYO credentials (managed by ESO from 1Password) so the rhdh-operator
-      # and CNPG agree on a password we control. CNPG reads `username` and
-      # `password` keys from this Secret to create the role.
-      secret:
-        name: rhdh-postgres-credentials
+    recovery:
+      source: rhdh-pg
+  externalClusters:
+    - name: rhdh-pg
+      plugin:
+        name: barman-cloud.cloudnative-pg.io
+        parameters:
+          barmanObjectName: rhdh-pg-backup
+          serverName: rhdh-pg
   storage:
     size: 10Gi
     storageClass: freenas-nvmeof-ssd-csi
