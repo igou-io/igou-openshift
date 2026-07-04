@@ -20,29 +20,21 @@ spec:
     nodeSelector:
       node-role.kubernetes.io/control-plane: ""
     podAntiAffinityType: preferred # CNPG default; declared to avoid ArgoCD drift
-  # 2026-07-03 disaster recovery: bootstrap by restoring the quay database from
-  # the Barman Cloud backup on RustFS (the cluster's own history), rather than
-  # initdb. CNPG opens a new timeline so continued WAL archiving to the same
-  # serverName does not collide with the restored backup. Revert to the initdb
-  # block (kept below, commented) once the DB is recovered and verified.
-  #   bootstrap:
-  #     initdb:
-  #       database: quay
-  #       owner: quay
-  #       secret:
-  #         name: quay-pg-credentials
-  #       postInitApplicationSQL:
-  #         - CREATE EXTENSION IF NOT EXISTS pg_trgm
+  # 2026-07-03: the database was disaster-recovered from Barman (bootstrap.recovery
+  # + a temporary externalClusters). Now that it is restored and verified, this is
+  # reverted to the steady-state initdb so a future Cluster *recreate* re-inits a
+  # fresh DB instead of silently rolling back to the pre-disaster snapshot. The
+  # live cluster keeps its recovery-baked, CNPG-defaulted bootstrap (bootstrap is
+  # set once at creation and is immutable) — the app ignoreDifferences on
+  # /spec/bootstrap + /spec/externalClusters suppresses that drift.
   bootstrap:
-    recovery:
-      source: quay-pg
-  externalClusters:
-    - name: quay-pg
-      plugin:
-        name: barman-cloud.cloudnative-pg.io
-        parameters:
-          barmanObjectName: quay-pg-backup
-          serverName: quay-pg
+    initdb:
+      database: quay
+      owner: quay
+      secret:
+        name: quay-pg-credentials
+      postInitApplicationSQL:
+        - CREATE EXTENSION IF NOT EXISTS pg_trgm
   # The clair role lives on the same cluster but owns its own database (managed
   # via the Database CR in clair-database.yaml). CNPG keeps the role's password
   # in sync with the password key of quay-clair-pg-credentials.
