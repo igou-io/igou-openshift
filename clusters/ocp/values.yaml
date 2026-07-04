@@ -359,6 +359,16 @@ applications:
     source:
       path: applications/forgejo
 
+    # The DB was disaster-recovered 2026-07-03; the live CNPG Cluster keeps its
+    # recovery-baked, CNPG-defaulted bootstrap (immutable, set once at creation)
+    # while git holds the steady-state initdb for a clean recreate. Ignore that
+    # drift so the app stays Synced.
+    ignoreDifferences:
+      - group: postgresql.cnpg.io
+        kind: Cluster
+        jsonPointers:
+          - /spec/bootstrap
+          - /spec/externalClusters
   gitea-mirror:
     project: cluster-apps
     annotations:
@@ -374,6 +384,16 @@ applications:
     source:
       path: components/quay-operator
 
+    # The DB was disaster-recovered 2026-07-03; the live CNPG Cluster keeps its
+    # recovery-baked, CNPG-defaulted bootstrap (immutable, set once at creation)
+    # while git holds the steady-state initdb for a clean recreate. Ignore that
+    # drift so the app stays Synced.
+    ignoreDifferences:
+      - group: postgresql.cnpg.io
+        kind: Cluster
+        jsonPointers:
+          - /spec/bootstrap
+          - /spec/externalClusters
   rhdh:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
@@ -381,6 +401,16 @@ applications:
     source:
       path: components/rhdh
 
+    # The DB was disaster-recovered 2026-07-03; the live CNPG Cluster keeps its
+    # recovery-baked, CNPG-defaulted bootstrap (immutable, set once at creation)
+    # while git holds the steady-state initdb for a clean recreate. Ignore that
+    # drift so the app stays Synced.
+    ignoreDifferences:
+      - group: postgresql.cnpg.io
+        kind: Cluster
+        jsonPointers:
+          - /spec/bootstrap
+          - /spec/externalClusters
   alertmanager-config:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
