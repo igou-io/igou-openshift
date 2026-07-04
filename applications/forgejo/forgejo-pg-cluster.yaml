@@ -17,10 +17,23 @@ spec:
     nodeSelector:
       node-role.kubernetes.io/control-plane: ""
     podAntiAffinityType: preferred # CNPG default; declared to avoid ArgoCD drift
+  # 2026-07-03 disaster recovery: restore the forgejo database from the Barman
+  # Cloud backup on RustFS (latest base 2026-07-02) instead of initdb. Revert to
+  # the initdb block below once recovered and verified.
+  #   bootstrap:
+  #     initdb:
+  #       database: forgejo
+  #       owner: forgejo
   bootstrap:
-    initdb:
-      database: forgejo
-      owner: forgejo
+    recovery:
+      source: forgejo-pg
+  externalClusters:
+    - name: forgejo-pg
+      plugin:
+        name: barman-cloud.cloudnative-pg.io
+        parameters:
+          barmanObjectName: forgejo-pg-backup
+          serverName: forgejo-pg
   storage:
     size: 10Gi
     storageClass: freenas-nvmeof-ssd-csi

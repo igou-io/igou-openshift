@@ -355,13 +355,13 @@ applications:
   # source:
   # path: applications/gotify
 
-  # forgejo:
-  # project: cluster-apps
-  # annotations:
-  # argocd.argoproj.io/compare-options: IgnoreExtraneous
-  # argocd.argoproj.io/sync-wave: '22'
-  # source:
-  # path: applications/forgejo
+  forgejo:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '22'
+    source:
+      path: applications/forgejo
 
   # gitea-mirror:
   # project: cluster-apps
@@ -371,19 +371,19 @@ applications:
   # source:
   # path: applications/gitea-mirror
 
-  # quay-operator:
-  # annotations:
-  # argocd.argoproj.io/compare-options: IgnoreExtraneous
-  # argocd.argoproj.io/sync-wave: '22'
-  # source:
-  # path: components/quay-operator
+  quay-operator:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '22'
+    source:
+      path: components/quay-operator
 
-  # rhdh:
-  # annotations:
-  # argocd.argoproj.io/compare-options: IgnoreExtraneous
-  # argocd.argoproj.io/sync-wave: '22'
-  # source:
-  # path: components/rhdh
+  rhdh:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '22'
+    source:
+      path: components/rhdh
 
   alertmanager-config:
     annotations:
