@@ -26,13 +26,14 @@ helmCharts:
         registry: ""
         repository: ghcr.io/defilantech/llmkube-controller
         pullPolicy: IfNotPresent
-        # Pinned to a digest compatible with chart 0.8.1's manager args.
+        # Pinned to the digest matching chart 0.8.8's manager args (appVersion
+        # 0.8.8, tag 0.8.8). MUST be bumped in lockstep with the chart version:
         # Renovate bumps to newer controller builds (e.g. 79969f6) that drop the
         # --default-fsgroup flag the chart still passes, causing CrashLoopBackOff
         # (exit 2: "flag provided but not defined: -default-fsgroup"). Do not bump
         # the image digest without also moving to a matching chart version.
-        tag: "@sha256:d7abfb6cfd11358db2416cf8f17af6d10001f9d88c3c64553ea93c2be3494080"
-        digest: "sha256:d7abfb6cfd11358db2416cf8f17af6d10001f9d88c3c64553ea93c2be3494080"
+        tag: "@sha256:e69e17695b361a275ac5f2e75e02cdf76060d5eadc25e30c151ec71b6fbec0ed"
+        digest: "sha256:e69e17695b361a275ac5f2e75e02cdf76060d5eadc25e30c151ec71b6fbec0ed"
       replicaCount: 1
       leaderElection:
         enabled: true
