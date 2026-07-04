@@ -80,3 +80,7 @@ spec:
       isWALArchiver: true
       parameters:
         barmanObjectName: quay-pg-backup
+        # Archive WAL to a NEW serverName so the post-recovery timeline does not
+        # collide with the pre-disaster archive we recovered from (CNPG refuses
+        # to archive into a non-empty destination for a different server).
+        serverName: quay-pg-r20260704
