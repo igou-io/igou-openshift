@@ -295,18 +295,18 @@ applications:
     source:
       path: clusters/ocp/cloudnative-pg
 
+  hermes-agent:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/hermes-agent
+
   # ── TEMPORARILY DISABLED 2026-07-03 (cluster rebuild), staged restore ──
   # These apps stay deferred in this wave. Uncomment (restore original block)
   # as each wave brings them back. ArgoCD ignores comments, so the flattened
   # indentation here is cosmetic. See the 2026-07-03 incident.
-  # hermes-agent:
-  # project: cluster-apps
-  # annotations:
-  # argocd.argoproj.io/compare-options: IgnoreExtraneous
-  # argocd.argoproj.io/sync-wave: '20'
-  # source:
-  # path: applications/hermes-agent
-
   # firecrawl:
   # project: cluster-apps
   # annotations:
