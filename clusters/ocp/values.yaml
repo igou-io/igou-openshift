@@ -208,23 +208,19 @@ applications:
     source:
       path: components/cluster-api-autoscaler
 
-  # ── TEMPORARILY DISABLED 2026-07-03 (cluster rebuild), staged restore ──
-  # These apps stay deferred in this wave. Uncomment (restore original block)
-  # as each wave brings them back. ArgoCD ignores comments, so the flattened
-  # indentation here is cosmetic. See the 2026-07-03 incident.
-  # loki-operator:
-  # annotations:
-  # argocd.argoproj.io/compare-options: IgnoreExtraneous
-  # argocd.argoproj.io/sync-wave: '10'
-  # source:
-  # path: components/loki-operator
+  loki-operator:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '10'
+    source:
+      path: components/loki-operator
 
-  # openshift-logging:
-  # annotations:
-  # argocd.argoproj.io/compare-options: IgnoreExtraneous
-  # argocd.argoproj.io/sync-wave: '10'
-  # source:
-  # path: components/openshift-logging
+  openshift-logging:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '10'
+    source:
+      path: components/openshift-logging
 
   openshift-pipelines:
     annotations:
@@ -264,12 +260,12 @@ applications:
     source:
       path: components/intel-device-plugins-operator
 
-  # grafana:
-  # annotations:
-  # argocd.argoproj.io/compare-options: IgnoreExtraneous
-  # argocd.argoproj.io/sync-wave: '10'
-  # source:
-  # path: components/grafana
+  grafana:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '10'
+    source:
+      path: components/grafana
 
   tailscale-operator:
     annotations:
@@ -299,6 +295,10 @@ applications:
     source:
       path: clusters/ocp/cloudnative-pg
 
+  # ── TEMPORARILY DISABLED 2026-07-03 (cluster rebuild), staged restore ──
+  # These apps stay deferred in this wave. Uncomment (restore original block)
+  # as each wave brings them back. ArgoCD ignores comments, so the flattened
+  # indentation here is cosmetic. See the 2026-07-03 incident.
   # hermes-agent:
   # project: cluster-apps
   # annotations:
@@ -385,14 +385,14 @@ applications:
   # source:
   # path: components/rhdh
 
-  # alertmanager-config:
-  # annotations:
-  # argocd.argoproj.io/compare-options: IgnoreExtraneous
-  # argocd.argoproj.io/sync-wave: '25'
-  # destination:
-  # namespace: openshift-monitoring
-  # source:
-  # path: components/alertmanager-config
+  alertmanager-config:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '25'
+    destination:
+      namespace: openshift-monitoring
+    source:
+      path: components/alertmanager-config
 
   # ansible-automation-platform:
   # project: cluster-apps
