@@ -8,12 +8,22 @@ spec:
   policyTypes:
     - Ingress
   ingress:
-    # SSH from the AAP namespace only, so Ansible can converge the guest over
-    # the masquerade pod IP. All other inbound is still denied.
+    # SSH from the AAP namespace, so Ansible can converge the guest over the
+    # masquerade pod IP. All other inbound is still denied.
     - from:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: ansible-automation-platform
+      ports:
+        - protocol: TCP
+          port: 22
+    # SSH from VLAN9 (the trusted server LAN) so operators can reach the guest
+    # over the hermes-ssh MetalLB LoadBalancer (10.10.150.1). The LB service
+    # uses externalTrafficPolicy: Local, so OVN sees the real VLAN9 client
+    # source IP and this ipBlock matches. Key-only auth; password login is off.
+    - from:
+        - ipBlock:
+            cidr: 10.10.9.0/24
       ports:
         - protocol: TCP
           port: 22
