@@ -303,57 +303,53 @@ applications:
     source:
       path: applications/hermes-agent
 
-  # ── TEMPORARILY DISABLED 2026-07-03 (cluster rebuild), staged restore ──
-  # These apps stay deferred in this wave. Uncomment (restore original block)
-  # as each wave brings them back. ArgoCD ignores comments, so the flattened
-  # indentation here is cosmetic. See the 2026-07-03 incident.
-  # firecrawl:
-  # project: cluster-apps
-  # annotations:
-  # argocd.argoproj.io/compare-options: IgnoreExtraneous
-  # argocd.argoproj.io/sync-wave: '19'
-  # source:
-  # path: applications/firecrawl
+  firecrawl:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '19'
+    source:
+      path: applications/firecrawl
 
-  # searxng:
-  # project: cluster-apps
-  # annotations:
-  # argocd.argoproj.io/compare-options: IgnoreExtraneous
-  # argocd.argoproj.io/sync-wave: '20'
-  # source:
-  # path: applications/searxng
+  searxng:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/searxng
 
-  # jellyfin:
-  # project: cluster-apps
-  # annotations:
-  # argocd.argoproj.io/compare-options: IgnoreExtraneous
-  # argocd.argoproj.io/sync-wave: '20'
-  # source:
-  # path: applications/jellyfin
+  jellyfin:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/jellyfin
 
-  # llmkube:
-  # project: cluster-apps
-  # annotations:
-  # argocd.argoproj.io/compare-options: IgnoreExtraneous
-  # argocd.argoproj.io/sync-wave: '20'
-  # source:
-  # path: applications/llmkube
-  # # Replicas on InferenceService CRs are scaled manually (and by the
-  # # cluster-autoscaler indirectly via casval) — leave them alone so ArgoCD
-  # # doesn't revert scale-ups back to the value checked into git.
-  # ignoreDifferences:
-  # - group: inference.llmkube.dev
-  # kind: InferenceService
-  # jsonPointers:
-  # - /spec/replicas
+  llmkube:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/llmkube
+    # Replicas on InferenceService CRs are scaled manually (and by the
+    # cluster-autoscaler indirectly via casval) — leave them alone so ArgoCD
+    # doesn't revert scale-ups back to the value checked into git.
+    ignoreDifferences:
+      - group: inference.llmkube.dev
+        kind: InferenceService
+        jsonPointers:
+          - /spec/replicas
 
-  # gotify:
-  # project: cluster-apps
-  # annotations:
-  # argocd.argoproj.io/compare-options: IgnoreExtraneous
-  # argocd.argoproj.io/sync-wave: '20'
-  # source:
-  # path: applications/gotify
+  gotify:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/gotify
 
   forgejo:
     project: cluster-apps
@@ -363,13 +359,13 @@ applications:
     source:
       path: applications/forgejo
 
-  # gitea-mirror:
-  # project: cluster-apps
-  # annotations:
-  # argocd.argoproj.io/compare-options: IgnoreExtraneous
-  # argocd.argoproj.io/sync-wave: '23'
-  # source:
-  # path: applications/gitea-mirror
+  gitea-mirror:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '23'
+    source:
+      path: applications/gitea-mirror
 
   quay-operator:
     annotations:
@@ -394,15 +390,15 @@ applications:
     source:
       path: components/alertmanager-config
 
-  # ansible-automation-platform:
-  # project: cluster-apps
-  # annotations:
-  # argocd.argoproj.io/compare-options: IgnoreExtraneous
-  # argocd.argoproj.io/sync-wave: '30'
-  # destination:
-  # namespace: ansible-automation-platform
-  # source:
-  # path: clusters/ocp/ansible-automation-platform
+  ansible-automation-platform:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '30'
+    destination:
+      namespace: ansible-automation-platform
+    source:
+      path: clusters/ocp/ansible-automation-platform
 
   molecule:
     annotations:
