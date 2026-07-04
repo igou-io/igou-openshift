@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hermes-ssh
+  namespace: hermes
+  annotations:
+    argocd.argoproj.io/sync-wave: '5'
+    # Pin to the historical hermes management IP (inventory ansible_host for
+    # hermes-hermes). MetalLB advertises the trusted-lan pool (10.10.150.0/24)
+    # into the fabric over BGP, so this address is reachable from VLAN9 clients
+    # via the rb5009. autoAssign is off on that pool, so the pool must be named
+    # explicitly.
+    metallb.universe.tf/address-pool: trusted-lan
+    metallb.universe.tf/loadBalancerIPs: 10.10.150.1
+spec:
+  type: LoadBalancer
+  # Local preserves the client source IP (needed for the deny-ingress
+  # NetworkPolicy's VLAN9 ipBlock match) and keeps traffic on the node running
+  # the hermes virt-launcher pod — no extra hop, no asymmetric-return stall.
+  externalTrafficPolicy: Local
+  # Select the hermes VM's virt-launcher pod. KubeVirt masquerade forwards the
+  # pod's :22 to the guest's sshd.
+  selector:
+    vm.kubevirt.io/name: hermes
+  ports:
+    - name: ssh
+      protocol: TCP
+      port: 22
+      targetPort: 22

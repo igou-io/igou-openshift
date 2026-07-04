@@ -7,4 +7,5 @@ resources:
   - default-egressfirewall.yaml
   - hermes-deny-ingress-networkpolicy.yaml
   - hermes-egress-networkpolicy.yaml
+  - hermes-ssh-service.yaml
   - hermes-vm-hardening-validatingadmissionpolicy.yaml
