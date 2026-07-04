@@ -17,23 +17,17 @@ spec:
     nodeSelector:
       node-role.kubernetes.io/control-plane: ""
     podAntiAffinityType: preferred # CNPG default; declared to avoid ArgoCD drift
-  # 2026-07-03 disaster recovery: restore the forgejo database from the Barman
-  # Cloud backup on RustFS (latest base 2026-07-02) instead of initdb. Revert to
-  # the initdb block below once recovered and verified.
-  #   bootstrap:
-  #     initdb:
-  #       database: forgejo
-  #       owner: forgejo
+  # 2026-07-03: the forgejo database was disaster-recovered from Barman
+  # (bootstrap.recovery + a temporary externalClusters). Now restored and
+  # verified, this is reverted to steady-state initdb so a future Cluster
+  # recreate re-inits fresh rather than silently rolling back to the pre-disaster
+  # snapshot. The live cluster keeps its recovery-baked bootstrap (immutable) —
+  # the app ignoreDifferences on /spec/bootstrap + /spec/externalClusters
+  # suppresses that drift.
   bootstrap:
-    recovery:
-      source: forgejo-pg
-  externalClusters:
-    - name: forgejo-pg
-      plugin:
-        name: barman-cloud.cloudnative-pg.io
-        parameters:
-          barmanObjectName: forgejo-pg-backup
-          serverName: forgejo-pg
+    initdb:
+      database: forgejo
+      owner: forgejo
   storage:
     size: 10Gi
     storageClass: freenas-nvmeof-ssd-csi
