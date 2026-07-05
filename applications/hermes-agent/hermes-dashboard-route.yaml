@@ -1,0 +1,23 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: hermes-dashboard
+  namespace: hermes
+  labels:
+    app: hermes
+spec:
+  host: hermes-dashboard.apps.ocp.igou.systems
+  to:
+    kind: Service
+    name: hermes-dashboard
+    weight: 100
+  port:
+    targetPort: dashboard
+  # Edge termination: the router terminates TLS (default wildcard cert for
+  # *.apps.ocp.igou.systems) and forwards plaintext HTTP to the dashboard on
+  # :9119. The dashboard enforces its own scrypt BasicAuth gate on top; the
+  # Route adds no auth of its own. Redirect any plaintext hit to HTTPS.
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None

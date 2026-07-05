@@ -6,6 +6,9 @@ resources:
   - hermes-state-datavolume.yaml
   - default-egressfirewall.yaml
   - hermes-deny-ingress-networkpolicy.yaml
+  - hermes-allow-dashboard-ingress-networkpolicy.yaml
   - hermes-egress-networkpolicy.yaml
   - hermes-ssh-service.yaml
+  - hermes-dashboard-service.yaml
+  - hermes-dashboard-route.yaml
   - hermes-vm-hardening-validatingadmissionpolicy.yaml
