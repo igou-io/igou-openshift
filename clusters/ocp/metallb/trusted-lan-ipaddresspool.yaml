@@ -8,6 +8,9 @@ metadata:
     argocd.argoproj.io/sync-wave: '0'
 spec:
   addresses:
-    - 10.10.150.0/24
+    # Low /25 — ocp's half of the trusted-lan tier; carries the live hermes
+    # VIP (.1). rk8s (igou-kubernetes) owns 10.10.150.128/25 and its gateway
+    # VIP is 10.10.150.129. rb5009's metallb-in filter enforces the split.
+    - 10.10.150.1-10.10.150.127
   autoAssign: false
   avoidBuggyIPs: true
