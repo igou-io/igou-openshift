@@ -25,8 +25,7 @@ spec:
   flashAttention: false
   jinja: true                 # apply the Gemma chat template
   parallelSlots: 1
-  podSecurityContext:
-    fsGroup: 1001030000       # OpenShift restricted-v2 SCC range (llmkube default 102 is rejected)
+  podSecurityContext:         # no fsGroup: the SCC injects it (pinned values break on ns recreation)
     seccompProfile:
       type: RuntimeDefault
   extraArgs:
