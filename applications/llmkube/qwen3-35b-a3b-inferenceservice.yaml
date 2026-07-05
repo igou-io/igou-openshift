@@ -26,12 +26,12 @@ spec:
   # 378 GiB RAM; the small hybrid KV makes the PCIe penalty modest).
   flashAttention: true
   jinja: true                # Qwen3.6 chat template is jinja-only (thinking tags)
-  # llmkube 0.8.1 defaults the inference pod's fsGroup to 102, which OpenShift's
-  # restricted-v2 SCC rejects (must be within the namespace's allocated range,
-  # openshift.io/sa.scc.supplemental-groups=1001030000/10000). Pin fsGroup into
-  # that range so the model-cache PVC is group-writable and the pod can schedule.
+  # No fsGroup here: the restricted-v2 SCC injects one from the namespace's
+  # allocated range, and that range changes whenever the namespace is recreated
+  # (a pinned value broke pod admission after the 2026-07 cluster reinstall).
+  # llmkube's fsGroup default of 102 only applies when podSecurityContext is
+  # entirely unset, so keeping seccompProfile here is enough to suppress it.
   podSecurityContext:
-    fsGroup: 1001030000
     seccompProfile:
       type: RuntimeDefault
   cacheTypeK: f16
