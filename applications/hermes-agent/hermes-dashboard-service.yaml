@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hermes-dashboard
+  namespace: hermes
+  labels:
+    app: hermes
+spec:
+  type: ClusterIP
+  # Select the VM's virt-launcher pod (masquerade forwards all ports to the
+  # guest, so :9119 reaches hermes-dashboard.service inside the VM), the same
+  # selector the hermes-ssh LoadBalancer uses for :22.
+  selector:
+    vm.kubevirt.io/name: hermes
+  ports:
+    - name: dashboard
+      protocol: TCP
+      port: 9119
+      targetPort: 9119
