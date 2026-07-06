@@ -3,6 +3,16 @@ kind: Kustomization
 
 resources:
   - ../../../components/external-secrets-operator
-  - onepassword-sdk-ocp-pull-clustersecretstore.yaml
-  - onepassword-sdk-ocp-push-clustersecretstore.yaml
-  - onepassword-sdk-claude-container-clustersecretstore.yaml
+  - onepassword-ocp-pull-clustersecretstore.yaml
+  - onepassword-ocp-push-clustersecretstore.yaml
+  - onepassword-claude-clustersecretstore.yaml
+  - onepassword-lab-openshift-clustersecretstore.yaml
+  - onepassword-lab-redhat-clustersecretstore.yaml
+  - onepassword-lab-container-registries-clustersecretstore.yaml
+  - onepassword-lab-forgejo-clustersecretstore.yaml
+  - onepassword-lab-github-clustersecretstore.yaml
+  - onepassword-lab-s3-clustersecretstore.yaml
+  - onepassword-lab-routeros-clustersecretstore.yaml
+  - onepassword-lab-external-api-keys-clustersecretstore.yaml
+  - onepassword-lab-aap-clustersecretstore.yaml
+  - onepassword-lab-serviceaccounts-clustersecretstore.yaml
