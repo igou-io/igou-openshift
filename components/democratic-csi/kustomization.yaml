@@ -12,6 +12,13 @@ resources:
   - allow-privileged-to-democratic-csi-nvmeof-fast-config-node-sa-clusterrolebinding.yaml
   - allow-privileged-to-democratic-csi-nvmeof-ssd-config-node-sa-clusterrolebinding.yaml
   - allow-privileged-to-democratic-csi-nvmeof-cold-config-node-sa-clusterrolebinding.yaml
+# Give each node a unique, stable NVMe host NQN (igou-io/igou-openshift#404).
+# Targets only the three NVMe-oF node DaemonSets by name regex.
+patches:
+  - path: patches/nvmeof-unique-hostnqn.yaml
+    target:
+      kind: DaemonSet
+      name: democratic-csi-nvmeof-.*-config-node
 helmCharts:
 # ---- iSCSI - fast pool ----
 - name: democratic-csi
