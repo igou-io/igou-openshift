@@ -9,7 +9,7 @@
 # whichever ClusterSecretStore exists and the chart is provider-agnostic.
 secretStore:
   kind: ClusterSecretStore
-  name: onepassword-sdk-ocp-pull
+  name: onepassword-ocp-pull
 
 tenants:
   - name: igou-ansible

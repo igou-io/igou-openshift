@@ -109,7 +109,7 @@ helmCharts:
               refreshInterval: 24h
               secretStoreRef:
                 kind: ClusterSecretStore
-                name: onepassword-sdk-ocp-pull
+                name: onepassword-lab-routeros
               target:
                 name: mktxp-secret
                 creationPolicy: Owner

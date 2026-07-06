@@ -149,7 +149,9 @@ serviceAccounts:
       - name: cluster-read-only-token-push
         refreshInterval: "0"
         secretStoreRefs:
-          - name: onepassword-sdk-claude
+          - name: onepassword-claude
+            kind: ClusterSecretStore
+          - name: onepassword-lab-serviceaccounts
             kind: ClusterSecretStore
         data:
           - conversionStrategy: None
@@ -168,7 +170,9 @@ serviceAccounts:
       - name: cluster-edit-token-push
         refreshInterval: "0"
         secretStoreRefs:
-          - name: onepassword-sdk-claude
+          - name: onepassword-claude
+            kind: ClusterSecretStore
+          - name: onepassword-lab-serviceaccounts
             kind: ClusterSecretStore
         data:
           - conversionStrategy: None
@@ -184,7 +188,9 @@ serviceAccounts:
       - name: claude-edit-token-push
         refreshInterval: "0"
         secretStoreRefs:
-          - name: onepassword-sdk-claude
+          - name: onepassword-claude
+            kind: ClusterSecretStore
+          - name: onepassword-lab-serviceaccounts
             kind: ClusterSecretStore
         data:
           - conversionStrategy: None
@@ -206,7 +212,9 @@ serviceAccounts:
       - name: ansible-molecule-token-push
         refreshInterval: "0"
         secretStoreRefs:
-          - name: onepassword-sdk-claude
+          - name: onepassword-claude
+            kind: ClusterSecretStore
+          - name: onepassword-lab-serviceaccounts
             kind: ClusterSecretStore
         data:
           - conversionStrategy: None
@@ -234,7 +242,9 @@ serviceAccounts:
       - name: virtualmachine-ops-token
         refreshInterval: "0"
         secretStoreRefs:
-          - name: onepassword-sdk-ocp-push
+          - name: onepassword-ocp-push
+            kind: ClusterSecretStore
+          - name: onepassword-lab-serviceaccounts
             kind: ClusterSecretStore
         data:
           - conversionStrategy: None
@@ -249,7 +259,9 @@ serviceAccounts:
       - name: ns-agent-token
         refreshInterval: "0"
         secretStoreRefs:
-          - name: onepassword-sdk-ocp-push
+          - name: onepassword-ocp-push
+            kind: ClusterSecretStore
+          - name: onepassword-lab-serviceaccounts
             kind: ClusterSecretStore
         data:
           - conversionStrategy: None

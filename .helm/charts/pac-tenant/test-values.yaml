@@ -5,7 +5,7 @@
 # GCP SM, Azure KV).
 secretStore:
   kind: ClusterSecretStore
-  name: onepassword-sdk-ocp-pull
+  name: onepassword-ocp-pull
 
 tenants:
   - name: simple-tenant
