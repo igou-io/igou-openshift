@@ -7,6 +7,15 @@ metadata:
     argocd.argoproj.io/sync-wave: "3"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
+  # This cluster does NOT support live migration by design: we run RWO block
+  # storage only (no RWX block), so VM disks can't be shared across nodes and
+  # VMs are never migratable. A short outage to power-cycle a VM during node
+  # maintenance is acceptable here. Default every VM's eviction strategy to
+  # None so a node drain cleanly shuts the VM down instead of attempting a
+  # migration that can't succeed — which is what raises the (noise)
+  # VMCannotBeEvicted alert under the KubeVirt default of LiveMigrate.
+  # See igou-io/igou-openshift#405.
+  evictionStrategy: None
   featureGates:
     deployTektonTaskResources: true
     enableCommonBootImageImport: true
