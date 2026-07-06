@@ -59,6 +59,9 @@ defaults:
 #         key: <remote-secret-key>                       `provider.token` (Forgejo PAT) and `webhook.secret`
 #         # property: <field>                          # optional, provider-specific (e.g. Vault KV property)
 #         # version: <version>                         # optional, provider-specific
+#       # secretStore:                                 # optional per-secret store override. Defaults to the
+#       #   name: <store-name>                           chart-level secretStore.name; set it when this item
+#       #   # kind: ClusterSecretStore                   lives in a different context vault/store than the default.
 #     concurrencyLimit: <int>                          # optional; unset by default. Mutually
 #                                                        exclusive with the cluster's global
 #                                                        enable-cancel-in-progress-on-* setting —
@@ -104,6 +107,12 @@ defaults:
 #           key: <key-in-secret>                         (typically created via workspaceSecrets)
 #         # filter: "..."                              # optional CEL expression to scope the param to specific events
 #     secrets:
+#       # Every secret entry below (imagePullSecrets / serviceAccountSecrets /
+#       # workspaceSecrets) accepts an optional per-secret store override:
+#       #   secretStore:
+#       #     name: <store-name>                       # defaults to chart-level secretStore.name
+#       #     # kind: ClusterSecretStore               # defaults to chart-level secretStore.kind
+#       # Use it when the item lives in a different context vault/store than the default.
 #       imagePullSecrets:                              # SSA-patched onto the operator-managed `pipeline` SA's
 #                                                        imagePullSecrets (consumed by the kubelet).
 #         - name: <k8s-secret-name>
