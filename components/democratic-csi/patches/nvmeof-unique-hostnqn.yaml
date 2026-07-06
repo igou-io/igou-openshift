@@ -9,13 +9,28 @@
 # isolation at the fabric layer (reservation/ANA ambiguity; data-integrity risk
 # if two nodes ever attach the same namespace).
 #
+# UPSTREAM: this is tracked as democratic-csi/democratic-csi#451 (open). The
+# baked value is literally in the image Dockerfile (echo 'nqn...941e4f03...' >
+# /etc/nvme/hostnqn), on both `next` and `master`. The maintainer added a
+# generate-if-missing step (`if (!fs.existsSync) nvme gen-hostnqn`) but it is
+# dead code while the Dockerfile keeps baking the file, so even the latest
+# `next` image ships duplicate NQNs by default. There is no chart release past
+# 0.15.1 and no config/driver option to set the hostnqn per node (democratic-csi
+# calls `nvme connect` without --hostnqn, so /etc/nvme/hostnqn is authoritative).
+# Native alternatives are strictly worse here: nvmeDirMountEnabled: true only
+# surfaces the HOST /etc/nvme, which on RHCOS is ALSO a shared duplicate (Red Hat
+# KB 7073579), so it would still need a per-node MachineConfig + reboots.
+# REMOVE THIS PATCH only once #451's Dockerfile stops baking hostnqn/hostid AND a
+# persistent per-node mount lands upstream.
+#
 # Fix: an initContainer derives a deterministic host NQN from the node's
 # /etc/machine-id (unique per node, stable across reboots — NOT random, so the
 # NQN is stable so reconnects and any future TrueNAS host ACL keep matching) and
 # writes hostnqn + hostid into an emptyDir mounted over /etc/nvme in the
-# csi-driver container. discovery.conf is intentionally not recreated: the
-# freenas-api-nvmeof driver connects to explicit transports from its config and
-# does not use nvme discovery.
+# csi-driver container. This is deliberately deterministic, unlike upstream's
+# random-on-first-start which would remint the NQN on every pod reschedule.
+# discovery.conf is intentionally not recreated: the freenas-api-nvmeof driver
+# connects to explicit transports from its config and does not use nvme discovery.
 #
 # Applied to the three NVMe-oF node DaemonSets (ssd/fast/cold) via a targeted
 # kustomize patch because the chart's node template has no initContainers hook.
