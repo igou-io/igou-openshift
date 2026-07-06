@@ -17,6 +17,9 @@ tenants:
     gitProvider:
       remoteRef:
         key: ci-forgejo-igou-ansible
+      # Item lives in the lab_forgejo context vault.
+      secretStore:
+        name: onepassword-lab-forgejo
     imageStreams:
       - name: ee-minimal-rhel9
         from: registry.redhat.io/ansible-automation-platform-27/ee-minimal-rhel9:latest
@@ -25,6 +28,9 @@ tenants:
         - name: quay-push-config
           remoteRef:
             key: ci-quay-shared
+          # Item lives in the lab_container_registries context vault.
+          secretStore:
+            name: onepassword-lab-container-registries
           asImagePullSecret: true
       # Red Hat Automation Hub offline token (from console.redhat.com/openshift/token).
       # The remote secret must contain a field `token` with the SSO offline token.
@@ -32,6 +38,9 @@ tenants:
         - name: rh-automationhub-credentials
           remoteRef:
             key: rh-automationhub-credentials
+          # Item lives in the lab_redhat context vault.
+          secretStore:
+            name: onepassword-lab-redhat
     # Galaxy servers exposed to ansible-builder PipelineRuns. Repository params
     # are interpolated into PipelineRun YAML at trigger time (PaC {{ name }}
     # syntax); the pipeline turns them into ANSIBLE_GALAXY_SERVER_<NAME>_*

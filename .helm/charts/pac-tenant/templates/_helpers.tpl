@@ -29,15 +29,21 @@ true
 
 {{/*
 pac-tenant.secretStoreRef — renders the spec.secretStoreRef block for an
-ExternalSecret using the chart-level secretStore.{kind,name} config.
+ExternalSecret. Each secret may point at its own store via an optional
+per-secret `secretStore.{kind,name}` override; unset fields fall back to the
+chart-level secretStore.{kind,name} default. This lets ExternalSecrets whose
+items live in different context vaults each reference the matching per-vault
+ClusterSecretStore.
 Usage:
   spec:
     secretStoreRef:
-      {{- include "pac-tenant.secretStoreRef" $ | nindent 6 }}
+      {{- include "pac-tenant.secretStoreRef" (dict "root" $ "store" $secret.secretStore) | nindent 6 }}
 */}}
 {{- define "pac-tenant.secretStoreRef" -}}
-kind: {{ .Values.secretStore.kind | quote }}
-name: {{ .Values.secretStore.name | quote }}
+{{- $root := .root -}}
+{{- $store := .store | default dict -}}
+kind: {{ $store.kind | default $root.Values.secretStore.kind | quote }}
+name: {{ $store.name | default $root.Values.secretStore.name | quote }}
 {{- end -}}
 
 {{/*
