@@ -8,6 +8,8 @@ metadata:
     argocd.argoproj.io/sync-wave: '0'
 spec:
   addresses:
-    - 10.10.151.0/24
+    # Low /25 — ocp's half of the iot tier. rk8s (igou-kubernetes) owns
+    # 10.10.151.128/25. rb5009's metallb-in filter enforces the split.
+    - 10.10.151.1-10.10.151.127
   autoAssign: false
   avoidBuggyIPs: true

@@ -8,6 +8,9 @@ metadata:
     argocd.argoproj.io/sync-wave: '0'
 spec:
   addresses:
-    - 10.10.152.0/24
+    # Low /25 — ocp's half of the guest-dmz tier; carries the live jellyfin
+    # (.1) and dmz gateway (.3) VIPs. rk8s (igou-kubernetes) owns
+    # 10.10.152.128/25. rb5009's metallb-in filter enforces the split.
+    - 10.10.152.1-10.10.152.127
   autoAssign: false
   avoidBuggyIPs: true
