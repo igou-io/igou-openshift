@@ -15,9 +15,14 @@ spec:
     - name: truenas.disk
       rules:
         - alert: ColdDiskLatencyOutlier
+          # Absolute floor (> 200 ms busy ≈ >20% util) guards against the
+          # median collapsing to 0 when the pool is idle, which would turn the
+          # ">3× median" test into ">0" and fire on any trivially-busy disk.
           expr: >
             netdata_Disk_Busy_Time_Milliseconds_average{disk=~"ZC16MM71|YVKX3BSK|YVKU4R7K|YHJBKNGA|YHJDPJTA|PN2234P9JSE1UW"}
               > 3 * scalar(quantile(0.5, netdata_Disk_Busy_Time_Milliseconds_average{disk=~"ZC16MM71|YVKX3BSK|YVKU4R7K|YHJBKNGA|YHJDPJTA|PN2234P9JSE1UW"}))
+              and
+            netdata_Disk_Busy_Time_Milliseconds_average{disk=~"ZC16MM71|YVKX3BSK|YVKU4R7K|YHJBKNGA|YHJDPJTA|PN2234P9JSE1UW"} > 200
           for: 30m
           labels:
             severity: warning
@@ -41,7 +46,7 @@ spec:
               a whole-box outage.
         - alert: DiskTempHigh
           expr: >
-            smartctl_device_temperature{device!="sdk"} > 60
+            smartctl_device_temperature{device!="sdk", temperature_type="current"} > 60
           for: 10m
           labels:
             severity: critical
@@ -53,9 +58,9 @@ spec:
               for stable drive identity.
         - alert: DiskTempWarn
           expr: >
-            (smartctl_device_temperature{device!="sdk"} > 50)
+            (smartctl_device_temperature{device!="sdk", temperature_type="current"} > 50)
               and
-            (smartctl_device_temperature{device!="sdk"} <= 60)
+            (smartctl_device_temperature{device!="sdk", temperature_type="current"} <= 60)
           for: 10m
           labels:
             severity: warning
@@ -107,14 +112,16 @@ spec:
               degrades further.
         - alert: SATASectorErrors
           expr: >
-            smartctl_device_attribute{attribute_name=~"Reallocated_Sector_Ct|Current_Pending_Sector|Offline_Uncorrectable", attribute_value_type="raw"} > 0
+            (smartctl_device_attribute{attribute_name=~"Reallocated_Sector_Ct|Current_Pending_Sector|Offline_Uncorrectable", attribute_value_type="raw"}
+              * on(device) group_left(serial_number,model_name) smartctl_device) > 0
           for: 10m
           labels:
             severity: warning
           annotations:
-            summary: SATA sector errors on {{ $labels.device }}
+            summary: SATA sector errors on {{ $labels.device }} ({{ $labels.serial_number }})
             description: |
-              SATA disk {{ $labels.device }} on {{ $labels.instance }} has
+              SATA disk {{ $labels.device }} ({{ $labels.serial_number }},
+              {{ $labels.model_name }}) on {{ $labels.instance }} has
               {{ $labels.attribute_name }} raw value {{ $value | humanize }}.
         - alert: NVMeWearHigh
           expr: smartctl_device_percentage_used > 80
