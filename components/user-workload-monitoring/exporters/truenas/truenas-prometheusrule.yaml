@@ -28,7 +28,7 @@ spec:
               been more than 3× the pool median for 30m - likely a slow or
               ailing drive.
         - alert: BootDeviceOverTemp
-          expr: smartctl_device_temperature{device="sdk"} > 65
+          expr: smartctl_device_temperature{device="sdk"} > 85
           for: 5m
           labels:
             severity: warning
@@ -36,8 +36,9 @@ spec:
             summary: SATADOM boot device overheating
             description: |
               SATADOM boot device sdk on {{ $labels.instance }} is
-              {{ $value | humanize }}C. It normally runs 72-73C; boot-device
-              failure means a whole-box outage.
+              {{ $value | humanize }}C. It normally runs 72-73C; this alert
+              fires above 85C, where boot-device failure is imminent and means
+              a whole-box outage.
         - alert: DiskTempHigh
           expr: >
             smartctl_device_temperature{device!="sdk"} > 60
@@ -52,28 +53,32 @@ spec:
               for stable drive identity.
         - alert: DiskTempWarn
           expr: >
-            smartctl_device_temperature{device!="sdk"} > 50
+            (smartctl_device_temperature{device!="sdk"} > 50)
+              and
+            (smartctl_device_temperature{device!="sdk"} <= 60)
           for: 10m
           labels:
             severity: warning
           annotations:
-            summary: Disk {{ $labels.device }} temperature high
+            summary: Disk {{ $labels.device }} temperature elevated
             description: |
               Disk {{ $labels.device }} on {{ $labels.instance }} is
-              {{ $value | humanize }}C. Check the SMART serial/model labels
-              for stable drive identity.
+              {{ $value | humanize }}C (warn band 50-60C). Check the SMART
+              serial/model labels for stable drive identity.
     - name: truenas.smart
       rules:
         - alert: SmartFailurePredicted
-          expr: smartctl_device_smart_status == 0
+          expr: >
+            (smartctl_device_smart_status * on(device) group_left(serial_number,model_name) smartctl_device) == 0
           for: 5m
           labels:
             severity: critical
           annotations:
             summary: SMART failure predicted for {{ $labels.device }} ({{ $labels.serial_number }})
             description: |
-              SMART status for {{ $labels.device }} on {{ $labels.instance }}
-              reports failure predicted. Replace the device before it fails.
+              SMART status for {{ $labels.device }} ({{ $labels.serial_number }},
+              {{ $labels.model_name }}) on {{ $labels.instance }} reports failure
+              predicted. Replace the device before it fails.
         - alert: SASGrownDefects
           expr: >
             (smartctl_scsi_grown_defect_list * on(device) group_left(serial_number,model_name) smartctl_device) > 0
@@ -87,17 +92,19 @@ spec:
               {{ $labels.model_name }}) has a non-zero grown defect list.
         - alert: SASUncorrectedErrors
           expr: >
-            (smartctl_read_total_uncorrected_errors > 0)
-              or (smartctl_write_total_uncorrected_errors > 0)
+            ((smartctl_read_total_uncorrected_errors * on(device) group_left(serial_number,model_name) smartctl_device) > 0)
+              or
+            ((smartctl_write_total_uncorrected_errors * on(device) group_left(serial_number,model_name) smartctl_device) > 0)
           for: 10m
           labels:
             severity: critical
           annotations:
-            summary: SAS uncorrected errors on {{ $labels.device }}
+            summary: SAS uncorrected errors on {{ $labels.device }} ({{ $labels.serial_number }})
             description: |
-              SAS disk {{ $labels.device }} on {{ $labels.instance }} has
-              read or write uncorrected errors. Use smartctl_device to map the
-              current device name to serial and model.
+              SAS disk {{ $labels.device }} ({{ $labels.serial_number }},
+              {{ $labels.model_name }}) on {{ $labels.instance }} has read or
+              write uncorrected errors. Inspect with smartctl before the drive
+              degrades further.
         - alert: SATASectorErrors
           expr: >
             smartctl_device_attribute{attribute_name=~"Reallocated_Sector_Ct|Current_Pending_Sector|Offline_Uncorrectable", attribute_value_type="raw"} > 0
@@ -133,7 +140,7 @@ spec:
     - name: truenas.chassis
       rules:
         - alert: IPMISensorCritical
-          expr: ipmi_sensor_state{name!~"Chassis Intru.*"} >= 2
+          expr: ipmi_sensor_state{name!~"Chassis Intru.*"} == 2
           for: 5m
           labels:
             severity: critical
@@ -141,7 +148,8 @@ spec:
             summary: IPMI sensor {{ $labels.name }} critical on {{ $labels.instance }}
             description: |
               IPMI sensor {{ $labels.name }} on {{ $labels.instance }} is in
-              a critical state. The stale Chassis Intru sensor is excluded.
+              a critical state (state=2). The stale Chassis Intru sensor is
+              excluded.
         - alert: IPMIFanStopped
           expr: ipmi_fan_speed_rpm == 0
           for: 2m
