@@ -1,0 +1,187 @@
+---
+# TrueNAS alerts for the netdata, smartctl, and IPMI exporters on VLAN9.
+# severity critical/warning routes to the EDA GitHub-issue pipeline +
+# Gotify/Slack via the platform Alertmanager.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: truenas
+  labels:
+    app.kubernetes.io/name: truenas
+    app.kubernetes.io/part-of: truenas
+    openshift.io/prometheus-rule-evaluation-scope: leaf-prometheus
+spec:
+  groups:
+    - name: truenas.disk
+      rules:
+        - alert: ColdDiskLatencyOutlier
+          expr: >
+            netdata_Disk_Busy_Time_Milliseconds_average{disk=~"ZC16MM71|YVKX3BSK|YVKU4R7K|YHJBKNGA|YHJDPJTA|PN2234P9JSE1UW"}
+              > 3 * scalar(quantile(0.5, netdata_Disk_Busy_Time_Milliseconds_average{disk=~"ZC16MM71|YVKX3BSK|YVKU4R7K|YHJBKNGA|YHJDPJTA|PN2234P9JSE1UW"}))
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: Cold data disk {{ $labels.disk }} busy-time > 3× pool median
+            description: |
+              Disk {{ $labels.disk }} busy-time on {{ $labels.instance }} has
+              been more than 3× the pool median for 30m - likely a slow or
+              ailing drive.
+        - alert: BootDeviceOverTemp
+          expr: smartctl_device_temperature{device="sdk"} > 65
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: SATADOM boot device overheating
+            description: |
+              SATADOM boot device sdk on {{ $labels.instance }} is
+              {{ $value | humanize }}C. It normally runs 72-73C; boot-device
+              failure means a whole-box outage.
+        - alert: DiskTempHigh
+          expr: >
+            smartctl_device_temperature{device!="sdk"} > 60
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: Disk {{ $labels.device }} temperature critical
+            description: |
+              Disk {{ $labels.device }} on {{ $labels.instance }} is
+              {{ $value | humanize }}C. Check the SMART serial/model labels
+              for stable drive identity.
+        - alert: DiskTempWarn
+          expr: >
+            smartctl_device_temperature{device!="sdk"} > 50
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: Disk {{ $labels.device }} temperature high
+            description: |
+              Disk {{ $labels.device }} on {{ $labels.instance }} is
+              {{ $value | humanize }}C. Check the SMART serial/model labels
+              for stable drive identity.
+    - name: truenas.smart
+      rules:
+        - alert: SmartFailurePredicted
+          expr: smartctl_device_smart_status == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: SMART failure predicted for {{ $labels.device }} ({{ $labels.serial_number }})
+            description: |
+              SMART status for {{ $labels.device }} on {{ $labels.instance }}
+              reports failure predicted. Replace the device before it fails.
+        - alert: SASGrownDefects
+          expr: >
+            (smartctl_scsi_grown_defect_list * on(device) group_left(serial_number,model_name) smartctl_device) > 0
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: SAS grown defect list non-zero on {{ $labels.device }} ({{ $labels.serial_number }})
+            description: |
+              SAS disk {{ $labels.device }} ({{ $labels.serial_number }},
+              {{ $labels.model_name }}) has a non-zero grown defect list.
+        - alert: SASUncorrectedErrors
+          expr: >
+            (smartctl_read_total_uncorrected_errors > 0)
+              or (smartctl_write_total_uncorrected_errors > 0)
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: SAS uncorrected errors on {{ $labels.device }}
+            description: |
+              SAS disk {{ $labels.device }} on {{ $labels.instance }} has
+              read or write uncorrected errors. Use smartctl_device to map the
+              current device name to serial and model.
+        - alert: SATASectorErrors
+          expr: >
+            smartctl_device_attribute{attribute_name=~"Reallocated_Sector_Ct|Current_Pending_Sector|Offline_Uncorrectable", attribute_value_type="raw"} > 0
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: SATA sector errors on {{ $labels.device }}
+            description: |
+              SATA disk {{ $labels.device }} on {{ $labels.instance }} has
+              {{ $labels.attribute_name }} raw value {{ $value | humanize }}.
+        - alert: NVMeWearHigh
+          expr: smartctl_device_percentage_used > 80
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: NVMe wear high on {{ $labels.device }}
+            description: |
+              NVMe device {{ $labels.device }} on {{ $labels.instance }} has
+              {{ $value | humanize }}% lifetime used.
+        - alert: NVMeSpareLow
+          expr: >
+            smartctl_device_available_spare < smartctl_device_available_spare_threshold
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: NVMe spare below threshold on {{ $labels.device }}
+            description: |
+              NVMe device {{ $labels.device }} on {{ $labels.instance }} has
+              available spare below the device threshold.
+    - name: truenas.chassis
+      rules:
+        - alert: IPMISensorCritical
+          expr: ipmi_sensor_state{name!~"Chassis Intru.*"} >= 2
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: IPMI sensor {{ $labels.name }} critical on {{ $labels.instance }}
+            description: |
+              IPMI sensor {{ $labels.name }} on {{ $labels.instance }} is in
+              a critical state. The stale Chassis Intru sensor is excluded.
+        - alert: IPMIFanStopped
+          expr: ipmi_fan_speed_rpm == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: IPMI fan {{ $labels.name }} stopped on {{ $labels.instance }}
+            description: |
+              IPMI fan {{ $labels.name }} on {{ $labels.instance }} reports
+              0 RPM. Unpopulated FAN3/FAN6 emit no series, so this is safe.
+        - alert: IPMINICTempHigh
+          expr: ipmi_temperature_celsius{name=~"MB_NIC.*"} > 88
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Onboard NIC temperature high
+            description: |
+              Onboard NIC sensor {{ $labels.name }} on {{ $labels.instance }}
+              is {{ $value | humanize }}C.
+        - alert: IPMIPowerSupplyDegraded
+          expr: ipmi_sensor_state{name=~"PS.*"} >= 1
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: Power supply {{ $labels.name }} degraded
+            description: |
+              Power supply {{ $labels.name }} on {{ $labels.instance }} is
+              degraded. This is a single-PSU box with no redundancy.
+    - name: truenas.scrape
+      rules:
+        - alert: TrueNASExporterDown
+          expr: up{job=~"truenas-.*"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: TrueNAS exporter {{ $labels.job }} scrape failing
+            description: |
+              UWM Prometheus cannot scrape {{ $labels.job }} on
+              {{ $labels.instance }}. This alert is per exporter target
+              because netdata, smartctl, and ipmi use separate ServiceMonitors.

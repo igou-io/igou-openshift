@@ -7,6 +7,7 @@ resources:
   - exporters/blackbox-exporter
   - exporters/mktxp
   - exporters/upsmonitor
+  - exporters/truenas
   - servicemonitors/argocd-servicemonitor.yaml
   - servicemonitors/cert-manager-servicemonitor.yaml
   - servicemonitors/external-secrets-podmonitor.yaml
