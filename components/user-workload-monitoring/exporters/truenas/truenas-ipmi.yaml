@@ -1,0 +1,58 @@
+---
+# ipmi_exporter on TrueNAS (VLAN9), scraped DIRECTLY over the LAN.
+# Selectorless Service + manual Endpoints point UWM Prometheus at the NAS'
+# static address.
+apiVersion: v1
+kind: Service
+metadata:
+  name: truenas-ipmi
+  labels:
+    app.kubernetes.io/name: truenas-ipmi
+    app.kubernetes.io/part-of: truenas
+spec:
+  clusterIP: None
+  ports:
+    - name: metrics
+      port: 9290
+      targetPort: 9290
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  # Must match the Service name for endpoint discovery.
+  name: truenas-ipmi
+  labels:
+    app.kubernetes.io/name: truenas-ipmi
+    app.kubernetes.io/part-of: truenas
+subsets:
+  - addresses:
+      - ip: 10.10.9.243
+    ports:
+      - name: metrics
+        port: 9290
+        protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: truenas-ipmi
+  labels:
+    app.kubernetes.io/name: truenas-ipmi
+    app.kubernetes.io/part-of: truenas
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: truenas-ipmi
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+      relabelings:
+        # The target address is a bare IP; name the real source.
+        # action: replace is the CRD default - set explicitly so the
+        # rendered manifest matches the live object and ArgoCD stays Synced.
+        - action: replace
+          targetLabel: instance
+          replacement: truenas.igou.systems

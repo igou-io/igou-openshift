@@ -1,0 +1,68 @@
+---
+# Netdata Prometheus proxy on TrueNAS (VLAN9), scraped DIRECTLY over the LAN.
+# Selectorless Service + manual Endpoints point UWM Prometheus at the NAS'
+# static address. Classic Endpoints (not EndpointSlice): the mirroring
+# controller derives the slice automatically, so discovery works for both
+# endpoint roles.
+apiVersion: v1
+kind: Service
+metadata:
+  name: truenas-netdata
+  labels:
+    app.kubernetes.io/name: truenas-netdata
+    app.kubernetes.io/part-of: truenas
+spec:
+  clusterIP: None
+  ports:
+    - name: metrics
+      port: 9998
+      targetPort: 9998
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  # Must match the Service name for endpoint discovery.
+  name: truenas-netdata
+  labels:
+    app.kubernetes.io/name: truenas-netdata
+    app.kubernetes.io/part-of: truenas
+subsets:
+  - addresses:
+      - ip: 10.10.9.243
+    ports:
+      - name: metrics
+        port: 9998
+        protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: truenas-netdata
+  labels:
+    app.kubernetes.io/name: truenas-netdata
+    app.kubernetes.io/part-of: truenas
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: truenas-netdata
+  endpoints:
+    - port: metrics
+      path: /api/v1/allmetrics
+      params:
+        format:
+          - prometheus
+      interval: 30s
+      scrapeTimeout: 10s
+      relabelings:
+        # The target address is a bare IP; name the real source.
+        # action: replace is the CRD default - set explicitly so the
+        # rendered manifest matches the live object and ArgoCD stays Synced.
+        - action: replace
+          targetLabel: instance
+          replacement: truenas.igou.systems
+      metricRelabelings:
+        - sourceLabels: [chart]
+          regex: '.*_serial(?:_lunid)?_([^_]+).*'
+          targetLabel: disk
+          replacement: '${1}'
