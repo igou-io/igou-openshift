@@ -24,6 +24,8 @@ resources:
   - grafana-dashboard-external-secrets.yaml
   - grafana-dashboard-nut-exporter.yaml
   - grafana-dashboard-truenas.yaml
+  - grafana-dashboard-15765.yaml
+  - grafana-dashboard-22604.yaml
 # Vendored dashboard JSON (see grafana-dashboard-nut-exporter.yaml for why
 # it cannot come from spec.grafanaCom). Stable name: the GrafanaDashboard
 # CR references the ConfigMap by name.
