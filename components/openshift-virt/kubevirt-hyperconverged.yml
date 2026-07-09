@@ -7,6 +7,18 @@ metadata:
     argocd.argoproj.io/sync-wave: "3"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
+  # Backend storage for persistent vTPM + persistent EFI (NVRAM) state PVCs.
+  # Every Windows VM here carries persistent vTPM + EFI (baked into the
+  # windows.* ClusterPreferences), and KubeVirt stores that state in a small
+  # per-VM PVC. Resolution order is this field -> SC annotated
+  # storageclass.kubevirt.io/is-default-virt-class -> cluster default. Both of
+  # the latter are unset, so it would silently fall to freenas-nvmeof-ssd-csi
+  # (Block, RWO) — but TPM/EFI state needs Filesystem mode. Pin it explicitly to
+  # an NFS (Filesystem-native, RWX) class. Performance is irrelevant for a
+  # boot-time-read state volume. This must be set BEFORE the first VM with
+  # persistent TPM/EFI state is created (changing it later orphans state PVCs).
+  # See igou-io/igou-openshift#380 (Phase 0).
+  vmStateStorageClass: freenas-nfs-ssd-csi
   # This cluster does NOT support live migration by design: we run RWO block
   # storage only (no RWX block), so VM disks can't be shared across nodes and
   # VMs are never migratable. A short outage to power-cycle a VM during node
