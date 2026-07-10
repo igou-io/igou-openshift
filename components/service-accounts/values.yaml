@@ -43,6 +43,54 @@ clusterRoles:
         verbs:
           - get
           - list
+      # VMI reads let scenarios wait on install progress (phase, guest-agent
+      # AgentConnected condition) — the VMI carries that status, not the VM.
+      - apiGroups:
+          - kubevirt.io
+        resources:
+          - virtualmachineinstances
+        verbs:
+          - get
+          - list
+          - watch
+      # The Windows golden-image build (igou-ansible#343) drives the VM
+      # imperatively: start/stop around sysprep, and VNC for the ISO
+      # "press any key" CD-boot keypress helper.
+      - apiGroups:
+          - subresources.kubevirt.io
+        resources:
+          - virtualmachines/start
+          - virtualmachines/stop
+          - virtualmachines/restart
+          - virtualmachineinstances/console
+          - virtualmachineinstances/vnc
+        verbs:
+          - get
+          - update
+      # Sysprep/autounattend payloads mounted into the build VM. Secrets
+      # included because the rendered autounattend carries the admin password.
+      - apiGroups:
+          - ""
+        resources:
+          - configmaps
+          - secrets
+        verbs:
+          - get
+          - list
+          - watch
+          - create
+          - delete
+          - patch
+          - update
+      # Read-only: watch DV-owned PVCs reach Bound during import/clone.
+      - apiGroups:
+          - ""
+        resources:
+          - persistentvolumeclaims
+        verbs:
+          - get
+          - list
+          - watch
       # DataVolumes let molecule scenarios boot from CDI-managed golden images
       # (dataVolumeTemplates on the VM). Paired with golden-image-cloner below
       # for the cross-namespace clone authorization.
@@ -56,11 +104,35 @@ clusterRoles:
           - watch
           - create
           - delete
+      # Same-namespace clone authorization (capture the generalized disk and
+      # boot verify VMs from it, all inside the molecule namespace).
+      - apiGroups:
+          - cdi.kubevirt.io
+        resources:
+          - datavolumes/source
+        verbs:
+          - create
+      # Golden images built by molecule are published as DataSources in the
+      # molecule namespace itself — never in openshift-virtualization-os-images.
+      - apiGroups:
+          - cdi.kubevirt.io
+        resources:
+          - datasources
+        verbs:
+          - get
+          - list
+          - watch
+          - create
+          - delete
+          - patch
+          - update
 
   # CDI cross-namespace clone authorization: creating a DataVolume that clones
   # from another namespace requires `datavolumes/source create` in the SOURCE
-  # namespace. Bound to ansible-molecule in openshift-virtualization-os-images
-  # so molecule VMs can boot from the DataImportCron golden images.
+  # namespace, plus read on the source DataVolume to check it is ready. Bound
+  # to ansible-molecule in openshift-virtualization-os-images (boot from the
+  # DataImportCron golden images) and in windows-images (clone the installer
+  # ISO DVs into the molecule namespace for the golden-image build).
   - name: golden-image-cloner
     rules:
       - apiGroups:
@@ -69,6 +141,14 @@ clusterRoles:
           - datavolumes/source
         verbs:
           - create
+      - apiGroups:
+          - cdi.kubevirt.io
+        resources:
+          - datavolumes
+        verbs:
+          - get
+          - list
+          - watch
 
   - name: virtualmachine-reader
     rules:
@@ -232,6 +312,11 @@ serviceAccounts:
         clusterRoles:
           - molecule-kubernetes
       - namespace: openshift-virtualization-os-images
+        clusterRoles:
+          - golden-image-cloner
+      # Source-side grant for the windows-build-golden-image scenario: clone
+      # the installer ISO DataVolumes into the molecule build namespace.
+      - namespace: windows-images
         clusterRoles:
           - golden-image-cloner
     clusterRoleBindings:
