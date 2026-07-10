@@ -1,0 +1,103 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: @@NAME@@
+  namespace: windows-images
+  labels:
+    app.kubernetes.io/part-of: windows-vm-verify
+    windows-edition: "@@NAME@@"
+spec:
+  runStrategy: RerunOnFailure
+  preference:
+    kind: virtualmachineclusterpreference
+    name: @@PREFERENCE@@
+  dataVolumeTemplates:
+  - metadata:
+      name: @@NAME@@-rootdisk
+    spec:
+      source:
+        blank: {}
+      storage:
+        resources:
+          requests:
+            storage: 50Gi
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: @@NAME@@
+    spec:
+      # Keep Windows VMs OFF the TrueNAS-hosted worker (nested virt unsupported).
+      # Belt-and-suspenders with the HCO workloads nodePlacement exclusion.
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: NotIn
+                    values:
+                      # SHORT hostname — the node's kubernetes.io/hostname label is
+                      # "truenas-w1", not the FQDN (verified on the live cluster;
+                      # every other node uses its FQDN). FQDN here silently never
+                      # matches, so the exclusion is a no-op. See README / #420.
+                      - truenas-w1
+      domain:
+        cpu:
+          # windows.11 client preference requires the 2 vCPUs presented as
+          # sockets (server preferences accept it too). Win11 supports 2 sockets.
+          cores: 1
+          sockets: 2
+          threads: 1
+        memory:
+          guest: 6Gi
+        firmware:
+          # Non-persistent EFI: NVRAM lives in the virt-launcher for the life of
+          # the VMI and survives guest reboots (install completes fine). Only a
+          # full VM stop/start resets it — acceptable for install-and-verify.
+          # secureBoot required for Windows 11 client install; harmless for Server.
+          bootloader:
+            efi:
+              secureBoot: true
+        features:
+          smm:
+            enabled: true
+          acpi: {}
+        devices:
+          # Non-persistent vTPM (satisfies Win 11 TPM 2.0 install check).
+          tpm: {}
+          disks:
+          - name: rootdisk
+            bootOrder: 1
+            disk:
+              bus: sata
+          - name: installcd
+            bootOrder: 2
+            cdrom:
+              bus: sata
+          - name: virtiodrivers
+            cdrom:
+              bus: sata
+          - name: sysprep
+            cdrom:
+              bus: sata
+          interfaces:
+          - name: default
+            masquerade: {}
+            model: e1000e
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - name: rootdisk
+        dataVolume:
+          name: @@NAME@@-rootdisk
+      - name: installcd
+        persistentVolumeClaim:
+          claimName: @@ISOPVC@@
+      - name: virtiodrivers
+        containerDisk:
+          image: registry.redhat.io/container-native-virtualization/virtio-win-rhel9@sha256:cc98b37978b84b5fe7127c08d52a09c8c136c61ae51085a3f3180e3e11275497
+      - name: sysprep
+        sysprep:
+          configMap:
+            name: @@NAME@@-unattend

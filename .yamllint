@@ -3,6 +3,8 @@ extends: default
 ignore:
   - .helm/charts/*/templates/
   - tools/kube-burner/*/templates/
+  # sed-templated installer manifests with @@SENTINEL@@ placeholders (not valid YAML)
+  - test-workloads/windows-vms/examples/
 
 rules:
   line-length:
