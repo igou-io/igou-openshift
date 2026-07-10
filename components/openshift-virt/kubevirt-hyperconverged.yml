@@ -18,11 +18,22 @@ metadata:
     # while CDI worker pods stay on the always-on workers. Note: HCO reports
     # jsonpatch annotations as an unsupported modification
     # (kubevirt_hco_unsafe_modification_count metric) — accepted trade-off.
+    #
+    # This must be "replace" with an empty list, NOT "remove": HCO applies the
+    # patch to the marshaled desired CDI and then json.Unmarshals the result
+    # back into the same populated Go struct (applyAnnotationPatch in
+    # controllers/operands/operand.go). Go's Unmarshal leaves struct fields
+    # untouched when their key is absent from the JSON, so a removed key
+    # silently keeps its old value — "remove" ops are no-ops for every HCO
+    # jsonpatch annotation. "replace" keeps the key present so the unmarshal
+    # actually clears the field, and HCO's ReformatObj normalizes the empty
+    # list back to nil, so the operand doesn't flap.
     containerizeddataimporter.kubevirt.io/jsonpatch: |-
       [
         {
-          "op": "remove",
-          "path": "/spec/workload/tolerations"
+          "op": "replace",
+          "path": "/spec/workload/tolerations",
+          "value": []
         }
       ]
 spec:
