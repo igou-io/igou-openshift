@@ -7,4 +7,5 @@ resources:
   - truenas-netdata.yaml
   - truenas-smartctl.yaml
   - truenas-ipmi.yaml
+  - truenas-zfs.yaml
   - truenas-prometheusrule.yaml
