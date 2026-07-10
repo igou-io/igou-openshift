@@ -1,0 +1,52 @@
+---
+# One-time bootstrap: seeds the database (long-running, rate-limited
+# upstream, resumable — if it dies partway, re-apply and it continues).
+#
+#   oc apply -f applications/sands-of-time/sands-of-time-bootstrap-job.yaml
+#
+# Intentionally NOT in kustomization.yaml; run it once by hand, then the
+# serve process keeps itself current.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sands-of-time-bootstrap
+  namespace: sands-of-time
+  labels:
+    app.kubernetes.io/name: sands-of-time
+spec:
+  backoffLimit: 4
+  template:
+    spec:
+      restartPolicy: OnFailure
+      imagePullSecrets:
+        - name: ghcr-pull
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: bootstrap
+          image: ghcr.io/david-igou/sands-of-time:latest@sha256:1d59381495432e6978b2e8fd0ed2c00b12086a000970a9e6c68a8f0d62f296b4
+          command: ["sh", "-c"]
+          # load-drops first (offline, fast): it creates tables the serve
+          # pod's probes need, so it goes Ready long before the slow step.
+          args:
+            - sands-of-time load-drops && sands-of-time hydrate && sands-of-time daily
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: sands-of-time-data
