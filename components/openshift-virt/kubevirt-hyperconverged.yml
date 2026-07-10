@@ -6,6 +6,25 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "3"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    # HCO copies spec.workloads.nodePlacement verbatim onto every workload
+    # component it manages, including the CDI CR. That made transient CDI pods
+    # (importer-prime / cdi-upload-prime) tolerate casval's workload=burst
+    # taint, so the CAPI cluster-autoscaler treated the casval-worker node
+    # group as a valid home for them and booted the burst node during plain
+    # DataVolume imports/clones (3x on 2026-07-09, each node came up empty and
+    # was scaled back down ~40min later). Strip the tolerations from the CDI CR
+    # only: virt-handler keeps them (it must run on casval for opt-in VMs to
+    # schedule there, and DaemonSet pods never trigger autoscaler scale-up),
+    # while CDI worker pods stay on the always-on workers. Note: HCO reports
+    # jsonpatch annotations as an unsupported modification
+    # (kubevirt_hco_unsafe_modification_count metric) — accepted trade-off.
+    containerizeddataimporter.kubevirt.io/jsonpatch: |-
+      [
+        {
+          "op": "remove",
+          "path": "/spec/workload/tolerations"
+        }
+      ]
 spec:
   # This cluster does NOT support live migration by design: we run RWO block
   # storage only (no RWX block), so VM disks can't be shared across nodes and
@@ -24,7 +43,9 @@ spec:
   # Allow virt-handler (and virt-launcher pods it spawns) onto the casval burst
   # worker, which carries workload=burst:NoSchedule from the CAPI MachineSet.
   # HCO propagates this to the virt-handler DaemonSet so VMs that opt in via
-  # matching nodeSelector + toleration can run there.
+  # matching nodeSelector + toleration can run there. CDI is deliberately
+  # excluded via the containerizeddataimporter.kubevirt.io/jsonpatch
+  # annotation above — see the comment there.
   workloads:
     nodePlacement:
       # Keep virt-handler (and therefore VM scheduling) OFF truenas-w1:
