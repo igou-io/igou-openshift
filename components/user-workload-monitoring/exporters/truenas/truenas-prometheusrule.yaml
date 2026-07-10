@@ -269,3 +269,17 @@ spec:
           expr: sum by (pool, dimension) (disk:truenas_disk_throughput_bytes)
         - record: pool:truenas_disk_iops:sum
           expr: sum by (pool, dimension) (disk:truenas_disk_iops)
+    # Aggregate throughput across EVERY drive on the SAS backplane
+    # (826EL1 expander behind the SAS3008), regardless of pool membership:
+    # ssd EVOs + BX500 scratch + cold members + both spares. Excluded: the
+    # SATADOM (mobo ata9) and all NVMe - they do not ride this fabric.
+    # Ceiling per direction (full duplex, verified 2026-07-10): HBA uplink
+    # 8x12Gb wide port = 9.6 GB/s; binding cap = PCIe Gen3 x8 = 7.88 GB/s
+    # raw / ~6.8 GB/s practical. Current 12-drive population tops out
+    # ~3.9 GB/s, so this is capacity-planning telemetry, not an alert basis.
+    - name: truenas.recording.backplane
+      rules:
+        - record: sas:truenas_backplane_throughput_bytes:sum
+          expr: >
+            sum by (dimension, instance) ({__name__=~"netdata_Read_Write_for_disk_.*_KiB_persec_average",
+            disk=~"S753NS0X206644B|S753NS0X206645D|2515E9B3E0E1|2515E9B3E121|ZC16MM71|YVKX3BSK|YVKU4R7K|YHJBKNGA|YHJDPJTA|PN2234P9JSE1UW|ZC16Q4Z6|P9JTUH8W"}) * 1024
