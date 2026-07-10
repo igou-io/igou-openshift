@@ -351,6 +351,14 @@ applications:
     source:
       path: applications/gotify
 
+  sands-of-time:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/sands-of-time
+
   forgejo:
     project: cluster-apps
     annotations:

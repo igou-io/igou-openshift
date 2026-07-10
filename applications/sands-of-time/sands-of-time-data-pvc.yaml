@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sands-of-time-data
+  namespace: sands-of-time
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      # Fully hydrated SQLite DB is ~700Mi and grows ~5Mi/day plus hourly
+      # real-time bars; 5Gi gives multi-year headroom.
+      storage: 5Gi
+  storageClassName: freenas-nvmeof-ssd-csi

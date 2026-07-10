@@ -1,0 +1,55 @@
+---
+# One-time bootstrap: full price backfill from the Weird Gloop API (~80 min,
+# throttled to 1 req/s) + boss drop tables from the CSV snapshot baked into
+# the image (offline). Resumable — if it dies partway, re-apply and it skips
+# items already hydrated.
+#
+#   oc apply -f applications/sands-of-time/sands-of-time-bootstrap-job.yaml
+#
+# Intentionally NOT in kustomization.yaml; run it once by hand, then the
+# serve process keeps itself current (daily bulk update + startup repair).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sands-of-time-bootstrap
+  namespace: sands-of-time
+  labels:
+    app.kubernetes.io/name: sands-of-time
+spec:
+  backoffLimit: 4
+  template:
+    spec:
+      restartPolicy: OnFailure
+      imagePullSecrets:
+        - name: ghcr-pull
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: bootstrap
+          image: ghcr.io/david-igou/sands-of-time:latest@sha256:1d59381495432e6978b2e8fd0ed2c00b12086a000970a9e6c68a8f0d62f296b4
+          command: ["sh", "-c"]
+          args:
+            - sands-of-time hydrate && sands-of-time load-drops && sands-of-time daily
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          env:
+            - name: SOT_DB
+              value: /data/osrs_prices.db
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: sands-of-time-data

@@ -1,0 +1,19 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: sands-of-time
+
+# The bootstrap Job is intentionally not listed; apply it once by hand
+# (see README.md). No CronJob either: the serve process updates itself daily
+# from the bulk dump and repairs missed days at startup.
+resources:
+  - sands-of-time-namespace.yaml
+  - sands-of-time-data-pvc.yaml
+  - sands-of-time-deployment.yaml
+  - sands-of-time-service.yaml
+  - sands-of-time-route.yaml
+
+labels:
+  - pairs:
+      app.kubernetes.io/name: sands-of-time
+    includeSelectors: true
