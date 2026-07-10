@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: windows-images
+  labels:
+    kubernetes.io/metadata.name: windows-images
+    app.kubernetes.io/part-of: windows-vms

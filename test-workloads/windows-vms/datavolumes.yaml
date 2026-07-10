@@ -1,0 +1,125 @@
+# CDI DataVolumes that import the Microsoft Evaluation Center ISOs over HTTP from
+# public.igou.systems (TrueNAS static autoindex). One PVC per release; installer
+# VMs attach these as a cdrom. See igou-io/igou-openshift#380 Phase 2.
+#
+# The `storage` API (not spec.pvc) defers volumeMode/accessModes to the
+# StorageProfile and auto-adds filesystem overhead. deleteAfterCompletion=false
+# keeps the PVC after import so multiple VMs can reuse it.
+#
+# NOTE: initial verification (all 7 editions) was done by uploading these same
+# ISOs directly with `virtctl image-upload` while the public.igou.systems publish
+# pipeline (igou-ansible publish_windows_isos.yml + the ssd/public quota bump in
+# igou-inventory) lands. Once the ISOs are served, these DataVolumes reproduce the
+# same PVCs declaratively.
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: iso-winserver2025-eval
+  namespace: windows-images
+  annotations:
+    cdi.kubevirt.io/storage.deleteAfterCompletion: "false"
+spec:
+  source:
+    http:
+      url: https://public.igou.systems/isos/windows/winserver2025-eval-en-us.iso
+  storage:
+    resources:
+      requests:
+        storage: 9Gi
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: iso-winserver2022-eval
+  namespace: windows-images
+  annotations:
+    cdi.kubevirt.io/storage.deleteAfterCompletion: "false"
+spec:
+  source:
+    http:
+      url: https://public.igou.systems/isos/windows/winserver2022-eval-en-us.iso
+  storage:
+    resources:
+      requests:
+        storage: 6Gi
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: iso-winserver2019-eval
+  namespace: windows-images
+  annotations:
+    cdi.kubevirt.io/storage.deleteAfterCompletion: "false"
+spec:
+  source:
+    http:
+      url: https://public.igou.systems/isos/windows/winserver2019-eval-en-us.iso
+  storage:
+    resources:
+      requests:
+        storage: 7Gi
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: iso-winserver2016-eval
+  namespace: windows-images
+  annotations:
+    cdi.kubevirt.io/storage.deleteAfterCompletion: "false"
+spec:
+  source:
+    http:
+      url: https://public.igou.systems/isos/windows/winserver2016-eval-en-us.iso
+  storage:
+    resources:
+      requests:
+        storage: 8Gi
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: iso-win11-25h2-enterprise-eval
+  namespace: windows-images
+  annotations:
+    cdi.kubevirt.io/storage.deleteAfterCompletion: "false"
+spec:
+  source:
+    http:
+      url: https://public.igou.systems/isos/windows/win11-25h2-enterprise-eval-en-us.iso
+  storage:
+    resources:
+      requests:
+        storage: 9Gi
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: iso-win11-ltsc2024-enterprise-eval
+  namespace: windows-images
+  annotations:
+    cdi.kubevirt.io/storage.deleteAfterCompletion: "false"
+spec:
+  source:
+    http:
+      url: https://public.igou.systems/isos/windows/win11-ltsc2024-enterprise-eval-en-us.iso
+  storage:
+    resources:
+      requests:
+        storage: 6Gi
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: iso-win11-iot-ltsc2024-enterprise-eval
+  namespace: windows-images
+  annotations:
+    cdi.kubevirt.io/storage.deleteAfterCompletion: "false"
+spec:
+  source:
+    http:
+      url: https://public.igou.systems/isos/windows/win11-iot-ltsc2024-enterprise-eval-en-us.iso
+  storage:
+    resources:
+      requests:
+        storage: 6Gi
