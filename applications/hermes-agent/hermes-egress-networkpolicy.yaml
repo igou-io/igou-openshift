@@ -69,6 +69,20 @@ spec:
       ports:
         - protocol: TCP
           port: 3002
+    # in-cluster sands-of-time API (east-west). Hermes reads the HTTP API via
+    # the ClusterIP service (port 80 -> pod 8000); NetworkPolicy matches the
+    # post-DNAT pod port. Read-only consumer — the app's admin surface is
+    # bearer-token gated, this rule only grants network reach.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: sands-of-time
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: sands-of-time
+      ports:
+        - protocol: TCP
+          port: 8000
     # in-cluster Quay registry (image pull)
     - to:
         - namespaceSelector:
