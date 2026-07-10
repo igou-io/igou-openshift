@@ -1,16 +1,19 @@
-# CDI DataVolumes that import the Microsoft Evaluation Center ISOs over HTTP from
-# public.igou.systems (TrueNAS static autoindex). One PVC per release; installer
-# VMs attach these as a cdrom. See igou-io/igou-openshift#380 Phase 2.
+# The only Windows ISOs kept live on the cluster (GitOps-managed): the latest
+# Server and the latest desktop eval. CDI imports each over HTTP from
+# public.igou.systems (TrueNAS static autoindex) into the windows-images
+# namespace; installer/build VMs attach these as a cdrom. See #380.
 #
-# The `storage` API (not spec.pvc) defers volumeMode/accessModes to the
-# StorageProfile and auto-adds filesystem overhead. deleteAfterCompletion=false
-# keeps the PVC after import so multiple VMs can reuse it.
+# Storage: pinned to the cold pool over NFS (freenas-nfs-cold-csi). ISOs are
+# bulk, read-mostly, imported once — cold RAIDZ2 is the right tier, and NFS
+# gives RWX/Filesystem so multiple test VMs can mount the same ISO cdrom
+# concurrently (block RWO would multi-attach conflict). The `storage` API
+# defers volumeMode/accessModes to the StorageProfile (RWX Filesystem here) and
+# auto-adds filesystem overhead. deleteAfterCompletion=false keeps the PVC after
+# import so it is reused across VMs.
 #
-# NOTE: initial verification (all 7 editions) was done by uploading these same
-# ISOs directly with `virtctl image-upload` while the public.igou.systems publish
-# pipeline (igou-ansible publish_windows_isos.yml + the ssd/public quota bump in
-# igou-inventory) lands. Once the ISOs are served, these DataVolumes reproduce the
-# same PVCs declaratively.
+# Other editions (older Server/desktop, LTSC, IoT) are NOT kept live — publish
+# them to public.igou.systems and image-upload/DV on demand for hands-on testing
+# (see examples/ + README). Only these two are the standing library.
 ---
 apiVersion: cdi.kubevirt.io/v1beta1
 kind: DataVolume
@@ -24,57 +27,10 @@ spec:
     http:
       url: https://public.igou.systems/isos/windows/winserver2025-eval-en-us.iso
   storage:
+    storageClassName: freenas-nfs-cold-csi
     resources:
       requests:
         storage: 9Gi
----
-apiVersion: cdi.kubevirt.io/v1beta1
-kind: DataVolume
-metadata:
-  name: iso-winserver2022-eval
-  namespace: windows-images
-  annotations:
-    cdi.kubevirt.io/storage.deleteAfterCompletion: "false"
-spec:
-  source:
-    http:
-      url: https://public.igou.systems/isos/windows/winserver2022-eval-en-us.iso
-  storage:
-    resources:
-      requests:
-        storage: 6Gi
----
-apiVersion: cdi.kubevirt.io/v1beta1
-kind: DataVolume
-metadata:
-  name: iso-winserver2019-eval
-  namespace: windows-images
-  annotations:
-    cdi.kubevirt.io/storage.deleteAfterCompletion: "false"
-spec:
-  source:
-    http:
-      url: https://public.igou.systems/isos/windows/winserver2019-eval-en-us.iso
-  storage:
-    resources:
-      requests:
-        storage: 7Gi
----
-apiVersion: cdi.kubevirt.io/v1beta1
-kind: DataVolume
-metadata:
-  name: iso-winserver2016-eval
-  namespace: windows-images
-  annotations:
-    cdi.kubevirt.io/storage.deleteAfterCompletion: "false"
-spec:
-  source:
-    http:
-      url: https://public.igou.systems/isos/windows/winserver2016-eval-en-us.iso
-  storage:
-    resources:
-      requests:
-        storage: 8Gi
 ---
 apiVersion: cdi.kubevirt.io/v1beta1
 kind: DataVolume
@@ -88,38 +44,7 @@ spec:
     http:
       url: https://public.igou.systems/isos/windows/win11-25h2-enterprise-eval-en-us.iso
   storage:
+    storageClassName: freenas-nfs-cold-csi
     resources:
       requests:
         storage: 9Gi
----
-apiVersion: cdi.kubevirt.io/v1beta1
-kind: DataVolume
-metadata:
-  name: iso-win11-ltsc2024-enterprise-eval
-  namespace: windows-images
-  annotations:
-    cdi.kubevirt.io/storage.deleteAfterCompletion: "false"
-spec:
-  source:
-    http:
-      url: https://public.igou.systems/isos/windows/win11-ltsc2024-enterprise-eval-en-us.iso
-  storage:
-    resources:
-      requests:
-        storage: 6Gi
----
-apiVersion: cdi.kubevirt.io/v1beta1
-kind: DataVolume
-metadata:
-  name: iso-win11-iot-ltsc2024-enterprise-eval
-  namespace: windows-images
-  annotations:
-    cdi.kubevirt.io/storage.deleteAfterCompletion: "false"
-spec:
-  source:
-    http:
-      url: https://public.igou.systems/isos/windows/win11-iot-ltsc2024-enterprise-eval-en-us.iso
-  storage:
-    resources:
-      requests:
-        storage: 6Gi

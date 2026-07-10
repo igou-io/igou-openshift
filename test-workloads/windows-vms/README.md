@@ -16,6 +16,11 @@ All seven editions were deployed and verified booting on OpenShift (each reached
 | `win11-ltsc2024`     | Windows 11 Enterprise LTSC 2024 (1)                | windows.11   |
 | `win11-iot-ltsc2024` | Windows 11 IoT Enterprise LTSC 2024 (1)            | windows.11   |
 
+Of these, only **`winsrv2025` (latest Server)** and **`win11-25h2` (latest
+desktop)** are kept live on the cluster as GitOps-managed DataVolumes
+(`datavolumes.yaml`). The rest were verified once and are re-imported on demand
+for testing (see below).
+
 > **Reviewer note — this is not (yet) a hands-free `oc apply -k`.** The install is
 > partly imperative and hit several issues during the first run. The
 > [Gaps & known issues](#gaps--known-issues) section below documents every one and
@@ -26,15 +31,25 @@ All seven editions were deployed and verified booting on OpenShift (each reached
 ## What's git-managed here
 
 - `namespace.yaml` — the `windows-images` namespace.
-- `datavolumes.yaml` — one CDI DataVolume per ISO, imported over HTTP from
-  `public.igou.systems` (see #380 Phase 2). Applied via `kustomization.yaml`:
-  `oc apply -k test-workloads/windows-vms/`. **Caveat:** these imports only work
-  once the ISOs are actually published on `public.igou.systems` by igou-ansible
-  **#333** (+ the ssd/public quota bump). That pipeline has not been run yet, so
-  today you must upload the ISOs with `virtctl image-upload` instead (see repro).
+- `datavolumes.yaml` — **only two** CDI DataVolumes, the standing library kept
+  live on the cluster: the **latest Server** (`iso-winserver2025-eval`) and the
+  **latest desktop** (`iso-win11-25h2-enterprise-eval`). Each imports over HTTP
+  from `public.igou.systems` onto the **cold pool over NFS**
+  (`freenas-nfs-cold-csi`) — bulk read-mostly ISOs belong on cold RAIDZ2, and NFS
+  gives RWX so several test VMs can share one ISO cdrom. Applied via
+  `kustomization.yaml`: `oc apply -k test-workloads/windows-vms/`. The ISOs are
+  published on `public.igou.systems` (hydrated from the igounas archive), so these
+  imports resolve as-is.
 
-Installer VMs are inherently imperative (they need the CD-boot prompt caught on
-first boot), so they live in `examples/` rather than the kustomization.
+Deliberately **not** GitOps-managed:
+- The other five editions (older Server, Win11 LTSC/IoT). They were all verified
+  (table above) but are not kept live. To work with one, publish it to
+  `public.igou.systems` and `virtctl image-upload` / add a throwaway DataVolume on
+  demand — see the repro and `examples/`.
+- Installer/build VMs — inherently imperative (they need the CD-boot prompt caught
+  on first boot), so they live in `examples/`, not the kustomization. Those
+  scripts (`vm-template.yaml`, `autounattend.*.xml`, `autoboot.py`, `boot-vm.sh`)
+  are kept on purpose: they are the hands-on debugging/testing kit for any edition.
 
 ## The install pattern (`examples/`)
 
