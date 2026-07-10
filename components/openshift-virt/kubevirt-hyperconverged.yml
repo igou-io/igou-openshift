@@ -60,7 +60,7 @@ spec:
                   - key: kubernetes.io/hostname
                     operator: NotIn
                     values:
-                      - truenas-w1.igou.systems
+                      - truenas-w1
       tolerations:
         - key: workload
           operator: Equal
