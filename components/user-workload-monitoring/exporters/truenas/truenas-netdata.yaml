@@ -62,7 +62,11 @@ spec:
           targetLabel: instance
           replacement: truenas.igou.systems
       metricRelabelings:
-        - sourceLabels: [chart]
+        # action: replace is the CRD default - set explicitly (as above) so
+        # the rendered manifest matches the live object and ArgoCD stays
+        # Synced instead of perpetually OutOfSync on the defaulted field.
+        - action: replace
+          sourceLabels: [chart]
           regex: '.*_serial(?:_lunid)?_([^_]+).*'
           targetLabel: disk
           replacement: '${1}'
