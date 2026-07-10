@@ -1,0 +1,63 @@
+---
+# zfs_exporter (ghcr image deployed via igou-io/igou-inventory#151) on TrueNAS
+# (VLAN9), scraped DIRECTLY over the LAN. It exposes ZFS pool/dataset
+# capacity + health on :9134, consumed by the TrueNAS ZFS & Storage Health
+# dashboard (igou-io/igou-inventory#154) and future pool alerts
+# (igou-io/igou-openshift#422). The job label resolves to truenas-zfs, so the
+# existing TrueNASExporterDown alert (up{job=~"truenas-.*"}) covers it
+# automatically. Selectorless Service + manual Endpoints point UWM Prometheus
+# at the NAS' static address.
+apiVersion: v1
+kind: Service
+metadata:
+  name: truenas-zfs
+  labels:
+    app.kubernetes.io/name: truenas-zfs
+    app.kubernetes.io/part-of: truenas
+spec:
+  clusterIP: None
+  ports:
+    - name: metrics
+      port: 9134
+      targetPort: 9134
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  # Must match the Service name for endpoint discovery.
+  name: truenas-zfs
+  labels:
+    app.kubernetes.io/name: truenas-zfs
+    app.kubernetes.io/part-of: truenas
+subsets:
+  - addresses:
+      - ip: 10.10.9.243
+    ports:
+      - name: metrics
+        port: 9134
+        protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: truenas-zfs
+  labels:
+    app.kubernetes.io/name: truenas-zfs
+    app.kubernetes.io/part-of: truenas
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: truenas-zfs
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+      relabelings:
+        # The target address is a bare IP; name the real source.
+        # action: replace is the CRD default - set explicitly so the
+        # rendered manifest matches the live object and ArgoCD stays Synced.
+        - action: replace
+          targetLabel: instance
+          replacement: truenas.igou.systems

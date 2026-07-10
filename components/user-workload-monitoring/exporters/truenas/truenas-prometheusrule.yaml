@@ -200,3 +200,72 @@ spec:
               UWM Prometheus cannot scrape {{ $labels.job }} on
               {{ $labels.instance }}. This alert is per exporter target
               because netdata, smartctl, and ipmi use separate ServiceMonitors.
+    # Recording rules that roll per-disk netdata series up to pool-level
+    # aggregates for the ZFS & Storage Health dashboard (igou-inventory#154)
+    # and future pool-saturation alerts (igou-openshift#422). netdata_* series
+    # only exist in the UWM leaf Prometheus, which is why these live in THIS
+    # file (see the leaf-prometheus evaluation-scope label above). The
+    # serial->pool map below is the SINGLE source of truth, dated 2026-07-10
+    # (post BX500 mirror-1 eviction); it is the ONLY place to edit when a disk
+    # is replaced. Excluded: evicted BX500s 2515E9B3E0E1/2515E9B3E121, cold
+    # spares ZC16Q4Z6/P9JTUH8W, unpooled CT500P3SSD8s, and the boot-pool
+    # SATADOM (single device, no aggregation value).
+    - name: truenas.recording.disk
+      rules:
+        - record: disk:truenas_disk_busy_ms
+          expr: >
+            sum by (disk, instance) (netdata_Disk_Busy_Time_Milliseconds_average{disk=~"S753NS0X206644B|S753NS0X206645D"})
+          labels:
+            pool: ssd
+        - record: disk:truenas_disk_throughput_bytes
+          expr: >
+            sum by (disk, dimension, instance) ({__name__=~"netdata_Read_Write_for_disk_.*_KiB_persec_average", disk=~"S753NS0X206644B|S753NS0X206645D"}) * 1024
+          labels:
+            pool: ssd
+        - record: disk:truenas_disk_iops
+          expr: >
+            sum by (disk, dimension, instance) ({__name__=~"netdata_Complete_read_write_for_disk_.*_Operation_persec_average", disk=~"S753NS0X206644B|S753NS0X206645D"})
+          labels:
+            pool: ssd
+        - record: disk:truenas_disk_busy_ms
+          expr: >
+            sum by (disk, instance) (netdata_Disk_Busy_Time_Milliseconds_average{disk=~"240446940060|24044694581A|240546A2C222|240546A29A83"})
+          labels:
+            pool: fast
+        - record: disk:truenas_disk_throughput_bytes
+          expr: >
+            sum by (disk, dimension, instance) ({__name__=~"netdata_Read_Write_for_disk_.*_KiB_persec_average", disk=~"240446940060|24044694581A|240546A2C222|240546A29A83"}) * 1024
+          labels:
+            pool: fast
+        - record: disk:truenas_disk_iops
+          expr: >
+            sum by (disk, dimension, instance) ({__name__=~"netdata_Complete_read_write_for_disk_.*_Operation_persec_average", disk=~"240446940060|24044694581A|240546A2C222|240546A29A83"})
+          labels:
+            pool: fast
+        - record: disk:truenas_disk_busy_ms
+          expr: >
+            sum by (disk, instance) (netdata_Disk_Busy_Time_Milliseconds_average{disk=~"ZC16MM71|YVKX3BSK|YVKU4R7K|YHJBKNGA|YHJDPJTA|PN2234P9JSE1UW"})
+          labels:
+            pool: cold
+        - record: disk:truenas_disk_throughput_bytes
+          expr: >
+            sum by (disk, dimension, instance) ({__name__=~"netdata_Read_Write_for_disk_.*_KiB_persec_average", disk=~"ZC16MM71|YVKX3BSK|YVKU4R7K|YHJBKNGA|YHJDPJTA|PN2234P9JSE1UW"}) * 1024
+          labels:
+            pool: cold
+        - record: disk:truenas_disk_iops
+          expr: >
+            sum by (disk, dimension, instance) ({__name__=~"netdata_Complete_read_write_for_disk_.*_Operation_persec_average", disk=~"ZC16MM71|YVKX3BSK|YVKU4R7K|YHJBKNGA|YHJDPJTA|PN2234P9JSE1UW"})
+          labels:
+            pool: cold
+    # Pool-level aggregates layered on the per-disk records above. These are
+    # the series the future 400ms/800ms pool-saturation alerts attach to.
+    # Cross-group references are safe: Prometheus evaluates groups
+    # independently, so these lag the disk records by at most one interval.
+    - name: truenas.recording.pool
+      rules:
+        - record: pool:truenas_disk_busy_ms:avg
+          expr: avg by (pool) (disk:truenas_disk_busy_ms)
+        - record: pool:truenas_disk_throughput_bytes:sum
+          expr: sum by (pool, dimension) (disk:truenas_disk_throughput_bytes)
+        - record: pool:truenas_disk_iops:sum
+          expr: sum by (pool, dimension) (disk:truenas_disk_iops)
