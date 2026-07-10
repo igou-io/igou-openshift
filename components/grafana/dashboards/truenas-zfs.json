@@ -1239,6 +1239,65 @@
       ],
       "title": "Storage NIC throughput + drops",
       "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "description": "Aggregate read/write across all 12 drives on the SAS backplane (826EL1 expander behind the SAS3008) - ssd EVOs, BX500 scratch, cold members, and spares; SATADOM and NVMe do not ride this fabric. Full duplex: each direction is independently capped. Dashed lines: ~6.8 GB/s practical / 7.88 GB/s raw PCIe Gen3 x8 (the binding hop; the 8x12Gb SAS uplink is 9.6 GB/s). Current drive population tops out ~3.9 GB/s aggregate, so sustained values near the lines mean the fabric, not the drives, is the story.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "dashed" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": 0 },
+              { "color": "yellow", "value": 6800000000 },
+              { "color": "red", "value": 7880000000 }
+            ]
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 75 },
+      "id": 105,
+      "options": {
+        "legend": { "calcs": ["lastNotNull", "max"], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "hideZeros": false, "mode": "multi", "sort": "desc" }
+      },
+      "pluginVersion": "12.1.0",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "editorMode": "code",
+          "expr": "sas:truenas_backplane_throughput_bytes:sum",
+          "legendFormat": "{{dimension}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "SAS backplane aggregate throughput (vs PCIe Gen3 x8 cap)",
+      "type": "timeseries"
     }
   ],
   "refresh": "30s",
