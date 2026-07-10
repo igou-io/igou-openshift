@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sands-of-time-data
+  namespace: sands-of-time
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      # DB is well under 1Gi and grows slowly; 5Gi gives multi-year headroom.
+      storage: 5Gi
+  storageClassName: freenas-nvmeof-ssd-csi
