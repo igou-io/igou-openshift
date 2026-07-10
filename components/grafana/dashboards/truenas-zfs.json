@@ -74,7 +74,7 @@
     },
     {
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "description": "Allocated / size per pool.",
+      "description": "Root-dataset used / (used + available) - matches the TrueNAS UI. Includes zvol refreservations (committed but unwritten) and, for RAIDZ, uses usable rather than parity-inclusive raw bytes; zpool-level alloc/size reads lower and understates real exposure.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
@@ -112,7 +112,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
           "editorMode": "code",
-          "expr": "100 * zfs_pool_allocated_bytes{pool=~\"$pool\"} / zfs_pool_size_bytes{pool=~\"$pool\"}",
+          "expr": "100 * zfs_dataset_used_bytes{pool=~\"$pool\",type=\"filesystem\",name!~\".+/.+\"} / (zfs_dataset_used_bytes{pool=~\"$pool\",type=\"filesystem\",name!~\".+/.+\"} + zfs_dataset_available_bytes{pool=~\"$pool\",type=\"filesystem\",name!~\".+/.+\"})",
           "legendFormat": "{{pool}}",
           "range": true,
           "refId": "A"
@@ -782,7 +782,7 @@
     },
     {
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
-      "description": "Provisioned zvol size vs pool free - CSI volumes are thin, >1 means overcommitted.",
+      "description": "Provisioned zvol size vs usable free space (root-dataset available, not raw zpool free - raw includes RAIDZ parity and overstates headroom). CSI volumes are thin, >1 means overcommitted.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -830,7 +830,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
           "editorMode": "code",
-          "expr": "sum by (pool) (zfs_dataset_volume_size_bytes{type=\"volume\"}) / on (pool) zfs_pool_free_bytes",
+          "expr": "sum by (pool) (zfs_dataset_volume_size_bytes{type=\"volume\"}) / on (pool) zfs_dataset_available_bytes{type=\"filesystem\",name!~\".+/.+\"}",
           "legendFormat": "{{pool}}",
           "range": true,
           "refId": "A"
