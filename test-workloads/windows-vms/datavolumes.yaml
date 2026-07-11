@@ -14,18 +14,28 @@
 # Other editions (older Server/desktop, LTSC, IoT) are NOT kept live — publish
 # them to public.igou.systems and image-upload/DV on demand for hands-on testing
 # (see examples/ + README). Only these two are the standing library.
+#
+# -noprompt media: the "Press any key to boot from CD or DVD" prompt is compiled
+# into the shipped cdboot.efi, so a headless EFI VM misses the keypress and drops
+# to no-boot. Microsoft ships (but does not document) efisys_noprompt.bin /
+# cdboot_noprompt.efi that boot straight into Setup with no keypress; the
+# remaster swaps those in so EFI VMs enter Setup hands-free. This is a feedstock
+# requirement for igou-ansible's declarative golden-image path
+# (build_windows_golden.yml) — no autoboot.py/boot-vm.sh keypress dance needed.
+# The remastered ISOs are produced by igou-ansible
+# playbooks/truenas/publish_windows_isos.yml.
 ---
 apiVersion: cdi.kubevirt.io/v1beta1
 kind: DataVolume
 metadata:
-  name: iso-winserver2025-eval
+  name: iso-winserver2025-eval-noprompt
   namespace: windows-images
   annotations:
     cdi.kubevirt.io/storage.deleteAfterCompletion: "false"
 spec:
   source:
     http:
-      url: https://public.igou.systems/isos/windows/winserver2025-eval-en-us.iso
+      url: https://public.igou.systems/isos/windows/winserver2025-eval-en-us-noprompt.iso
   storage:
     storageClassName: freenas-nfs-cold-csi
     resources:
@@ -35,14 +45,14 @@ spec:
 apiVersion: cdi.kubevirt.io/v1beta1
 kind: DataVolume
 metadata:
-  name: iso-win11-25h2-enterprise-eval
+  name: iso-win11-25h2-enterprise-eval-noprompt
   namespace: windows-images
   annotations:
     cdi.kubevirt.io/storage.deleteAfterCompletion: "false"
 spec:
   source:
     http:
-      url: https://public.igou.systems/isos/windows/win11-25h2-enterprise-eval-en-us.iso
+      url: https://public.igou.systems/isos/windows/win11-25h2-enterprise-eval-en-us-noprompt.iso
   storage:
     storageClassName: freenas-nfs-cold-csi
     resources:

@@ -32,14 +32,20 @@ for testing (see below).
 
 - `namespace.yaml` — the `windows-images` namespace.
 - `datavolumes.yaml` — **only two** CDI DataVolumes, the standing library kept
-  live on the cluster: the **latest Server** (`iso-winserver2025-eval`) and the
-  **latest desktop** (`iso-win11-25h2-enterprise-eval`). Each imports over HTTP
-  from `public.igou.systems` onto the **cold pool over NFS**
-  (`freenas-nfs-cold-csi`) — bulk read-mostly ISOs belong on cold RAIDZ2, and NFS
-  gives RWX so several test VMs can share one ISO cdrom. Applied via
-  `kustomization.yaml`: `oc apply -k test-workloads/windows-vms/`. The ISOs are
-  published on `public.igou.systems` (hydrated from the igounas archive), so these
-  imports resolve as-is.
+  live on the cluster: the **latest Server** (`iso-winserver2025-eval-noprompt`)
+  and the **latest desktop** (`iso-win11-25h2-enterprise-eval-noprompt`). Both
+  point at the **`-noprompt` remastered media** — the "Press any key to boot from
+  CD" prompt is compiled into the shipped `cdboot.efi`, so the remaster swaps in
+  Microsoft's shipped-but-undocumented `efisys_noprompt.bin`/`cdboot_noprompt.efi`
+  so EFI VMs enter Setup hands-free (feedstock for igou-ansible's declarative
+  `build_windows_golden.yml`; produced by
+  `playbooks/truenas/publish_windows_isos.yml`). Each imports over HTTP from
+  `public.igou.systems` onto the **cold pool over NFS** (`freenas-nfs-cold-csi`) —
+  bulk read-mostly ISOs belong on cold RAIDZ2, and NFS gives RWX so several test
+  VMs can share one ISO cdrom. Applied via `kustomization.yaml`:
+  `oc apply -k test-workloads/windows-vms/`. The ISOs are published on
+  `public.igou.systems` (hydrated from the igounas archive), so these imports
+  resolve as-is.
 
 Deliberately **not** GitOps-managed:
 - The other five editions (older Server, Win11 LTSC/IoT). They were all verified
@@ -85,6 +91,13 @@ Deliberately **not** GitOps-managed:
 - **`boot-vm.sh`** — **the reliable driver.** `autoboot.py` alone is a timing
   gamble; this wrapper force power-cycles the VM and retries `autoboot.py` until
   Setup appears. Use this, not bare `autoboot.py`.
+
+> **`-noprompt` media makes the keypress dance unnecessary.** The standing
+> DataVolumes (`iso-*-noprompt`) boot straight into Setup with no "Press any key"
+> prompt, so `autoboot.py`/`boot-vm.sh` are **not needed** when a VM attaches one
+> of them. The keypress kit is kept only for **pristine** (un-remastered) ISOs —
+> e.g. an on-demand edition uploaded straight from the Evaluation Center that
+> still carries the prompt-compiled `cdboot.efi`.
 
 ### Reproduce one edition (hands-free path, works today)
 
