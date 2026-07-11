@@ -17,9 +17,8 @@ All seven editions were deployed and verified booting on OpenShift (each reached
 | `win11-iot-ltsc2024` | Windows 11 IoT Enterprise LTSC 2024 (1)            | windows.11   |
 
 Of these, only **`winsrv2025` (latest Server)** and **`win11-25h2` (latest
-desktop)** are kept live on the cluster as GitOps-managed DataVolumes
-(`datavolumes.yaml`). The rest were verified once and are re-imported on demand
-for testing (see below).
+desktop)** are kept live on the cluster as standing DataVolumes. The rest were
+verified once and are re-imported on demand for testing (see below).
 
 > **Reviewer note — this is not (yet) a hands-free `oc apply -k`.** The install is
 > partly imperative and hit several issues during the first run. The
@@ -30,32 +29,37 @@ for testing (see below).
 
 ## What's git-managed here
 
-- `namespace.yaml` — the `windows-images` namespace.
-- `datavolumes.yaml` — **only two** CDI DataVolumes, the standing library kept
-  live on the cluster: the **latest Server** (`iso-winserver2025-eval-noprompt`)
-  and the **latest desktop** (`iso-win11-25h2-enterprise-eval-noprompt`). Both
-  point at the **`-noprompt` remastered media** — the "Press any key to boot from
-  CD" prompt is compiled into the shipped `cdboot.efi`, so the remaster swaps in
-  Microsoft's shipped-but-undocumented `efisys_noprompt.bin`/`cdboot_noprompt.efi`
-  so EFI VMs enter Setup hands-free (feedstock for igou-ansible's declarative
+- `namespace.yaml` — the `windows-images` namespace. Applied via
+  `kustomization.yaml`: `oc apply -k test-workloads/windows-vms/`.
+
+The standing install-media DataVolumes are **no longer GitOps-managed here.**
+They are managed out-of-band by the igou-ansible playbook
+[`playbooks/openshift_virtualization/manage-os-datavolumes.yml`](https://github.com/igou-io/igou-ansible/pull/360)
+— a data-driven manager whose `os_datavolumes` list stands up the standing
+library:
+
+- **only two** CDI DataVolumes are kept live: the **latest Server**
+  (`iso-winserver2025-eval-noprompt`) and the **latest desktop**
+  (`iso-win11-25h2-enterprise-eval-noprompt`). Both point at the **`-noprompt`
+  remastered media** — the "Press any key to boot from CD" prompt is compiled
+  into the shipped `cdboot.efi`, so the remaster swaps in Microsoft's
+  shipped-but-undocumented `efisys_noprompt.bin`/`cdboot_noprompt.efi` so EFI VMs
+  enter Setup hands-free (feedstock for igou-ansible's declarative
   `build_windows_golden.yml`; produced by
   `playbooks/truenas/publish_windows_isos.yml`). Each imports over HTTP from
   `public.igou.systems` onto the **cold pool over NFS** (`freenas-nfs-cold-csi`) —
   bulk read-mostly ISOs belong on cold RAIDZ2, and NFS gives RWX so several test
-  VMs can share one ISO cdrom. Applied via `kustomization.yaml`:
-  `oc apply -k test-workloads/windows-vms/`. The ISOs are published on
-  `public.igou.systems` (hydrated from the igounas archive), so these imports
-  resolve as-is.
+  VMs can share one ISO cdrom. The ISOs are published on `public.igou.systems`
+  (hydrated from the igounas archive), so these imports resolve as-is.
 
-Deliberately **not** GitOps-managed:
+Deliberately **not** kept live:
 - The other five editions (older Server, Win11 LTSC/IoT). They were all verified
   (table above) but are not kept live. To work with one, publish it to
   `public.igou.systems` and `virtctl image-upload` / add a throwaway DataVolume on
   demand — see the repro and `examples/`.
-- Installer/build VMs — inherently imperative (they need the CD-boot prompt caught
-  on first boot), so they live in `examples/`, not the kustomization. Those
-  scripts (`vm-template.yaml`, `autounattend.*.xml`, `autoboot.py`, `boot-vm.sh`)
-  are kept on purpose: they are the hands-on debugging/testing kit for any edition.
+- Installer/build VMs — inherently imperative, so they live in `examples/`, not
+  the kustomization. Those files (`vm-template.yaml`, `autounattend.*.xml`) are
+  kept on purpose: they are the hands-on debugging/testing kit for any edition.
 
 ## The install pattern (`examples/`)
 
@@ -85,28 +89,27 @@ Deliberately **not** GitOps-managed:
   `@@ADMINPW@@` are substituted at apply time — the admin/auto-logon password is
   **not** committed (injected via `sed` in step 2, see repro). Delivered as a
   KubeVirt `sysprep` volume from a ConfigMap keyed `autounattend.xml`.
-- **`autoboot.py`** — presses Enter while the guest framebuffer is dark to catch
-  the "Press any key to boot from CD" prompt, stops when the blue Setup screen
-  appears (exit 0), or gives up on the gray UEFI Front Page (exit 1).
-- **`boot-vm.sh`** — **the reliable driver.** `autoboot.py` alone is a timing
-  gamble; this wrapper force power-cycles the VM and retries `autoboot.py` until
-  Setup appears. Use this, not bare `autoboot.py`.
 
-> **`-noprompt` media makes the keypress dance unnecessary.** The standing
-> DataVolumes (`iso-*-noprompt`) boot straight into Setup with no "Press any key"
-> prompt, so `autoboot.py`/`boot-vm.sh` are **not needed** when a VM attaches one
-> of them. The keypress kit is kept only for **pristine** (un-remastered) ISOs —
-> e.g. an on-demand edition uploaded straight from the Evaluation Center that
-> still carries the prompt-compiled `cdboot.efi`.
+> **The standing `-noprompt` media boots straight into Setup.** The standing
+> DataVolumes (`iso-*-noprompt`) carry Microsoft's `efisys_noprompt.bin` boot
+> feedstock, so an EFI VM enters Windows Setup hands-free with **no "Press any
+> key to boot from CD" keypress** to catch. A VM that attaches one of them just
+> boots and installs. (Pristine, un-remastered on-demand media still carries the
+> prompt-compiled `cdboot.efi` and would sit at that prompt on a headless VM —
+> remaster it to `-noprompt` via igou-ansible
+> `playbooks/truenas/publish_windows_isos.yml` before attaching.)
 
 ### Reproduce one edition (hands-free path, works today)
 
 ```sh
 cd test-workloads/windows-vms
 
-# 1. ISO PVC. datavolumes.yaml (HTTP import) needs #333 first; until then upload:
-virtctl image-upload dv iso-winserver2025-eval -n windows-images --size 9Gi \
-  --image-path winserver2025-eval-en-us.iso \
+# 1. ISO PVC. The two standing -noprompt DataVolumes are managed by igou-ansible
+#    (playbooks/openshift_virtualization/manage-os-datavolumes.yml). For an
+#    on-demand edition NOT in that standing set, upload a throwaway DV — remaster
+#    it to -noprompt first (publish_windows_isos.yml) so it boots hands-free:
+virtctl image-upload dv iso-winserver2025-eval-noprompt -n windows-images --size 9Gi \
+  --image-path winserver2025-eval-en-us-noprompt.iso \
   --uploadproxy-url https://cdi-uploadproxy-openshift-cnv.apps.ocp.igou.systems --insecure
 
 # 2. autounattend ConfigMap (INDEX per the table above; 2 = Server Std Desktop,
@@ -119,14 +122,13 @@ sed -e 's/@@INDEX@@/2/' -e 's/@@HOSTNAME@@/winsrv2025/' -e "s/@@ADMINPW@@/$ADMIN
 oc create configmap winsrv2025-unattend -n windows-images --from-file=autounattend.xml=/tmp/au.xml
 rm -f /tmp/au.xml   # scrub the rendered file; the password lived in it
 
-# 3. VM
+# 3. VM. With -noprompt media it boots straight into Setup on create — no
+#    keypress to catch. (Pristine, prompt-carrying media would hang at the
+#    "Press any key to boot from CD" prompt on a headless VM; remaster first.)
 sed -e 's/@@NAME@@/winsrv2025/g' -e 's/@@PREFERENCE@@/windows.2k25/g' \
-    -e 's/@@ISOPVC@@/iso-winserver2025-eval/g' examples/vm-template.yaml | oc apply -f -
+    -e 's/@@ISOPVC@@/iso-winserver2025-eval-noprompt/g' examples/vm-template.yaml | oc apply -f -
 
-# 4. catch the CD-boot prompt (retries until Setup — do NOT use bare autoboot.py)
-examples/boot-vm.sh winsrv2025 5901
-
-# 5. verify (after install + first logon + guest-tools install, ~15-20 min)
+# 4. verify (after install + first logon + guest-tools install, ~15-20 min)
 oc get vmi winsrv2025 -n windows-images \
   -o jsonpath='{.status.conditions[?(@.type=="AgentConnected")].status} {.status.guestOSInfo.prettyName}'
 ```
@@ -144,11 +146,14 @@ installed + verified cleanly on `freenas-nvmeof-ssd-csi`).
 
 ### A. Native to Windows / KubeVirt — will recur, handled by this PR
 
-1. **CD-boot prompt must be caught per install.** Windows install media prints
-   "Press any key to boot from CD or DVD"; headless, it times out and the VM
-   drops to no-boot. Needs `boot-vm.sh` (power-cycle + retry `autoboot.py`).
-   Inherent to the media on any UEFI VM; unrelated to storage. *Handled:*
-   `boot-vm.sh` committed.
+1. **Stock media needs the CD-boot prompt caught per install.** Pristine Windows
+   install media prints "Press any key to boot from CD or DVD"; headless, it
+   times out and the VM drops to no-boot. Inherent to the media on any UEFI VM;
+   unrelated to storage. *Handled:* the standing library is **`-noprompt`
+   remastered media** (`efisys_noprompt.bin`), which boots straight into Setup
+   with no keypress — so no console keystroke robot is needed. Remaster any
+   on-demand edition to `-noprompt` via igou-ansible
+   `playbooks/truenas/publish_windows_isos.yml` before attaching it.
 2. **Empty `<ProductKey>` breaks older Server eval Setup.** With
    `<ProductKey><Key></Key></ProductKey>`, Server 2016/2019/2022 eval Setup fails
    with *"Windows cannot find the Microsoft Software License Terms."* Eval media
@@ -175,13 +180,12 @@ installed + verified cleanly on `freenas-nvmeof-ssd-csi`).
    autounattend did not — fails OOBE with *"The computer restarted unexpectedly
    or encountered an unexpected error."* This reproduced on healthy local
    storage, so it is **not** a storage issue; it is an IoT-edition/OOBE quirk.
-   **Manual recovery** (done over VNC): at the error dialog press **Shift+F10**,
-   then in the cmd window run
+   **Manual recovery** (done at the VM graphical console): at the error dialog
+   press **Shift+F10**, then in the cmd window run
    `reg add HKLM\SYSTEM\Setup\Status\ChildCompletion /v setup.exe /t REG_DWORD /d 3 /f`,
    `exit`, then click **OK** to reboot — OOBE then resumes and the VM verifies.
    *Not yet automated* (would need an autounattend/SetupComplete change to avoid
-   the error, or a scripted VNC keystroke recovery). Reviewer TODO if IoT LTSC is
-   a recurring target.
+   the error). Reviewer TODO if IoT LTSC is a recurring target.
 
 ### B. Transient to the storage backend at the time — resolved, won't recur
 
