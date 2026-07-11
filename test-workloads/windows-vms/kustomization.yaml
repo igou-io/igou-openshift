@@ -3,8 +3,10 @@ kind: Kustomization
 
 # Testing-only Windows VM workloads (igou-io/igou-openshift#380). Apply directly:
 #   oc apply -k test-workloads/windows-vms/
-# The namespace + ISO DataVolumes are the git-managed set. Per-edition installer
-# VMs are inherently imperative (see examples/) and are created per test run.
+# This anchors the `windows-images` namespace for the hands-on examples kit. The
+# standing install-media ISO DataVolumes are managed out-of-band by igou-ansible
+# playbooks/openshift_virtualization/manage-os-datavolumes.yml (not GitOps here).
+# Per-edition installer VMs are inherently imperative (see examples/) and are
+# created per test run.
 resources:
   - namespace.yaml
-  - datavolumes.yaml
