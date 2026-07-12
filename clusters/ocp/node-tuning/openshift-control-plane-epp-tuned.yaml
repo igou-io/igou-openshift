@@ -14,6 +14,12 @@ spec:
         [cpu]
         governor=powersave
         energy_performance_preference=balance_performance
+        # Cap intel_pstate to 75% of max turbo (~3.9GHz on the i9-13900H).
+        # The steady ~2.3-core control-plane load was boosting to 4.6-4.9GHz
+        # for no measurable latency benefit (apiserver/etcd p99s identical at
+        # 3.5GHz vs 4.9GHz) while holding the package at ~34W/87C. 50 = base
+        # clocks (full turbo-off equivalent) if 75 proves insufficient.
+        max_perf_pct=75
   recommend:
     # Priority MUST be numerically lower than the default openshift-control-plane
     # recommend (priority 30) so this profile wins on master nodes. The
