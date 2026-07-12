@@ -22,6 +22,7 @@ resources:
   - grafana-dashboard-kubevirt-control-plane.yaml
   - grafana-dashboard-kubevirt-top-consumers.yaml
   - grafana-dashboard-external-secrets.yaml
+  - grafana-dashboard-apc-pdu.yaml
   - grafana-dashboard-nut-exporter.yaml
   - grafana-dashboard-truenas.yaml
   - grafana-dashboard-truenas-zfs.yaml
@@ -56,6 +57,10 @@ resources:
 # it cannot come from spec.grafanaCom). Stable name: the GrafanaDashboard
 # CR references the ConfigMap by name.
 configMapGenerator:
+  - name: grafana-dashboard-apc-pdu-json
+    namespace: grafana
+    files:
+      - dashboards/apc-pdu.json
   - name: grafana-dashboard-nut-exporter-json
     namespace: grafana
     files:
