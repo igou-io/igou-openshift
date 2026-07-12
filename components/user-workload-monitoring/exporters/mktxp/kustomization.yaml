@@ -237,3 +237,16 @@ helmCharts:
                     key: mktxp-exporter
                     metadataPolicy: None
                     nullBytePolicy: Ignore
+patches:
+  # The mktxp-secret ExternalSecret is emitted by the app-template chart's
+  # rawResources without a namespace, and kustomize's top-level `namespace:`
+  # transformer does not reach helm-inflated rawResources. Without an explicit
+  # namespace, ArgoCD rejects every sync of the parent app with
+  # "InvalidSpecError: Namespace for mktxp-secret ... is missing". Pin it.
+  - target:
+      kind: ExternalSecret
+      name: mktxp-secret
+    patch: |
+      - op: add
+        path: /metadata/namespace
+        value: mktxp
