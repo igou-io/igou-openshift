@@ -70,3 +70,15 @@ spec:
           regex: '.*_serial(?:_lunid)?_([^_]+).*'
           targetLabel: disk
           replacement: '${1}'
+        # Drop netdata's truenas_pool.usage chart. The TrueNAS collector emits
+        # one instance per pool but does NOT encode the pool name into the
+        # chart/family label, so all pools collapse to an identical label set
+        # (chart="truenas_pool.usage", family="pool.usage", dimension=
+        # available|used|total). With 4 pools that is 12 samples sharing only 3
+        # unique series keys at the same scrape timestamp, so Prometheus keeps
+        # 3 and drops 9 - the source of PrometheusDuplicateTimestamps
+        # (num_dropped=9). No relabeling can recover the lost pool identity, and
+        # per-pool usage already comes from zfs_exporter, so drop the series.
+        - action: drop
+          sourceLabels: [__name__]
+          regex: 'netdata_pool_usage_bytes_average'
