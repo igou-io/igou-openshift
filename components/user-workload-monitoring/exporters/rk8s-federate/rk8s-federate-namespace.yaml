@@ -1,0 +1,18 @@
+---
+# Namespace that hosts the federation ServiceMonitor for the rk8s lab
+# cluster. It carries ONLY pod-security labels: the absence of the UWM
+# opt-out label (openshift.io/user-monitoring: "false") is what lets UWM
+# Prometheus discover and scrape the ServiceMonitor here.
+#
+# IMPORTANT: because the UWM Prometheus CR sets enforcedNamespaceLabel:
+# namespace, THIS namespace name ("rk8s-federate") is force-stamped as the
+# `namespace` label on EVERY federated series. The real rk8s namespace of
+# each series survives as `exported_namespace` (see the ServiceMonitor).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rk8s-federate
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted

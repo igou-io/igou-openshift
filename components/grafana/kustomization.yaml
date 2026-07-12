@@ -27,6 +27,31 @@ resources:
   - grafana-dashboard-truenas-zfs.yaml
   - grafana-dashboard-15765.yaml
   - grafana-dashboard-22604.yaml
+  # kube-prometheus-stack dashboard set for the rk8s lab cluster (federated
+  # via UWM). Grouped in the grafana "rk8s" folder; namespace label rewritten
+  # to exported_namespace (enforcedNamespaceLabel forces namespace on scrape).
+  - grafana-dashboard-rk8s-alertmanager-overview.yaml
+  - grafana-dashboard-rk8s-apiserver.yaml
+  - grafana-dashboard-rk8s-cluster-total.yaml
+  - grafana-dashboard-rk8s-grafana-overview.yaml
+  - grafana-dashboard-rk8s-k8s-coredns.yaml
+  - grafana-dashboard-rk8s-k8s-resources-cluster.yaml
+  - grafana-dashboard-rk8s-k8s-resources-multicluster.yaml
+  - grafana-dashboard-rk8s-k8s-resources-namespace.yaml
+  - grafana-dashboard-rk8s-k8s-resources-node.yaml
+  - grafana-dashboard-rk8s-k8s-resources-pod.yaml
+  - grafana-dashboard-rk8s-k8s-resources-workload.yaml
+  - grafana-dashboard-rk8s-k8s-resources-workloads-namespace.yaml
+  - grafana-dashboard-rk8s-kubelet.yaml
+  - grafana-dashboard-rk8s-namespace-by-pod.yaml
+  - grafana-dashboard-rk8s-namespace-by-workload.yaml
+  - grafana-dashboard-rk8s-node-cluster-rsrc-use.yaml
+  - grafana-dashboard-rk8s-node-rsrc-use.yaml
+  - grafana-dashboard-rk8s-nodes.yaml
+  - grafana-dashboard-rk8s-persistentvolumesusage.yaml
+  - grafana-dashboard-rk8s-pod-total.yaml
+  - grafana-dashboard-rk8s-prometheus.yaml
+  - grafana-dashboard-rk8s-workload-total.yaml
 # Vendored dashboard JSON (see grafana-dashboard-nut-exporter.yaml for why
 # it cannot come from spec.grafanaCom). Stable name: the GrafanaDashboard
 # CR references the ConfigMap by name.
@@ -43,6 +68,95 @@ configMapGenerator:
     namespace: grafana
     files:
       - dashboards/truenas-zfs.json
+  # rk8s kube-prometheus-stack dashboards (vendored + transformed JSON).
+  - name: grafana-dashboard-rk8s-alertmanager-overview-json
+    namespace: grafana
+    files:
+      - dashboards/rk8s/alertmanager-overview.json
+  - name: grafana-dashboard-rk8s-apiserver-json
+    namespace: grafana
+    files:
+      - dashboards/rk8s/apiserver.json
+  - name: grafana-dashboard-rk8s-cluster-total-json
+    namespace: grafana
+    files:
+      - dashboards/rk8s/cluster-total.json
+  - name: grafana-dashboard-rk8s-grafana-overview-json
+    namespace: grafana
+    files:
+      - dashboards/rk8s/grafana-overview.json
+  - name: grafana-dashboard-rk8s-k8s-coredns-json
+    namespace: grafana
+    files:
+      - dashboards/rk8s/k8s-coredns.json
+  - name: grafana-dashboard-rk8s-k8s-resources-cluster-json
+    namespace: grafana
+    files:
+      - dashboards/rk8s/k8s-resources-cluster.json
+  - name: grafana-dashboard-rk8s-k8s-resources-multicluster-json
+    namespace: grafana
+    files:
+      - dashboards/rk8s/k8s-resources-multicluster.json
+  - name: grafana-dashboard-rk8s-k8s-resources-namespace-json
+    namespace: grafana
+    files:
+      - dashboards/rk8s/k8s-resources-namespace.json
+  - name: grafana-dashboard-rk8s-k8s-resources-node-json
+    namespace: grafana
+    files:
+      - dashboards/rk8s/k8s-resources-node.json
+  - name: grafana-dashboard-rk8s-k8s-resources-pod-json
+    namespace: grafana
+    files:
+      - dashboards/rk8s/k8s-resources-pod.json
+  - name: grafana-dashboard-rk8s-k8s-resources-workload-json
+    namespace: grafana
+    files:
+      - dashboards/rk8s/k8s-resources-workload.json
+  - name: grafana-dashboard-rk8s-k8s-resources-workloads-namespace-json
+    namespace: grafana
+    files:
+      - dashboards/rk8s/k8s-resources-workloads-namespace.json
+  - name: grafana-dashboard-rk8s-kubelet-json
+    namespace: grafana
+    files:
+      - dashboards/rk8s/kubelet.json
+  - name: grafana-dashboard-rk8s-namespace-by-pod-json
+    namespace: grafana
+    files:
+      - dashboards/rk8s/namespace-by-pod.json
+  - name: grafana-dashboard-rk8s-namespace-by-workload-json
+    namespace: grafana
+    files:
+      - dashboards/rk8s/namespace-by-workload.json
+  - name: grafana-dashboard-rk8s-node-cluster-rsrc-use-json
+    namespace: grafana
+    files:
+      - dashboards/rk8s/node-cluster-rsrc-use.json
+  - name: grafana-dashboard-rk8s-node-rsrc-use-json
+    namespace: grafana
+    files:
+      - dashboards/rk8s/node-rsrc-use.json
+  - name: grafana-dashboard-rk8s-nodes-json
+    namespace: grafana
+    files:
+      - dashboards/rk8s/nodes.json
+  - name: grafana-dashboard-rk8s-persistentvolumesusage-json
+    namespace: grafana
+    files:
+      - dashboards/rk8s/persistentvolumesusage.json
+  - name: grafana-dashboard-rk8s-pod-total-json
+    namespace: grafana
+    files:
+      - dashboards/rk8s/pod-total.json
+  - name: grafana-dashboard-rk8s-prometheus-json
+    namespace: grafana
+    files:
+      - dashboards/rk8s/prometheus.json
+  - name: grafana-dashboard-rk8s-workload-total-json
+    namespace: grafana
+    files:
+      - dashboards/rk8s/workload-total.json
 generatorOptions:
   disableNameSuffixHash: true
 commonAnnotations:
