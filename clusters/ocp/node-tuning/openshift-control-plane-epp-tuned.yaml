@@ -19,6 +19,13 @@ spec:
         # for no measurable latency benefit (apiserver/etcd p99s identical at
         # 3.5GHz vs 4.9GHz) while holding the package at ~34W/87C. 50 = base
         # clocks (full turbo-off equivalent) if 75 proves insufficient.
+        #
+        # min_perf_pct MUST be overridden here: the inherited
+        # throughput-performance profile (via openshift) sets min_perf_pct=100,
+        # and the kernel clamps max_perf_pct writes to >= min_perf_pct — with
+        # the inherited value, the max_perf_pct=75 write is silently clamped
+        # back to 100. 8% ~= the 400MHz hardware floor on this SKU.
+        min_perf_pct=8
         max_perf_pct=75
   recommend:
     # Priority MUST be numerically lower than the default openshift-control-plane
