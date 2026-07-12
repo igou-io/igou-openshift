@@ -1,0 +1,33 @@
+---
+# Durably suppress the UnsupportedHCOModification alert on the path to the
+# platform Alertmanager. The HyperConverged CR intentionally carries a CDI
+# jsonpatch annotation (containerizeddataimporter.kubevirt.io/jsonpatch) that
+# adds the burst-worker tolerations to CDI prime/import pods (see
+# components/openshift-virt burst CDI scale-up). HCO flags any jsonpatch as an
+# "unsafe modification" and fires UnsupportedHCOModification (severity=info)
+# permanently. The modification is deliberate and must stay.
+#
+# The drop is scoped by BOTH alertname AND annotation_name so it only ever
+# matches THIS deliberate CDI jsonpatch. A genuinely new unsupported HCO
+# modification carrying a DIFFERENT annotation_name still fires normally.
+# Tradeoff: a future modification that reuses the SAME annotation_name
+# (containerizeddataimporter.kubevirt.io/jsonpatch) would also be silenced.
+#
+# NOTE: AlertRelabelConfig only relabels alerts on the Prometheus ->
+# Alertmanager path. Per OpenShift docs, dropped alerts are NOT removed from
+# the web console Observe > Alerting list (the console reads the Prometheus
+# rules API, which is upstream of this relabeling). severity=info is already
+# null-routed in alertmanager.yaml, so this object's practical effect is
+# defense-in-depth + intent-as-code at the Alertmanager boundary. See PR body.
+apiVersion: monitoring.openshift.io/v1
+kind: AlertRelabelConfig
+metadata:
+  name: drop-unsupported-hco-modification
+  namespace: openshift-monitoring
+spec:
+  configs:
+    - sourceLabels:
+        - alertname
+        - annotation_name
+      regex: 'UnsupportedHCOModification;containerizeddataimporter\.kubevirt\.io/jsonpatch'
+      action: Drop
