@@ -1,0 +1,27 @@
+---
+# UWM Prometheus scrapes the in-cluster adb-exporter Service. The scrape can
+# be slow: the exporter serializes every adb command and the whole-scrape cap
+# is 8x the 5s adb timeout, so scrapeTimeout is set generously to 20s.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: adb-exporter
+  labels:
+    app.kubernetes.io/name: adb-exporter
+    app.kubernetes.io/part-of: adb-exporter
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: adb-exporter
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 20s
+      relabelings:
+        # The pod IP is meaningless; name the real device the series describe.
+        # action: replace is the CRD default - set explicitly so the rendered
+        # manifest matches the live object and ArgoCD stays Synced.
+        - action: replace
+          targetLabel: instance
+          replacement: shield.igou.systems

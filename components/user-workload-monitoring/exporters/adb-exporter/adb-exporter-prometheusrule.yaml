@@ -1,0 +1,56 @@
+---
+# Alerts for the in-cluster adb-exporter scraping the Nvidia Shield. Two
+# failure layers are distinguished: the exporter Deployment being down/absent
+# (up == 0) versus the exporter running but unable to reach the device over
+# adb (adb_up == 0). severity critical/warning routes to the EDA
+# GitHub-issue pipeline + Gotify/Slack via the platform Alertmanager. These
+# adb_* series only exist in the UWM leaf Prometheus, hence the
+# leaf-prometheus evaluation-scope label.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: adb-exporter
+  labels:
+    app.kubernetes.io/name: adb-exporter
+    app.kubernetes.io/part-of: adb-exporter
+    openshift.io/prometheus-rule-evaluation-scope: leaf-prometheus
+spec:
+  groups:
+    - name: adb-exporter.scrape
+      rules:
+        - alert: AdbExporterDown
+          expr: up{job="adb-exporter"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: adb-exporter scrape failing for {{ $labels.instance }}
+            description: |
+              UWM Prometheus cannot scrape adb-exporter for
+              {{ $labels.instance }} - the exporter pod is down or unschedulable
+              and all adb_* device metrics are invisible.
+    - name: adb-exporter.device
+      rules:
+        - alert: AdbDeviceUnreachable
+          expr: adb_up == 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Shield unreachable over adb from {{ $labels.instance }}
+            description: |
+              adb-exporter is up but adb_up == 0 for {{ $labels.instance }} -
+              the Shield is not answering adb (device powered off, off the
+              network, or the adb key is no longer authorized).
+        - alert: AdbCollectorFailing
+          expr: adb_scrape_collector_success == 0
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: adb-exporter collector {{ $labels.collector }} failing
+            description: |
+              adb-exporter collector {{ $labels.collector }} on
+              {{ $labels.instance }} has been failing for 15m - a subset of
+              adb_* metrics is stale even though the device is otherwise
+              reachable.
