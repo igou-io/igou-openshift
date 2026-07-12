@@ -1,0 +1,44 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: snmp-exporter
+  namespace: snmp-exporter
+  labels:
+    app.kubernetes.io/name: snmp-exporter
+spec:
+  groups:
+    - name: apc-pdu.rules
+      rules:
+        - alert: APCPDUUnreachable
+          # staticConfig labels (category=power) propagate to `up`
+          expr: up{category="power"} == 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: APC PDU SNMP scrape failing ({{ $labels.instance }})
+            description: >-
+              snmp-exporter could not scrape the APC PDU at {{ $labels.instance }}
+              for 5 minutes. Check the PDU NMC, VLAN60 reachability, and the
+              SNMP community.
+        - alert: APCPDULoadNearOverload
+          expr: rPDULoadStatusLoadState{rPDULoadStatusLoadState="phaseLoadNearOverload"} == 1
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: APC PDU load near overload ({{ $labels.instance }})
+            description: >-
+              PDU {{ $labels.instance }} phase/bank {{ $labels.rPDULoadStatusIndex }}
+              load is near overload. Redistribute load before it trips.
+        - alert: APCPDULoadOverload
+          expr: rPDULoadStatusLoadState{rPDULoadStatusLoadState="phaseLoadOverload"} == 1
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: APC PDU load OVERLOAD ({{ $labels.instance }})
+            description: >-
+              PDU {{ $labels.instance }} phase/bank {{ $labels.rPDULoadStatusIndex }}
+              is in OVERLOAD. Shed load immediately to avoid a breaker trip.

@@ -9,6 +9,7 @@ resources:
   - exporters/upsmonitor
   - exporters/truenas
   - exporters/rk8s-federate
+  - exporters/snmp-exporter
   - servicemonitors/argocd-servicemonitor.yaml
   - servicemonitors/cert-manager-servicemonitor.yaml
   - servicemonitors/external-secrets-podmonitor.yaml
