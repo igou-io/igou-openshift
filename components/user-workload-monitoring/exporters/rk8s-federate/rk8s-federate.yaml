@@ -1,0 +1,147 @@
+---
+# Prometheus federation of the rk8s lab cluster (k3s + kube-prometheus-stack)
+# into OpenShift User Workload Monitoring. rk8s exposes its Prometheus
+# /federate endpoint at https://federate.rk8s.igou.systems (MetalLB VIP
+# 10.10.150.129:443, Let's Encrypt prod cert, path-restricted to /federate,
+# no auth). OCP nodes (10.10.9.0/24) route to the rk8s MetalLB range
+# (10.10.150.129-254) directly over the LAN.
+#
+# House pattern for external scrape targets: a selectorless Service + a
+# classic manual Endpoints object (bare IP) + a ServiceMonitor. The Endpoints
+# name MUST match the Service name so endpoint discovery works; the mirroring
+# controller derives the EndpointSlice automatically.
+apiVersion: v1
+kind: Service
+metadata:
+  name: rk8s-federate
+  labels:
+    app.kubernetes.io/name: rk8s-federate
+    app.kubernetes.io/part-of: rk8s-federate
+spec:
+  clusterIP: None
+  ports:
+    - name: metrics
+      port: 443
+      targetPort: 443
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  # Must match the Service name for endpoint discovery.
+  name: rk8s-federate
+  labels:
+    app.kubernetes.io/name: rk8s-federate
+    app.kubernetes.io/part-of: rk8s-federate
+subsets:
+  - addresses:
+      # rk8s MetalLB VIP for the federation ingress. Bare IP, so the
+      # ServiceMonitor must pin tlsConfig.serverName for cert verification.
+      - ip: 10.10.150.129
+    ports:
+      - name: metrics
+        port: 443
+        protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: rk8s-federate
+  labels:
+    app.kubernetes.io/name: rk8s-federate
+    app.kubernetes.io/part-of: rk8s-federate
+spec:
+  # sampleLimit protects UWM from a runaway rk8s Prometheus. Measured union
+  # of all match[] selectors below on the live rk8s Prometheus = 188,244
+  # series (kubelet 108,953 + apiserver 59,985 + kube-state-metrics 6,473 +
+  # node-exporter 6,610 + recording rules 2,375 + the rest); set ~3.2x for
+  # cardinality growth headroom.
+  sampleLimit: 600000
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rk8s-federate
+  endpoints:
+    - port: metrics
+      scheme: https
+      path: /federate
+      # Bare-IP target: the LE prod cert chains to the container trust store,
+      # but SNI/hostname verification needs the real DNS name. No
+      # insecureSkipVerify.
+      tlsConfig:
+        serverName: federate.rk8s.igou.systems
+      # Federation runs a touch slower than the 30s house default because the
+      # payload is large (see sampleLimit).
+      interval: 60s
+      scrapeTimeout: 30s
+      # Preserve the labels rk8s attaches to each federated series (job,
+      # instance, cluster="rk8s", the real namespace, etc.). NOTE: CMO's
+      # overrideHonorLabels forces honor_labels=false for EVERY user
+      # ServiceMonitor, so this request is effectively ignored - the
+      # federated job/instance/service/endpoint/namespace labels collide with
+      # the target-assigned ones and are renamed exported_*. The
+      # metricRelabelings below put back the ones we can.
+      honorLabels: true
+      params:
+        # Pull the active kube-prometheus-stack jobs plus recording-rule
+        # outputs. The {__name__=~".+:.+"} matcher captures recorded series
+        # (e.g. namespace_workload_pod:kube_pod_owner:relabel,
+        # node_namespace_pod_container:container_memory_working_set_bytes)
+        # that drop their job label - many dashboard panels are empty without
+        # it. k3s disables scheduler/controller-manager/etcd/proxy jobs, so
+        # those are intentionally absent.
+        'match[]':
+          - '{job="node-exporter"}'
+          - '{job="kube-state-metrics"}'
+          - '{job="kubelet"}'
+          - '{job="apiserver"}'
+          - '{job="coredns"}'
+          - '{job="kube-prometheus-stack-prometheus"}'
+          - '{job="kube-prometheus-stack-alertmanager"}'
+          - '{job="kube-prometheus-stack-operator"}'
+          - '{job="cdi-prometheus-metrics"}'
+          - '{__name__=~".+:.+"}'
+      metricRelabelings:
+        # Restore the labels honor_labels=false renamed to exported_*. The
+        # regex (.+) guard means recording-rule series that legitimately have
+        # no job/instance are left untouched instead of blanked. Explicit
+        # action: keeps CRD defaults visible so ArgoCD stays Synced.
+        - action: replace
+          sourceLabels: [exported_job]
+          regex: (.+)
+          targetLabel: job
+          replacement: $1
+        - action: labeldrop
+          regex: exported_job
+        - action: replace
+          sourceLabels: [exported_instance]
+          regex: (.+)
+          targetLabel: instance
+          replacement: $1
+        - action: labeldrop
+          regex: exported_instance
+        - action: replace
+          sourceLabels: [exported_service]
+          regex: (.+)
+          targetLabel: service
+          replacement: $1
+        - action: labeldrop
+          regex: exported_service
+        - action: replace
+          sourceLabels: [exported_endpoint]
+          regex: (.+)
+          targetLabel: endpoint
+          replacement: $1
+        - action: labeldrop
+          regex: exported_endpoint
+        # `namespace` is deliberately NOT restored. enforcedNamespaceLabel
+        # appends a `namespace=rk8s-federate` relabel AFTER user
+        # metric_relabel_configs (verified against the live rendered UWM
+        # config_out: user relabelings run first, the enforced namespace
+        # relabel is last), so any exported_namespace->namespace copy would be
+        # overwritten. The real rk8s namespace therefore lives permanently in
+        # `exported_namespace`, and the rk8s Grafana dashboards key off it.
+        #
+        # Drop Prometheus' own federation replica label to avoid needless
+        # series churn.
+        - action: labeldrop
+          regex: prometheus_replica
