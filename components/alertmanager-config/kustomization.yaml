@@ -5,6 +5,7 @@ namespace: openshift-monitoring
 resources:
   - alertmanager-eda-event-stream-externalsecret.yaml
   - alertmanager-slack-bot-token-externalsecret.yaml
+  - drop-unsupported-hco-modification-alertrelabelconfig.yaml
 secretGenerator:
   - name: alertmanager-main
     namespace: openshift-monitoring
