@@ -1,0 +1,56 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: snmp-exporter
+resources:
+  - snmp-exporter-namespace.yaml
+  - apc-pdu-snmp-externalsecret.yaml
+  - snmp-exporter-prometheusrule.yaml
+  - probes/apc-pdu-probe.yaml
+helmCharts:
+  - name: prometheus-snmp-exporter
+    namespace: snmp-exporter
+    version: 9.16.1
+    releaseName: snmp-exporter
+    repo: https://prometheus-community.github.io/helm-charts
+    valuesInline:
+      fullnameOverride: snmp-exporter
+      image:
+        registry: quay.io
+        repository: prometheus/snmp-exporter
+        tag: v0.30.1@sha256:e5fd5e8b43ace6c088fe9bf0b37b7fff0e04380bee352be7ec41b853a4dd5859
+      # config is supplied out-of-band via the ExternalSecret-rendered
+      # Secret snmp-exporter-config (mounted at /etc/snmp_exporter/snmp.yml
+      # by the patch below), so the read community never lands in git.
+      serviceMonitor:
+        enabled: false
+      resources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
+        limits:
+          memory: 64Mi
+# Post-render patches:
+#   1. Mount the ESO-rendered snmp.yml over the image default config path.
+#   2. OpenShift restricted-v2 SCC assigns runAsUser from the namespace UID
+#      range; the chart hard-codes runAsUser=1000, so remove it (same shape
+#      as the blackbox-exporter precedent).
+patches:
+  - target:
+      kind: Deployment
+      name: snmp-exporter
+    patch: |
+      - op: remove
+        path: /spec/template/spec/containers/0/securityContext/runAsUser
+      - op: replace
+        path: /spec/template/spec/volumes
+        value:
+          - name: snmp-config
+            secret:
+              secretName: snmp-exporter-config
+      - op: replace
+        path: /spec/template/spec/containers/0/volumeMounts
+        value:
+          - name: snmp-config
+            mountPath: /etc/snmp_exporter/snmp.yml
+            subPath: snmp.yml
+            readOnly: true

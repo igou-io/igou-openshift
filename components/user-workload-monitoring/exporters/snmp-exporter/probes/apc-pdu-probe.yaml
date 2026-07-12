@@ -1,0 +1,34 @@
+---
+# Scrapes the APC AP7900 rack PDU (UP-HortWoods-PDU01) on VLAN60 through the
+# snmp-exporter. The Probe operator turns each staticConfig target into
+# /snmp?target=<ip>&module=apc_pdu; the relabelingConfigs add ?auth=apc_v1
+# (snmp_exporter v0.23+ split auth out of the module) and label each series
+# by the PDU it came from.
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: apc-pdu
+  namespace: snmp-exporter
+  labels:
+    app.kubernetes.io/name: snmp-exporter
+spec:
+  interval: 60s
+  scrapeTimeout: 30s
+  module: apc_pdu
+  prober:
+    url: snmp-exporter.snmp-exporter.svc:9116
+    path: /snmp
+  targets:
+    staticConfig:
+      static:
+        - 10.10.60.22
+      labels:
+        tier: standard
+        category: power
+        owner: platform
+        device: UP-HortWoods-PDU01
+      relabelingConfigs:
+        - targetLabel: __param_auth
+          replacement: apc_v1
+        - sourceLabels: [__param_target]
+          targetLabel: instance
