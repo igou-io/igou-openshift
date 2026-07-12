@@ -1,0 +1,25 @@
+apiVersion: tuned.openshift.io/v1
+kind: Tuned
+metadata:
+  name: openshift-control-plane-epp
+  namespace: openshift-cluster-node-tuning-operator
+spec:
+  profile:
+    - name: openshift-control-plane-epp
+      data: |
+        [main]
+        summary=openshift-control-plane with balanced EPP to reduce idle clocks/heat
+        include=openshift-control-plane
+
+        [cpu]
+        governor=powersave
+        energy_performance_preference=balance_performance
+  recommend:
+    # Priority MUST be numerically lower than the default openshift-control-plane
+    # recommend (priority 30) so this profile wins on master nodes. The
+    # include= above keeps every other control-plane tuning intact; only the
+    # [cpu] block (governor + HWP energy-performance preference) is overridden.
+    - match:
+        - label: node-role.kubernetes.io/master
+      priority: 20
+      profile: openshift-control-plane-epp
