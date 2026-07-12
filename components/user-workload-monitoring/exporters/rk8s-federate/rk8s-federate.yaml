@@ -69,6 +69,19 @@ spec:
       # insecureSkipVerify.
       tlsConfig:
         serverName: federate.rk8s.igou.systems
+      # The rk8s ingress routes /federate by HTTP Host header. A bare-IP
+      # Endpoints target makes Prometheus send `Host: 10.10.150.129` (the
+      # __address__), which the ingress answers with 404 -
+      # tlsConfig.serverName above only sets the TLS SNI, NOT the HTTP Host
+      # header. Rewrite __address__ to the DNS name so both the Host header
+      # and SNI are federate.rk8s.igou.systems; the OCP cluster resolves it to
+      # the same MetalLB VIP (10.10.150.129) and routes there directly over
+      # the LAN. Target discovery still comes from the bare-IP Endpoints above
+      # - this only fixes the scrape connection's Host header.
+      relabelings:
+        - action: replace
+          targetLabel: __address__
+          replacement: federate.rk8s.igou.systems:443
       # Federation runs a touch slower than the 30s house default because the
       # payload is large (see sampleLimit).
       interval: 60s
