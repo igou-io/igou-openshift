@@ -42,7 +42,11 @@ spec:
           type: RuntimeDefault
       containers:
         - name: adb-exporter
-          image: ghcr.io/igou-io/adb-exporter:v0.1.0
+          # renovate: datasource=docker depName=ghcr.io/igou-io/adb-exporter
+          # Immutable date tag from the igou-containers build of source tag
+          # v0.1.0 (v0.1.0 is the source git tag, NOT an image tag). Renovate
+          # auto-merges igou images, so this tracks forward automatically.
+          image: ghcr.io/igou-io/adb-exporter:2026.07.12@sha256:532073ecdc3f71ebeb74f9de713b7b991fcab078201002c60e2f2bcb8457514f
           args:
             - -adb.address=10.10.9.22:5555
           ports:
