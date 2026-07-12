@@ -1,0 +1,18 @@
+---
+# ClusterIP Service in front of the single adb-exporter pod; the
+# ServiceMonitor selects it by label and UWM Prometheus scrapes :9836.
+apiVersion: v1
+kind: Service
+metadata:
+  name: adb-exporter
+  labels:
+    app.kubernetes.io/name: adb-exporter
+    app.kubernetes.io/part-of: adb-exporter
+spec:
+  selector:
+    app.kubernetes.io/name: adb-exporter
+  ports:
+    - name: metrics
+      port: 9836
+      targetPort: metrics
+      protocol: TCP

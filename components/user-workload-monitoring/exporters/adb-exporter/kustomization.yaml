@@ -1,0 +1,11 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: adb-exporter
+resources:
+  - adb-exporter-namespace.yaml
+  - adb-exporter-externalsecret.yaml
+  - adb-exporter-deployment.yaml
+  - adb-exporter-service.yaml
+  - adb-exporter-servicemonitor.yaml
+  - adb-exporter-prometheusrule.yaml

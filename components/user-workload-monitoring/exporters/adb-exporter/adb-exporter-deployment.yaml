@@ -1,0 +1,94 @@
+---
+# adb-exporter (github.com/david-igou/adb-exporter) runs IN-CLUSTER and
+# scrapes an Nvidia Shield Android TV over `adb`, exposing ~120 adb_* metrics
+# on :9836. It reaches the device over the LAN at 10.10.9.22:5555.
+#
+# NOTE: the Shield currently sits on VLAN9 at 10.10.9.22; once the operator
+# returns it to VLAN35 the device address becomes 10.10.35.20:5555 - update
+# the -adb.address arg below at that time.
+#
+# strategy Recreate (NOT the default RollingUpdate): the exporter serializes
+# every adb command through one mutex and the Shield drops concurrent adb
+# sessions, so there must NEVER be two pods talking to the device at once.
+#
+# adb authorization: ADB_VENDOR_KEYS points at the ESO-rendered keypair
+# mounted read-only at /etc/adb-exporter, so `adb connect` presents an
+# already-authorized key and no on-device prompt appears. HOME is left at the
+# image default (/home/adb-exporter, group-0 writable) so the adb server can
+# create its own scratch under ~/.android at runtime.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adb-exporter
+  labels:
+    app.kubernetes.io/name: adb-exporter
+    app.kubernetes.io/part-of: adb-exporter
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: adb-exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: adb-exporter
+        app.kubernetes.io/part-of: adb-exporter
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: adb-exporter
+          image: ghcr.io/igou-io/adb-exporter:v0.1.0
+          args:
+            - -adb.address=10.10.9.22:5555
+          ports:
+            - name: metrics
+              containerPort: 9836
+              protocol: TCP
+          env:
+            # Present the already-authorized key from the mounted Secret so
+            # `adb connect` never prompts on the device.
+            - name: ADB_VENDOR_KEYS
+              value: /etc/adb-exporter/adbkey
+          volumeMounts:
+            - name: adbkey
+              mountPath: /etc/adb-exporter
+              readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: 9836
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: 9836
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            # runAsUser deliberately unset: OpenShift restricted-v2 SCC
+            # assigns a random UID from the namespace range. The image's
+            # HOME dir is owned root:0 mode 0775, so it works under any UID
+            # in GID 0.
+            seccompProfile:
+              type: RuntimeDefault
+      volumes:
+        - name: adbkey
+          secret:
+            secretName: adb-exporter-adbkey
