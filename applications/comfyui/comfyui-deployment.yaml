@@ -37,6 +37,37 @@ spec:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
+      initContainers:
+        # Copy pre-start.sh from the ConfigMap onto the PVC so it lands OWNED by
+        # the SCC-assigned UID (initContainers share the main container's
+        # runAsUser). The entrypoint does `chmod +x` on it under `set -e`; a
+        # direct ConfigMap subPath mount is read-only, so that chmod would fail
+        # and abort startup — hence this copy. cp -f is unconditional so
+        # ConfigMap edits propagate on every restart (the PVC copy is not the
+        # source of truth). Same image as main = already on the node, no pull.
+        - name: seed-user-scripts
+          image: docker.io/yanwk/comfyui-boot:cu130-slim-20260706@sha256:a2c861b1b30840eeece704e883d4a9af6428da2a6b483688f4cd95a5616efcb7
+          command:
+            - bash
+            - -c
+            - mkdir -p /root/user-scripts && cp -f /seed/pre-start.sh /root/user-scripts/pre-start.sh
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: data
+              mountPath: /root
+            - name: user-scripts-seed
+              mountPath: /seed
+              readOnly: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
       containers:
         - name: comfyui
           # yanwk/comfyui-boot, slim CUDA 13.0 family (CUDA 13.0 runtime <= the
@@ -73,24 +104,36 @@ spec:
               path: /
               port: http
             periodSeconds: 10
+          # Loose thresholds: large checkpoint loads / CUDA init can block the
+          # aiohttp main thread for a while — a long model load must not trip
+          # a restart mid-generation.
           livenessProbe:
             httpGet:
               path: /
               port: http
             periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 6
           resources:
             requests:
-              # One GPU only — the second stays free for llmkube. cpu/memory
-              # sized for a single generation pipeline; memory limit gives
-              # headroom for large models without cpu-throttling GPU work (no
-              # cpu limit, matching sands-of-time / the lab batch-work habit).
+              # Both of casval's GPUs go to this one ComfyUI process for
+              # multi-GPU model placement (ComfyUI-MultiGPU, seeded by
+              # pre-start.sh). This claims the whole node's GPU capacity:
+              # llmkube's casval-hosted models (e.g. qwen3-35b) cannot run
+              # concurrently — scale comfyui to 0 before starting them.
+              # cpu/memory sized for a single generation pipeline; memory limit
+              # gives headroom for large models without cpu-throttling GPU work
+              # (no cpu limit, matching sands-of-time / the lab batch-work habit).
               cpu: "4"
               memory: 16Gi
-              nvidia.com/gpu: "1"
+              nvidia.com/gpu: "2"
             limits:
               memory: 48Gi
-              nvidia.com/gpu: "1"
+              nvidia.com/gpu: "2"
       volumes:
         - name: data
           persistentVolumeClaim:
             claimName: comfyui-data
+        - name: user-scripts-seed
+          configMap:
+            name: comfyui-user-scripts

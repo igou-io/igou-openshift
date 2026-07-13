@@ -31,10 +31,23 @@ First start on an empty PVC copies the image-bundled ComfyUI into `/root`
 
 ## GPU
 
-- Requests/limits **`nvidia.com/gpu: 1`** — one of casval's two GPUs. The
-  second stays free for llmkube (hermes qwen35-2b). ComfyUI is single-GPU per
-  process: to use both, either bump to `2` plus the ComfyUI-MultiGPU custom
-  node, or run a second instance.
+- Requests/limits **`nvidia.com/gpu: 2`** — **both** of casval's GPUs back one
+  ComfyUI process. ComfyUI core is single-GPU per process and execution stays
+  sequential; the [ComfyUI-MultiGPU](https://github.com/pollockjj/ComfyUI-MultiGPU)
+  custom node spreads a model's **components** across the two cards for VRAM
+  headroom — e.g. UNet on `cuda:0`, CLIP/VAE on `cuda:1`, with DisTorch layer
+  offload — so bigger models fit than either 16 GB card holds alone.
+- **Contention**: claiming both GPUs means llmkube's casval-hosted models (e.g.
+  `qwen3-35b`) **cannot run concurrently** with ComfyUI. Scale comfyui to `0`
+  before starting them (and vice-versa).
+- ComfyUI-MultiGPU is auto-installed on first boot by the `pre-start.sh` hook
+  (see below) — a SHA-pinned `git clone`, zero extra pip deps. It auto-discovers
+  both cards via `torch.cuda.device_count()`; **do not** set `--cuda-device` in
+  `CLI_ARGS` or it only sees one.
+- **Bumping the node**: it has no upstream release tags and Renovate can't manage
+  a raw `git clone`, so the pin lives in
+  `comfyui-user-scripts-configmap.yaml` (`MULTIGPU_PIN`). Edit that SHA to
+  update; the next pod restart re-pins the PVC checkout.
 - GPU metrics come from the existing DCGM exporter dashboards.
 
 ## Storage layout
@@ -47,8 +60,16 @@ runner home. Everything ComfyUI writes lives under it:
 /root/ComfyUI/input/           uploaded images
 /root/ComfyUI/output/          generated images
 /root/ComfyUI/custom_nodes/    ComfyUI-Manager + installed nodes
-/root/user-scripts/            optional set-proxy.sh / pre-start.sh hooks
+/root/user-scripts/            pre-start.sh hook (seeded from ConfigMap each boot)
 ```
+
+`pre-start.sh` is **not** hand-edited on the PVC. The `seed-user-scripts`
+initContainer copies it (`cp -f`) from the `comfyui-user-scripts` ConfigMap onto
+the PVC on **every** start, so the ConfigMap in git is the source of truth and
+any manual PVC edit is overwritten. The copy is what lets the entrypoint
+`chmod +x` the file (a read-only ConfigMap mount would fail that chmod under
+`set -e`); it lands owned by the pod's UID because init and main containers share
+the SCC-assigned `runAsUser`.
 
 ### Getting models onto the PVC
 

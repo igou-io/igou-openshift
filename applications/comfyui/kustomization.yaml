@@ -6,6 +6,7 @@ namespace: comfyui
 resources:
   - comfyui-namespace.yaml
   - comfyui-data-pvc.yaml
+  - comfyui-user-scripts-configmap.yaml
   - comfyui-deployment.yaml
   - comfyui-service.yaml
   - comfyui-route.yaml
