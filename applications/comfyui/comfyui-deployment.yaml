@@ -90,6 +90,14 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /root
+            # The model tree lives on its own cold-backed PVC; the rest of /root
+            # (app bundle, custom_nodes, .cache/.local, user config) stays on the
+            # fast ssd `data` PVC. Ordering matters: `data` mounts at /root and
+            # `models` mounts at the deeper /root/ComfyUI/models — the deeper
+            # mount shadows whatever would sit under the ssd copy, which is
+            # intentional (models never touch the ssd PVC).
+            - name: models
+              mountPath: /root/ComfyUI/models
           # First boot on an empty PVC copies the bundled ComfyUI into place and
           # may compile/warm caches — allow up to ~15 min before the liveness
           # probe can act (startup gates it).
@@ -134,6 +142,9 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: comfyui-data
+        - name: models
+          persistentVolumeClaim:
+            claimName: comfyui-models
         - name: user-scripts-seed
           configMap:
             name: comfyui-user-scripts

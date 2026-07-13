@@ -52,15 +52,27 @@ First start on an empty PVC copies the image-bundled ComfyUI into `/root`
 
 ## Storage layout
 
-One 300Gi RWO PVC (`freenas-nvmeof-ssd-csi`) mounted at `/root` — the image's
-runner home. Everything ComfyUI writes lives under it:
+Two RWO PVCs, split by access pattern:
+
+- **`comfyui-data`** — 300Gi on `freenas-nvmeof-ssd-csi` (fast ssd pool),
+  mounted at `/root`. The app home: the ComfyUI app bundle, custom_nodes,
+  input/output, user config, and `.cache`/`.local`. 300Gi is oversized for a
+  home-only volume (an artifact of the original single-PVC layout) and could be
+  reduced on a future clean recreate.
+- **`comfyui-models`** — 200Gi on `freenas-nvmeof-cold-csi` (cheaper cold
+  pool), mounted at the deeper `/root/ComfyUI/models`. The bulk model weights
+  (checkpoints, unets, GGUF, text-encoders, VAEs, LoRAs). Model loads are large
+  sequential reads that tolerate the cold pool fine.
+
+The `/root/ComfyUI/models` mount is deeper than the `/root` mount and
+**shadows** the ssd copy — intentional, so models never consume ssd space.
 
 ```
-/root/ComfyUI/models/<type>/   checkpoints, loras, vae, controlnet, upscale_models, ...
-/root/ComfyUI/input/           uploaded images
-/root/ComfyUI/output/          generated images
-/root/ComfyUI/custom_nodes/    ComfyUI-Manager + installed nodes
-/root/user-scripts/            pre-start.sh hook (seeded from ConfigMap each boot)
+/root/ComfyUI/models/<type>/   checkpoints, loras, vae, controlnet, upscale_models, ...   [cold PVC]
+/root/ComfyUI/input/           uploaded images                                            [ssd PVC]
+/root/ComfyUI/output/          generated images                                           [ssd PVC]
+/root/ComfyUI/custom_nodes/    ComfyUI-Manager + installed nodes                          [ssd PVC]
+/root/user-scripts/            pre-start.sh hook (seeded from ConfigMap each boot)         [ssd PVC]
 ```
 
 `pre-start.sh` is **not** hand-edited on the PVC. The `seed-user-scripts`
@@ -72,6 +84,9 @@ any manual PVC edit is overwritten. The copy is what lets the entrypoint
 the SCC-assigned `runAsUser`.
 
 ### Getting models onto the PVC
+
+Models land on the `comfyui-models` cold PVC — `/root/ComfyUI/models` in the
+pod is that PVC, not the ssd home.
 
 - Sideload from a workstation into the running pod:
   ```bash
