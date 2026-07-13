@@ -1,0 +1,21 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: comfyui-models
+  namespace: comfyui
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      # Holds the bulk model weights — checkpoints, unets, GGUF, text-encoders,
+      # VAEs, LoRAs — the multi-hundred-GB tree that dominates ComfyUI's disk
+      # use. Parked on the cheaper NVMe-oF cold pool: model loads are large
+      # sequential reads that tolerate the cold pool fine, while the app home
+      # stays on the fast ssd pool. 200Gi fits a working set of SDXL/Flux
+      # checkpoints plus LoRAs/VAEs/upscalers.
+      storage: 200Gi
+  # Pin explicitly (lab convention): NVMe-oF on the cold pool. RWO is fine —
+  # replicas stay 0/1 with a Recreate strategy.
+  storageClassName: freenas-nvmeof-cold-csi

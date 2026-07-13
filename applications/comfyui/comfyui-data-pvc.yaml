@@ -1,0 +1,22 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: comfyui-data
+  namespace: comfyui
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      # App home only (/root): the ComfyUI app bundle, custom_nodes,
+      # input/output, user config, and .cache/.local. The model tree no longer
+      # lives here — it's on the separate `comfyui-models` cold PVC mounted at
+      # /root/ComfyUI/models. 300Gi is oversized for a home-only volume (an
+      # artifact of the original single-PVC layout) and could be reduced on a
+      # future clean recreate; it's kept here because the live PVC is bound at
+      # 300Gi and CSI can't shrink in place.
+      storage: 300Gi
+  # Pin explicitly (lab convention): NVMe-oF on the ssd pool, the cluster
+  # default. RWO is fine — replicas stay 0/1 with a Recreate strategy.
+  storageClassName: freenas-nvmeof-ssd-csi

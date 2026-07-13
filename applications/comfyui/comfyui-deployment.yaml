@@ -1,0 +1,150 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: comfyui
+  namespace: comfyui
+spec:
+  # Checked in at 0 on purpose. casval is an on-demand CAPI burst node that the
+  # cluster-autoscaler powers down when idle; a permanently-Running GPU pod
+  # would pin it on. Scale to 1 by hand to run (autoscaler boots casval), back
+  # to 0 when done. ArgoCD ignores /spec/replicas so it never reverts a
+  # scale-up (see clusters/ocp/values.yaml).
+  replicas: 0
+  # Exclusive GPU + a RWO PVC: the old pod must release both before the new one
+  # starts.
+  strategy:
+    type: Recreate
+  selector: {}
+  template:
+    metadata: {}
+    spec:
+      # Land on casval (the only GPU burst node) and tolerate its dedicated
+      # taint so nothing else drifts onto it.
+      nodeSelector:
+        node-role.kubernetes.io/burst: ""
+      tolerations:
+        - key: workload
+          operator: Equal
+          value: burst
+          effect: NoSchedule
+      # restricted-v2 baseline. No runAsUser/fsGroup: the SCC assigns them from
+      # the namespace range (pinned values break on namespace recreation). The
+      # image hardcodes /root as its home and writes everything there
+      # (ComfyUI/, .cache, .local) — mounting the PVC at /root makes that tree
+      # fsGroup-owned and group-writable, so the arbitrary UID can write it.
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        # Copy pre-start.sh from the ConfigMap onto the PVC so it lands OWNED by
+        # the SCC-assigned UID (initContainers share the main container's
+        # runAsUser). The entrypoint does `chmod +x` on it under `set -e`; a
+        # direct ConfigMap subPath mount is read-only, so that chmod would fail
+        # and abort startup — hence this copy. cp -f is unconditional so
+        # ConfigMap edits propagate on every restart (the PVC copy is not the
+        # source of truth). Same image as main = already on the node, no pull.
+        - name: seed-user-scripts
+          image: docker.io/yanwk/comfyui-boot:cu130-slim-20260706@sha256:a2c861b1b30840eeece704e883d4a9af6428da2a6b483688f4cd95a5616efcb7
+          command:
+            - bash
+            - -c
+            - mkdir -p /root/user-scripts && cp -f /seed/pre-start.sh /root/user-scripts/pre-start.sh
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: data
+              mountPath: /root
+            - name: user-scripts-seed
+              mountPath: /seed
+              readOnly: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
+      containers:
+        - name: comfyui
+          # yanwk/comfyui-boot, slim CUDA 13.0 family (CUDA 13.0 runtime <= the
+          # node's 13.2; runs on driver 595). Digest-pinned, Renovate-managed.
+          image: docker.io/yanwk/comfyui-boot:cu130-slim-20260706@sha256:a2c861b1b30840eeece704e883d4a9af6428da2a6b483688f4cd95a5616efcb7
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: http
+              containerPort: 8188
+          env:
+            # The entrypoint cd's to /root and writes ComfyUI/, .cache, .local
+            # there; the PVC is mounted at /root. Set HOME too since the
+            # arbitrary UID has no passwd home.
+            - name: HOME
+              value: /root
+          volumeMounts:
+            - name: data
+              mountPath: /root
+            # The model tree lives on its own cold-backed PVC; the rest of /root
+            # (app bundle, custom_nodes, .cache/.local, user config) stays on the
+            # fast ssd `data` PVC. Ordering matters: `data` mounts at /root and
+            # `models` mounts at the deeper /root/ComfyUI/models — the deeper
+            # mount shadows whatever would sit under the ssd copy, which is
+            # intentional (models never touch the ssd PVC).
+            - name: models
+              mountPath: /root/ComfyUI/models
+          # First boot on an empty PVC copies the bundled ComfyUI into place and
+          # may compile/warm caches — allow up to ~15 min before the liveness
+          # probe can act (startup gates it).
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 15
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+          # Loose thresholds: large checkpoint loads / CUDA init can block the
+          # aiohttp main thread for a while — a long model load must not trip
+          # a restart mid-generation.
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 6
+          resources:
+            requests:
+              # Both of casval's GPUs go to this one ComfyUI process for
+              # multi-GPU model placement (ComfyUI-MultiGPU, seeded by
+              # pre-start.sh). This claims the whole node's GPU capacity:
+              # llmkube's casval-hosted models (e.g. qwen3-35b) cannot run
+              # concurrently — scale comfyui to 0 before starting them.
+              # cpu/memory sized for a single generation pipeline; memory limit
+              # gives headroom for large models without cpu-throttling GPU work
+              # (no cpu limit, matching sands-of-time / the lab batch-work habit).
+              cpu: "4"
+              memory: 16Gi
+              nvidia.com/gpu: "2"
+            limits:
+              memory: 48Gi
+              nvidia.com/gpu: "2"
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: comfyui-data
+        - name: models
+          persistentVolumeClaim:
+            claimName: comfyui-models
+        - name: user-scripts-seed
+          configMap:
+            name: comfyui-user-scripts

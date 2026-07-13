@@ -1,0 +1,24 @@
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: comfyui
+  namespace: comfyui
+  annotations:
+    # Image generation and the websocket progress stream stay open well past
+    # the router's 30s default — match the llmkube routes' 10m budget.
+    haproxy.router.openshift.io/timeout: 10m
+spec:
+  host: comfyui.apps.ocp.igou.systems
+  to:
+    kind: Service
+    name: comfyui
+    weight: 100
+  port:
+    targetPort: http
+  # Edge termination: the router terminates TLS (default wildcard cert for
+  # *.apps.ocp.igou.systems) and forwards plaintext HTTP to ComfyUI on :8188.
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None
