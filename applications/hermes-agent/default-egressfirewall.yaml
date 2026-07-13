@@ -362,6 +362,14 @@ spec:
         - protocol: TCP
           port: 443
 
+    # npm package registry (npx / npm installs)
+    - type: Allow
+      to:
+        dnsName: registry.npmjs.org
+      ports:
+        - protocol: TCP
+          port: 443
+
     # CentOS Stream dnf mirrors (package installs/updates during Hermes VM convergence)
     - type: Allow
       to:
