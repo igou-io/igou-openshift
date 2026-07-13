@@ -1,0 +1,46 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: comfyui-user-scripts
+  namespace: comfyui
+data:
+  # Seeded onto the PVC (/root/user-scripts/pre-start.sh) by the
+  # seed-user-scripts initContainer each boot; the image entrypoint chmod +x's
+  # and `source`s it under `set -e` before starting ComfyUI. This ConfigMap is
+  # the source of truth — the PVC copy is overwritten (cp -f) every start, so
+  # edit here, not the PVC.
+  #
+  # Installs the pollockjj/ComfyUI-MultiGPU custom node so both of casval's GPUs
+  # back one ComfyUI process (model components spread across cuda:0/cuda:1 for
+  # VRAM headroom). Zero extra pip deps (torch/ComfyUI only), so a git clone is
+  # the whole install.
+  #
+  # SHA-pinned: upstream cuts no release tags, and Renovate can't manage a raw
+  # git clone — bump PIN by hand when you want a newer node.
+  pre-start.sh: |
+    #!/usr/bin/env bash
+    # Sourced by the entrypoint under `set -e`. First-boot clone failures SHOULD
+    # abort (loud) so we never launch a half-provisioned PVC without multi-GPU;
+    # restart-path failures (offline re-pin) must NOT abort an already-good clone.
+    # Deliberately no `set`/`shopt` here — options would leak into the entrypoint.
+    MULTIGPU_REPO="https://github.com/pollockjj/ComfyUI-MultiGPU"
+    MULTIGPU_PIN="b51c99a525e9607e43545ee2a8b7694c74a4775a"
+    MULTIGPU_DIR="/root/ComfyUI/custom_nodes/ComfyUI-MultiGPU"
+
+    if [ ! -d "${MULTIGPU_DIR}/.git" ]; then
+      echo "[multigpu] first boot: cloning ${MULTIGPU_REPO}"
+      # No `|| true`: a first-boot clone/checkout failure must fail the pod.
+      git clone "${MULTIGPU_REPO}" "${MULTIGPU_DIR}"
+      git -C "${MULTIGPU_DIR}" checkout "${MULTIGPU_PIN}"
+      echo "[multigpu] cloned and pinned to ${MULTIGPU_PIN}"
+    elif [ "$(git -C "${MULTIGPU_DIR}" rev-parse HEAD 2>/dev/null)" != "${MULTIGPU_PIN}" ]; then
+      echo "[multigpu] existing clone off pin; re-pinning to ${MULTIGPU_PIN}"
+      # Guarded: a network blip on restart must not kill startup of a PVC that
+      # already has a working node checked out.
+      git -C "${MULTIGPU_DIR}" fetch --depth 1 origin "${MULTIGPU_PIN}" \
+        && git -C "${MULTIGPU_DIR}" checkout "${MULTIGPU_PIN}" \
+        || echo "[multigpu] WARN: re-pin failed (offline?); keeping existing HEAD"
+    else
+      echo "[multigpu] existing clone already at ${MULTIGPU_PIN}"
+    fi
