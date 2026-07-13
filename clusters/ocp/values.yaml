@@ -317,6 +317,22 @@ applications:
     source:
       path: applications/hermes-agent
 
+  comfyui:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/comfyui
+    # Replicas are scaled manually (and the cluster-autoscaler powers casval
+    # up/down in response) — leave them alone so ArgoCD doesn't revert
+    # scale-ups back to the 0 checked into git.
+    ignoreDifferences:
+      - group: apps
+        kind: Deployment
+        jsonPointers:
+          - /spec/replicas
+
   firecrawl:
     project: cluster-apps
     annotations:

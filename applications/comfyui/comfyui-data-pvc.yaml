@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: comfyui-data
+  namespace: comfyui
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      # Single volume holds the whole ComfyUI runner home (/root): the app
+      # itself, custom_nodes, input/output, user config, and the model tree.
+      # Models dominate — 300Gi leaves room for a handful of SDXL/Flux
+      # checkpoints plus LoRAs/VAEs/upscalers.
+      storage: 300Gi
+  # Pin explicitly (lab convention): NVMe-oF on the ssd pool, the cluster
+  # default. RWO is fine — replicas stay 0/1 with a Recreate strategy.
+  storageClassName: freenas-nvmeof-ssd-csi
