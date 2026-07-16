@@ -1,0 +1,55 @@
+---
+# Central log store for the whole lab (issue #382): ocp cluster logs via
+# the CLF collector plus all external lab logs via the log-gateway, with
+# tenants application/infrastructure/audit gated by OpenShift RBAC at the
+# LokiStack gateway.
+# 1x.demo = single replica of each component, no ingest HA — fine at lab
+# scale (≲15 GB/day); documented upgrade path is 1x.pico (HA, RF=2,
+# ~430Gi+ storage floor) if ingest ever grows past that.
+apiVersion: loki.grafana.com/v1
+kind: LokiStack
+metadata:
+  name: logging-loki
+  namespace: openshift-logging
+  annotations:
+    argocd.argoproj.io/sync-wave: '1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  size: 1x.demo
+  storage:
+    schemas:
+      - version: v13
+        effectiveDate: "2026-07-15"
+    secret:
+      name: logging-loki-s3
+      type: s3
+  storageClassName: freenas-nvmeof-ssd-csi
+  tenants:
+    mode: openshift-logging
+  limits:
+    global:
+      # Retention is compactor-enforced here, not via bucket ILM: 31d
+      # global, audit trimmed (noisiest stream), device syslog kept a
+      # season for "when did this switch port start flapping" questions.
+      retention:
+        days: 31
+        streams:
+          - selector: '{log_type="audit"}'
+            priority: 10
+            days: 14
+          - selector: '{job="syslog"}'
+            priority: 10
+            days: 92
+      ingestion:
+        perStreamRateLimit: 5
+        perStreamRateLimitBurst: 15
+  # Ruler on so AlertingRule CRs (phase 6) deliver into the platform
+  # Alertmanager (auto-wired by the operator on OpenShift).
+  rules:
+    enabled: true
+    selector:
+      matchLabels:
+        openshift.io/log-alerting: "true"
+    namespaceSelector:
+      matchLabels:
+        openshift.io/cluster-monitoring: "true"

@@ -1,0 +1,53 @@
+---
+# Cluster log collection (issue #382): Vector DaemonSet forwarding the
+# application/infrastructure/audit inputs to the LokiStack. Audit input
+# defaults to kubeAPI+openshiftAPI; ovn/auditd deliberately left out
+# (noisiest streams). External (non-cluster) logs do NOT come through
+# here — CLF receivers are scoped to on-cluster sources; they enter via
+# the log-gateway Alloy aggregator instead.
+apiVersion: observability.openshift.io/v1
+kind: ClusterLogForwarder
+metadata:
+  name: collector
+  namespace: openshift-logging
+  annotations:
+    argocd.argoproj.io/sync-wave: '2'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  serviceAccount:
+    name: collector
+  outputs:
+    - name: default-lokistack
+      type: lokiStack
+      lokiStack:
+        target:
+          name: logging-loki
+          namespace: openshift-logging
+        authentication:
+          token:
+            from: serviceAccount
+      tls:
+        ca:
+          key: service-ca.crt
+          configMapName: openshift-service-ca.crt
+  filters:
+    - name: multiline
+      type: detectMultilineException
+  pipelines:
+    - name: application
+      inputRefs:
+        - application
+      filterRefs:
+        - multiline
+      outputRefs:
+        - default-lokistack
+    - name: infrastructure
+      inputRefs:
+        - infrastructure
+      outputRefs:
+        - default-lokistack
+    - name: audit
+      inputRefs:
+        - audit
+      outputRefs:
+        - default-lokistack
