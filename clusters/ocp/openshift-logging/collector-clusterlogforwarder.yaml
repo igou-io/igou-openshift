@@ -25,6 +25,11 @@ spec:
         cpu: 500m
         memory: 512Mi
       limits:
+        # cpu limit restored: setting resources REPLACES the operator
+        # default (6 cpu / 2Gi) wholesale — without it, backlog catch-up
+        # after a node rejoin ran Vector at 15 cores and congested the
+        # node (observed on p330/hpg5 2026-07-16).
+        cpu: 4
         memory: 4Gi
   outputs:
     - name: default-lokistack
