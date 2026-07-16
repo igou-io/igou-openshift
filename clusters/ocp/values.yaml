@@ -383,6 +383,9 @@ applications:
 
   sands-of-time:
     project: cluster-apps
+    # Auto-sync disabled while an agent iterates on this namespace directly;
+    # sync manually until this line is removed.
+    enableAutoSync: false
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
       argocd.argoproj.io/sync-wave: '20'

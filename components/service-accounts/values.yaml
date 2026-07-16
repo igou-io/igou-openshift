@@ -294,7 +294,10 @@ serviceAccounts:
                 property: token
 
   - name: claude-edit
-    roleBindings: []
+    roleBindings:
+      - namespace: sands-of-time
+        clusterRoles:
+          - edit
     pushSecrets:
       - name: claude-edit-token-push
         refreshInterval: "0"
