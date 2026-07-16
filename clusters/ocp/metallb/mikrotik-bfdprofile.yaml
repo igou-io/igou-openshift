@@ -1,0 +1,18 @@
+# BFD backing for the mikrotik BGP session: detects a silently dead node in
+# ~0.9s (300ms x3) instead of the 180s BGP hold timer, during which shared
+# ECMP VIPs partially blackhole. The router side (BFD whitelist + use-bfd on
+# the listener) lives in igou-inventory; one-sided BFD is harmless — the BGP
+# session stays up with BFD down until both ends are configured. Full design:
+# igou-inventory/docs/network-topology.md.
+apiVersion: metallb.io/v1beta1
+kind: BFDProfile
+metadata:
+  name: mikrotik
+  namespace: metallb-system
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,ServerSideApply=true
+    argocd.argoproj.io/sync-wave: '0'
+spec:
+  receiveInterval: 300
+  transmitInterval: 300
+  detectMultiplier: 3

@@ -12,3 +12,6 @@ spec:
   myASN: 64513
   holdTime: 180s
   keepaliveTime: 60s
+  # Fast failure detection via BFD (mikrotik-bfdprofile.yaml); the hold
+  # timer above becomes the backstop.
+  bfdProfile: mikrotik
