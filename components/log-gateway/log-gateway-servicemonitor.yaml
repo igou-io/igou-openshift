@@ -1,0 +1,16 @@
+---
+# User-workload-monitoring scrape for the gateway: syslog received /
+# parse-error rates (loki_source_syslog_*) and LokiStack forward health
+# (loki_write_*). Surfaced in the Grafana "logging > Log Gateway" board.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: log-gateway
+  namespace: log-gateway
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: log-gateway
+  endpoints:
+    - port: http-metrics
+      interval: 30s
