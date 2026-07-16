@@ -973,6 +973,12 @@ Git source: `clusters/ocp/machineconfigs` (sync-wave 2, dest ns `openshift-machi
 
 **Status: healthy**
 
+> **Superseded detail (2026-07):** the pool ranges below predate the
+> rk8s/ocp cluster split. Each tier range is now split between this cluster
+> and rk8s (`igou-kubernetes/components/metallb/`), enforced by the router's
+> import filter. Current design: `igou-inventory/docs/network-topology.md`
+> (private inventory repo); current pools: `clusters/ocp/metallb/`.
+
 MetalLB (git sources `components/metallb-operator` + `clusters/ocp/metallb`) fully recovered from the 2026-07-03 cluster reinstall. Both ArgoCD apps are `Synced`/`Healthy` at `origin/main` (`d81e454`), the operator CSV is `Succeeded`, all BGP sessions are Established, and the one live LoadBalancer service (the guest-dmz ingress gateway) has its IP assigned and advertised end-to-end. MetalLB is stateless (no PVCs), so there was nothing to restore — GitOps reconciliation alone brought it back.
 
 ### Health check (live cluster)
