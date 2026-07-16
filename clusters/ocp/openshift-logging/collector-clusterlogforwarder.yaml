@@ -40,7 +40,13 @@ spec:
         # after a node rejoin ran Vector at 15 cores and congested the
         # node (observed on p330/hpg5 2026-07-16).
         cpu: 4
-        memory: 4Gi
+        # 8Gi: 4Gi OOM-killed the master collector in ~23s when the #477
+        # audit input rename (audit -> audit-api) reset file checkpoints
+        # and Vector re-read ~600MB of apiserver audit logs from byte 0 —
+        # the parse/enrich fan-out balloons several times the raw size
+        # before sink backpressure engages. Requests stay 512Mi; this is
+        # burst headroom only, same failure mode as the 2Gi->4Gi bump.
+        memory: 8Gi
   outputs:
     - name: default-lokistack
       type: lokiStack
