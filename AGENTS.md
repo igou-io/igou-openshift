@@ -59,8 +59,38 @@ Components are placed in order of dependencies. Storage and secrets management a
 - Secondary interface: `enp2s0f1` (OVS-managed via `br-secondary`)
 - NMState NNCP in `clusters/ocp/nmstate/` manages interface and bridge config
 - OVS bridges require `allow-extra-patch-ports: true` when OVN adds patch ports
-- #TODO BGP
-- #TODO GatewayAPI
+
+## MetalLB / BGP
+
+LoadBalancer services get VIPs from MetalLB, BGP-advertised (FRR backend) to
+the homelab router. Operator install is in `components/metallb-operator/`;
+the pools, BGPPeer, communities, and advertisements are in
+`clusters/ocp/metallb/` — peer and pool specifics live in those manifests.
+The full network design — peer addressing, ASNs, tier split boundaries, the
+pinned-VIP registry — lives in the private inventory repo at
+`igou-inventory/docs/network-topology.md`; **read it before changing
+anything here.** What an agent needs to know from this side:
+
+- Three exposure tiers — `trusted-lan`, `iot`, `guest-dmz`. The router's
+  firewall decides which VLANs may reach each tier.
+- The tier ranges are **shared with the rk8s cluster**
+  (`igou-kubernetes/components/metallb/`): each tier is split between the
+  two clusters (all pools here are `autoAssign: false`), and the router's
+  import filter rejects announcements on the wrong side of the split. Never
+  widen or move a pool boundary in one repo alone.
+- Pinned VIPs (hermes-ssh, jellyfin, the guest-dmz Gateway) are cross-repo
+  contracts: the same address is pinned in the Service/Gateway here and in
+  the router's static DNS and firewall pinholes in igou-inventory. New tier
+  services need an explicit per-service DNS record on the router (no
+  wildcards), added in igou-inventory.
+
+## Gateway API
+
+Shared per-tier Gateways (OpenShift Gateway API / Istio) live in
+`clusters/ocp/gateway-api/` — see its README for the design. The `guest-dmz`
+Gateway is pinned to a VIP in the guest-dmz MetalLB pool and serves
+`*.dmz.igou.systems`; apps onboard by adding an HTTPRoute (jellyfin is the
+reference example).
 
 # Storage
 
