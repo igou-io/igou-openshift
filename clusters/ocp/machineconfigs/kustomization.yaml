@@ -2,3 +2,5 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - 99-master-load-nvme-tcp-machineconfig.yaml
+  - 99-master-crio-nofile-machineconfig.yaml
+  - 99-worker-crio-nofile-machineconfig.yaml

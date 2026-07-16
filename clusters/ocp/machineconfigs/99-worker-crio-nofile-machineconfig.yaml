@@ -1,0 +1,20 @@
+---
+# Worker copy of 99-master-crio-nofile — see that file for rationale.
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  name: 99-worker-crio-nofile
+  labels:
+    machineconfiguration.openshift.io/role: worker
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    systemd:
+      units:
+        - name: crio.service
+          dropins:
+            - name: 10-nofile.conf
+              contents: |
+                [Service]
+                LimitNOFILE=65536:524288

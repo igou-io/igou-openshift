@@ -1,0 +1,24 @@
+---
+# crio.service ships LimitNOFILESoft=1024, so every container starts with
+# a 1024 soft fd limit. The logging collector (Vector) needs to tail
+# ~1400+ files on the master and starves before reaching app-namespace
+# logs (igou-openshift#382). Raise the soft limit service-wide; the hard
+# limit stays at the crio default 524288.
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  name: 99-master-crio-nofile
+  labels:
+    machineconfiguration.openshift.io/role: master
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    systemd:
+      units:
+        - name: crio.service
+          dropins:
+            - name: 10-nofile.conf
+              contents: |
+                [Service]
+                LimitNOFILE=65536:524288
