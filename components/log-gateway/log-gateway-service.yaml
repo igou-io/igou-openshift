@@ -1,0 +1,35 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: log-gateway
+  namespace: log-gateway
+  annotations:
+    # Pinned VIP — this is the new syslog.igou.systems. The DNS static
+    # entry on the rb5009 (igou-inventory) targets this address; update
+    # both repos together (see igou-inventory/docs/network-topology.md
+    # pinned-VIP registry). autoAssign is off on the pool, so it must be
+    # named explicitly.
+    metallb.universe.tf/address-pool: trusted-lan
+    metallb.universe.tf/loadBalancerIPs: 10.10.150.16
+spec:
+  type: LoadBalancer
+  # Local preserves client source IPs for the NetworkPolicy ipBlock fence
+  # and advertises the VIP only from the node running the pod (no ECMP
+  # spray / asymmetric-return stall; see the hermes-ssh Service).
+  externalTrafficPolicy: Local
+  selector:
+    app.kubernetes.io/name: log-gateway
+  ports:
+    - name: syslog-udp
+      port: 514
+      targetPort: syslog-udp
+      protocol: UDP
+    - name: syslog-tcp
+      port: 514
+      targetPort: syslog-tcp
+      protocol: TCP
+    - name: loki-push
+      port: 3500
+      targetPort: loki-push
+      protocol: TCP

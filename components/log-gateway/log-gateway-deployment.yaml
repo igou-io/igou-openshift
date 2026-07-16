@@ -1,0 +1,82 @@
+---
+# Stateless syslog/loki-push aggregator. Pinned to the control-plane node
+# (the only always-on node) because the Service uses
+# externalTrafficPolicy: Local — the VIP is only advertised from the node
+# running the pod, and source IPs must survive for the NetworkPolicy
+# ipBlock fence.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: log-gateway
+  namespace: log-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: log-gateway
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: log-gateway
+    spec:
+      serviceAccountName: log-gateway
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: alloy
+          image: docker.io/grafana/alloy:v1.17.1@sha256:4f6ddc56ffdcf8a6316748fc5162972e20cb301523cac1bb4a31957df733ae9b
+          args:
+            - run
+            - /etc/alloy/config.alloy
+            - --storage.path=/var/lib/alloy/data
+            - --server.http.listen-addr=0.0.0.0:12345
+          ports:
+            - name: syslog-udp
+              containerPort: 5514
+              protocol: UDP
+            - name: syslog-tcp
+              containerPort: 5514
+              protocol: TCP
+            - name: loki-push
+              containerPort: 3500
+              protocol: TCP
+            - name: http-metrics
+              containerPort: 12345
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: http-metrics
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alloy
+            - name: data
+              mountPath: /var/lib/alloy/data
+      volumes:
+        - name: config
+          configMap:
+            name: log-gateway
+        - name: data
+          emptyDir: {}
