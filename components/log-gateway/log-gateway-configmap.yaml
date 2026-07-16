@@ -1,0 +1,70 @@
+---
+# Alloy pipeline: two ingest paths, one authenticated write.
+#   :5514 udp/tcp — RFC3164 syslog from appliances/devices (RouterOS,
+#                   Synology, Home Assistant, UniFi, TrueNAS)
+#   :3500 tcp     — Loki push API from Alloy host agents and the rk8s
+#                   DaemonSet
+# Everything lands in the LokiStack `infrastructure` tenant with
+# source=external; `host` comes from the syslog hostname (or the agent's
+# own labels), so client source IP is informational only.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: log-gateway
+  namespace: log-gateway
+data:
+  config.alloy: |
+    // Appliance/device syslog (RFC3164, bsd-syslog)
+    loki.source.syslog "lan" {
+      listener {
+        address                = "0.0.0.0:5514"
+        protocol               = "udp"
+        syslog_format          = "rfc3164"
+        use_incoming_timestamp = true
+        labels                 = { job = "syslog" }
+      }
+      listener {
+        address                = "0.0.0.0:5514"
+        protocol               = "tcp"
+        syslog_format          = "rfc3164"
+        use_incoming_timestamp = true
+        labels                 = { job = "syslog" }
+      }
+      relabel_rules = loki.relabel.syslog.rules
+      forward_to    = [loki.write.lokistack.receiver]
+    }
+
+    // Host agents + rk8s DaemonSet push here (Loki push API)
+    loki.source.api "agents" {
+      http {
+        listen_address = "0.0.0.0"
+        listen_port    = 3500
+      }
+      forward_to = [loki.write.lokistack.receiver]
+    }
+
+    loki.relabel "syslog" {
+      forward_to = []
+      rule {
+        source_labels = ["__syslog_message_hostname"]
+        target_label  = "host"
+      }
+      rule {
+        source_labels = ["__syslog_message_severity"]
+        target_label  = "level"
+      }
+    }
+
+    // The only LokiStack credential for external ingest: this pod's SA
+    // token, authorized by the log-gateway-infrastructure-writer
+    // ClusterRole at the LokiStack gateway.
+    loki.write "lokistack" {
+      endpoint {
+        url               = "https://logging-loki-gateway-http.openshift-logging.svc:8080/api/logs/v1/infrastructure/loki/api/v1/push"
+        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+        tls_config {
+          ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt"
+        }
+      }
+      external_labels = { source = "external" }
+    }

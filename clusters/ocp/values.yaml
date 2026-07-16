@@ -256,6 +256,20 @@ applications:
     source:
       path: components/openshift-pipelines
 
+  # Alloy aggregator for all off-cluster log ingest (issue #382) — the
+  # config-as-code replacement for syslog.igou.systems. Syslog :514 +
+  # Loki push :3500 behind pinned trusted-lan VIP 10.10.150.16; the only
+  # holder of a LokiStack write token for external logs. After
+  # cluster-logging (wave 15).
+  log-gateway:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    destination:
+      namespace: log-gateway
+    source:
+      path: components/log-gateway
+
   remote-tenants:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous

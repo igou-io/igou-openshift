@@ -1,0 +1,32 @@
+---
+# Gateway-level write authorization: the log-gateway SA is the ONLY
+# credential for external log ingest — it may `create` log entries in the
+# LokiStack `infrastructure` tenant through the gateway. Devices and host
+# agents send to the gateway unauthenticated (LAN-fenced by
+# NetworkPolicy) and never hold LokiStack credentials.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: log-gateway-infrastructure-writer
+rules:
+  - apiGroups:
+      - loki.grafana.com
+    resources:
+      - infrastructure
+    resourceNames:
+      - logs
+    verbs:
+      - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: log-gateway-infrastructure-writer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: log-gateway-infrastructure-writer
+subjects:
+  - kind: ServiceAccount
+    name: log-gateway
+    namespace: log-gateway
