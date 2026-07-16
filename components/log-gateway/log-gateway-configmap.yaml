@@ -23,7 +23,7 @@ data:
         // RFC3164 timestamps have no year; without this the parser yields
         // year 0 and loki.write fails encoding ("before 0001-01-01").
         rfc3164_default_to_current_year = true
-        use_incoming_timestamp = true
+        use_incoming_timestamp = false
         labels                 = { job = "syslog" }
       }
       listener {
@@ -33,7 +33,7 @@ data:
         // RFC3164 timestamps have no year; without this the parser yields
         // year 0 and loki.write fails encoding ("before 0001-01-01").
         rfc3164_default_to_current_year = true
-        use_incoming_timestamp = true
+        use_incoming_timestamp = false
         labels                 = { job = "syslog" }
       }
       relabel_rules = loki.relabel.syslog.rules
