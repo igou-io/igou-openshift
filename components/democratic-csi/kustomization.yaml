@@ -607,3 +607,26 @@ helmCharts:
       existingConfigSecret: "democratic-csi-nvmeof-cold-config"
       config:
         driver: freenas-api-nvmeof
+patches:
+  # The chart hardcodes failureThreshold: 3 on the controller csi-driver
+  # liveness probe (only enabled/disabled is exposed via values). The probe's
+  # Probe RPC calls the TrueNAS API with a 5s client timeout, and middlewared
+  # latency spikes (ssd pool saturation) intermittently exceed it — 3 misses
+  # of the 60s-period probe killed every controller ~8x/day while restarting
+  # fixed nothing (dependency-side slowness). Require 6 consecutive minutes
+  # of API unavailability before a restart.
+  - target:
+      kind: Deployment
+      name: democratic-csi-.*-config-controller
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: unused
+      spec:
+        template:
+          spec:
+            containers:
+              - name: csi-driver
+                livenessProbe:
+                  failureThreshold: 6
