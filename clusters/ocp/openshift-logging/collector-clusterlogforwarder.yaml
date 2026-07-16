@@ -16,6 +16,16 @@ metadata:
 spec:
   serviceAccount:
     name: collector
+  # The operator default (limits 2Gi) OOM-kills Vector during the initial
+  # catch-up read of /var/log/pods on the long-lived master — the first
+  # deploy tails months of accumulated logs before the checkpoint exists.
+  collector:
+    resources:
+      requests:
+        cpu: 500m
+        memory: 512Mi
+      limits:
+        memory: 4Gi
   outputs:
     - name: default-lokistack
       type: lokiStack
