@@ -25,8 +25,12 @@ spec:
       port: 514
       targetPort: syslog-udp
       protocol: UDP
+    # TCP syslog moved off 514: sharing one numeric port across TCP+UDP
+    # makes ovn-k program only the TCP br-ex steering flow — external UDP
+    # then falls through to the host and is dropped. 601 is the IANA
+    # syslog-conn port. Devices all use UDP; TCP here is optional spare.
     - name: syslog-tcp
-      port: 514
+      port: 601
       targetPort: syslog-tcp
       protocol: TCP
     - name: loki-push
