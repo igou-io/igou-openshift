@@ -20,6 +20,9 @@ data:
         address                = "0.0.0.0:5514"
         protocol               = "udp"
         syslog_format          = "rfc3164"
+        # RFC3164 timestamps have no year; without this the parser yields
+        # year 0 and loki.write fails encoding ("before 0001-01-01").
+        rfc3164_default_to_current_year = true
         use_incoming_timestamp = true
         labels                 = { job = "syslog" }
       }
@@ -27,6 +30,9 @@ data:
         address                = "0.0.0.0:5514"
         protocol               = "tcp"
         syslog_format          = "rfc3164"
+        # RFC3164 timestamps have no year; without this the parser yields
+        # year 0 and loki.write fails encoding ("before 0001-01-01").
+        rfc3164_default_to_current_year = true
         use_incoming_timestamp = true
         labels                 = { job = "syslog" }
       }
