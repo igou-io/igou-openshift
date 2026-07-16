@@ -24,7 +24,8 @@ spec:
           type: RuntimeDefault
       containers:
         - name: serve
-          image: ghcr.io/david-igou/sands-of-time:latest@sha256:1d59381495432e6978b2e8fd0ed2c00b12086a000970a9e6c68a8f0d62f296b4
+          image: quay.apps.ocp.igou.systems/igou-io/sands-of-time:dev
+          imagePullPolicy: Always # mutable tag — must re-pull on every restart
           args: ["serve"]
           securityContext:
             allowPrivilegeEscalation: false
