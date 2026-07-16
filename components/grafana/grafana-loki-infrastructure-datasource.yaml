@@ -1,0 +1,31 @@
+---
+# LokiStack `infrastructure` tenant (issue #382): ocp node/infra logs plus
+# ALL external lab logs (devices, hosts, rk8s) via the log-gateway.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: loki-infrastructure
+  namespace: grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: '11'
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  valuesFrom:
+    - targetPath: secureJsonData.httpHeaderValue1
+      valueFrom:
+        secretKeyRef:
+          name: grafana-sa-token
+          key: token
+  datasource:
+    name: loki-infrastructure
+    type: loki
+    access: proxy
+    url: https://logging-loki-gateway-http.openshift-logging.svc:8080/api/logs/v1/infrastructure
+    editable: false
+    jsonData:
+      httpHeaderName1: Authorization
+      tlsSkipVerify: true
+    secureJsonData:
+      httpHeaderValue1: 'Bearer ${token}'

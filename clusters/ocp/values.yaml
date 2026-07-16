@@ -236,6 +236,19 @@ applications:
     source:
       path: components/openshift-logging
 
+  # LokiStack + ClusterLogForwarder operands for central logging (issue
+  # #382): store = RustFS S3 (hot instance) via ESO, tenants
+  # application/infrastructure/audit. After the loki-operator and
+  # openshift-logging operator subscriptions at wave 10.
+  cluster-logging:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '15'
+    destination:
+      namespace: openshift-logging
+    source:
+      path: clusters/ocp/openshift-logging
+
   openshift-pipelines:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
