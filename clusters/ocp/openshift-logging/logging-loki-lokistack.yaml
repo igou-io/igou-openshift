@@ -41,6 +41,12 @@ spec:
             priority: 10
             days: 92
       ingestion:
+        # Operator defaults (4MB/s tenant rate) discarded ~40% of lines
+        # during the initial node-backlog replay (reason=rate_limited).
+        # ~15GB/day steady state fits easily; headroom is for catch-up
+        # bursts after node outages.
+        ingestionRate: 10
+        ingestionBurstSize: 20
         perStreamRateLimit: 5
         perStreamRateLimitBurst: 15
   # Ruler on so AlertingRule CRs (phase 6) deliver into the platform
