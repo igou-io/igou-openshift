@@ -13,7 +13,11 @@ spec:
   workerConfig:
     configData: |
       core:
-        sleepInterval: 60s
+        # Workers burst well past their operator-fixed 200m CPU limit on every
+        # scan (26-57% of CFS periods throttled at 60s), accumulating restarts.
+        # The operand schema exposes no resources override, so lower the scan
+        # duty cycle instead — hardware feature labels rarely change.
+        sleepInterval: 300s
       sources:
         pci:
           deviceClassWhitelist:

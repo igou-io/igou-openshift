@@ -59,9 +59,12 @@ spec:
           resources:
             requests:
               cpu: 100m
-              memory: 256Mi
-            limits:
               memory: 512Mi
+            limits:
+              # Steady-state working set reached ~450Mi within a day of the
+              # 4-device rollout — 512Mi left no headroom for ingest bursts
+              # or WAL replay after a restart.
+              memory: 1Gi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
