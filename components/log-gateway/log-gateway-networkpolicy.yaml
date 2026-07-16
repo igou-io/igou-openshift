@@ -27,3 +27,12 @@ spec:
           protocol: TCP
         - port: 3500
           protocol: TCP
+    # User workload monitoring scrapes Alloy's telemetry endpoint (the
+    # ServiceMonitor in this component); metrics stay off the ingest VIP.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-user-workload-monitoring
+      ports:
+        - port: 12345
+          protocol: TCP

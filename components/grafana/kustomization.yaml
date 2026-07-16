@@ -57,6 +57,14 @@ resources:
   - grafana-dashboard-rk8s-pod-total.yaml
   - grafana-dashboard-rk8s-prometheus.yaml
   - grafana-dashboard-rk8s-workload-total.yaml
+  # Central logging (igou-openshift#382): vendored operator console
+  # dashboards + custom log-gateway board, grouped in the "logging" folder.
+  - grafana-dashboard-logging-cluster-logging.yaml
+  - grafana-dashboard-logging-lokistack-writes.yaml
+  - grafana-dashboard-logging-lokistack-reads.yaml
+  - grafana-dashboard-logging-lokistack-chunks.yaml
+  - grafana-dashboard-logging-lokistack-retention.yaml
+  - grafana-dashboard-logging-log-gateway.yaml
 # Vendored dashboard JSON (see grafana-dashboard-nut-exporter.yaml for why
 # it cannot come from spec.grafanaCom). Stable name: the GrafanaDashboard
 # CR references the ConfigMap by name.
@@ -170,6 +178,30 @@ configMapGenerator:
     namespace: grafana
     files:
       - dashboards/rk8s/workload-total.json
+  - name: grafana-dashboard-logging-cluster-logging-json
+    namespace: grafana
+    files:
+      - dashboards/logging/cluster-logging.json
+  - name: grafana-dashboard-logging-lokistack-writes-json
+    namespace: grafana
+    files:
+      - dashboards/logging/lokistack-writes.json
+  - name: grafana-dashboard-logging-lokistack-reads-json
+    namespace: grafana
+    files:
+      - dashboards/logging/lokistack-reads.json
+  - name: grafana-dashboard-logging-lokistack-chunks-json
+    namespace: grafana
+    files:
+      - dashboards/logging/lokistack-chunks.json
+  - name: grafana-dashboard-logging-lokistack-retention-json
+    namespace: grafana
+    files:
+      - dashboards/logging/lokistack-retention.json
+  - name: grafana-dashboard-logging-log-gateway-json
+    namespace: grafana
+    files:
+      - dashboards/logging/log-gateway.json
 generatorOptions:
   disableNameSuffixHash: true
 commonAnnotations:

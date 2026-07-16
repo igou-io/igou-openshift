@@ -8,4 +8,6 @@ resources:
   - log-gateway-configmap.yaml
   - log-gateway-deployment.yaml
   - log-gateway-service.yaml
+  - log-gateway-metrics-service.yaml
+  - log-gateway-servicemonitor.yaml
   - log-gateway-networkpolicy.yaml
