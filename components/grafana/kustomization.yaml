@@ -12,6 +12,9 @@ resources:
   - grafana-oauth-cookie-externalsecret.yaml
   - grafana-grafana.yaml
   - grafana-thanos-datasource.yaml
+  - grafana-loki-rbac.yaml
+  - grafana-loki-infrastructure-datasource.yaml
+  - grafana-loki-application-datasource.yaml
   - grafana-dashboard-7587.yaml
   - grafana-dashboard-20340.yaml
   - grafana-dashboard-12239.yaml
