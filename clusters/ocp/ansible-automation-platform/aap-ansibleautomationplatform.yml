@@ -23,13 +23,17 @@ spec:
     postgres_storage_class: freenas-nvmeof-ssd-csi
   route_host: automation.apps.ocp.igou.systems
   controller:
-    # Probes are disabled (period 0) by operator default. Without them, uwsgi
-    # workers that die (e.g. postgres outage) leave the web pod Running while
-    # /api/v2/ping/ flaps 500, and nothing restarts it.
-    web_liveness_period: 15
-    web_liveness_initial_delay: 60
-    web_liveness_timeout: 5
-    web_liveness_failure_threshold: 3
+    # Liveness MUST stay disabled (period 0): the AAP 2.7 automation-controller
+    # operator templates the web liveness exec against /etc/supervisord_task.conf,
+    # which does not exist in the web container ("unix:///var/run/supervisor/
+    # supervisor.task.sock no such file" -> always exit 1). Enabling it kills the
+    # web pod every initial_delay + failure_threshold*period seconds ->
+    # CrashLoopBackOff -> gateway "no healthy upstream". Upstream awx-operator
+    # uses supervisord_web.conf; re-enable only after the downstream operator
+    # ships that fix. Readiness (HTTP /api/v2/ping/) is correct and stays: dead
+    # uwsgi workers now unroute the pod instead of serving 500s, but auto-restart
+    # (the original goal of #466) is deferred.
+    web_liveness_period: 0
     web_readiness_period: 10
     web_readiness_initial_delay: 20
     web_readiness_timeout: 5
