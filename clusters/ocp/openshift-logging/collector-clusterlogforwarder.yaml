@@ -1,10 +1,11 @@
 ---
 # Cluster log collection (issue #382): Vector DaemonSet forwarding the
-# application/infrastructure/audit inputs to the LokiStack. Audit input
-# defaults to kubeAPI+openshiftAPI; ovn/auditd deliberately left out
-# (noisiest streams). External (non-cluster) logs do NOT come through
-# here — CLF receivers are scoped to on-cluster sources; they enter via
-# the log-gateway Alloy aggregator instead.
+# application/infrastructure/audit inputs to the LokiStack. Audit is an
+# explicit input scoped to kubeAPI+openshiftAPI — the built-in `audit`
+# inputRef would also collect auditd and ovn (noisiest streams). External
+# (non-cluster) logs do NOT come through here — CLF receivers are scoped
+# to on-cluster sources; they enter via the log-gateway Alloy aggregator
+# instead.
 apiVersion: observability.openshift.io/v1
 kind: ClusterLogForwarder
 metadata:
@@ -16,6 +17,15 @@ metadata:
 spec:
   serviceAccount:
     name: collector
+  inputs:
+    # The built-in `audit` inputRef collects all four sources (kubeAPI,
+    # openshiftAPI, auditd, ovn); this file always intended API audit only.
+    - name: audit-api
+      type: audit
+      audit:
+        sources:
+          - kubeAPI
+          - openshiftAPI
   # The operator default (limits 2Gi) OOM-kills Vector during the initial
   # catch-up read of /var/log/pods on the long-lived master — the first
   # deploy tails months of accumulated logs before the checkpoint exists.
@@ -67,6 +77,17 @@ spec:
         - test:
             - field: .message
               matches: '^(20(1\d|2[0-5])-|2026-0[1-6]-|2026-07-0|2026-07-1[0-4])'
+    # kube-apiserver audit at the Default profile is ~17GB/day, dominated
+    # by read-only requests (#382 sizing assumed ~15GB/day TOTAL). Keep
+    # every mutation auditable; drop reads. The audit input meta transform
+    # merges the parsed event into ._internal before pipeline filters run,
+    # so .verb is addressable here.
+    - name: drop-audit-read-verbs
+      type: drop
+      drop:
+        - test:
+            - field: .verb
+              matches: '^(get|list|watch)$'
   pipelines:
     - name: application
       inputRefs:
@@ -85,6 +106,8 @@ spec:
         - default-lokistack
     - name: audit
       inputRefs:
-        - audit
+        - audit-api
+      filterRefs:
+        - drop-audit-read-verbs
       outputRefs:
         - default-lokistack
