@@ -72,8 +72,11 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /etc/alloy
+            # Mounted over the image's /var/lib/alloy (0770 alloy:alloy),
+            # which the SCC-assigned arbitrary UID cannot traverse — the
+            # emptyDir at the parent gets fsGroup group-write instead.
             - name: data
-              mountPath: /var/lib/alloy/data
+              mountPath: /var/lib/alloy
       volumes:
         - name: config
           configMap:
