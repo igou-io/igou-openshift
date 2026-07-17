@@ -1,0 +1,11 @@
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: rhacs-operator-group
+  namespace: rhacs-operator
+# AllNamespaces mode: the RHACS operator CSV supports only AllNamespaces
+# (OwnNamespace/SingleNamespace/MultiNamespace all false, verified against
+# rhacs-operator.v4.11.1 in the live redhat-operators catalog), so an
+# own-namespace OperatorGroup is not installable.
+spec: {}

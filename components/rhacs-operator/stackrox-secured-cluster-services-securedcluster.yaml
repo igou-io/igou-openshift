@@ -1,0 +1,53 @@
+---
+apiVersion: platform.stackrox.io/v1alpha1
+kind: SecuredCluster
+metadata:
+  name: stackrox-secured-cluster-services
+  namespace: stackrox
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  clusterName: ocp
+  # centralEndpoint omitted — defaults to Central in the same namespace.
+  monitoring:
+    openshift:
+      enabled: true
+  sensor:
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        memory: 3Gi
+  admissionControl:
+    # Observe-only: replaces the deprecated listenOn* knobs; new installs
+    # since 4.9 default to Enabled. failurePolicy defaults to Ignore
+    # (fail-open) — no API-availability risk on the single master.
+    enforcement: Disabled
+    replicas: 1
+    resources:
+      requests:
+        cpu: 50m
+        memory: 100Mi
+      limits:
+        memory: 500Mi
+  perNode:
+    collector:
+      collection: CORE_BPF
+      resources:
+        requests:
+          cpu: 100m
+          memory: 320Mi
+        limits:
+          memory: 1Gi
+    compliance:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 100Mi
+  scanner:
+    # Local/delegated scanning off (default AutoSense).
+    scannerComponent: Disabled
+  scannerV4:
+    # Explicit — defaults to AutoSense on new installs since 4.8.
+    scannerComponent: Disabled
