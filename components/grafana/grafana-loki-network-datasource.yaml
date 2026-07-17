@@ -1,0 +1,34 @@
+---
+# netobserv-loki `network` tenant: sampled eBPF flow records
+# (clusters/ocp/netobserv) for the NetObserv traffic dashboard drill-down.
+# NOTE the gateway rejects regex matchers on stream-selector labels —
+# filter with pipeline label filters instead:
+#   {app="netobserv-flowcollector"} | SrcK8S_Namespace=~"foo.*"
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: loki-network
+  namespace: grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: '11'
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  valuesFrom:
+    - targetPath: secureJsonData.httpHeaderValue1
+      valueFrom:
+        secretKeyRef:
+          name: grafana-sa-token
+          key: token
+  datasource:
+    name: loki-network
+    type: loki
+    access: proxy
+    url: https://netobserv-loki-gateway-http.netobserv.svc:8080/api/logs/v1/network
+    editable: false
+    jsonData:
+      httpHeaderName1: Authorization
+      tlsSkipVerify: true
+    secureJsonData:
+      httpHeaderValue1: 'Bearer ${token}'
