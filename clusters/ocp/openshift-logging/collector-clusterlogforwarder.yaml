@@ -107,6 +107,18 @@ spec:
               matches: '^democratic-csi$'
             - field: .message
               matches: '^(executing (mount|filesystem|ssh) command:|\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2} (request|response))'
+    # OLM catalog registry pods log every gRPC round-trip ("finished
+    # call") at info — health probes + resolver polling make this ~2GB/day
+    # of chronic no-signal chatter, spiking ~4x during catalog refreshes.
+    # Errors/warnings from the same pods don't match and still flow.
+    - name: drop-olm-catalog-noise
+      type: drop
+      drop:
+        - test:
+            - field: .kubernetes.namespace_name
+              matches: '^openshift-marketplace$'
+            - field: .message
+              matches: 'msg="finished call"'
   pipelines:
     - name: application
       inputRefs:
@@ -122,6 +134,7 @@ spec:
         - infrastructure
       filterRefs:
         - drop-pre-schema-backlog
+        - drop-olm-catalog-noise
       outputRefs:
         - default-lokistack
     - name: audit
