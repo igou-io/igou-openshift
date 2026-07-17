@@ -9,4 +9,7 @@ metadata:
 spec:
   sharedDevNum: 10
   enableMonitoring: true
-  logLevel: 4
+  # 4 dumps the full device map on every kubelet probe cycle (~2GB/day
+  # of logs across 3 nodes — igou-openshift#382 volume review); 1 keeps
+  # registration events and errors.
+  logLevel: 1

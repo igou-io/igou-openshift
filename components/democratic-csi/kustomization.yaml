@@ -24,6 +24,7 @@ helmCharts:
     controller:
       driver:
         enabled: true
+        logLevel: warn
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
           # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
@@ -48,6 +49,7 @@ helmCharts:
           privileged: true
       driver:
         enabled: true
+        logLevel: warn
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
           # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
@@ -90,6 +92,7 @@ helmCharts:
     controller:
       driver:
         enabled: true
+        logLevel: warn
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
           # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
@@ -114,6 +117,7 @@ helmCharts:
           privileged: true
       driver:
         enabled: true
+        logLevel: warn
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
           # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
@@ -156,6 +160,7 @@ helmCharts:
     controller:
       driver:
         enabled: true
+        logLevel: warn
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
           # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
@@ -180,6 +185,7 @@ helmCharts:
           privileged: true
       driver:
         enabled: true
+        logLevel: warn
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
           # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
@@ -218,6 +224,7 @@ helmCharts:
     controller:
       driver:
         enabled: true
+        logLevel: warn
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
           # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
@@ -242,6 +249,7 @@ helmCharts:
         operator: Exists
       driver:
         enabled: true
+        logLevel: warn
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
           # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
@@ -286,6 +294,7 @@ helmCharts:
     controller:
       driver:
         enabled: true
+        logLevel: warn
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
           # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
@@ -310,6 +319,7 @@ helmCharts:
         operator: Exists
       driver:
         enabled: true
+        logLevel: warn
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
           # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
@@ -354,6 +364,7 @@ helmCharts:
     controller:
       driver:
         enabled: true
+        logLevel: warn
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
           # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
@@ -378,6 +389,7 @@ helmCharts:
         operator: Exists
       driver:
         enabled: true
+        logLevel: warn
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
           # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
@@ -418,6 +430,7 @@ helmCharts:
     controller:
       driver:
         enabled: true
+        logLevel: warn
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
           # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
@@ -442,6 +455,7 @@ helmCharts:
         operator: Exists
       driver:
         enabled: true
+        logLevel: warn
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
           # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
@@ -486,6 +500,7 @@ helmCharts:
     controller:
       driver:
         enabled: true
+        logLevel: warn
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
           # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
@@ -510,6 +525,7 @@ helmCharts:
         operator: Exists
       driver:
         enabled: true
+        logLevel: warn
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
           # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
@@ -554,6 +570,7 @@ helmCharts:
     controller:
       driver:
         enabled: true
+        logLevel: warn
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
           # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
@@ -578,6 +595,7 @@ helmCharts:
         operator: Exists
       driver:
         enabled: true
+        logLevel: warn
         image:
           registry: "ghcr.io/democratic-csi/democratic-csi"
           # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
