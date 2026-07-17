@@ -40,6 +40,12 @@ spec:
           - selector: '{job="syslog"}'
             priority: 10
             days: 92
+          # Chatty operator namespaces (~6GB/day combined at the 2026-07-17
+          # volume review): worth a week for incident debugging, not a
+          # month of storage. Revisit membership as top-talkers change.
+          - selector: '{kubernetes_namespace_name=~"democratic-csi|intel-device-plugins|nvidia-gpu-operator"}'
+            priority: 20
+            days: 7
       ingestion:
         # Operator defaults (4MB/s tenant rate) discarded ~40% of lines
         # during the initial node-backlog replay (reason=rate_limited).
