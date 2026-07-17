@@ -37,10 +37,8 @@ route:
         - alertname =~ "Alertmanager(Cluster)?FailedToSendAlerts"
         - integration = webhook
       receiver: 'null'
-    - matchers:
-        - severity =~ "critical|warning"
-      receiver: eda-github-issue
-      continue: true
+    # eda-github-issue route temporarily removed — EDA event-stream pipeline
+    # is not currently set up. Restore the route and receiver together.
     - matchers:
         - severity = critical
       receiver: gotify-and-slack-critical
@@ -56,14 +54,6 @@ receivers:
     webhook_configs:
       - url: http://alertmanager-gotify-bridge.gotify.svc:8080/gotify_webhook
         send_resolved: true
-  - name: eda-github-issue
-    webhook_configs:
-      - url_file: /etc/alertmanager/secrets/alertmanager-eda-event-stream/url
-        send_resolved: false
-        http_config:
-          authorization:
-            type: Bearer
-            credentials_file: /etc/alertmanager/secrets/alertmanager-eda-event-stream/token
   # Severity receivers fan out to both Gotify (push) and Slack. Bridge
   # v2.3.2 still returns HTTP 400 on alerts missing the `description`
   # annotation, but the `Alertmanager(Cluster)?FailedToSendAlerts
