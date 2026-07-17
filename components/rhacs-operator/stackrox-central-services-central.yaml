@@ -1,0 +1,65 @@
+---
+apiVersion: platform.stackrox.io/v1alpha1
+kind: Central
+metadata:
+  name: stackrox-central-services
+  namespace: stackrox
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  monitoring:
+    openshift:
+      enabled: true
+  central:
+    telemetry:
+      enabled: false
+    exposure:
+      route:
+        enabled: true
+    # Phase-1 placement guard (#381): keep the only stateful pieces (Central
+    # and its DB PVC) off the tenant nodes (hpg5/p330 — power-cycled for lab
+    # work) and off the already-busy master. The CRD exposes no affinity, only
+    # nodeSelector, so this is a hostname pin on the one non-tenant worker.
+    # Everything else floats free — scheduler placement is phase-1 data.
+    nodeSelector:
+      kubernetes.io/hostname: truenas-w1
+    resources:
+      requests:
+        cpu: 500m
+        memory: 2Gi
+      limits:
+        memory: 4Gi
+    db:
+      nodeSelector:
+        kubernetes.io/hostname: truenas-w1
+      persistence:
+        persistentVolumeClaim:
+          size: 40Gi
+      resources:
+        requests:
+          cpu: 250m
+          memory: 1Gi
+        limits:
+          memory: 4Gi
+  scanner:
+    analyzer:
+      scaling:
+        autoScaling: Disabled
+        replicas: 1
+      resources:
+        requests:
+          cpu: 500m
+          memory: 1500Mi
+        limits:
+          memory: 3Gi
+    db:
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          memory: 2Gi
+  scannerV4:
+    # REQUIRED for the minimal footprint: new installs since 4.8 default to
+    # Enabled/AutoSense.
+    scannerComponent: Disabled

@@ -462,6 +462,18 @@ applications:
         jsonPointers:
           - /spec/bootstrap
           - /spec/externalClusters
+  # RHACS phase 1 observe-only install (#381) — trimmed footprint, no
+  # enforcement. Secured-cluster services stay degraded until the one-time
+  # init-bundle bootstrap documented in components/rhacs-operator/README.md.
+  rhacs-operator:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '22'
+    destination:
+      namespace: stackrox
+    source:
+      path: components/rhacs-operator
+
   rhdh:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
