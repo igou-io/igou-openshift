@@ -1,0 +1,29 @@
+---
+# Sampled eBPF flow collection for NetworkPolicy authoring: per-flow
+# source/destination namespace, workload, port, and protocol land in the
+# netobserv-loki LokiStack (network tenant, 7d) and the console Network
+# Traffic views; aggregate traffic metrics go to cluster monitoring.
+# Sampling 1:50 (operator default) keeps volume reasonable on the cold
+# store — fine for discovering who-talks-to-whom, not a packet audit.
+apiVersion: flows.netobserv.io/v1beta2
+kind: FlowCollector
+metadata:
+  name: cluster
+  annotations:
+    argocd.argoproj.io/sync-wave: '2'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  namespace: netobserv
+  deploymentModel: Direct
+  agent:
+    type: eBPF
+    ebpf:
+      sampling: 50
+  loki:
+    enable: true
+    mode: LokiStack
+    lokiStack:
+      name: netobserv-loki
+      namespace: netobserv
+  consolePlugin:
+    enable: true

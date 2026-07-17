@@ -1,0 +1,33 @@
+---
+# Flow-log store for NetObserv (tenants mode openshift-network — a
+# LokiStack mode is fixed at creation, which is why the central-logging
+# logging-loki instance cannot be shared). 1x.demo is plenty: flows are
+# eBPF-sampled 1:50 and retained only 7 days — the durable
+# namespace-to-namespace traffic matrix lives in Prometheus metrics;
+# flow-level detail (ports/protocols) only needs to cover a policy-
+# authoring window.
+apiVersion: loki.grafana.com/v1
+kind: LokiStack
+metadata:
+  name: netobserv-loki
+  namespace: netobserv
+  annotations:
+    argocd.argoproj.io/sync-wave: '1'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  size: 1x.demo
+  storage:
+    schemas:
+      - version: v13
+        effectiveDate: "2026-07-17"
+    secret:
+      name: netobserv-loki-s3
+      type: s3
+  storageClassName: freenas-nvmeof-ssd-csi
+  tenants:
+    mode: openshift-network
+  limits:
+    global:
+      # Compactor-enforced (no bucket ILM — Loki owns object lifecycle).
+      retention:
+        days: 7
