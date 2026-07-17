@@ -236,6 +236,13 @@ applications:
     source:
       path: components/openshift-logging
 
+  netobserv-operator:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '10'
+    source:
+      path: components/netobserv-operator
+
   # LokiStack + ClusterLogForwarder operands for central logging (issue
   # #382): store = RustFS S3 (hot instance) via ESO, tenants
   # application/infrastructure/audit. After the loki-operator and
@@ -248,6 +255,19 @@ applications:
       namespace: openshift-logging
     source:
       path: clusters/ocp/openshift-logging
+
+  # NetObserv operands: dedicated flow-log LokiStack (openshift-network
+  # tenants — the central-logging LokiStack's mode cannot be shared) +
+  # FlowCollector (sampled eBPF flows for NetworkPolicy authoring). After
+  # the netobserv and loki operator subscriptions at wave 10.
+  netobserv:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '15'
+    destination:
+      namespace: netobserv
+    source:
+      path: clusters/ocp/netobserv
 
   openshift-pipelines:
     annotations:
