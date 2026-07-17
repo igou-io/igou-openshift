@@ -15,6 +15,7 @@ resources:
   - grafana-loki-rbac.yaml
   - grafana-loki-infrastructure-datasource.yaml
   - grafana-loki-application-datasource.yaml
+  - grafana-loki-network-datasource.yaml
   - grafana-dashboard-7587.yaml
   - grafana-dashboard-20340.yaml
   - grafana-dashboard-12239.yaml
@@ -65,6 +66,8 @@ resources:
   - grafana-dashboard-logging-lokistack-chunks.yaml
   - grafana-dashboard-logging-lokistack-retention.yaml
   - grafana-dashboard-logging-log-gateway.yaml
+  # NetObserv flow analytics (network folder)
+  - grafana-dashboard-network-netobserv-traffic.yaml
 # Vendored dashboard JSON (see grafana-dashboard-nut-exporter.yaml for why
 # it cannot come from spec.grafanaCom). Stable name: the GrafanaDashboard
 # CR references the ConfigMap by name.
@@ -202,6 +205,10 @@ configMapGenerator:
     namespace: grafana
     files:
       - dashboards/logging/log-gateway.json
+  - name: grafana-dashboard-network-netobserv-traffic-json
+    namespace: grafana
+    files:
+      - dashboards/network/netobserv-traffic.json
 generatorOptions:
   disableNameSuffixHash: true
 commonAnnotations:
