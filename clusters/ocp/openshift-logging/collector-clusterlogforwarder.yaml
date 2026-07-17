@@ -94,6 +94,19 @@ spec:
         - test:
             - field: .verb
               matches: '^(get|list|watch)$'
+    # democratic-csi structural noise the winston logLevel=warn (#484)
+    # can't reach: bare "executing ... command:" stdout writes and
+    # csi-proxy's unconditional per-request/response dumps — all driven
+    # by kubelet's ~1/min/volume NodeGetVolumeStats polling. Errors and
+    # warnings don't match these anchors and still flow.
+    - name: drop-csi-exec-noise
+      type: drop
+      drop:
+        - test:
+            - field: .kubernetes.namespace_name
+              matches: '^democratic-csi$'
+            - field: .message
+              matches: '^(executing (mount|filesystem|ssh) command:|\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2} (request|response))'
   pipelines:
     - name: application
       inputRefs:
@@ -101,6 +114,7 @@ spec:
       filterRefs:
         - multiline
         - drop-pre-schema-backlog
+        - drop-csi-exec-noise
       outputRefs:
         - default-lokistack
     - name: infrastructure
