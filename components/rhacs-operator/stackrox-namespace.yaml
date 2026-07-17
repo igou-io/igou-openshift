@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  annotations:
+    openshift.io/display-name: "Red Hat Advanced Cluster Security"
+  labels:
+    # Required for the ACS ServiceMonitors (monitoring.openshift.enabled on
+    # both CRs) to be picked up by cluster monitoring.
+    openshift.io/cluster-monitoring: 'true'
+  name: stackrox
