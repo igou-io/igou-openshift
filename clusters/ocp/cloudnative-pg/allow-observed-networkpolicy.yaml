@@ -28,12 +28,15 @@ spec:
       ports:
         - port: 8080
           protocol: TCP
-    # host-network sources: kubelet health probes and/or UWM/monitoring
-    # scrapes that netobserv could not attribute to a namespace. Scoped to
-    # the node/lab network. Observed metrics/health ports.
+    # host-network sources (router Routes, kubelet probes, host-network
+    # scrapes/webhooks). Under OVN-Kubernetes these SNAT to the node's host
+    # network, which ipBlock 10.10.9.0/24 does NOT match (proven by the
+    # gitea-mirror :4321 route outage). The synthetic openshift-host-network
+    # namespace label matches them.
     - from:
-        - ipBlock:
-            cidr: 10.10.9.0/24
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/host-network: ""
       ports:
         - port: 9090
           protocol: TCP
