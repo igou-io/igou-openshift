@@ -20,17 +20,20 @@ spec:
       ports:
         - port: 8080
           protocol: TCP
-    # ModelRouter ValidatingWebhook (llmkube-webhook:443, failurePolicy: Fail).
-    # kube-apiserver is host-network; under OVN-K its call SNATs to the host
-    # network, matched by the openshift-host-network namespace label (an ipBlock
-    # 10.10.9.0/24 does NOT match it). Latent today (no ModelRouter CRs) but
-    # blocks the first create/update.
+    # ModelRouter ValidatingWebhook (failurePolicy: Fail). kube-apiserver is
+    # host-network; under OVN-K its call is matched by the openshift-host-network
+    # namespace label (an ipBlock 10.10.9.0/24 does NOT match it). The Service
+    # llmkube-webhook exposes :443 but DNATs to the pod's webhook container port
+    # 9443; NetworkPolicy matches the POST-DNAT pod port, so the rule MUST allow
+    # 9443, not the Service port 443 (proven live 2026-07-18: a :443 rule left the
+    # apiserver->webhook call timing out; :9443 admitted it). Latent today (no
+    # ModelRouter CRs) but blocks the first create/update.
     - from:
         - namespaceSelector:
             matchLabels:
               policy-group.network.openshift.io/host-network: ""
       ports:
-        - port: 443
+        - port: 9443
           protocol: TCP
   egress:
     # cluster DNS (always required)
