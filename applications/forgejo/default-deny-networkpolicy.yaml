@@ -1,0 +1,14 @@
+---
+# Default-deny (ingress + egress) for namespace forgejo. Allow policies below
+# open exactly the flows observed via NetObserv eBPF sampling. Generated;
+# review before merge (see PR body for methodology + caveats).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: forgejo
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
