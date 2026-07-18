@@ -1,0 +1,109 @@
+---
+# Observed-flow allow policy for cloudnative-pg (NetObserv eBPF, 1:50 sampling).
+# Derived from captured inter-namespace flows; see PR body for methodology + caveats.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-observed
+  namespace: cloudnative-pg
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-kube-apiserver-operator
+      ports:
+        - port: 443
+          protocol: TCP
+        - port: 9443
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-user-workload-monitoring
+      ports:
+        - port: 8080
+          protocol: TCP
+    # host-network sources (router Routes, kubelet probes, host-network
+    # scrapes/webhooks). Under OVN-Kubernetes these SNAT to the node's host
+    # network, which ipBlock 10.10.9.0/24 does NOT match (proven by the
+    # gitea-mirror :4321 route outage). The synthetic openshift-host-network
+    # namespace label matches them.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/host-network: ""
+      ports:
+        - port: 9090
+          protocol: TCP
+        - port: 9443
+          protocol: TCP
+    # barman-cloud plugin CNPG-I gRPC (:9090). The cnpg-controller-manager
+    # (intra-ns) dials the barman-cloud operator plugin for backup/WAL config
+    # every reconcile — a connection-reused loop the 1:50 sampling under-
+    # represented. Tenant instance namespaces are also permitted for backup/
+    # restore coordination the sidecar may perform cross-namespace. Sampling
+    # missed this critical low-frequency flow (seq-14 severance).
+    - from:
+        - podSelector: {}
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values:
+                  - forgejo
+                  - quay-enterprise
+                  - rhdh
+      ports:
+        - port: 9090
+          protocol: TCP
+  egress:
+    # cluster DNS (always required)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+        - port: 5353
+          protocol: UDP
+        - port: 5353
+          protocol: TCP
+    # kube-apiserver (observed egress to the kubernetes.default endpoint)
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.10/32
+      ports:
+        - port: 6443
+          protocol: TCP
+    # cnpg-controller-manager polls each instance's status webserver at
+    # pod-IP:8000/pg/status every reconcile (primary detection, switchover,
+    # config apply). Connection-reused loop under-represented by sampling.
+    - to:
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values:
+                  - forgejo
+                  - quay-enterprise
+                  - rhdh
+      ports:
+        - port: 8000
+          protocol: TCP
+    # cnpg-controller-manager -> barman-cloud plugin CNPG-I gRPC (:9090),
+    # intra-namespace. Required so the operator can render backup/WAL config
+    # from the plugin; severed at seq-14 when only host-network :9090 ingress
+    # was permitted (no matching operator egress either).
+    - to:
+        - podSelector: {}
+      ports:
+        - port: 9090
+          protocol: TCP
