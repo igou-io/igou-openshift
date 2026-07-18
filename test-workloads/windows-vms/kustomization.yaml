@@ -9,4 +9,6 @@ kind: Kustomization
 # Per-edition installer VMs are inherently imperative (see examples/) and are
 # created per test run.
 resources:
+  - default-deny-networkpolicy.yaml
+  - allow-observed-networkpolicy.yaml
   - namespace.yaml
