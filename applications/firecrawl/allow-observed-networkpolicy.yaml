@@ -1,0 +1,70 @@
+---
+# Observed-flow allow policy for firecrawl (NetObserv eBPF, 1:50 sampling).
+# Derived from captured inter-namespace flows; see PR body for methodology + caveats.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-observed
+  namespace: firecrawl
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # intra-namespace (pod-to-pod within this namespace)
+    - from:
+        - podSelector: {}
+      ports:
+        - port: 5432
+          protocol: TCP
+        - port: 5672
+          protocol: TCP
+        - port: 6379
+          protocol: TCP
+    # host-network sources: kubelet health probes and/or UWM/monitoring
+    # scrapes that netobserv could not attribute to a namespace. Scoped to
+    # the node/lab network. Observed metrics/health ports.
+    - from:
+        - ipBlock:
+            cidr: 10.10.9.0/24
+      ports:
+        - port: 3000
+          protocol: TCP
+        - port: 3002
+          protocol: TCP
+        - port: 3004
+          protocol: TCP
+        - port: 3005
+          protocol: TCP
+        - port: 3006
+          protocol: TCP
+        - port: 5672
+          protocol: TCP
+        - port: 6379
+          protocol: TCP
+  egress:
+    # cluster DNS (always required)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+        - port: 5353
+          protocol: UDP
+        - port: 5353
+          protocol: TCP
+    # intra-namespace (pod-to-pod within this namespace)
+    - to:
+        - podSelector: {}
+      ports:
+        - port: 5432
+          protocol: TCP
+        - port: 5672
+          protocol: TCP
+        - port: 6379
+          protocol: TCP

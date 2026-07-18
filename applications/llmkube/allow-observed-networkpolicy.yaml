@@ -1,0 +1,37 @@
+---
+# Observed-flow allow policy for llmkube-system (NetObserv eBPF, 1:50 sampling).
+# Derived from captured inter-namespace flows; see PR body for methodology + caveats.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-observed
+  namespace: llmkube-system
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # in-cluster LLM inference from Hermes; the models were idle during the capture window so no flow was observed, but the hermes-egress policy documents this path
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes
+      ports:
+        - port: 8080
+          protocol: TCP
+  egress:
+    # cluster DNS (always required)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+        - port: 5353
+          protocol: UDP
+        - port: 5353
+          protocol: TCP

@@ -1,0 +1,63 @@
+---
+# Observed-flow allow policy for cloudnative-pg (NetObserv eBPF, 1:50 sampling).
+# Derived from captured inter-namespace flows; see PR body for methodology + caveats.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-observed
+  namespace: cloudnative-pg
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-kube-apiserver-operator
+      ports:
+        - port: 443
+          protocol: TCP
+        - port: 9443
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-user-workload-monitoring
+      ports:
+        - port: 8080
+          protocol: TCP
+    # host-network sources: kubelet health probes and/or UWM/monitoring
+    # scrapes that netobserv could not attribute to a namespace. Scoped to
+    # the node/lab network. Observed metrics/health ports.
+    - from:
+        - ipBlock:
+            cidr: 10.10.9.0/24
+      ports:
+        - port: 9090
+          protocol: TCP
+        - port: 9443
+          protocol: TCP
+  egress:
+    # cluster DNS (always required)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+        - port: 5353
+          protocol: UDP
+        - port: 5353
+          protocol: TCP
+    # kube-apiserver (observed egress to the kubernetes.default endpoint)
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.10/32
+      ports:
+        - port: 6443
+          protocol: TCP

@@ -6,6 +6,8 @@ namespace: sands-of-time
 # The bootstrap Job is intentionally not listed; apply it once by hand
 # (see README.md). No CronJob either: the serve process keeps itself current.
 resources:
+  - default-deny-networkpolicy.yaml
+  - allow-observed-networkpolicy.yaml
   - sands-of-time-namespace.yaml
   - sands-of-time-data-pvc.yaml
   - sands-of-time-deployment.yaml
