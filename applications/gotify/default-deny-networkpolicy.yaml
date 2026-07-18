@@ -1,0 +1,14 @@
+---
+# Default-deny (ingress + egress) for namespace gotify. Allow policies below
+# open exactly the flows observed via NetObserv eBPF sampling. Generated;
+# review before merge (see PR body for methodology + caveats).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: gotify
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
