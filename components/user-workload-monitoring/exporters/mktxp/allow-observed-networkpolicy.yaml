@@ -11,7 +11,26 @@ spec:
   policyTypes:
     - Ingress
     - Egress
-  ingress: []
+  ingress:
+    # UWM Prometheus scrapes mktxp :49090 (ServiceMonitor is active; target up).
+    # This namespace has no cluster-monitoring label, so the scrape comes from a
+    # normal pod in openshift-user-workload-monitoring, not host-network.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-user-workload-monitoring
+      ports:
+        - port: 49090
+          protocol: TCP
+    # host-network sources: kubelet health probes and/or UWM/monitoring
+    # scrapes that netobserv could not attribute to a namespace. Scoped to
+    # the node/lab network.
+    - from:
+        - ipBlock:
+            cidr: 10.10.9.0/24
+      ports:
+        - port: 49090
+          protocol: TCP
   egress:
     # cluster DNS (always required)
     - to:

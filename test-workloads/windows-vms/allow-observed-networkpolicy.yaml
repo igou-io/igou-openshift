@@ -11,7 +11,19 @@ spec:
   policyTypes:
     - Ingress
     - Egress
-  ingress: []
+  ingress:
+    # codex-desktop VMI (masquerade binding, NetworkPolicy applies) is reached
+    # via NodePort Services RDP 3389:30907 and WinRM 5986:30741. Services are
+    # externalTrafficPolicy: Cluster, so client traffic SNATs to the node IP.
+    # No RDP/WinRM session fell inside the capture window.
+    - from:
+        - ipBlock:
+            cidr: 10.10.9.0/24
+      ports:
+        - port: 3389
+          protocol: TCP
+        - port: 5986
+          protocol: TCP
   egress:
     # cluster DNS (always required)
     - to:

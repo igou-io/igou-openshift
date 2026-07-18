@@ -61,3 +61,18 @@ spec:
       ports:
         - port: 6443
           protocol: TCP
+    # cnpg-controller-manager polls each instance's status webserver at
+    # pod-IP:8000/pg/status every reconcile (primary detection, switchover,
+    # config apply). Connection-reused loop under-represented by sampling.
+    - to:
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values:
+                  - forgejo
+                  - quay-enterprise
+                  - rhdh
+      ports:
+        - port: 8000
+          protocol: TCP
