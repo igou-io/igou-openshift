@@ -1,0 +1,101 @@
+---
+# Observed-flow allow policy for firecrawl (NetObserv eBPF, 1:50 sampling).
+# Derived from captured inter-namespace flows; see PR body for methodology + caveats.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-observed
+  namespace: firecrawl
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # intra-namespace (pod-to-pod within this namespace)
+    - from:
+        - podSelector: {}
+      ports:
+        - port: 5432
+          protocol: TCP
+        - port: 5672
+          protocol: TCP
+        - port: 6379
+          protocol: TCP
+    # host-network sources (router Routes, kubelet probes, host-network
+    # scrapes/webhooks). Under OVN-Kubernetes these SNAT to the node's host
+    # network, which ipBlock 10.10.9.0/24 does NOT match (proven by the
+    # gitea-mirror :4321 route outage). The synthetic openshift-host-network
+    # namespace label matches them.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/host-network: ""
+      ports:
+        - port: 3000
+          protocol: TCP
+        - port: 3002
+          protocol: TCP
+        - port: 3004
+          protocol: TCP
+        - port: 3005
+          protocol: TCP
+        - port: 3006
+          protocol: TCP
+        - port: 5672
+          protocol: TCP
+        - port: 6379
+          protocol: TCP
+    # hermes VM (KubeVirt masquerade, SNATs to pod IP) calls the firecrawl API
+    # for website extraction; documented in hermes-egress policy. Not sampled.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes
+      ports:
+        - port: 3002
+          protocol: TCP
+  egress:
+    # cluster DNS (always required)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+        - port: 5353
+          protocol: UDP
+        - port: 5353
+          protocol: TCP
+    # intra-namespace (pod-to-pod within this namespace)
+    - to:
+        - podSelector: {}
+      ports:
+        - port: 5432
+          protocol: TCP
+        - port: 5672
+          protocol: TCP
+        - port: 6379
+          protocol: TCP
+    # meta-search backend (SEARXNG_ENDPOINT=searxng.searxng.svc:8080).
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: searxng
+      ports:
+        - port: 8080
+          protocol: TCP
+    # firecrawl's core function is fetching arbitrary external URLs
+    # (playwright/worker/extract-worker). No crawl ran during the sample window.
+    # external / off-cluster egress (internet + lab devices). Cluster pod
+    # and service CIDRs are excluded to block lateral movement; the node/lab
+    # network (10.10.0.0/16) stays reachable for lab-device targets.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.128.0.0/14
+              - 172.30.0.0/16
