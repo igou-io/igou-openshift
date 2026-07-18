@@ -14,11 +14,13 @@ spec:
   ingress:
     # codex-desktop VMI (masquerade binding, NetworkPolicy applies) is reached
     # via NodePort Services RDP 3389:30907 and WinRM 5986:30741. Services are
-    # externalTrafficPolicy: Cluster, so client traffic SNATs to the node IP.
-    # No RDP/WinRM session fell inside the capture window.
+    # externalTrafficPolicy: Cluster: under OVN-K the client SNATs to the node's
+    # host network, matched by the openshift-host-network namespace label (an
+    # ipBlock 10.10.9.0/24 does NOT match it).
     - from:
-        - ipBlock:
-            cidr: 10.10.9.0/24
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/host-network: ""
       ports:
         - port: 3389
           protocol: TCP

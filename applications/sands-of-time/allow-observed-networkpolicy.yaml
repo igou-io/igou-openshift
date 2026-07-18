@@ -21,11 +21,13 @@ spec:
         - port: 8000
           protocol: TCP
     # public edge Route (sands-of-time.apps.ocp.igou.systems) fronts the pod on
-    # :8000. router-default runs HostNetwork so its source is node IP 10.10.9.10,
-    # unmatchable by namespaceSelector. Namespace was idle during the window.
+    # :8000. router-default runs HostNetwork; under OVN-K its source SNATs to the
+    # host network, matched by the openshift-host-network namespace label (an
+    # ipBlock 10.10.9.0/24 does NOT match it). Namespace was idle during window.
     - from:
-        - ipBlock:
-            cidr: 10.10.9.0/24
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/host-network: ""
       ports:
         - port: 8000
           protocol: TCP

@@ -21,11 +21,14 @@ spec:
         - port: 8080
           protocol: TCP
     # ModelRouter ValidatingWebhook (llmkube-webhook:443, failurePolicy: Fail).
-    # kube-apiserver reaches the webhook from the host-network node IP under
-    # OVN-K. Latent today (no ModelRouter CRs) but blocks the first create/update.
+    # kube-apiserver is host-network; under OVN-K its call SNATs to the host
+    # network, matched by the openshift-host-network namespace label (an ipBlock
+    # 10.10.9.0/24 does NOT match it). Latent today (no ModelRouter CRs) but
+    # blocks the first create/update.
     - from:
-        - ipBlock:
-            cidr: 10.10.9.0/24
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/host-network: ""
       ports:
         - port: 443
           protocol: TCP
