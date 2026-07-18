@@ -1,0 +1,65 @@
+---
+# Observed-flow allow policy for llmkube-system (NetObserv eBPF, 1:50 sampling).
+# Derived from captured inter-namespace flows; see PR body for methodology + caveats.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-observed
+  namespace: llmkube-system
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # in-cluster LLM inference from Hermes; the models were idle during the capture window so no flow was observed, but the hermes-egress policy documents this path
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes
+      ports:
+        - port: 8080
+          protocol: TCP
+    # ModelRouter ValidatingWebhook (llmkube-webhook:443, failurePolicy: Fail).
+    # kube-apiserver is host-network; under OVN-K its call SNATs to the host
+    # network, matched by the openshift-host-network namespace label (an ipBlock
+    # 10.10.9.0/24 does NOT match it). Latent today (no ModelRouter CRs) but
+    # blocks the first create/update.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/host-network: ""
+      ports:
+        - port: 443
+          protocol: TCP
+  egress:
+    # cluster DNS (always required)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+        - port: 5353
+          protocol: UDP
+        - port: 5353
+          protocol: TCP
+    # kube-apiserver egress (leader-election lease renewal + controller watches).
+    # The operator's watch/leader-election streams are long-lived and pre-dated
+    # the NetObserv capture, so 1:50 sampling never observed this flow and the
+    # generator omitted it. Under default-deny egress the controller-manager
+    # loses its leader lease (Get https://172.30.0.1:443/.../leases context
+    # deadline exceeded) and crashloops. OVN-K evaluates egress ACLs post-DNAT,
+    # so the match is the endpoint node IP :6443 (ipBlock), NOT the service VIP
+    # 172.30.0.1:443 and NOT the host-network namespaceSelector (both proven
+    # insufficient live on 2026-07-18). Mirrors the rule already present in the
+    # other 8 API-consuming namespaces in this PR.
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.10/32
+      ports:
+        - port: 6443
+          protocol: TCP
