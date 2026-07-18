@@ -249,6 +249,28 @@ clusterRoles:
         resources: ["secrets", "configmaps"]
         verbs: ["create", "get", "list", "watch", "update", "patch", "delete"]
 
+  # AAP openshift_etcd_defrag job (igou-inventory#81): the
+  # cluster-etcd-operator skips auto-defrag on SingleReplica topology,
+  # so a scheduled AAP job execs etcdctl defrag in the etcd pods.
+  # Scoped to exactly what kubernetes.core needs: pod read + exec,
+  # bound only in openshift-etcd.
+  - name: etcd-defrag
+    rules:
+      - apiGroups:
+          - ""
+        resources:
+          - pods
+        verbs:
+          - get
+          - list
+      - apiGroups:
+          - ""
+        resources:
+          - pods/exec
+        verbs:
+          - get
+          - create
+
 serviceAccounts:
   - name: cluster-read-only
     clusterRoleBindings:
@@ -391,4 +413,25 @@ serviceAccounts:
               secretKey: token
               remoteRef:
                 remoteKey: ns-agent
+                property: token
+
+  - name: etcd-defrag
+    roleBindings:
+      - namespace: openshift-etcd
+        clusterRoles:
+          - etcd-defrag
+    pushSecrets:
+      - name: etcd-defrag-token
+        refreshInterval: "0"
+        secretStoreRefs:
+          - name: onepassword-ocp-push
+            kind: ClusterSecretStore
+          - name: onepassword-lab-serviceaccounts
+            kind: ClusterSecretStore
+        data:
+          - conversionStrategy: None
+            match:
+              secretKey: token
+              remoteRef:
+                remoteKey: ocp-etcd-defrag
                 property: token
