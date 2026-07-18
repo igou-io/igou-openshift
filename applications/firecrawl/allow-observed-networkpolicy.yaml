@@ -43,6 +43,15 @@ spec:
           protocol: TCP
         - port: 6379
           protocol: TCP
+    # hermes VM (KubeVirt masquerade, SNATs to pod IP) calls the firecrawl API
+    # for website extraction; documented in hermes-egress policy. Not sampled.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes
+      ports:
+        - port: 3002
+          protocol: TCP
   egress:
     # cluster DNS (always required)
     - to:
@@ -68,3 +77,22 @@ spec:
           protocol: TCP
         - port: 6379
           protocol: TCP
+    # meta-search backend (SEARXNG_ENDPOINT=searxng.searxng.svc:8080).
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: searxng
+      ports:
+        - port: 8080
+          protocol: TCP
+    # firecrawl's core function is fetching arbitrary external URLs
+    # (playwright/worker/extract-worker). No crawl ran during the sample window.
+    # external / off-cluster egress (internet + lab devices). Cluster pod
+    # and service CIDRs are excluded to block lateral movement; the node/lab
+    # network (10.10.0.0/16) stays reachable for lab-device targets.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.128.0.0/14
+              - 172.30.0.0/16

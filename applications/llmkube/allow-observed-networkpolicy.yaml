@@ -20,6 +20,15 @@ spec:
       ports:
         - port: 8080
           protocol: TCP
+    # ModelRouter ValidatingWebhook (llmkube-webhook:443, failurePolicy: Fail).
+    # kube-apiserver reaches the webhook from the host-network node IP under
+    # OVN-K. Latent today (no ModelRouter CRs) but blocks the first create/update.
+    - from:
+        - ipBlock:
+            cidr: 10.10.9.0/24
+      ports:
+        - port: 443
+          protocol: TCP
   egress:
     # cluster DNS (always required)
     - to:

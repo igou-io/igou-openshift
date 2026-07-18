@@ -28,6 +28,16 @@ spec:
       ports:
         - port: 8096
           protocol: TCP
+    # jellyfin LoadBalancer VIP (10.10.152.1) is externalTrafficPolicy: Local,
+    # which preserves the real client source IP. Off-subnet VLAN clients
+    # (lan/iot/dmz phones/Shield) hit the VIP directly; admit the lab supernet
+    # on :8096 so the documented direct-HTTP endpoint is not dropped.
+    - from:
+        - ipBlock:
+            cidr: 10.10.0.0/16
+      ports:
+        - port: 8096
+          protocol: TCP
   egress:
     # cluster DNS (always required)
     - to:

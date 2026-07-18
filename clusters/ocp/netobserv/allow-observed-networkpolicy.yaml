@@ -22,6 +22,11 @@ spec:
           protocol: TCP
         - port: 8080
           protocol: TCP
+        # LokiStack microservice gRPC (grpclb): write path distributor->ingester
+        # and read path querier<->ingester/query-frontend/index-gateway. Rides
+        # long-lived connections under-represented by 1:50 sampling.
+        - port: 9095
+          protocol: TCP
     - from:
         - namespaceSelector:
             matchLabels:
@@ -76,6 +81,11 @@ spec:
         - port: 7946
           protocol: TCP
         - port: 8080
+          protocol: TCP
+        # LokiStack microservice gRPC (grpclb): write path distributor->ingester
+        # and read path querier<->ingester/query-frontend/index-gateway. Rides
+        # long-lived connections under-represented by 1:50 sampling.
+        - port: 9095
           protocol: TCP
     # kube-apiserver (observed egress to the kubernetes.default endpoint)
     - to:
