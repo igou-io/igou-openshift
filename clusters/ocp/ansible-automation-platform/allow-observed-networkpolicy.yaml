@@ -1,0 +1,105 @@
+---
+# Observed-flow allow policy for ansible-automation-platform (NetObserv eBPF, 1:50 sampling).
+# Derived from captured inter-namespace flows; see PR body for methodology + caveats.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-observed
+  namespace: ansible-automation-platform
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # intra-namespace (pod-to-pod within this namespace)
+    - from:
+        - podSelector: {}
+      ports:
+        - port: 80
+          protocol: TCP
+        - port: 5432
+          protocol: TCP
+        - port: 6379
+          protocol: TCP
+        - port: 8000
+          protocol: TCP
+        # aap-eda-daphne ASGI/websocket server (EDA activation live-log UI):
+        # gateway -> daphne:8001 intra-ns. Under-sampled by 1:50 (fires only when
+        # the EDA UI websocket is open); confirmed a live listener during rollout.
+        - port: 8001
+          protocol: TCP
+        - port: 8052
+          protocol: TCP
+        - port: 8080
+          protocol: TCP
+    # host-network sources (router Routes, kubelet probes, host-network
+    # scrapes/webhooks). Under OVN-Kubernetes these SNAT to the node's host
+    # network, which ipBlock 10.10.9.0/24 does NOT match (proven by the
+    # gitea-mirror :4321 route outage). The synthetic openshift-host-network
+    # namespace label matches them.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/host-network: ""
+      ports:
+        - port: 6789
+          protocol: TCP
+        - port: 8000
+          protocol: TCP
+        - port: 8002
+          protocol: TCP
+        - port: 8080
+          protocol: TCP
+  egress:
+    # cluster DNS (always required)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+        - port: 5353
+          protocol: UDP
+        - port: 5353
+          protocol: TCP
+    # intra-namespace (pod-to-pod within this namespace)
+    - to:
+        - podSelector: {}
+      ports:
+        - port: 80
+          protocol: TCP
+        - port: 5432
+          protocol: TCP
+        - port: 6379
+          protocol: TCP
+        - port: 8000
+          protocol: TCP
+        # aap-eda-daphne ASGI/websocket server (EDA activation live-log UI):
+        # gateway -> daphne:8001 intra-ns. Under-sampled by 1:50 (fires only when
+        # the EDA UI websocket is open); confirmed a live listener during rollout.
+        - port: 8001
+          protocol: TCP
+        - port: 8052
+          protocol: TCP
+        - port: 8080
+          protocol: TCP
+    # kube-apiserver (observed egress to the kubernetes.default endpoint)
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.10/32
+      ports:
+        - port: 6443
+          protocol: TCP
+    # external / off-cluster egress (internet + lab devices). Cluster pod
+    # and service CIDRs are excluded to block lateral movement; the node/lab
+    # network (10.10.0.0/16) stays reachable for lab-device targets.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.128.0.0/14
+              - 172.30.0.0/16
