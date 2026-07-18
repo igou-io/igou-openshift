@@ -1,0 +1,52 @@
+---
+# Observed-flow allow policy for windows-images (NetObserv eBPF, 1:50 sampling).
+# Derived from captured inter-namespace flows; see PR body for methodology + caveats.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-observed
+  namespace: windows-images
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # codex-desktop VMI (masquerade binding, NetworkPolicy applies) is reached
+    # via NodePort Services RDP 3389:30907 and WinRM 5986:30741. Services are
+    # externalTrafficPolicy: Cluster: under OVN-K the client SNATs to the node's
+    # host network, matched by the openshift-host-network namespace label (an
+    # ipBlock 10.10.9.0/24 does NOT match it).
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/host-network: ""
+      ports:
+        - port: 3389
+          protocol: TCP
+        - port: 5986
+          protocol: TCP
+  egress:
+    # cluster DNS (always required)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+        - port: 5353
+          protocol: UDP
+        - port: 5353
+          protocol: TCP
+    # external / off-cluster egress (internet + lab devices). Cluster pod
+    # and service CIDRs are excluded to block lateral movement; the node/lab
+    # network (10.10.0.0/16) stays reachable for lab-device targets.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.128.0.0/14
+              - 172.30.0.0/16
