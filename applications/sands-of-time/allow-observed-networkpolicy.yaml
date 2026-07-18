@@ -1,0 +1,48 @@
+---
+# Observed-flow allow policy for sands-of-time (NetObserv eBPF, 1:50 sampling).
+# Derived from captured inter-namespace flows; see PR body for methodology + caveats.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-observed
+  namespace: sands-of-time
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Hermes reads the sands-of-time API (ClusterIP 80 -> pod 8000); no flow observed in the window (idle) but the hermes-egress policy documents this path
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes
+      ports:
+        - port: 8000
+          protocol: TCP
+    # public edge Route (sands-of-time.apps.ocp.igou.systems) fronts the pod on
+    # :8000. router-default runs HostNetwork; under OVN-K its source SNATs to the
+    # host network, matched by the openshift-host-network namespace label (an
+    # ipBlock 10.10.9.0/24 does NOT match it). Namespace was idle during window.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/host-network: ""
+      ports:
+        - port: 8000
+          protocol: TCP
+  egress:
+    # cluster DNS (always required)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+        - port: 5353
+          protocol: UDP
+        - port: 5353
+          protocol: TCP
