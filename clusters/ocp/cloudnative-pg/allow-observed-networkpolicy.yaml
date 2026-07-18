@@ -42,6 +42,25 @@ spec:
           protocol: TCP
         - port: 9443
           protocol: TCP
+    # barman-cloud plugin CNPG-I gRPC (:9090). The cnpg-controller-manager
+    # (intra-ns) dials the barman-cloud operator plugin for backup/WAL config
+    # every reconcile — a connection-reused loop the 1:50 sampling under-
+    # represented. Tenant instance namespaces are also permitted for backup/
+    # restore coordination the sidecar may perform cross-namespace. Sampling
+    # missed this critical low-frequency flow (seq-14 severance).
+    - from:
+        - podSelector: {}
+        - namespaceSelector:
+            matchExpressions:
+              - key: kubernetes.io/metadata.name
+                operator: In
+                values:
+                  - forgejo
+                  - quay-enterprise
+                  - rhdh
+      ports:
+        - port: 9090
+          protocol: TCP
   egress:
     # cluster DNS (always required)
     - to:
@@ -78,4 +97,13 @@ spec:
                   - rhdh
       ports:
         - port: 8000
+          protocol: TCP
+    # cnpg-controller-manager -> barman-cloud plugin CNPG-I gRPC (:9090),
+    # intra-namespace. Required so the operator can render backup/WAL config
+    # from the plugin; severed at seq-14 when only host-network :9090 ingress
+    # was permitted (no matching operator egress either).
+    - to:
+        - podSelector: {}
+      ports:
+        - port: 9090
           protocol: TCP
