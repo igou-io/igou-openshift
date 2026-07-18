@@ -7,6 +7,8 @@ namespace: gotify
 # (see GOTIFY_ENDPOINT below). Its GOTIFY_TOKEN is the VPS alertmanager app
 # token, delivered via the gotify-bridge-token ExternalSecret.
 resources:
+  - default-deny-networkpolicy.yaml
+  - allow-observed-networkpolicy.yaml
   - gotify-namespace.yaml
   - gotify-bridge-token-externalsecret.yaml
 helmCharts:
