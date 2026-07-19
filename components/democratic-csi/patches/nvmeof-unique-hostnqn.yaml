@@ -1,0 +1,91 @@
+# Give each node a UNIQUE, STABLE NVMe host NQN/host ID for the democratic-csi
+# NVMe-oF node plugins. See igou-io/igou-openshift#404.
+#
+# Problem: the democratic-csi container image ships a static /etc/nvme/hostnqn
+# (uuid:941e4f03-...). Because the DaemonSet runs the same image on every node
+# and we do not mount the host's /etc/nvme (node.driver.nvmeDirMountEnabled is
+# false by default), every node connects to TrueNAS presenting the SAME host
+# NQN — so all nodes look like one NVMe initiator and there is no per-host
+# isolation at the fabric layer (reservation/ANA ambiguity; data-integrity risk
+# if two nodes ever attach the same namespace).
+#
+# UPSTREAM: this is tracked as democratic-csi/democratic-csi#451 (open). The
+# baked value is literally in the image Dockerfile (echo 'nqn...941e4f03...' >
+# /etc/nvme/hostnqn), on both `next` and `master`. The maintainer added a
+# generate-if-missing step (`if (!fs.existsSync) nvme gen-hostnqn`) but it is
+# dead code while the Dockerfile keeps baking the file, so even the latest
+# `next` image ships duplicate NQNs by default. There is no chart release past
+# 0.15.1 and no config/driver option to set the hostnqn per node (democratic-csi
+# calls `nvme connect` without --hostnqn, so /etc/nvme/hostnqn is authoritative).
+# Native alternatives are strictly worse here: nvmeDirMountEnabled: true only
+# surfaces the HOST /etc/nvme, which on RHCOS is ALSO a shared duplicate (Red Hat
+# KB 7073579), so it would still need a per-node MachineConfig + reboots.
+# REMOVE THIS PATCH only once #451's Dockerfile stops baking hostnqn/hostid AND a
+# persistent per-node mount lands upstream.
+#
+# Fix: an initContainer derives a deterministic host NQN from the node's
+# /etc/machine-id (unique per node, stable across reboots — NOT random, so the
+# NQN is stable so reconnects and any future TrueNAS host ACL keep matching) and
+# writes hostnqn + hostid into an emptyDir mounted over /etc/nvme in the
+# csi-driver container. This is deliberately deterministic, unlike upstream's
+# random-on-first-start which would remint the NQN on every pod reschedule.
+# discovery.conf is intentionally not recreated: the freenas-api-nvmeof driver
+# connects to explicit transports from its config and does not use nvme discovery.
+#
+# Applied to the three NVMe-oF node DaemonSets (ssd/fast/cold) via a targeted
+# kustomize patch because the chart's node template has no initContainers hook.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nvmeof-node  # overridden by the patch target selector in kustomization.yaml
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: unique-hostnqn
+          # Same image the node plugin already runs (guaranteed present on every
+          # node, ships /bin/sh + coreutils) so this adds no extra image pull.
+          # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
+          image: ghcr.io/democratic-csi/democratic-csi:next@sha256:0f308ae601474cb9633f90dc96f59dbd23440b0ed0e77d70e224465246a12dfa
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              # /etc/machine-id is 32 hex chars = a 128-bit id, unique per node
+              # and stable across reboots. Format it into UUID shape and use it
+              # as the NVMe host identity (deterministic => stable NQN).
+              mid=$(tr -d '\n' < /host-machine-id)
+              if [ "${#mid}" -ne 32 ]; then
+                echo "machine-id is not 32 hex chars ('${mid}'); refusing to generate hostnqn" >&2
+                exit 1
+              fi
+              uuid=$(printf '%s-%s-%s-%s-%s' \
+                "$(printf '%s' "$mid" | cut -c1-8)" \
+                "$(printf '%s' "$mid" | cut -c9-12)" \
+                "$(printf '%s' "$mid" | cut -c13-16)" \
+                "$(printf '%s' "$mid" | cut -c17-20)" \
+                "$(printf '%s' "$mid" | cut -c21-32)")
+              printf 'nqn.2014-08.org.nvmexpress:uuid:%s\n' "$uuid" > /etc/nvme/hostnqn
+              printf '%s\n' "$uuid" > /etc/nvme/hostid
+              echo "wrote unique NVMe host identity: nqn.2014-08.org.nvmexpress:uuid:${uuid}"
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: host-machine-id
+              mountPath: /host-machine-id
+              readOnly: true
+            - name: nvme-dir
+              mountPath: /etc/nvme
+      containers:
+        - name: csi-driver
+          volumeMounts:
+            - name: nvme-dir
+              mountPath: /etc/nvme
+      volumes:
+        - name: nvme-dir
+          emptyDir: {}
+        - name: host-machine-id
+          hostPath:
+            path: /etc/machine-id
+            type: File
