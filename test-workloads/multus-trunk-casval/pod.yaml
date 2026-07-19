@@ -23,7 +23,7 @@ spec:
   restartPolicy: Never
   containers:
     - name: net
-      image: registry.access.redhat.com/ubi9/ubi-minimal:latest@sha256:850143255ee0d1915f09aaa09f6ed31f24086ba605c323badfbefa95b8c52b0e
+      image: registry.access.redhat.com/ubi9/ubi-minimal:latest@sha256:062c52ff973065752b0965787649db2bcf551a6c727a00e95a3eb42cebadbdab
       command: ["sleep", "infinity"]
       securityContext:
         capabilities:
