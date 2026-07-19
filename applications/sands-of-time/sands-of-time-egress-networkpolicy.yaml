@@ -1,0 +1,36 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: sands-of-time-egress
+  namespace: sands-of-time
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    # cluster DNS
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - protocol: UDP
+          port: 5353
+        - protocol: TCP
+          port: 5353
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # external (no EgressFirewall in this namespace — all external destinations
+    # permitted); block all RFC1918 cluster-internal and trusted-LAN space to
+    # prevent lateral movement: 10.0.0.0/8 covers the OpenShift pod CIDR
+    # (10.128.0.0/14) and the homelab LAN (10.10.9.0/24 etc.); 172.30.0.0/16 is
+    # the OpenShift service CIDR.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.30.0.0/16

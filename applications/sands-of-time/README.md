@@ -27,6 +27,17 @@ Then seed the database (long-running, resumable, rate-limited):
 oc apply -f applications/sands-of-time/sands-of-time-bootstrap-job.yaml
 ```
 
+## Egress
+
+The namespace's `allow-observed` NetworkPolicy (NetObserv-derived) only
+permitted cluster DNS egress, which blocked the serve pod's outbound data
+sync. The `sands-of-time-egress-networkpolicy.yaml` NetworkPolicy opens
+outgoing connections broadly (cluster DNS + all external destinations,
+excluding `10.0.0.0/8` — which covers the OpenShift pod CIDR and the
+homelab LAN — and `172.30.0.0/16`, the OpenShift service CIDR, to block
+lateral movement). No EgressFirewall is used — the namespace intentionally
+has no OVN-level host allowlist.
+
 ## Admin API (optional)
 
 `/api/admin` stays disabled (503) until the token Secret exists:
