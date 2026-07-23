@@ -64,25 +64,6 @@ spec:
   filters:
     - name: multiline
       type: detectMultilineException
-    # TEMPORARY — remove after 2026-07-22. Entries older than the
-    # LokiStack schema effectiveDate (2026-07-15) but younger than
-    # reject_old_samples_max_age (7d) get a 500 "no schema config found"
-    # from the ingester; Vector retries 500s forever, and the poisoned
-    # batches head-of-line block the sink (live ingestion stalled for
-    # ~90min on the master during backlog replay). The webhook forbids
-    # backdating the schema, so drop pre-schema records at the collector.
-    # Filters run before the viaq transform: journald events carry a
-    # parsed .timestamp, container events are still the raw CRI line in
-    # .message (which starts with the ISO timestamp) — hence two tests.
-    - name: drop-pre-schema-backlog
-      type: drop
-      drop:
-        - test:
-            - field: .timestamp
-              matches: '^(20(1\d|2[0-5])-|2026-0[1-6]-|2026-07-0|2026-07-1[0-4])'
-        - test:
-            - field: .message
-              matches: '^(20(1\d|2[0-5])-|2026-0[1-6]-|2026-07-0|2026-07-1[0-4])'
     # kube-apiserver audit at the Default profile is ~17GB/day, dominated
     # by read-only requests (#382 sizing assumed ~15GB/day TOTAL). Keep
     # every mutation auditable; drop reads. The audit input meta transform
@@ -125,7 +106,6 @@ spec:
         - application
       filterRefs:
         - multiline
-        - drop-pre-schema-backlog
         - drop-csi-exec-noise
       outputRefs:
         - default-lokistack
@@ -133,7 +113,6 @@ spec:
       inputRefs:
         - infrastructure
       filterRefs:
-        - drop-pre-schema-backlog
         - drop-olm-catalog-noise
       outputRefs:
         - default-lokistack
