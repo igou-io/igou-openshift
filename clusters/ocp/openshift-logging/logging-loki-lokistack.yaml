@@ -4,8 +4,9 @@
 # tenants application/infrastructure/audit gated by OpenShift RBAC at the
 # LokiStack gateway.
 # 1x.demo = single replica of each component, no ingest HA — fine at lab
-# scale (≲15 GB/day); documented upgrade path is 1x.pico (HA, RF=2,
-# ~430Gi+ storage floor) if ingest ever grows past that.
+# scale (measured 2026-07-23: ~27.5 GB/day ingest, ~3.9 GB/day stored,
+# peak 0.5 MB/s vs the 10 MB/s tenant limit); documented upgrade path is
+# 1x.pico (HA, RF=2, ~430Gi+ storage floor) if ingest ever grows past it.
 apiVersion: loki.grafana.com/v1
 kind: LokiStack
 metadata:
