@@ -554,6 +554,22 @@ spec:
         - protocol: TCP
           port: 443
 
+    # Google Sheets API — storescrape cron appends meat prices via
+    # scripts/sheets_append.py (zero-role service account, single shared
+    # spreadsheet). oauth2 is the service-account token exchange.
+    - type: Allow
+      to:
+        dnsName: sheets.googleapis.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Allow
+      to:
+        dnsName: oauth2.googleapis.com
+      ports:
+        - protocol: TCP
+          port: 443
+
     # igou.io homelab sites
     # (sandsoftime.igou.io removed: Hermes consumes the in-cluster service
     # directly — see hermes-egress-networkpolicy.yaml — not the public route.)
