@@ -64,13 +64,15 @@ step 2 above) stays as break-glass.
 
 ## Policy-as-code (#547)
 
-Five `SecurityPolicy` CRs (`cluster-apps-*-securitypolicy.yaml`, reconciled by
-config-controller) clone the dangerous-workload built-ins — Privileged
-Container, Sensitive Host Mounts, Runtime Socket Mount, CAP_SYS_ADMIN,
-Secret in Env Var — scoped to the **cluster-apps ArgoCD project namespaces +
-hermes**. Criteria copied verbatim from the 4.11 built-ins. The built-ins keep
-observing cluster-wide; the clones carry admission enforcement actions
-(`FAIL_DEPLOYMENT_CREATE/UPDATE`).
+Six `SecurityPolicy` CRs (`cluster-apps-*-securitypolicy.yaml`, reconciled by
+config-controller) clone built-ins scoped to the **cluster-apps ArgoCD project
+namespaces + hermes**: the dangerous-workload set — Privileged Container,
+Sensitive Host Mounts, Runtime Socket Mount, CAP_SYS_ADMIN, Secret in Env Var
+(#547) — plus Latest tag (#559, gated on the firecrawl digest-only pinning;
+AAP automation-job/activation-job pods are excluded because their EE/DE images
+track `:latest` by design in igou-inventory). Criteria copied verbatim from
+the 4.11 built-ins. The built-ins keep observing cluster-wide; the clones
+carry admission enforcement actions (`FAIL_DEPLOYMENT_CREATE/UPDATE`).
 
 **Enforcement is currently OFF**: the SecuredCluster CR has
 `admissionControl.enforcement: Disabled`, which makes those actions inert.
@@ -96,7 +98,7 @@ Recipe (add an exclusion): `GET /v1/policies?query=Policy:<name>` for the id,
 
 ## Violation notifications (#548)
 
-The five cluster-apps SecurityPolicy CRs reference the notifier
+The six cluster-apps SecurityPolicy CRs reference the notifier
 `slack-igoucloud-alerts` by name — violations of those policies (and only
 those) post to the **#igoucloud-alerts-warning** Slack channel (the same
 channel Alertmanager's warning receiver uses). With zero in-scope violations
