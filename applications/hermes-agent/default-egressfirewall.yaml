@@ -580,6 +580,15 @@ spec:
         - protocol: TCP
           port: 443
 
+    # Grafana package repo — alloy install + updates (igou-openshift#382
+    # phase 4).
+    - type: Allow
+      to:
+        dnsName: rpm.grafana.com
+      ports:
+        - protocol: TCP
+          port: 443
+
     # Central log shipping (igou-openshift#382 phase 4): Alloy on the VM
     # pushes the journal to the log-gateway Loki push listener on the
     # trusted-lan VIP.
