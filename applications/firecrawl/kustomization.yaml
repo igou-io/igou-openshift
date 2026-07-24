@@ -78,7 +78,7 @@ helmCharts:
               args: ["--max-old-space-size=2048", "dist/src/index.js"]
               image: &firecrawlImage
                 repository: docker.io/winkkgmbh/firecrawl
-                tag: "latest@sha256:8b26e0967fa83e7f92d2e506e0957c10fe52f082b829e56a72ade0f7a627ed50"
+                digest: sha256:8b26e0967fa83e7f92d2e506e0957c10fe52f082b829e56a72ade0f7a627ed50
                 pullPolicy: IfNotPresent
               envFrom: &firecrawlEnvFrom
                 - configMapRef:
@@ -462,7 +462,7 @@ helmCharts:
               nameOverride: playwright-service
               image:
                 repository: docker.io/winkkgmbh/firecrawl-playwright
-                tag: "latest@sha256:3542c4773c7ba5072258625cf40916d6589b2d94f7f12a5ed22e670ece126ead"
+                digest: sha256:3542c4773c7ba5072258625cf40916d6589b2d94f7f12a5ed22e670ece126ead
                 pullPolicy: IfNotPresent
               envFrom:
                 - configMapRef:
@@ -593,13 +593,15 @@ helmCharts:
         nuq-postgres:
           type: deployment
           replicas: 1
-          strategy: RollingUpdate
+          # Single-replica postgres on an RWO PVC: RollingUpdate deadlocks (new
+          # pod can't take the PGDATA lock while the old one holds it).
+          strategy: Recreate
           containers:
             app:
               nameOverride: nuq-postgres
               image:
                 repository: docker.io/winkkgmbh/nuq-postgres
-                tag: "latest@sha256:b0f14f9c8c9b5929d25a5d6f1f7f6ef99c51475d45767908eed4f086f7159e02"
+                digest: sha256:b0f14f9c8c9b5929d25a5d6f1f7f6ef99c51475d45767908eed4f086f7159e02
                 pullPolicy: IfNotPresent
               env:
                 POSTGRES_USER: postgres
