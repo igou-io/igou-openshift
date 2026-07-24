@@ -11,5 +11,6 @@ resources:
   - sensor-tls-externalsecret.yaml
   - collector-tls-externalsecret.yaml
   - admission-control-tls-externalsecret.yaml
+  - central-declarative-config-configmap.yaml
   - stackrox-central-services-central.yaml
   - stackrox-secured-cluster-services-securedcluster.yaml

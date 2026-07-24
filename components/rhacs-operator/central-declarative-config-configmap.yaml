@@ -1,0 +1,23 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: central-declarative-config
+  namespace: stackrox
+data:
+  # Declarative auth (#546): OpenShift OAuth login for Central. The operator
+  # does not auto-create an OpenShift auth provider; htpasswd basic auth
+  # (admin + central-htpasswd secret) stays as break-glass.
+  # Schema: stackrox pkg/declarativeconfig (verified against tag 4.11.1).
+  auth-providers.yaml: |
+    name: OpenShift
+    minimumRole: None
+    uiEndpoint: central-stackrox.apps.ocp.igou.systems
+    extraUIEndpoints:
+      - central-stackrox.apps.ocp.igou.systems:443
+    groups:
+      - key: groups
+        value: global-admins
+        role: Admin
+    openshift:
+      enable: true
