@@ -78,6 +78,7 @@ resources:
   - grafana-dashboard-sre-use-nodes.yaml
   - grafana-dashboard-sre-golden-signals-vms.yaml
   - grafana-dashboard-sre-use-storage.yaml
+  - grafana-dashboard-power-lab-power.yaml
   # NetObserv flow analytics (network folder)
   - grafana-dashboard-network-netobserv-traffic.yaml
 # Vendored dashboard JSON (see grafana-dashboard-nut-exporter.yaml for why
@@ -273,6 +274,10 @@ configMapGenerator:
     namespace: grafana
     files:
       - dashboards/sre/use-storage.json
+  - name: grafana-dashboard-power-lab-power-json
+    namespace: grafana
+    files:
+      - dashboards/power/lab-power.json
   - name: grafana-dashboard-network-netobserv-traffic-json
     namespace: grafana
     files:
