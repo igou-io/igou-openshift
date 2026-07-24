@@ -29,6 +29,16 @@ spec:
           protocol: UDP
         - port: 3500
           protocol: TCP
+    # In-cluster sender: the hermes VM (KubeVirt, pod network) ships its
+    # journal to :3500. In-cluster traffic to the VIP keeps its pod-CIDR
+    # source IP, which the RFC1918 ipBlock above never matches.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes
+      ports:
+        - port: 3500
+          protocol: TCP
     # User workload monitoring scrapes Alloy's telemetry endpoint (the
     # ServiceMonitor in this component); metrics stay off the ingest VIP.
     - from:
