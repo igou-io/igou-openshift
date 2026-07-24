@@ -1,0 +1,354 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_LOKI_INFRASTRUCTURE",
+      "label": "loki-infrastructure",
+      "type": "datasource",
+      "pluginId": "loki"
+    }
+  ],
+  "title": "Hermes",
+  "uid": "hermes-logs",
+  "description": "The hermes agent VM's journal: sudo/sshd security panels + its own service units \u2014 igou-openshift#382.",
+  "tags": [
+    "logging"
+  ],
+  "schemaVersion": 39,
+  "timezone": "browser",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "refresh": "1m",
+  "templating": {
+    "list": [
+      {
+        "name": "unit",
+        "label": "Unit",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "${DS_LOKI_INFRASTRUCTURE}"
+        },
+        "definition": "label_values({job=\"systemd-journal\", host=\"hermes\"}, unit)",
+        "query": "label_values({job=\"systemd-journal\", host=\"hermes\"}, unit)",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "sort": 1,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        }
+      },
+      {
+        "name": "search",
+        "label": "Line contains",
+        "type": "textbox",
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "query": ""
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Journal volume by unit",
+      "description": "",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_INFRASTRUCTURE}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "pointSize": 4,
+            "showPoints": "never",
+            "drawStyle": "line"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_INFRASTRUCTURE}"
+          },
+          "expr": "sum by (unit) (count_over_time({job=\"systemd-journal\", host=\"hermes\", unit=~\"$unit\"}[$__auto]))",
+          "legendFormat": "{{unit}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "sudo invocations",
+      "description": "The agent VM is hardened; sudo use should be operator sessions only.",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_INFRASTRUCTURE}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "pointSize": 4,
+            "showPoints": "never",
+            "drawStyle": "line"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_INFRASTRUCTURE}"
+          },
+          "expr": "sum (count_over_time({job=\"systemd-journal\", host=\"hermes\"} |= `sudo` |= `COMMAND=` [$__auto]))",
+          "legendFormat": "sudo",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "sshd sessions and auth",
+      "description": "",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_INFRASTRUCTURE}"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "pointSize": 4,
+            "showPoints": "never",
+            "drawStyle": "line"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_INFRASTRUCTURE}"
+          },
+          "expr": "sum (count_over_time({job=\"systemd-journal\", host=\"hermes\", unit=~\"sshd.*\"} |~ `(?i)(accepted|failed|session opened)` [$__auto]))",
+          "legendFormat": "sshd",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Agent services (gateway/dashboard/admin)",
+      "description": "",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_INFRASTRUCTURE}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "pointSize": 4,
+            "showPoints": "never",
+            "drawStyle": "line"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_INFRASTRUCTURE}"
+          },
+          "expr": "sum by (unit) (count_over_time({job=\"systemd-journal\", host=\"hermes\", unit=~\".*(hermes|alloy).*\"}[$__auto]))",
+          "legendFormat": "{{unit}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Error-ish lines",
+      "description": "",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_INFRASTRUCTURE}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "pointSize": 4,
+            "showPoints": "never",
+            "drawStyle": "line"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_INFRASTRUCTURE}"
+          },
+          "expr": "sum (count_over_time({job=\"systemd-journal\", host=\"hermes\"} |~ `(?i)(error|fail|denied)` [$__auto]))",
+          "legendFormat": "errors",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "logs",
+      "title": "hermes journal",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_INFRASTRUCTURE}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 24,
+        "h": 12
+      },
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_INFRASTRUCTURE}"
+          },
+          "expr": "{job=\"systemd-journal\", host=\"hermes\", unit=~\"$unit\"} |~ `$search`",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}
