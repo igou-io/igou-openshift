@@ -1,0 +1,29 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: gateway-trusted-lan-tls
+  # Must live in the Gateway's namespace (openshift-ingress) so the listener
+  # certificateRef needs no ReferenceGrant.
+  namespace: openshift-ingress
+  annotations:
+    argocd.argoproj.io/sync-wave: '0'
+spec:
+  secretName: gateway-trusted-lan-tls
+  duration: 2160h0m0s # 90d
+  renewBefore: 360h0m0s # 15d
+  subject:
+    organizations:
+      - Igou
+  privateKey:
+    size: 4096
+    algorithm: RSA
+    encoding: PKCS1
+    rotationPolicy: Always
+  dnsNames:
+    # Tier domains are cluster-agnostic: rk8s holds this wildcard too, and
+    # per-hostname DNS on the rb5009 decides which cluster serves a name.
+    - '*.lan.igou.systems'
+  issuerRef:
+    kind: ClusterIssuer
+    name: cluster-acme

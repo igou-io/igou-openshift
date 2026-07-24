@@ -4,3 +4,5 @@ resources:
   - gatewayclass.yaml
   - guest-dmz-certificate.yaml
   - guest-dmz-gateway.yaml
+  - trusted-lan-certificate.yaml
+  - trusted-lan-gateway.yaml
