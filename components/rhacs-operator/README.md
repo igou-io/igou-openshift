@@ -93,3 +93,20 @@ Recipe (add an exclusion): `GET /v1/policies?query=Policy:<name>` for the id,
 `GET /v1/policies/{id}`, append to `.exclusions` an entry
 `{"name": "<ns> (acceptable)", "deployment": {"scope": {"namespace": "<ns>"}}}`,
 `PUT /v1/policies/{id}` with the full body.
+
+## Violation notifications (#548)
+
+The five cluster-apps SecurityPolicy CRs reference the notifier
+`slack-igoucloud-alerts` by name — violations of those policies (and only
+those) post to the **#igoucloud-alerts-warning** Slack channel (the same
+channel Alertmanager's warning receiver uses). With zero in-scope violations
+at baseline, this is silent until something dangerous ships.
+
+The notifier itself is **API-managed** (declarative config supports only
+generic/splunk types): type `slack`, name `slack-igoucloud-alerts`, webhook
+from the 1P `lab_openshift` item `slack-webhook-igoucloud-alerts-warning`.
+Recreate: `POST /v1/notifiers` with
+`{"name":"slack-igoucloud-alerts","type":"slack","uiEndpoint":"<central route>","labelDefault":"<webhook url>"}`;
+verify with `POST /v1/notifiers/test` (flat notifier object as body).
+Built-in policies deliberately have NO notifier — the ~400 violation
+events/day of platform churn would flood the channel.
