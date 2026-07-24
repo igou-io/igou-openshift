@@ -9,17 +9,25 @@
   ],
   "title": "sands-of-time",
   "uid": "sands-of-time-logs",
-  "description": "sands-of-time app logs (application tenant) \u2014 igou-openshift#382.",
+  "description": "sands-of-time app logs (application tenant) \u2014 igou-openshift#382. Default 1h window with auto-refresh off: widen the range deliberately and refresh manually \u2014 widened-range + auto-refresh is the expensive combination on the small Loki.",
   "tags": [
     "logging"
   ],
   "schemaVersion": 39,
   "timezone": "browser",
   "time": {
-    "from": "now-6h",
+    "from": "now-1h",
     "to": "now"
   },
-  "refresh": "1m",
+  "refresh": false,
+  "timepicker": {
+    "refresh_intervals": [
+      "5m",
+      "15m",
+      "30m",
+      "1h"
+    ]
+  },
   "templating": {
     "list": [
       {
@@ -60,6 +68,114 @@
   },
   "panels": [
     {
+      "type": "stat",
+      "title": "Lines (range)",
+      "description": "Neutral by design \u2014 red is reserved for errors.",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_APPLICATION}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "none",
+        "colorMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_APPLICATION}"
+          },
+          "expr": "sum (count_over_time({log_type=\"application\", kubernetes_namespace_name=\"sands-of-time\"}[$__range]))",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Error-ish lines (range)",
+      "description": "Same expression as the error trend below, as a glance tile.",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_APPLICATION}"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#FF9830",
+                "value": 10
+              },
+              {
+                "color": "#F2495C",
+                "value": 50
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "none",
+        "colorMode": "background",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_APPLICATION}"
+          },
+          "expr": "sum (count_over_time({log_type=\"application\", kubernetes_namespace_name=\"sands-of-time\"} |~ `(?i)(error|fail|traceback|exception)` [$__range]))",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
       "type": "timeseries",
       "title": "Volume by pod",
       "description": "",
@@ -69,7 +185,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 0,
+        "y": 4,
         "w": 12,
         "h": 8
       },
@@ -121,7 +237,7 @@
       },
       "gridPos": {
         "x": 12,
-        "y": 0,
+        "y": 4,
         "w": 6,
         "h": 8
       },
@@ -173,7 +289,7 @@
       },
       "gridPos": {
         "x": 18,
-        "y": 0,
+        "y": 4,
         "w": 6,
         "h": 8
       },
@@ -224,7 +340,7 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 8,
+        "y": 12,
         "w": 24,
         "h": 12
       },
@@ -232,6 +348,8 @@
         "showTime": true,
         "wrapLogMessage": true,
         "enableLogDetails": true,
+        "showLabels": false,
+        "prettifyLogMessage": true,
         "dedupStrategy": "none",
         "sortOrder": "Descending"
       },
@@ -241,7 +359,8 @@
             "type": "loki",
             "uid": "${DS_LOKI_APPLICATION}"
           },
-          "expr": "{log_type=\"application\", kubernetes_namespace_name=\"sands-of-time\", kubernetes_pod_name=~\"$pod\"} |~ `$search`",
+          "expr": "{log_type=\"application\", kubernetes_namespace_name=\"sands-of-time\", kubernetes_pod_name=~\"$pod\"} |= `$search`",
+          "maxLines": 1000,
           "refId": "A"
         }
       ]
