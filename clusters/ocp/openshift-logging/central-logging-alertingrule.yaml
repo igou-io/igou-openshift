@@ -51,6 +51,7 @@ spec:
         - alert: RouterOSLoginFailures
           expr: |
             sum by (host) (count_over_time({job="syslog", host=~"rb5009|crs310|crs317|crs328"} |= `login failure` [15m])) > 3
+          for: 0m
           labels:
             severity: warning
           annotations:
@@ -64,6 +65,7 @@ spec:
         - alert: HostKernelOOM
           expr: |
             sum by (host) (count_over_time({job="systemd-journal"} |~ `Out of memory|oom-kill|Kernel panic` [10m])) > 0
+          for: 0m
           labels:
             severity: warning
           annotations:
