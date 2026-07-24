@@ -7,3 +7,4 @@ resources:
   - collector-serviceaccount.yaml
   - collector-rbac.yaml
   - collector-clusterlogforwarder.yaml
+  - central-logging-alertingrule.yaml

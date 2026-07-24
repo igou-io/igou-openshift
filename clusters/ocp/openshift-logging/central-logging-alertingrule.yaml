@@ -1,0 +1,74 @@
+---
+# Log-based alerts for the central logging pipeline (issue #382 phase
+# 6). Evaluated by the logging-loki ruler (rules.enabled + the
+# openshift.io/log-alerting selector on the LokiStack) against the
+# infrastructure tenant; delivery is auto-wired to the platform
+# Alertmanager, so these land in the existing Gotify/Slack/EDA→GitHub
+# pipeline.
+apiVersion: loki.grafana.com/v1
+kind: AlertingRule
+metadata:
+  name: central-logging
+  namespace: openshift-logging
+  labels:
+    openshift.io/log-alerting: "true"
+  annotations:
+    argocd.argoproj.io/sync-wave: '2'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  tenantID: infrastructure
+  groups:
+    - name: external-log-sources
+      interval: 5m
+      rules:
+        # Devices log rarely at info; a day of total silence from a
+        # RouterOS device means forwarding broke (config, DNS, or the
+        # gateway path) — the failure mode is silent on the device side
+        # (see the crs310 src-address incident).
+        - alert: SyslogRouterOSSilent
+          expr: |
+            sum by (host) (count_over_time({job="syslog", host=~"rb5009|crs310|crs317|crs328"}[24h])) < 1
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: RouterOS device {{ $labels.host }} sent no syslog in 24h
+            description: >-
+              Check /system/logging on the device and the log-gateway
+              parse-error counters; RouterOS remote logging fails
+              silently.
+        - alert: SyslogTrueNASSilent
+          expr: |
+            sum by (host) (count_over_time({job="syslog", host=~"truenas.*"}[6h])) < 1
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: TrueNAS sent no syslog in 6h
+            description: >-
+              TrueNAS middleware logs steadily at F_INFO; silence means
+              the RFC5424 path (syslog.igou.systems:1514) broke.
+        - alert: RouterOSLoginFailures
+          expr: |
+            sum by (host) (count_over_time({job="syslog", host=~"rb5009|crs310|crs317|crs328"} |= `login failure` [15m])) > 3
+          labels:
+            severity: warning
+          annotations:
+            summary: Repeated login failures on {{ $labels.host }}
+            description: >-
+              More than 3 failed logins in 15m on a RouterOS device —
+              check source addresses in the device log.
+    - name: host-journals
+      interval: 5m
+      rules:
+        - alert: HostKernelOOM
+          expr: |
+            sum by (host) (count_over_time({job="systemd-journal"} |~ `Out of memory|oom-kill|Kernel panic` [10m])) > 0
+          labels:
+            severity: warning
+          annotations:
+            summary: Kernel OOM/panic messages on {{ $labels.host }}
+            description: >-
+              The host journal shows out-of-memory or panic activity —
+              check workload placement and memory limits (SBCs are the
+              usual suspects).
