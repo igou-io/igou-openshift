@@ -44,6 +44,9 @@ spec:
             - name: syslog-tcp
               containerPort: 5514
               protocol: TCP
+            - name: syslog5424-udp
+              containerPort: 5524
+              protocol: UDP
             - name: loki-push
               containerPort: 3500
               protocol: TCP
