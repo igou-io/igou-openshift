@@ -1,4 +1,8 @@
 ---
+# Vendored locally (2026-07-24 dashboard audit): the upstream board was
+# broken live — ArgoCD (OpenShift GitOps) needed patched selectors (see the audit PR).
+# Re-vendor by refreshing dashboards/argocd.json and re-applying the
+# documented patches.
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -11,5 +15,9 @@ spec:
     matchLabels:
       dashboards: grafana
   resyncPeriod: 24h
-  grafanaCom:
-    id: 14584
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: thanos-querier
+  configMapRef:
+    name: grafana-dashboard-14584-json
+    key: argocd.json

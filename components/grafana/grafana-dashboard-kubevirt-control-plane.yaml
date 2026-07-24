@@ -1,4 +1,8 @@
 ---
+# Vendored locally (2026-07-24 dashboard audit): the upstream board was
+# broken live — KubeVirt control plane needed patched selectors (see the audit PR).
+# Re-vendor by refreshing dashboards/kubevirt-control-plane.json and re-applying the
+# documented patches.
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -10,5 +14,10 @@ spec:
   instanceSelector:
     matchLabels:
       dashboards: grafana
-  url: https://raw.githubusercontent.com/kubevirt/monitoring/main/dashboards/grafana/kubevirt-control-plane.json
-  contentCacheDuration: 24h
+  resyncPeriod: 24h
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: thanos-querier
+  configMapRef:
+    name: grafana-dashboard-kubevirt-control-plane-json
+    key: kubevirt-control-plane.json
