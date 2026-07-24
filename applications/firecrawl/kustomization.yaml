@@ -593,6 +593,11 @@ helmCharts:
         nuq-postgres:
           type: deployment
           replicas: 1
+          # Replace: the live object carries server-defaulted
+          # strategy.rollingUpdate, which a 3-way-merge apply can't remove and
+          # the API forbids alongside type: Recreate.
+          annotations:
+            argocd.argoproj.io/sync-options: Replace=true
           # Single-replica postgres on an RWO PVC: RollingUpdate deadlocks (new
           # pod can't take the PGDATA lock while the old one holds it).
           strategy: Recreate
