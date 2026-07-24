@@ -18,7 +18,6 @@ resources:
   - grafana-loki-infrastructure-datasource.yaml
   - grafana-loki-application-datasource.yaml
   - grafana-loki-network-datasource.yaml
-  - grafana-dashboard-7587.yaml
   - grafana-dashboard-20340.yaml
   - grafana-dashboard-12239.yaml
   - grafana-dashboard-14584.yaml
@@ -34,14 +33,12 @@ resources:
   - grafana-dashboard-truenas-zfs.yaml
   - grafana-dashboard-adb-exporter.yaml
   - grafana-dashboard-15765.yaml
-  - grafana-dashboard-22604.yaml
   # kube-prometheus-stack dashboard set for the rk8s lab cluster (federated
   # via UWM). Grouped in the grafana "rk8s" folder; namespace label rewritten
   # to exported_namespace (enforcedNamespaceLabel forces namespace on scrape).
   - grafana-dashboard-rk8s-alertmanager-overview.yaml
   - grafana-dashboard-rk8s-apiserver.yaml
   - grafana-dashboard-rk8s-cluster-total.yaml
-  - grafana-dashboard-rk8s-grafana-overview.yaml
   - grafana-dashboard-rk8s-k8s-coredns.yaml
   - grafana-dashboard-rk8s-k8s-resources-cluster.yaml
   - grafana-dashboard-rk8s-k8s-resources-multicluster.yaml
@@ -83,6 +80,14 @@ resources:
 # it cannot come from spec.grafanaCom). Stable name: the GrafanaDashboard
 # CR references the ConfigMap by name.
 configMapGenerator:
+  - name: grafana-dashboard-14584-json
+    namespace: grafana
+    files:
+      - dashboards/argocd.json
+  - name: grafana-dashboard-kubevirt-control-plane-json
+    namespace: grafana
+    files:
+      - dashboards/kubevirt-control-plane.json
   - name: grafana-dashboard-apc-pdu-json
     namespace: grafana
     files:
@@ -116,10 +121,6 @@ configMapGenerator:
     namespace: grafana
     files:
       - dashboards/rk8s/cluster-total.json
-  - name: grafana-dashboard-rk8s-grafana-overview-json
-    namespace: grafana
-    files:
-      - dashboards/rk8s/grafana-overview.json
   - name: grafana-dashboard-rk8s-k8s-coredns-json
     namespace: grafana
     files:

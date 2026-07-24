@@ -333,8 +333,8 @@
     },
     {
       "type": "timeseries",
-      "title": "Agent services (gateway/dashboard/admin)",
-      "description": "",
+      "title": "Shipper + user-scope services",
+      "description": "The hermes agent runs as systemd USER units, which journald tags under user@1001.service \u2014 only alloy.service is a system unit.",
       "datasource": {
         "type": "loki",
         "uid": "${DS_LOKI_INFRASTRUCTURE}"
@@ -377,7 +377,7 @@
             "type": "loki",
             "uid": "${DS_LOKI_INFRASTRUCTURE}"
           },
-          "expr": "sum by (unit) (count_over_time({job=\"systemd-journal\", host=\"hermes\", unit=~\".*(hermes|alloy).*\"}[$__auto]))",
+          "expr": "sum by (unit) (count_over_time({job=\"systemd-journal\", host=\"hermes\", unit=~\".*(hermes|alloy|user@).*\"}[$__auto]))",
           "legendFormat": "{{unit}}",
           "refId": "A"
         }
