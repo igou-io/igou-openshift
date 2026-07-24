@@ -83,6 +83,18 @@ spec:
       ports:
         - protocol: TCP
           port: 8000
+    # Central log shipping (igou-openshift#382): the VM's Alloy pushes
+    # to the log-gateway via the VIP, but OVN load-balancer DNAT runs
+    # BEFORE egress policy, so the flow must be allowed as east-west to
+    # the post-DNAT gateway pod — the 0.0.0.0/0 rule's cluster-CIDR
+    # except would otherwise eat it.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: log-gateway
+      ports:
+        - protocol: TCP
+          port: 3500
     # in-cluster Quay registry (image pull)
     - to:
         - namespaceSelector:
