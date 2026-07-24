@@ -9,7 +9,7 @@
   ],
   "title": "ocp Application Logs",
   "uid": "ocp-application-logs",
-  "description": "ocp user-namespace pod logs (application tenant) \u2014 igou-openshift#382. Default 1h window with auto-refresh off: widen the range deliberately and refresh manually \u2014 widened-range + auto-refresh is the expensive combination on the small Loki.",
+  "description": "ocp user-namespace pod logs (application tenant) \u2014 igou-openshift#382. STRESS-TESTED LIMIT: with All namespaces selected, the volume/error trend panels exceed Grafana's 30s query wall beyond ~24h of range (full-corpus scan on the 1x.demo querier) \u2014 narrow $namespace before widening the window. Default 1h window with auto-refresh off: widen the range deliberately and refresh manually \u2014 widened-range + auto-refresh is the expensive combination on the small Loki.",
   "tags": [
     "logging"
   ],
@@ -197,7 +197,7 @@
     },
     {
       "type": "bargauge",
-      "title": "Noisiest pods (range)",
+      "title": "Noisiest pods (last 6h)",
       "description": "",
       "datasource": {
         "type": "loki",
@@ -234,7 +234,7 @@
             "type": "loki",
             "uid": "${DS_LOKI_APPLICATION}"
           },
-          "expr": "topk(10, sum by (kubernetes_pod_name) (count_over_time({log_type=\"application\", kubernetes_namespace_name=~\"$namespace\", kubernetes_pod_name=~\"$pod\"}[$__range])))",
+          "expr": "topk(10, sum by (kubernetes_pod_name) (count_over_time({log_type=\"application\", kubernetes_namespace_name=~\"$namespace\", kubernetes_pod_name=~\"$pod\"}[6h])))",
           "legendFormat": "{{kubernetes_pod_name}}",
           "instant": true,
           "refId": "A"
@@ -243,7 +243,7 @@
     },
     {
       "type": "bargauge",
-      "title": "Noisiest namespaces (range)",
+      "title": "Noisiest namespaces (last 6h)",
       "description": "Chronic top-talkers are retention/prune candidates.",
       "datasource": {
         "type": "loki",
@@ -280,7 +280,7 @@
             "type": "loki",
             "uid": "${DS_LOKI_APPLICATION}"
           },
-          "expr": "topk(10, sum by (kubernetes_namespace_name) (count_over_time({log_type=\"application\", kubernetes_namespace_name=~\"$namespace\"}[$__range])))",
+          "expr": "topk(10, sum by (kubernetes_namespace_name) (count_over_time({log_type=\"application\", kubernetes_namespace_name=~\"$namespace\"}[6h])))",
           "legendFormat": "{{kubernetes_namespace_name}}",
           "instant": true,
           "refId": "A"

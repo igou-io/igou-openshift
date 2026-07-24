@@ -228,17 +228,25 @@ boards["ocp-application-logs"] = board(
      ts(APP, "Error-ish lines by namespace",
         'sum by (kubernetes_namespace_name) (count_over_time({log_type="application", kubernetes_namespace_name=~"$namespace"} |~ `(?i)(error|fail|panic|fatal)` [$__auto]))',
         "{{kubernetes_namespace_name}}", 12, 0),
-     bargauge(APP, "Noisiest pods (range)",
-        'topk(10, sum by (kubernetes_pod_name) (count_over_time({log_type="application", kubernetes_namespace_name=~"$namespace", kubernetes_pod_name=~"$pod"}[$__range])))',
+     # Fixed 6h windows, NOT [$__range]: a 48h stress test measured the
+     # full-corpus [$__range] instant topk at 39s — past Grafana's 30s
+     # dataproxy wall. A fixed window keeps these panels functional at
+     # any user-selected range.
+     bargauge(APP, "Noisiest pods (last 6h)",
+        'topk(10, sum by (kubernetes_pod_name) (count_over_time({log_type="application", kubernetes_namespace_name=~"$namespace", kubernetes_pod_name=~"$pod"}[6h])))',
         "{{kubernetes_pod_name}}", 0, 8, w=12),
-     bargauge(APP, "Noisiest namespaces (range)",
-        'topk(10, sum by (kubernetes_namespace_name) (count_over_time({log_type="application", kubernetes_namespace_name=~"$namespace"}[$__range])))',
+     bargauge(APP, "Noisiest namespaces (last 6h)",
+        'topk(10, sum by (kubernetes_namespace_name) (count_over_time({log_type="application", kubernetes_namespace_name=~"$namespace"}[6h])))',
         "{{kubernetes_namespace_name}}", 12, 8, w=12,
         desc="Chronic top-talkers are retention/prune candidates."),
      logs(APP, "Pod lines",
           '{log_type="application", kubernetes_namespace_name=~"$namespace", kubernetes_pod_name=~"$pod"} |= `$search`',
           0, 14, prettify=True)],
-    "ocp user-namespace pod logs (application tenant) — igou-openshift#382.")
+    "ocp user-namespace pod logs (application tenant) — igou-openshift#382. "
+    "STRESS-TESTED LIMIT: with All namespaces selected, the volume/error "
+    "trend panels exceed Grafana's 30s query wall beyond ~24h of range "
+    "(full-corpus scan on the 1x.demo querier) — narrow $namespace before "
+    "widening the window.")
 
 # ---------------- ocp Infrastructure Logs ----------------
 boards["ocp-infrastructure-logs"] = board(
