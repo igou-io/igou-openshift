@@ -1,0 +1,366 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_LOKI_INFRASTRUCTURE",
+      "label": "loki-infrastructure",
+      "type": "datasource",
+      "pluginId": "loki"
+    }
+  ],
+  "title": "Fleet Journals",
+  "uid": "fleet-journals",
+  "description": "systemd journals shipped by the alloy role (linux_logging) and the rk8s DaemonSet \u2014 igou-openshift#382.",
+  "tags": [
+    "logging"
+  ],
+  "schemaVersion": 39,
+  "timezone": "browser",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "refresh": "1m",
+  "templating": {
+    "list": [
+      {
+        "name": "host",
+        "label": "Host",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "${DS_LOKI_INFRASTRUCTURE}"
+        },
+        "query": "label_values({job=\"systemd-journal\"}, host)",
+        "definition": "label_values({job=\"systemd-journal\"}, host)",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "sort": 1
+      },
+      {
+        "name": "unit",
+        "label": "Unit",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "${DS_LOKI_INFRASTRUCTURE}"
+        },
+        "query": "label_values({job=\"systemd-journal\", host=~\"$host\"}, unit)",
+        "definition": "label_values({job=\"systemd-journal\", host=~\"$host\"}, unit)",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "sort": 1
+      },
+      {
+        "name": "search",
+        "label": "Line contains",
+        "type": "textbox",
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "query": ""
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Journal volume by host",
+      "description": "",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_INFRASTRUCTURE}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "pointSize": 4,
+            "showPoints": "never",
+            "drawStyle": "line"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_INFRASTRUCTURE}"
+          },
+          "expr": "sum by (host) (count_over_time({job=\"systemd-journal\", host=~\"$host\"}[$__auto]))",
+          "legendFormat": "{{host}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Error-ish lines by host",
+      "description": "Lines matching error/fail/critical/panic/oom (case-insensitive).",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_INFRASTRUCTURE}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "pointSize": 4,
+            "showPoints": "never",
+            "drawStyle": "line"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_INFRASTRUCTURE}"
+          },
+          "expr": "sum by (host) (count_over_time({job=\"systemd-journal\", host=~\"$host\"} |~ `(?i)(error|fail|critical|panic|oom)` [$__auto]))",
+          "legendFormat": "{{host}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "bargauge",
+      "title": "Noisiest units (selection, range)",
+      "description": "Top 10 units by line count over the dashboard range.",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_INFRASTRUCTURE}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 8,
+        "h": 6
+      },
+      "options": {
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "valueMode": "color"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "continuous-BlPu"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_INFRASTRUCTURE}"
+          },
+          "expr": "topk(10, sum by (unit) (count_over_time({job=\"systemd-journal\", host=~\"$host\", unit=~\"$unit\"}[$__range])))",
+          "legendFormat": "{{unit}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "bargauge",
+      "title": "Volume by host (range)",
+      "description": "",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_INFRASTRUCTURE}"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 8,
+        "w": 8,
+        "h": 6
+      },
+      "options": {
+        "displayMode": "basic",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "valueMode": "color"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "continuous-BlPu"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_INFRASTRUCTURE}"
+          },
+          "expr": "topk(10, sum by (host) (count_over_time({job=\"systemd-journal\", host=~\"$host\"}[$__range])))",
+          "legendFormat": "{{host}}",
+          "instant": true,
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "OOM / kernel panic mentions",
+      "description": "Feeds the HostKernelOOM alert; should normally be empty.",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_INFRASTRUCTURE}"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 8,
+        "w": 8,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "pointSize": 4,
+            "showPoints": "never",
+            "drawStyle": "line"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_INFRASTRUCTURE}"
+          },
+          "expr": "sum by (host) (count_over_time({job=\"systemd-journal\", host=~\"$host\"} |~ `Out of memory|oom-kill|Kernel panic` [$__auto]))",
+          "legendFormat": "{{host}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "logs",
+      "title": "Journal lines",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_INFRASTRUCTURE}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 24,
+        "h": 12
+      },
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_INFRASTRUCTURE}"
+          },
+          "expr": "{job=\"systemd-journal\", host=~\"$host\", unit=~\"$unit\"} |~ `$search`",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}

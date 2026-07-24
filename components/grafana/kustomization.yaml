@@ -68,6 +68,9 @@ resources:
   - grafana-dashboard-logging-lokistack-chunks.yaml
   - grafana-dashboard-logging-lokistack-retention.yaml
   - grafana-dashboard-logging-log-gateway.yaml
+  - grafana-dashboard-logging-fleet-journals.yaml
+  - grafana-dashboard-logging-device-syslog.yaml
+  - grafana-dashboard-logging-rk8s-logs.yaml
   # NetObserv flow analytics (network folder)
   - grafana-dashboard-network-netobserv-traffic.yaml
 # Vendored dashboard JSON (see grafana-dashboard-nut-exporter.yaml for why
@@ -207,6 +210,18 @@ configMapGenerator:
     namespace: grafana
     files:
       - dashboards/logging/log-gateway.json
+  - name: grafana-dashboard-logging-fleet-journals-json
+    namespace: grafana
+    files:
+      - dashboards/logging/fleet-journals.json
+  - name: grafana-dashboard-logging-device-syslog-json
+    namespace: grafana
+    files:
+      - dashboards/logging/device-syslog.json
+  - name: grafana-dashboard-logging-rk8s-logs-json
+    namespace: grafana
+    files:
+      - dashboards/logging/rk8s-logs.json
   - name: grafana-dashboard-network-netobserv-traffic-json
     namespace: grafana
     files:
