@@ -1,0 +1,74 @@
+---
+# cadvisor on TrueNAS (VLAN9) — container lifecycle + resource telemetry by
+# container NAME (Netdata's cgroup collector only has opaque ID hashes).
+# The load-bearing series is container_start_time_seconds: deunhealth
+# auto-heals an unhealthy container within seconds, so a VPN death can begin
+# and end entirely between two 30s scrapes — but the restart it causes moves
+# the start timestamp, which cannot be missed. Deployed from igou-inventory
+# group_vars/truenas.yml (cadvisor). Selectorless Service + manual
+# Endpoints, mirroring truenas-netdata.
+apiVersion: v1
+kind: Service
+metadata:
+  name: truenas-cadvisor
+  labels:
+    app.kubernetes.io/name: truenas-cadvisor
+    app.kubernetes.io/part-of: truenas
+spec:
+  clusterIP: None
+  ports:
+    - name: metrics
+      port: 9338
+      targetPort: 9338
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  # Must match the Service name for endpoint discovery.
+  name: truenas-cadvisor
+  labels:
+    app.kubernetes.io/name: truenas-cadvisor
+    app.kubernetes.io/part-of: truenas
+subsets:
+  - addresses:
+      - ip: 10.10.9.243
+    ports:
+      - name: metrics
+        port: 9338
+        protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: truenas-cadvisor
+  labels:
+    app.kubernetes.io/name: truenas-cadvisor
+    app.kubernetes.io/part-of: truenas
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: truenas-cadvisor
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+      relabelings:
+        # The target address is a bare IP; name the real source.
+        # action: replace is the CRD default - set explicitly so the
+        # rendered manifest matches the live object and ArgoCD stays Synced.
+        - action: replace
+          targetLabel: instance
+          replacement: truenas.igou.systems
+      metricRelabelings:
+        # Drop cgroup-hierarchy/machine rows (empty container name), then
+        # keep only the lifecycle + resource series the alerts and
+        # dashboards use - cadvisor's full set is high-cardinality noise
+        # for a single NAS.
+        - action: drop
+          sourceLabels: [__name__, name]
+          regex: 'container_.*;'
+        - action: keep
+          sourceLabels: [__name__]
+          regex: 'container_start_time_seconds|container_last_seen|container_oom_events_total|container_memory_working_set_bytes|container_cpu_usage_seconds_total'
