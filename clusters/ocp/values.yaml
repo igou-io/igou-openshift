@@ -494,6 +494,16 @@ applications:
     source:
       path: components/rhacs-operator
 
+  # Weekly CIS scans, observe-only — remediations never auto-apply (#550).
+  compliance-operator:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '22'
+    destination:
+      namespace: openshift-compliance
+    source:
+      path: components/compliance-operator
+
   rhdh:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
