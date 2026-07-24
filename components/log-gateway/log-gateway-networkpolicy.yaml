@@ -25,6 +25,8 @@ spec:
           protocol: UDP
         - port: 5514
           protocol: TCP
+        - port: 5524
+          protocol: UDP
         - port: 3500
           protocol: TCP
     # User workload monitoring scrapes Alloy's telemetry endpoint (the
