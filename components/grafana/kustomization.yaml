@@ -71,6 +71,12 @@ resources:
   - grafana-dashboard-logging-fleet-journals.yaml
   - grafana-dashboard-logging-device-syslog.yaml
   - grafana-dashboard-logging-rk8s-logs.yaml
+  - grafana-dashboard-logging-ocp-application-logs.yaml
+  - grafana-dashboard-logging-ocp-infrastructure-logs.yaml
+  - grafana-dashboard-logging-mikrotik.yaml
+  - grafana-dashboard-logging-hermes.yaml
+  - grafana-dashboard-logging-kubevirt-vms.yaml
+  - grafana-dashboard-logging-sands-of-time.yaml
   # NetObserv flow analytics (network folder)
   - grafana-dashboard-network-netobserv-traffic.yaml
 # Vendored dashboard JSON (see grafana-dashboard-nut-exporter.yaml for why
@@ -222,6 +228,30 @@ configMapGenerator:
     namespace: grafana
     files:
       - dashboards/logging/rk8s-logs.json
+  - name: grafana-dashboard-logging-ocp-application-logs-json
+    namespace: grafana
+    files:
+      - dashboards/logging/ocp-application-logs.json
+  - name: grafana-dashboard-logging-ocp-infrastructure-logs-json
+    namespace: grafana
+    files:
+      - dashboards/logging/ocp-infrastructure-logs.json
+  - name: grafana-dashboard-logging-mikrotik-json
+    namespace: grafana
+    files:
+      - dashboards/logging/mikrotik.json
+  - name: grafana-dashboard-logging-hermes-json
+    namespace: grafana
+    files:
+      - dashboards/logging/hermes.json
+  - name: grafana-dashboard-logging-kubevirt-vms-json
+    namespace: grafana
+    files:
+      - dashboards/logging/kubevirt-vms.json
+  - name: grafana-dashboard-logging-sands-of-time-json
+    namespace: grafana
+    files:
+      - dashboards/logging/sands-of-time.json
   - name: grafana-dashboard-network-netobserv-traffic-json
     namespace: grafana
     files:
