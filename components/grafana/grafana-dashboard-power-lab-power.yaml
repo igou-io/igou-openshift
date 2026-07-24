@@ -1,0 +1,27 @@
+---
+# Aggregated lab power board (design-build-review workflow 2026-07-24).
+# The board description carries the power ACCOUNTING MODEL: totals sum
+# exactly one measurement tier (WALL UPS estimate / BRANCH PDU+PoE /
+# HOST-ACTUAL IPMI); cross-tier data is comparison-only, never summed —
+# the AP7900 hangs off a UPS and exposes only one bank amp reading, so
+# UPS+PDU sums and per-outlet splits are both forbidden. JSON in
+# dashboards/power/lab-power.json.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-power-lab-power
+  namespace: grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: '12'
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  folder: power
+  resyncPeriod: 24h
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: thanos-querier
+  configMapRef:
+    name: grafana-dashboard-power-lab-power-json
+    key: lab-power.json
