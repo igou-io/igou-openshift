@@ -50,6 +50,16 @@
       "matchStrings": [
         "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)\\s+tag: \"(?<currentValue>[^@\"]+)@(?<currentDigest>sha256:[a-f0-9]+)\""
       ]
+    },
+    {
+      "description": "Tag-free digest-only app-template images (repository + digest, no tag) tracking the upstream latest channel; helm-values manager can't update the separate digest field",
+      "customType": "regex",
+      "managerFilePatterns": ["/^applications/firecrawl/kustomization\\.yaml$/"],
+      "matchStrings": [
+        "repository: (?<depName>\\S+)\\n\\s+digest: (?<currentDigest>sha256:[a-f0-9]+)"
+      ],
+      "datasourceTemplate": "docker",
+      "currentValueTemplate": "latest"
     }
   ]
 }
