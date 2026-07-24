@@ -51,3 +51,13 @@ only if the 1P items exist, so prefer the 1P route.
 - `sum by (pod) (rate(container_cpu_usage_seconds_total{namespace="stackrox", container!=""}[5m]))`
 - Watch restarts/OOMKills, central-db PVC growth, per-node Collector overhead
   (master + casval during burst).
+
+## Auth (#546)
+
+Login is OpenShift OAuth via the declarative-config ConfigMap
+(`central-declarative-config`, mounted through
+`central.declarativeConfiguration.configMaps`): auth provider `OpenShift`,
+OpenShift group `global-admins` → RHACS `Admin`, everyone else `None`.
+Declaratively-managed objects are read-only in the Central UI; change them
+here in git. htpasswd basic auth (`admin` + the `central-htpasswd` secret,
+step 2 above) stays as break-glass.

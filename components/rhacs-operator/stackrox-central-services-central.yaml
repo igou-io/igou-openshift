@@ -13,6 +13,9 @@ spec:
   central:
     telemetry:
       enabled: false
+    declarativeConfiguration:
+      configMaps:
+        - name: central-declarative-config
     exposure:
       route:
         enabled: true
