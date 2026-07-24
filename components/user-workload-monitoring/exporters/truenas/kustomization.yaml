@@ -8,4 +8,6 @@ resources:
   - truenas-smartctl.yaml
   - truenas-ipmi.yaml
   - truenas-zfs.yaml
+  - truenas-docker-health.yaml
+  - truenas-cadvisor.yaml
   - truenas-prometheusrule.yaml
