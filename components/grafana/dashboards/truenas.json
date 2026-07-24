@@ -195,7 +195,7 @@
         }
       ],
       "title": "Per-disk & Chassis Temperatures",
-      "type": "graph"
+      "type": "timeseries"
     },
     {
       "datasource": {
@@ -463,7 +463,7 @@
         }
       ],
       "title": "Fan RPM",
-      "type": "graph"
+      "type": "timeseries"
     },
     {
       "datasource": {
