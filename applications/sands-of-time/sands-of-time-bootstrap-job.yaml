@@ -26,7 +26,9 @@ spec:
           type: RuntimeDefault
       containers:
         - name: bootstrap
-          image: ghcr.io/david-igou/sands-of-time:latest@sha256:1d59381495432e6978b2e8fd0ed2c00b12086a000970a9e6c68a8f0d62f296b4
+          # Digest-only (no latest tag) for the RHACS Latest-tag policy (#559)
+          # renovate: datasource=docker depName=ghcr.io/david-igou/sands-of-time
+          image: ghcr.io/david-igou/sands-of-time@sha256:1d59381495432e6978b2e8fd0ed2c00b12086a000970a9e6c68a8f0d62f296b4
           command: ["sh", "-c"]
           # load-drops first (offline, fast): it creates tables the serve
           # pod's probes need, so it goes Ready long before the slow step.

@@ -60,6 +60,15 @@
       ],
       "datasourceTemplate": "docker",
       "currentValueTemplate": "latest"
+    },
+    {
+      "description": "Digest-only plain-manifest images (image: repo@sha256, no tag) tracking the upstream latest channel; the kubernetes manager can't update tag-free refs",
+      "customType": "regex",
+      "managerFilePatterns": ["/\\.yaml$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)\\s+image: \\S+@(?<currentDigest>sha256:[a-f0-9]+)"
+      ],
+      "currentValueTemplate": "latest"
     }
   ]
 }
