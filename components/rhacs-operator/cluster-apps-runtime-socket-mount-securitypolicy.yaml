@@ -20,6 +20,10 @@ spec:
   enforcementActions:
     - FAIL_DEPLOYMENT_CREATE_ENFORCEMENT
     - FAIL_DEPLOYMENT_UPDATE_ENFORCEMENT
+  # API-managed Slack notifier (#548) -> #igoucloud-alerts-warning; referenced
+  # by name, resolved by config-controller.
+  notifiers:
+    - slack-igoucloud-alerts
   scope:
     - namespace: ansible-automation-platform
     - namespace: comfyui
