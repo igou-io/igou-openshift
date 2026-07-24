@@ -187,6 +187,104 @@ spec:
             description: |
               Power supply {{ $labels.name }} on {{ $labels.instance }} is
               degraded. This is a single-PSU box with no redundancy.
+    # Docker app fleet health (docker-health-exporter + cadvisor). The
+    # signals the 2026-07-16 qbittorrent incident (stack down 20h, silent)
+    # and the silent-VPN-death failure mode need: container_health is the
+    # live health/state enum (0 unknown / 1 stopped / 2 alive-no-healthcheck
+    # / 3 unhealthy / 4 healthy); container_start_time_seconds is the
+    # durable restart evidence for deunhealth auto-heals that complete
+    # between scrapes.
+    - name: truenas.apps
+      rules:
+        - alert: TrueNASDockerDaemonDown
+          expr: docker_up == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: Docker daemon on TrueNAS is unreachable
+            description: |
+              docker-health-exporter on {{ $labels.instance }} cannot reach
+              the Docker daemon. Every app on the box (media stack, rustfs,
+              backup 1P Connect, exporters) is down or unobservable.
+        - alert: TrueNASVPNStackUnhealthy
+          expr: container_health{name=~"gluetun|qbittorrent|prowlarr|flaresolverr"} == 3
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: VPN stack container {{ $labels.name }} unhealthy and not recovering
+            description: |
+              {{ $labels.name }} healthchecks curl through the Mullvad
+              tunnel; unhealthy for 5m+ means the VPN is dead AND the
+              deunhealth auto-restart is not bringing it back. The gluetun
+              kill-switch keeps dependents running with zero connectivity,
+              so nothing else will page for this.
+        - alert: TrueNASContainerUnhealthy
+          expr: container_health{name!~"gluetun|qbittorrent|prowlarr|flaresolverr"} == 3
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Container {{ $labels.name }} failing its healthcheck
+            description: |
+              {{ $labels.name }} on {{ $labels.instance }} has been
+              unhealthy for 5m. It is running but its healthcheck is
+              failing (wedged process, dead dependency, or dead netns).
+        - alert: TrueNASContainerStopped
+          # Scoped to the expected fleet (inventory-managed stacks + ix
+          # apps; .+-exporter covers smartctl/ipmi/zfs/docker-health,
+          # onepassword-connect-.+ covers api+sync) so stray one-off
+          # containers left behind on the host do not page.
+          # enum 1 = stopped/exited/dead.
+          expr: >
+            container_health{name=~"gluetun|qbittorrent|prowlarr|flaresolverr|deunhealth|radarr|sonarr|romm|romm-db|unifi|unifi-db|cadvisor|ix-.+|onepassword-connect-.+|.+-exporter"} == 1
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: Expected container {{ $labels.name }} is stopped
+            description: |
+              {{ $labels.name }} on {{ $labels.instance }} has been stopped
+              for 10m. This is the 2026-07-16 failure class (qbittorrent
+              stack SIGTERM'd and down 20h with no alert). Removed/
+              decommissioned containers stop emitting the series entirely
+              and do not fire this.
+        - alert: TrueNASVPNTunnelRestarted
+          # Event-style: fires on any gluetun restart and self-resolves
+          # once the restart leaves the 15m window. deunhealth restarts an
+          # unhealthy gluetun within seconds, so the unhealthy gauge alone
+          # can miss the whole episode - the start-time change cannot.
+          expr: changes(container_start_time_seconds{name="gluetun"}[15m]) > 0
+          labels:
+            severity: warning
+          annotations:
+            summary: gluetun restarted - VPN tunnel died and was auto-healed
+            description: |
+              The gluetun container on {{ $labels.instance }} restarted in
+              the last 15m - normally deunhealth healing a dead Mullvad
+              tunnel (also fires on deliberate redeploys). Dependents
+              (qbittorrent/prowlarr/flaresolverr) bounce after it to rejoin
+              the new netns. Recurring restarts mean the tunnel or provider
+              endpoint is flapping.
+        - alert: TrueNASContainerFlapping
+          expr: changes(container_start_time_seconds{name!=""}[2h]) > 3
+          labels:
+            severity: warning
+          annotations:
+            summary: Container {{ $labels.name }} is restart-looping
+            description: |
+              {{ $labels.name }} on {{ $labels.instance }} restarted more
+              than 3 times in 2h - crash loop or deunhealth restart storm.
+        - alert: TrueNASContainerOOM
+          expr: increase(container_oom_events_total[1h]) > 0
+          labels:
+            severity: warning
+          annotations:
+            summary: Container {{ $labels.name }} was OOM-killed
+            description: |
+              {{ $labels.name }} on {{ $labels.instance }} hit an
+              out-of-memory kill in the last hour.
     - name: truenas.scrape
       rules:
         - alert: TrueNASExporterDown
