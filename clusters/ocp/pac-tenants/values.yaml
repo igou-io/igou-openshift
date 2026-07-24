@@ -41,6 +41,14 @@ tenants:
           # Item lives in the lab_redhat context vault.
           secretStore:
             name: onepassword-lab-redhat
+        # RHACS CI token for the advisory roxctl image check (#549). Role
+        # "Continuous Integration"; item field rox_api_token.
+        - name: rhacs-ci-token
+          remoteRef:
+            key: rhacs-ci-token
+          # Item lives in the lab_openshift context vault.
+          secretStore:
+            name: onepassword-lab-openshift
     # Galaxy servers exposed to ansible-builder PipelineRuns. Repository params
     # are interpolated into PipelineRun YAML at trigger time (PaC {{ name }}
     # syntax); the pipeline turns them into ANSIBLE_GALAXY_SERVER_<NAME>_*
@@ -95,6 +103,14 @@ tenants:
           - port: 443
             protocol: TCP
       - name: allow-forgejo-clone
+        cidr: 10.10.9.10/32
+        ports:
+          - port: 443
+            protocol: TCP
+      # roxctl image check (#549) reaches Central via its Route — same
+      # router IP/port as the rules above; named separately to document
+      # intent.
+      - name: allow-rhacs-central-route
         cidr: 10.10.9.10/32
         ports:
           - port: 443
