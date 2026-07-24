@@ -61,3 +61,35 @@ OpenShift group `global-admins` → RHACS `Admin`, everyone else `None`.
 Declaratively-managed objects are read-only in the Central UI; change them
 here in git. htpasswd basic auth (`admin` + the `central-htpasswd` secret,
 step 2 above) stays as break-glass.
+
+## Policy-as-code (#547)
+
+Five `SecurityPolicy` CRs (`cluster-apps-*-securitypolicy.yaml`, reconciled by
+config-controller) clone the dangerous-workload built-ins — Privileged
+Container, Sensitive Host Mounts, Runtime Socket Mount, CAP_SYS_ADMIN,
+Secret in Env Var — scoped to the **cluster-apps ArgoCD project namespaces +
+hermes**. Criteria copied verbatim from the 4.11 built-ins. The built-ins keep
+observing cluster-wide; the clones carry admission enforcement actions
+(`FAIL_DEPLOYMENT_CREATE/UPDATE`).
+
+**Enforcement is currently OFF**: the SecuredCluster CR has
+`admissionControl.enforcement: Disabled`, which makes those actions inert.
+The flip, when decided, is that single field → `Enabled` (failurePolicy stays
+Ignore/fail-open). Runtime policies (exec/attach) deliberately carry no
+enforcement — killing virt-launcher kills the hermes VM.
+
+### Built-in tuning (API-managed, not GitOps)
+
+Built-in policies cannot be managed by CR. Namespace *exclusions* on noisy
+built-ins are applied via the Central API and recorded here as the source of
+truth:
+
+| Built-in policy | Excluded namespaces | Why |
+|---|---|---|
+| Docker CIS 4.1 (container user) | ansible-automation-platform, nvidia-gpu-operator | vendor images, acceptable behavior |
+| Red Hat Package Manager in Image | ansible-automation-platform, nvidia-gpu-operator | vendor images, acceptable behavior |
+
+Recipe (add an exclusion): `GET /v1/policies?query=Policy:<name>` for the id,
+`GET /v1/policies/{id}`, append to `.exclusions` an entry
+`{"name": "<ns> (acceptable)", "deployment": {"scope": {"namespace": "<ns>"}}}`,
+`PUT /v1/policies/{id}` with the full body.

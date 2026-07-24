@@ -14,3 +14,8 @@ resources:
   - central-declarative-config-configmap.yaml
   - stackrox-central-services-central.yaml
   - stackrox-secured-cluster-services-securedcluster.yaml
+  - cluster-apps-privileged-container-securitypolicy.yaml
+  - cluster-apps-sensitive-host-mounts-securitypolicy.yaml
+  - cluster-apps-runtime-socket-mount-securitypolicy.yaml
+  - cluster-apps-cap-sys-admin-securitypolicy.yaml
+  - cluster-apps-secret-in-env-securitypolicy.yaml
