@@ -1,0 +1,354 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_LOKI_INFRASTRUCTURE",
+      "label": "loki-infrastructure",
+      "type": "datasource",
+      "pluginId": "loki"
+    }
+  ],
+  "title": "MikroTik",
+  "uid": "mikrotik",
+  "description": "RouterOS fleet syslog (rb5009 + crs310/317/328) \u2014 igou-openshift#382.",
+  "tags": [
+    "logging"
+  ],
+  "schemaVersion": 39,
+  "timezone": "browser",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "refresh": "1m",
+  "templating": {
+    "list": [
+      {
+        "name": "host",
+        "label": "Device",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "${DS_LOKI_INFRASTRUCTURE}"
+        },
+        "definition": "label_values({job=\"syslog\", host=~\"rb5009|crs310|crs317|crs328\"}, host)",
+        "query": "label_values({job=\"syslog\", host=~\"rb5009|crs310|crs317|crs328\"}, host)",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "sort": 1,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        }
+      },
+      {
+        "name": "search",
+        "label": "Line contains",
+        "type": "textbox",
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "query": ""
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Volume by device",
+      "description": "",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_INFRASTRUCTURE}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "pointSize": 4,
+            "showPoints": "never",
+            "drawStyle": "line"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_INFRASTRUCTURE}"
+          },
+          "expr": "sum by (host) (count_over_time({job=\"syslog\", host=~\"rb5009|crs310|crs317|crs328\", host=~\"$host\"}[$__auto]))",
+          "legendFormat": "{{host}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Login failures",
+      "description": "Feeds the RouterOSLoginFailures alert (>3 in 15m).",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_INFRASTRUCTURE}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "pointSize": 4,
+            "showPoints": "never",
+            "drawStyle": "line"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_INFRASTRUCTURE}"
+          },
+          "expr": "sum by (host) (count_over_time({job=\"syslog\", host=~\"rb5009|crs310|crs317|crs328\", host=~\"$host\"} |= `login failure` [$__auto]))",
+          "legendFormat": "{{host}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Interface link events",
+      "description": "Port flapping shows here \u2014 the 92d syslog retention exists for this.",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_INFRASTRUCTURE}"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "pointSize": 4,
+            "showPoints": "never",
+            "drawStyle": "line"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_INFRASTRUCTURE}"
+          },
+          "expr": "sum by (host) (count_over_time({job=\"syslog\", host=~\"rb5009|crs310|crs317|crs328\", host=~\"$host\"} |~ `link (up|down)` [$__auto]))",
+          "legendFormat": "{{host}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "DHCP lease events",
+      "description": "",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_INFRASTRUCTURE}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "pointSize": 4,
+            "showPoints": "never",
+            "drawStyle": "line"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_INFRASTRUCTURE}"
+          },
+          "expr": "sum by (host) (count_over_time({job=\"syslog\", host=~\"rb5009|crs310|crs317|crs328\", host=~\"$host\"} |~ `(?i)dhcp` [$__auto]))",
+          "legendFormat": "{{host}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Warnings and errors",
+      "description": "",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_INFRASTRUCTURE}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "pointSize": 4,
+            "showPoints": "never",
+            "drawStyle": "line"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_INFRASTRUCTURE}"
+          },
+          "expr": "sum by (host) (count_over_time({job=\"syslog\", host=~\"rb5009|crs310|crs317|crs328\", host=~\"$host\", level=~\"warning|err.*|crit.*\"}[$__auto]))",
+          "legendFormat": "{{host}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "logs",
+      "title": "Device lines",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_INFRASTRUCTURE}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 24,
+        "h": 12
+      },
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_INFRASTRUCTURE}"
+          },
+          "expr": "{job=\"syslog\", host=~\"rb5009|crs310|crs317|crs328\", host=~\"$host\"} |~ `$search`",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}
