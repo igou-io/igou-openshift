@@ -1,0 +1,305 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_LOKI_INFRASTRUCTURE",
+      "label": "loki-infrastructure",
+      "type": "datasource",
+      "pluginId": "loki"
+    }
+  ],
+  "title": "rk8s Logs",
+  "uid": "rk8s-logs",
+  "description": "rk8s ship-don't-store: pod logs, node journals, and cluster events via the Alloy DaemonSet \u2014 igou-openshift#382.",
+  "tags": [
+    "logging"
+  ],
+  "schemaVersion": 39,
+  "timezone": "browser",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "refresh": "1m",
+  "templating": {
+    "list": [
+      {
+        "name": "namespace",
+        "label": "Namespace",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "${DS_LOKI_INFRASTRUCTURE}"
+        },
+        "query": "label_values({cluster=\"rk8s\", job=\"rk8s-pods\"}, namespace)",
+        "definition": "label_values({cluster=\"rk8s\", job=\"rk8s-pods\"}, namespace)",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "sort": 1
+      },
+      {
+        "name": "pod",
+        "label": "Pod",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "${DS_LOKI_INFRASTRUCTURE}"
+        },
+        "query": "label_values({cluster=\"rk8s\", job=\"rk8s-pods\", namespace=~\"$namespace\"}, pod)",
+        "definition": "label_values({cluster=\"rk8s\", job=\"rk8s-pods\", namespace=~\"$namespace\"}, pod)",
+        "refresh": 2,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "sort": 1
+      },
+      {
+        "name": "search",
+        "label": "Line contains",
+        "type": "textbox",
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "query": ""
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Pod-log volume by namespace",
+      "description": "",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_INFRASTRUCTURE}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "pointSize": 4,
+            "showPoints": "never",
+            "drawStyle": "line"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_INFRASTRUCTURE}"
+          },
+          "expr": "sum by (namespace) (count_over_time({cluster=\"rk8s\", job=\"rk8s-pods\", namespace=~\"$namespace\"}[$__auto]))",
+          "legendFormat": "{{namespace}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Error-ish pod lines by namespace",
+      "description": "",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_INFRASTRUCTURE}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "pointSize": 4,
+            "showPoints": "never",
+            "drawStyle": "line"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_INFRASTRUCTURE}"
+          },
+          "expr": "sum by (namespace) (count_over_time({cluster=\"rk8s\", job=\"rk8s-pods\", namespace=~\"$namespace\"} |~ `(?i)(error|fail|panic)` [$__auto]))",
+          "legendFormat": "{{namespace}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Node journal volume",
+      "description": "",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_INFRASTRUCTURE}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 8,
+            "pointSize": 4,
+            "showPoints": "never",
+            "drawStyle": "line"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": [
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_INFRASTRUCTURE}"
+          },
+          "expr": "sum by (host) (count_over_time({cluster=\"rk8s\", job=\"systemd-journal\"}[$__auto]))",
+          "legendFormat": "{{host}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "logs",
+      "title": "Cluster events (Warning first \u2014 filter with search)",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_INFRASTRUCTURE}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 6
+      },
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_INFRASTRUCTURE}"
+          },
+          "expr": "{cluster=\"rk8s\", job=\"loki.source.kubernetes_events\"} |~ `$search`",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "logs",
+      "title": "Pod lines",
+      "datasource": {
+        "type": "loki",
+        "uid": "${DS_LOKI_INFRASTRUCTURE}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 24,
+        "h": 12
+      },
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "enableLogDetails": true,
+        "dedupStrategy": "none",
+        "sortOrder": "Descending"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "${DS_LOKI_INFRASTRUCTURE}"
+          },
+          "expr": "{cluster=\"rk8s\", job=\"rk8s-pods\", namespace=~\"$namespace\", pod=~\"$pod\"} |~ `$search`",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}
