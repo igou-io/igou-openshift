@@ -19,3 +19,4 @@ resources:
   - cluster-apps-runtime-socket-mount-securitypolicy.yaml
   - cluster-apps-cap-sys-admin-securitypolicy.yaml
   - cluster-apps-secret-in-env-securitypolicy.yaml
+  - cluster-apps-latest-tag-securitypolicy.yaml
