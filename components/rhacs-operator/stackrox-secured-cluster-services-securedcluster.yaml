@@ -13,12 +13,18 @@ spec:
     openshift:
       enabled: true
   sensor:
+    # Pinned off the tenant nodes after phase 1 — the scheduler put Sensor on
+    # hpg5, the node most likely to be power-cycled. Requests from the 7-day
+    # p50/p95 measurement (#381); p95 memory was 2657Mi against the old 3Gi
+    # limit, hence the raised request + limit.
+    nodeSelector:
+      kubernetes.io/hostname: truenas-w1
     resources:
       requests:
-        cpu: 500m
-        memory: 1Gi
+        cpu: 100m
+        memory: 2560Mi
       limits:
-        memory: 3Gi
+        memory: 4Gi
   admissionControl:
     # Observe-only: replaces the deprecated listenOn* knobs; new installs
     # since 4.9 default to Enabled. failurePolicy defaults to Ignore
@@ -27,8 +33,8 @@ spec:
     replicas: 1
     resources:
       requests:
-        cpu: 50m
-        memory: 100Mi
+        cpu: 10m
+        memory: 160Mi
       limits:
         memory: 500Mi
   perNode:
