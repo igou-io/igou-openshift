@@ -9,7 +9,7 @@ the MetalLB VIP **10.10.150.16** (`syslog.igou.systems`).
 | 514  | udp | RFC3164 (`bsd-syslog`) from appliances: RouterOS ×4, Synology DSM, Home Assistant, UniFi |
 | 601  | tcp | RFC3164 over TCP (spare — devices all speak UDP; can't share 514 with UDP, see the Service comment) |
 | 1514 | udp | RFC5424 (IETF) for senders whose format is fixed upstream: TrueNAS (syslog-ng `syslog()` driver) |
-| 3500 | tcp | Loki push API from Alloy host agents (helpernode, vscode, upsmonitor, rpi-builder, hermes, igou.io) and the rk8s Alloy DaemonSet |
+| 3500 | tcp | Loki push API from Alloy host agents (vscode, upsmonitor, rpi-builder, hermes) and the rk8s Alloy DaemonSet. igou.io is excluded by design — the VPS must not initiate connections into the LAN |
 
 Everything is written to the LokiStack `infrastructure` tenant
 (`components/../clusters/ocp/openshift-logging/`) with
