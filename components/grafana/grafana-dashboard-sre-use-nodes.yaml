@@ -1,0 +1,23 @@
+---
+# SRE board built by the metric-discovery workflow (2026-07-24): every
+# expression validated live against thanos before merge. JSON in
+# dashboards/sre/use-nodes.json via the configMapGenerator.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-sre-use-nodes
+  namespace: grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: '12'
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  folder: sre
+  resyncPeriod: 24h
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: thanos-querier
+  configMapRef:
+    name: grafana-dashboard-sre-use-nodes-json
+    key: use-nodes.json

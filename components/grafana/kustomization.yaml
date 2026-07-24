@@ -77,6 +77,10 @@ resources:
   - grafana-dashboard-logging-hermes.yaml
   - grafana-dashboard-logging-kubevirt-vms.yaml
   - grafana-dashboard-logging-sands-of-time.yaml
+  - grafana-dashboard-sre-golden-signals-services.yaml
+  - grafana-dashboard-sre-use-nodes.yaml
+  - grafana-dashboard-sre-golden-signals-vms.yaml
+  - grafana-dashboard-sre-use-storage.yaml
   # NetObserv flow analytics (network folder)
   - grafana-dashboard-network-netobserv-traffic.yaml
 # Vendored dashboard JSON (see grafana-dashboard-nut-exporter.yaml for why
@@ -252,6 +256,22 @@ configMapGenerator:
     namespace: grafana
     files:
       - dashboards/logging/sands-of-time.json
+  - name: grafana-dashboard-sre-golden-signals-services-json
+    namespace: grafana
+    files:
+      - dashboards/sre/golden-signals-services.json
+  - name: grafana-dashboard-sre-use-nodes-json
+    namespace: grafana
+    files:
+      - dashboards/sre/use-nodes.json
+  - name: grafana-dashboard-sre-golden-signals-vms-json
+    namespace: grafana
+    files:
+      - dashboards/sre/golden-signals-vms.json
+  - name: grafana-dashboard-sre-use-storage-json
+    namespace: grafana
+    files:
+      - dashboards/sre/use-storage.json
   - name: grafana-dashboard-network-netobserv-traffic-json
     namespace: grafana
     files:
