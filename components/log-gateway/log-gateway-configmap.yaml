@@ -1,7 +1,9 @@
 ---
-# Alloy pipeline: two ingest paths, one authenticated write.
+# Alloy pipeline: three ingest paths, one authenticated write.
 #   :5514 udp/tcp — RFC3164 syslog from appliances/devices (RouterOS,
-#                   Synology, Home Assistant, UniFi, TrueNAS)
+#                   Synology, Home Assistant, UniFi)
+#   :5524 udp     — RFC5424 syslog from senders whose format is fixed
+#                   upstream (TrueNAS syslog-ng `syslog()` driver)
 #   :3500 tcp     — Loki push API from Alloy host agents and the rk8s
 #                   DaemonSet
 # Everything lands in the LokiStack `infrastructure` tenant with
@@ -33,6 +35,25 @@ data:
         // RFC3164 timestamps have no year; without this the parser yields
         // year 0 and loki.write fails encoding ("before 0001-01-01").
         rfc3164_default_to_current_year = true
+        use_incoming_timestamp = false
+        labels                 = { job = "syslog" }
+      }
+      relabel_rules = loki.relabel.syslog.rules
+      forward_to    = [loki.write.lokistack.receiver]
+    }
+
+    // RFC5424 (IETF) syslog on a separate port: a listener parses ONE
+    // format, and TrueNAS's middleware-generated syslog-ng destination
+    // uses the RFC5424 `syslog()` driver with no format knob — its
+    // messages were arriving on :5514 and counting up
+    // loki_source_syslog_parsing_errors_total. Not on a second protocol
+    // of an existing numeric port: ovn-k mixed-protocol LB ports lose
+    // UDP (see the Service).
+    loki.source.syslog "lan_rfc5424" {
+      listener {
+        address                = "0.0.0.0:5524"
+        protocol               = "udp"
+        syslog_format          = "rfc5424"
         use_incoming_timestamp = false
         labels                 = { job = "syslog" }
       }

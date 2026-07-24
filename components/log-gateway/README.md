@@ -6,8 +6,9 @@ the MetalLB VIP **10.10.150.16** (`syslog.igou.systems`).
 
 | Port | Proto | What |
 |------|-------|------|
-| 514  | udp | RFC3164 (`bsd-syslog`) from appliances: RouterOS ×4, Synology DSM, Home Assistant, UniFi, TrueNAS |
+| 514  | udp | RFC3164 (`bsd-syslog`) from appliances: RouterOS ×4, Synology DSM, Home Assistant, UniFi |
 | 601  | tcp | RFC3164 over TCP (spare — devices all speak UDP; can't share 514 with UDP, see the Service comment) |
+| 1514 | udp | RFC5424 (IETF) for senders whose format is fixed upstream: TrueNAS (syslog-ng `syslog()` driver) |
 | 3500 | tcp | Loki push API from Alloy host agents (helpernode, vscode, upsmonitor, rpi-builder, hermes, igou.io) and the rk8s Alloy DaemonSet |
 
 Everything is written to the LokiStack `infrastructure` tenant

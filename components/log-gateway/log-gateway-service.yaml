@@ -33,6 +33,13 @@ spec:
       port: 601
       targetPort: syslog-tcp
       protocol: TCP
+    # RFC5424/UDP for senders whose format is fixed upstream (TrueNAS).
+    # Distinct numeric port for the same ovn-k reason as 601 above; 1514
+    # is the conventional "alternate syslog" port.
+    - name: syslog5424-udp
+      port: 1514
+      targetPort: syslog5424-udp
+      protocol: UDP
     - name: loki-push
       port: 3500
       targetPort: loki-push
