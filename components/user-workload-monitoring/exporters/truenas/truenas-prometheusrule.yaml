@@ -70,6 +70,49 @@ spec:
               Disk {{ $labels.device }} on {{ $labels.instance }} is
               {{ $value | humanize }}C (warn band 50-60C). Check the SMART
               serial/model labels for stable drive identity.
+    # NIC die temperatures. History: the onboard X540s (MB_NIC_Temp1/2, crit
+    # 100C) caused unclean host resets at >=100C before their retirement
+    # (igou-inventory#231); the ConnectX-4 25G cards that replaced them run
+    # ~72-85C under NVMe-oF load with a 105C crit (mlx5 hwmon). Warn margins
+    # sit ~10C under each family's crit so airflow regressions surface before
+    # the next crash, not after.
+    - name: truenas.nic
+      rules:
+        - alert: NICTempWarn
+          expr: >
+            (node_hwmon_temp_celsius{job="truenas-hwmon"}
+              * on (chip) group_left(chip_name)
+             node_hwmon_chip_names{job="truenas-hwmon", chip_name="mlx5"} > 92)
+              or
+            (ipmi_temperature_celsius{job="truenas-ipmi", name=~"MB_NIC_Temp.*"} > 88)
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: TrueNAS NIC temperature elevated
+            description: |
+              A NIC on {{ $labels.instance }} is {{ $value | humanize }}C
+              (ConnectX-4 warn 92C/crit 105C; onboard X540 warn 88C/crit
+              100C). The X540 overheat history ended in unclean host resets -
+              check chassis airflow before it gets there.
+        - alert: NICTempCritical
+          expr: >
+            (node_hwmon_temp_celsius{job="truenas-hwmon"}
+              * on (chip) group_left(chip_name)
+             node_hwmon_chip_names{job="truenas-hwmon", chip_name="mlx5"} > 100)
+              or
+            (ipmi_temperature_celsius{job="truenas-ipmi", name=~"MB_NIC_Temp.*"} > 96)
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: TrueNAS NIC temperature near critical trip
+            description: |
+              A NIC on {{ $labels.instance }} is {{ $value | humanize }}C,
+              within a few degrees of its hardware critical threshold
+              (ConnectX-4 105C, X540 100C). Past X540 trips at this level
+              caused unclean whole-box resets taking down all NVMe-oF/CSI
+              storage consumers.
     - name: truenas.smart
       rules:
         - alert: SmartFailurePredicted
@@ -167,16 +210,9 @@ spec:
             description: |
               IPMI fan {{ $labels.name }} on {{ $labels.instance }} reports
               0 RPM. Unpopulated FAN3/FAN6 emit no series, so this is safe.
-        - alert: IPMINICTempHigh
-          expr: ipmi_temperature_celsius{name=~"MB_NIC.*"} > 88
-          for: 5m
-          labels:
-            severity: warning
-          annotations:
-            summary: Onboard NIC temperature high
-            description: |
-              Onboard NIC sensor {{ $labels.name }} on {{ $labels.instance }}
-              is {{ $value | humanize }}C.
+        # NIC temperature alerts moved to the dedicated truenas.nic group,
+        # which covers both the retired onboard X540s (IPMI) and the active
+        # ConnectX-4 cards (mlx5 hwmon) with warn + critical tiers.
         - alert: IPMIPowerSupplyDegraded
           expr: ipmi_sensor_state{name=~"PS.*"} >= 1
           for: 2m
