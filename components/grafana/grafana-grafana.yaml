@@ -44,18 +44,23 @@ spec:
       template:
         spec:
           serviceAccountName: grafana
-          # Keep grafana off the truenas-w1 VM worker: its root disk is a
-          # zvol on the TrueNAS ssd pool, and grafana.db currently lives on
-          # the node root filesystem (PVC not mounted at /var/lib/grafana —
-          # ocp#431), so ssd-pool latency spikes stall SQLite, flap the
-          # readiness probe, and surface as router 503s (2026-07-30).
-          # The master is the always-on node with a local NVMe root.
-          nodeSelector:
-            node-role.kubernetes.io/master: ''
-          tolerations:
-            - key: node-role.kubernetes.io/master
-              operator: Exists
-              effect: NoSchedule
+          # Co-schedule grafana with the UWM Prometheus instance (its primary
+          # datasource) — required podAffinity, so grafana follows whichever
+          # node prometheus-user-workload-0 runs on. Context (2026-07-30):
+          # grafana.db lives on the node root filesystem (PVC not mounted at
+          # /var/lib/grafana — ocp#431), so node placement determines SQLite
+          # latency; a placement on truenas-w1 during ssd-pool pressure
+          # flapped readiness and threw router 503s.
+          affinity:
+            podAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - topologyKey: kubernetes.io/hostname
+                  namespaces:
+                    - openshift-user-workload-monitoring
+                  labelSelector:
+                    matchLabels:
+                      app.kubernetes.io/name: prometheus
+                      prometheus: user-workload
           volumes:
             - name: grafana-tls
               secret:
