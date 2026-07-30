@@ -44,6 +44,18 @@ spec:
       template:
         spec:
           serviceAccountName: grafana
+          # Keep grafana off the truenas-w1 VM worker: its root disk is a
+          # zvol on the TrueNAS ssd pool, and grafana.db currently lives on
+          # the node root filesystem (PVC not mounted at /var/lib/grafana —
+          # ocp#431), so ssd-pool latency spikes stall SQLite, flap the
+          # readiness probe, and surface as router 503s (2026-07-30).
+          # The master is the always-on node with a local NVMe root.
+          nodeSelector:
+            node-role.kubernetes.io/master: ''
+          tolerations:
+            - key: node-role.kubernetes.io/master
+              operator: Exists
+              effect: NoSchedule
           volumes:
             - name: grafana-tls
               secret:
