@@ -29,6 +29,7 @@ resources:
   - grafana-dashboard-external-secrets.yaml
   - grafana-dashboard-apc-pdu.yaml
   - grafana-dashboard-nut-exporter.yaml
+  - grafana-dashboard-storage-client-io.yaml
   - grafana-dashboard-truenas.yaml
   - grafana-dashboard-truenas-zfs.yaml
   - grafana-dashboard-adb-exporter.yaml
@@ -101,6 +102,10 @@ configMapGenerator:
     namespace: grafana
     files:
       - dashboards/prometheus-nut-exporter-druggeri.json
+  - name: grafana-dashboard-storage-client-io-json
+    namespace: grafana
+    files:
+      - dashboards/storage-client-io.json
   - name: grafana-dashboard-truenas-json
     namespace: grafana
     files:

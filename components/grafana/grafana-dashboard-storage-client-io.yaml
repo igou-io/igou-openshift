@@ -1,0 +1,24 @@
+---
+# Client/initiator-side storage dashboard: per-workload PVC IOPS + throughput
+# (cAdvisor container_fs_* against NVMe-oF block devices), client-observed
+# device latency and queue backlog (node-exporter node_disk_*, incl. the
+# truenas-w1 virtio root), and PVC fullness (kubelet volume stats).
+# Server-side counterparts: grafana-dashboard-truenas{,-zfs}.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-storage-client-io
+  namespace: grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: '12'
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  resyncPeriod: 24h
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: thanos-querier
+  configMapRef:
+    name: grafana-dashboard-storage-client-io-json
+    key: storage-client-io.json
