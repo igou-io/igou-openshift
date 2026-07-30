@@ -210,16 +210,9 @@ spec:
             description: |
               IPMI fan {{ $labels.name }} on {{ $labels.instance }} reports
               0 RPM. Unpopulated FAN3/FAN6 emit no series, so this is safe.
-        - alert: IPMINICTempHigh
-          expr: ipmi_temperature_celsius{name=~"MB_NIC.*"} > 88
-          for: 5m
-          labels:
-            severity: warning
-          annotations:
-            summary: Onboard NIC temperature high
-            description: |
-              Onboard NIC sensor {{ $labels.name }} on {{ $labels.instance }}
-              is {{ $value | humanize }}C.
+        # NIC temperature alerts moved to the dedicated truenas.nic group,
+        # which covers both the retired onboard X540s (IPMI) and the active
+        # ConnectX-4 cards (mlx5 hwmon) with warn + critical tiers.
         - alert: IPMIPowerSupplyDegraded
           expr: ipmi_sensor_state{name=~"PS.*"} >= 1
           for: 2m
