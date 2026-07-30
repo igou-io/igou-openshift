@@ -1223,7 +1223,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
           "editorMode": "code",
-          "expr": "netdata_net_net_kilobits_persec_average{family=~\"enp2s0f0|vlan45|enp1s0f0|vlan9\"}",
+          "expr": "netdata_net_net_kilobits_persec_average{family=~\"ens2f0np0|ens2f1np1|vlan9|vlan45\"}",
           "legendFormat": "{{family}} {{dimension}}",
           "range": true,
           "refId": "A"
@@ -1231,7 +1231,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
           "editorMode": "code",
-          "expr": "netdata_net_drops_drops_persec_average{family=~\"enp2s0f0|vlan45|enp1s0f0|vlan9\"}",
+          "expr": "netdata_net_drops_drops_persec_average{family=~\"ens2f0np0|ens2f1np1|vlan9|vlan45\"}",
           "legendFormat": "{{family}} {{dimension}} drops",
           "range": true,
           "refId": "B"
