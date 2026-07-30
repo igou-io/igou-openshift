@@ -1,0 +1,61 @@
+---
+# hwmon-only node_exporter on TrueNAS (VLAN9), scraped DIRECTLY over the LAN.
+# Exists for the ConnectX-4 25G NIC die temperatures (mlx5 hwmon chips,
+# crit 105C) — the cards carrying all NVMe-oF/CSI traffic since the X540
+# retirement. IPMI has no sensor for them and Netdata exports cputemp only.
+# Selectorless Service + manual Endpoints point UWM Prometheus at the NAS'
+# static address, mirroring the other truenas-* exporters.
+apiVersion: v1
+kind: Service
+metadata:
+  name: truenas-hwmon
+  labels:
+    app.kubernetes.io/name: truenas-hwmon
+    app.kubernetes.io/part-of: truenas
+spec:
+  clusterIP: None
+  ports:
+    - name: metrics
+      port: 9100
+      targetPort: 9100
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  # Must match the Service name for endpoint discovery.
+  name: truenas-hwmon
+  labels:
+    app.kubernetes.io/name: truenas-hwmon
+    app.kubernetes.io/part-of: truenas
+subsets:
+  - addresses:
+      - ip: 10.10.9.243
+    ports:
+      - name: metrics
+        port: 9100
+        protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: truenas-hwmon
+  labels:
+    app.kubernetes.io/name: truenas-hwmon
+    app.kubernetes.io/part-of: truenas
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: truenas-hwmon
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+      relabelings:
+        # The target address is a bare IP; name the real source.
+        # action: replace is the CRD default - set explicitly so the
+        # rendered manifest matches the live object and ArgoCD stays Synced.
+        - action: replace
+          targetLabel: instance
+          replacement: truenas.igou.systems
