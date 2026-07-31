@@ -1,0 +1,20 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: olm-state-metrics
+resources:
+  - default-deny-networkpolicy.yaml
+  - allow-observed-networkpolicy.yaml
+  - olm-state-metrics-namespace.yaml
+  - olm-state-metrics-serviceaccount.yaml
+  - olm-state-metrics-clusterrole.yaml
+  - olm-state-metrics-clusterrolebinding.yaml
+  - olm-state-metrics-deployment.yaml
+  - olm-state-metrics-service.yaml
+  - olm-state-metrics-servicemonitor.yaml
+  - olm-state-metrics-prometheusrule.yaml
+configMapGenerator:
+  # Hash-suffixed so config edits roll the Deployment automatically.
+  - name: olm-state-metrics-config
+    files:
+      - customresourcestate.yaml

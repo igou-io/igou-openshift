@@ -33,6 +33,7 @@ resources:
   - grafana-dashboard-truenas.yaml
   - grafana-dashboard-truenas-zfs.yaml
   - grafana-dashboard-adb-exporter.yaml
+  - grafana-dashboard-olm-updates.yaml
   - grafana-dashboard-15765.yaml
   # kube-prometheus-stack dashboard set for the rk8s lab cluster (federated
   # via UWM). Grouped in the grafana "rk8s" folder; namespace label rewritten
@@ -118,6 +119,10 @@ configMapGenerator:
     namespace: grafana
     files:
       - dashboards/adb-exporter.json
+  - name: grafana-dashboard-olm-updates-json
+    namespace: grafana
+    files:
+      - dashboards/olm-updates.json
   # rk8s kube-prometheus-stack dashboards (vendored + transformed JSON).
   - name: grafana-dashboard-rk8s-alertmanager-overview-json
     namespace: grafana

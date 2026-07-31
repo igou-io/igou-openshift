@@ -1,0 +1,20 @@
+---
+# UWM Prometheus scrapes the olm_subscription_* / olm_installplan_* series.
+# O(20) Subscriptions and a few dozen InstallPlans -> tiny scrape; defaults
+# are fine.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: olm-state-metrics
+  labels:
+    app.kubernetes.io/name: olm-state-metrics
+    app.kubernetes.io/part-of: olm-state-metrics
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: olm-state-metrics
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s

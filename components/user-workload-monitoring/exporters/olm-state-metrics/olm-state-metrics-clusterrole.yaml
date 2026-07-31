@@ -1,0 +1,27 @@
+---
+# Read-only, list/watch-only access scoped to exactly what the
+# CustomResourceState config consumes: the CRD definitions (KSM resolves the
+# resource plural via discovery) and the OLM Subscription/InstallPlan CRs.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: olm-state-metrics
+  labels:
+    app.kubernetes.io/name: olm-state-metrics
+    app.kubernetes.io/part-of: olm-state-metrics
+rules:
+  - apiGroups:
+      - apiextensions.k8s.io
+    resources:
+      - customresourcedefinitions
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - operators.coreos.com
+    resources:
+      - subscriptions
+      - installplans
+    verbs:
+      - list
+      - watch

@@ -1,0 +1,83 @@
+---
+# Standalone kube-state-metrics running ONLY the CustomResourceState config
+# (--custom-resource-state-only) for OLM Subscriptions/InstallPlans. The
+# platform KSM in openshift-monitoring cannot be used for this: CMO rewrites
+# its custom-resource-state ConfigMap every reconcile, so any edit is
+# reverted. Pin the image to the same KSM minor OCP ships (4.21 -> v2.17.0)
+# so CustomResourceState behavior matches the platform's.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: olm-state-metrics
+  labels:
+    app.kubernetes.io/name: olm-state-metrics
+    app.kubernetes.io/part-of: olm-state-metrics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: olm-state-metrics
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: olm-state-metrics
+        app.kubernetes.io/part-of: olm-state-metrics
+    spec:
+      serviceAccountName: olm-state-metrics
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: kube-state-metrics
+          # renovate: datasource=docker depName=registry.k8s.io/kube-state-metrics/kube-state-metrics
+          image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.17.0@sha256:2bbc915567334b13632bf62c0a97084aff72a36e13c4dabd5f2f11c898c5bacd
+          args:
+            - --custom-resource-state-config-file=/etc/kube-state-metrics/customresourcestate.yaml
+            - --custom-resource-state-only=true
+            - --port=8080
+            - --telemetry-port=8081
+          ports:
+            - name: metrics
+              containerPort: 8080
+              protocol: TCP
+            - name: telemetry
+              containerPort: 8081
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: metrics
+            initialDelaySeconds: 5
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: telemetry
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            # runAsUser deliberately unset: OpenShift restricted-v2 SCC
+            # assigns a UID from the namespace range; the distroless KSM
+            # binary runs under any UID.
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: config
+              mountPath: /etc/kube-state-metrics
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: olm-state-metrics-config

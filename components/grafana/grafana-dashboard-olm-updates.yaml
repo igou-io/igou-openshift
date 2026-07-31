@@ -1,0 +1,24 @@
+---
+# OLM operator update status — fed by the olm-state-metrics exporter
+# (kube-state-metrics CustomResourceState over Subscriptions/InstallPlans).
+# Vendored under dashboards/ + configMapGenerator so the ${DS_PROMETHEUS}
+# input ref can be mapped to thanos-querier below (same pattern as
+# adb-exporter).
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-olm-updates
+  namespace: grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: '12'
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  resyncPeriod: 24h
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: thanos-querier
+  configMapRef:
+    name: grafana-dashboard-olm-updates-json
+    key: olm-updates.json

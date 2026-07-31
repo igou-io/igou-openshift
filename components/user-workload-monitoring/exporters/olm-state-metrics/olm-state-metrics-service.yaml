@@ -1,0 +1,23 @@
+---
+# ClusterIP Service in front of the KSM pod; the ServiceMonitor selects it by
+# label and UWM Prometheus scrapes :8080 (CR metrics) and :8081 (self
+# telemetry).
+apiVersion: v1
+kind: Service
+metadata:
+  name: olm-state-metrics
+  labels:
+    app.kubernetes.io/name: olm-state-metrics
+    app.kubernetes.io/part-of: olm-state-metrics
+spec:
+  selector:
+    app.kubernetes.io/name: olm-state-metrics
+  ports:
+    - name: metrics
+      port: 8080
+      targetPort: metrics
+      protocol: TCP
+    - name: telemetry
+      port: 8081
+      targetPort: telemetry
+      protocol: TCP
