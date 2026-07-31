@@ -1,0 +1,105 @@
+---
+# Required-flow allow policy for the keycloak namespace. Hand-modeled from the
+# rhdh namespace policy set; port set:
+#   8443 Keycloak HTTPS (passthrough route), 9000 Keycloak management/health,
+#   5432 Postgres, 9187 CNPG metrics, 8000 CNPG instance status webserver.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-required
+  namespace: keycloak
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # intra-namespace: keycloak -> postgres, operator -> keycloak https/mgmt,
+    # realm-import job -> keycloak
+    - from:
+        - podSelector: {}
+      ports:
+        - port: 5432
+          protocol: TCP
+        - port: 8443
+          protocol: TCP
+        - port: 9000
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-user-workload-monitoring
+      ports:
+        - port: 9187
+          protocol: TCP
+    # cnpg-controller-manager polls the instance status webserver (pod:8000).
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cloudnative-pg
+      ports:
+        - port: 8000
+          protocol: TCP
+    # host-network sources (router passthrough Route -> 8443, kubelet probes
+    # -> 9000/8000). Under OVN-Kubernetes these SNAT to the host network; only
+    # the synthetic openshift-host-network namespace label matches them.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/host-network: ""
+      ports:
+        - port: 8443
+          protocol: TCP
+        - port: 9000
+          protocol: TCP
+        - port: 8000
+          protocol: TCP
+  egress:
+    # cluster DNS (always required)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+        - port: 5353
+          protocol: UDP
+        - port: 5353
+          protocol: TCP
+    # intra-namespace (keycloak -> postgres, operator/realm-import -> keycloak)
+    - to:
+        - podSelector: {}
+      ports:
+        - port: 5432
+          protocol: TCP
+        - port: 8443
+          protocol: TCP
+        - port: 9000
+          protocol: TCP
+    # kube-apiserver (rhbk-operator + CNPG instance manager)
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.10/32
+      ports:
+        - port: 6443
+          protocol: TCP
+    # barman-cloud plugin CNPG-I gRPC (:9090) in cloudnative-pg; WAL/backup
+    # uploads go directly to the S3 endpoint via the external egress below.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cloudnative-pg
+      ports:
+        - port: 9090
+          protocol: TCP
+    # external / off-cluster egress (S3 backups, ACME solvers via router).
+    # Cluster pod and service CIDRs are excluded to block lateral movement.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.128.0.0/14
+              - 172.30.0.0/16

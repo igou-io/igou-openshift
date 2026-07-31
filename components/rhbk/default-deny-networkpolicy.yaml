@@ -1,0 +1,15 @@
+---
+# Default-deny (ingress + egress) for namespace keycloak. Allow policies in
+# allow-required-networkpolicy.yaml open exactly the flows this component
+# needs (modeled on the rhdh namespace policies, not NetObserv-observed —
+# re-diff against flows after the component settles).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: keycloak
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
