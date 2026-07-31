@@ -1,4 +1,14 @@
 # OCP Total-Loss DR Readiness Report
+
+> **Addendum (2026-07-31, same day):** Gap #1 (E1, no etcd backup) is
+> **remediated** — nightly `cluster-backup.sh` CronJob to
+> `s3://etcd-backups/<z-stream>/<ts>/` on rustfs-cold with failure +
+> staleness alerting (#598/#599, igou-inventory#238), e2e-tested incl. a
+> deliberate-failure run, plus a rehearsed restore/mining runbook
+> (`docs/runbooks/etcd-backup-restore.md`). The mining rehearsal also
+> regenerated the PV→zvol catalog gap #2 mourns (55/55 PVs, stored at
+> `s3://etcd-backups/catalogs/`) — the *scheduled* half of gap #2
+> (TrueNAS snapshot tasks, Retain classes) remains open.
 **Assessed:** 2026-07-31 · **Scenario:** etcd wiped, all 4 nodes need reinstall, TrueNAS storage intact · **Baseline:** 2026-07-03 post-mortem (28 days elapsed)
 
 ---
