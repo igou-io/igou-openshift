@@ -1,0 +1,13 @@
+---
+# Default-deny (ingress + egress) for namespace olm-state-metrics. Allow
+# policies below open exactly the flows this exporter needs.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: olm-state-metrics
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
