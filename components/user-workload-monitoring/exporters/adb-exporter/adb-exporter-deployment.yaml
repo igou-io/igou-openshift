@@ -1,11 +1,9 @@
 ---
 # adb-exporter (github.com/david-igou/adb-exporter) runs IN-CLUSTER and
 # scrapes an Nvidia Shield Android TV over `adb`, exposing ~120 adb_* metrics
-# on :9836. It reaches the device over the LAN at 10.10.9.22:5555.
-#
-# NOTE: the Shield currently sits on VLAN9 at 10.10.9.22; once the operator
-# returns it to VLAN35 the device address becomes 10.10.35.20:5555 - update
-# the -adb.address arg below at that time.
+# on :9836. It reaches the device over the LAN at 10.10.35.20:5555 (the
+# Shield's VLAN35 DHCP reservation, A record shield.igou.systems; the
+# VLAN9->VLAN35 forward accept on rb5009 covers the cluster-egress path).
 #
 # strategy Recreate (NOT the default RollingUpdate): the exporter serializes
 # every adb command through one mutex and the Shield drops concurrent adb
@@ -48,7 +46,7 @@ spec:
           # auto-merges igou images, so this tracks forward automatically.
           image: ghcr.io/igou-io/adb-exporter:2026.07.12@sha256:532073ecdc3f71ebeb74f9de713b7b991fcab078201002c60e2f2bcb8457514f
           args:
-            - -adb.address=10.10.9.22:5555
+            - -adb.address=10.10.35.20:5555
           ports:
             - name: metrics
               containerPort: 9836
