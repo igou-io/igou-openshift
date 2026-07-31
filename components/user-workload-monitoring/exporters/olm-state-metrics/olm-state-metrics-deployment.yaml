@@ -59,9 +59,13 @@ spec:
           resources:
             requests:
               cpu: 10m
-              memory: 32Mi
+              memory: 64Mi
             limits:
-              memory: 128Mi
+              # The CRD informer lists every CRD on the cluster (hundreds on
+              # OCP, some with MB-sized schemas), which spikes memory at
+              # startup well past a small limit — 128Mi OOMKilled on first
+              # deploy. Steady state is far lower.
+              memory: 512Mi
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
