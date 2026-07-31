@@ -89,6 +89,13 @@ helmCharts:
         deletionPolicy: Delete
         parameters:
           detachedSnapshots: "false"
+      # -detached = full zfs send/receive copy onto the cold pool (see the
+      # release's detachedSnapshotsDatasetParentName); survives loss of the
+      # source pool but creation/restore are full data copies, not instant.
+      - name: freenas-iscsi-fast-csi-detached
+        deletionPolicy: Delete
+        parameters:
+          detachedSnapshots: "true"
     driver:
       existingConfigSecret: "democratic-csi-iscsi-fast-config"
       config:
@@ -169,6 +176,10 @@ helmCharts:
         deletionPolicy: Delete
         parameters:
           detachedSnapshots: "false"
+      - name: freenas-iscsi-ssd-csi-detached
+        deletionPolicy: Delete
+        parameters:
+          detachedSnapshots: "true"
     driver:
       existingConfigSecret: "democratic-csi-iscsi-ssd-config"
       config:
@@ -327,6 +338,10 @@ helmCharts:
         deletionPolicy: Delete
         parameters:
           detachedSnapshots: "false"
+      - name: freenas-nfs-fast-csi-detached
+        deletionPolicy: Delete
+        parameters:
+          detachedSnapshots: "true"
     driver:
       existingConfigSecret: "democratic-csi-nfs-fast-config"
       config:
@@ -409,6 +424,10 @@ helmCharts:
         deletionPolicy: Delete
         parameters:
           detachedSnapshots: "false"
+      - name: freenas-nfs-ssd-csi-detached
+        deletionPolicy: Delete
+        parameters:
+          detachedSnapshots: "true"
     driver:
       existingConfigSecret: "democratic-csi-nfs-ssd-config"
       config:
@@ -569,6 +588,10 @@ helmCharts:
         deletionPolicy: Delete
         parameters:
           detachedSnapshots: "false"
+      - name: freenas-nvmeof-fast-csi-detached
+        deletionPolicy: Delete
+        parameters:
+          detachedSnapshots: "true"
     driver:
       existingConfigSecret: "democratic-csi-nvmeof-fast-config"
       config:
@@ -651,6 +674,10 @@ helmCharts:
         deletionPolicy: Delete
         parameters:
           detachedSnapshots: "false"
+      - name: freenas-nvmeof-ssd-csi-detached
+        deletionPolicy: Delete
+        parameters:
+          detachedSnapshots: "true"
     driver:
       existingConfigSecret: "democratic-csi-nvmeof-ssd-config"
       config:
