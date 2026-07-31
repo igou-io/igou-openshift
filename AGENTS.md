@@ -106,6 +106,15 @@ External storage is a TrueNAS box exposing three ZFS pools, fronted by democrati
 
 Each pool is exposed via three protocols (iSCSI, NFS, NVMe-oF) as separate democratic-csi releases — see `components/democratic-csi/kustomization.yaml`. Default StorageClass is `freenas-nvmeof-ssd-csi` (note: this is NVMe-oF *protocol* on the `ssd` *pool*, not the `fast` pool).
 
+## Volume snapshots
+
+Every fast/ssd release ships two VolumeSnapshotClasses (cold releases have none):
+
+- `freenas-<protocol>-<pool>-csi` — native ZFS snapshot on the source dataset. Instant and space-shared, but lives in the same pool as the volume and dies with it. Used by CDI smart-clone for VM images.
+- `freenas-<protocol>-<pool>-csi-detached` — full `zfs send/receive` copy onto the **cold pool** (`cold/k8sbak/<pool>/<pvc>/<snapshot>` via TrueNAS one-shot local replication). Survives loss of the source pool; creation and restore are full data copies, so expect minutes-per-GiB-class latency, not instant. Use for point-in-time protection of data you care about, not for cheap clones.
+
+Snapshots stay on the same TrueNAS box either way — detached snapshots protect against source-pool loss, not chassis loss.
+
 # Bare metal scaling (Cluster API)
 
 Worker scaling on this cluster is done via **upstream Cluster API + CAPM3**, not OpenShift's native Machine API. The OCP Machine API (`machine.openshift.io/v1beta1` MachineSets in `openshift-machine-api`) **cannot manage workers on a single-control-plane-node cluster** — it assumes a separate worker MachineSet topology, and a SNO-style cluster has no MAPI seam to attach extra workers to. Upstream CAPI is the only path that works for "one control plane host + on-demand bare metal workers".
