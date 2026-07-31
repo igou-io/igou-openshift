@@ -1,12 +1,13 @@
 ---
-# devspaces-operator only supports AllNamespaces, so it subscribes in
-# openshift-operators (global OperatorGroup); the CheCluster operand lives in
-# openshift-devspaces.
+# Subscribed in its own namespace (global-mode OperatorGroup) rather than
+# openshift-operators: OLM approval is effectively namespace-wide, and the
+# Manual-approval servicemeshoperator3 subscription there leaves every other
+# InstallPlan permanently pending.
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
   name: devspaces
-  namespace: openshift-operators
+  namespace: openshift-devspaces
   annotations:
     argocd.argoproj.io/sync-wave: '9'
 spec:
