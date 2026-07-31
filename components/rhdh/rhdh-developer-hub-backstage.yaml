@@ -10,10 +10,17 @@ metadata:
 spec:
   database:
     enableLocalDb: false
+  monitoring:
+    enabled: true
   application:
     appConfig:
       configMaps:
         - name: app-config-rhdh
+    extraFiles:
+      mountPath: /opt/app-root/src
+      configMaps:
+        - name: rbac-policies
+        - name: catalog-templates
     dynamicPluginsConfigMapName: dynamic-plugins-rhdh
     route:
       host: rhdh.apps.ocp.igou.systems
@@ -22,3 +29,4 @@ spec:
         - name: rhdh-postgres-credentials
         - name: rhdh-backend-secret
         - name: rhdh-keycloak-credentials
+        - name: rhdh-forgejo-credentials

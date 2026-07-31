@@ -32,6 +32,9 @@ spec:
       ports:
         - port: 9187
           protocol: TCP
+        # keycloak management interface metrics (ServiceMonitor)
+        - port: 9000
+          protocol: TCP
     # cnpg-controller-manager polls the instance status webserver (pod:8000).
     - from:
         - namespaceSelector:

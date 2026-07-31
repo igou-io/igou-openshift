@@ -25,6 +25,10 @@ spec:
       secret:
         name: keycloak-realm-secrets
         key: IGOU_TEMP_PASSWORD
+    DEV1_TEMP_PASSWORD:
+      secret:
+        name: keycloak-realm-secrets
+        key: DEV1_TEMP_PASSWORD
   realm:
     id: igou
     realm: igou
@@ -51,6 +55,12 @@ spec:
           - https://rhdh.apps.ocp.igou.systems
     groups:
       - name: admins
+      # RHDH RBAC binds group:default/developers to role:default/developer
+      # (rbac-policies ConfigMap in components/rhdh). dev1 is the example
+      # POC-persona login. NOTE: group + user were ALSO created live via the
+      # admin API on 2026-07-31 (realm import never reconciles) — this block
+      # keeps the bootstrap record complete for a from-scratch re-import.
+      - name: developers
     users:
       - username: service-account-rhdh
         enabled: true
@@ -71,4 +81,16 @@ spec:
         credentials:
           - type: password
             value: "${IGOU_TEMP_PASSWORD}"
+            temporary: true
+      - username: dev1
+        enabled: true
+        firstName: Example
+        lastName: Developer
+        email: dev1@igou.systems
+        emailVerified: true
+        groups:
+          - /developers
+        credentials:
+          - type: password
+            value: "${DEV1_TEMP_PASSWORD}"
             temporary: true

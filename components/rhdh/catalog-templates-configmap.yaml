@@ -1,0 +1,80 @@
+---
+# Scaffolder Template entities, mounted via the CR's extraFiles and registered
+# as a file location in app-config (rules allow Template).
+#
+# ansible-collection: RHDH 1.10 ships no gitea/forgejo publish module, so the
+# golden path leans on Forgejo's native template-repository feature — one
+# synchronous `generate` API call (via the /forgejo backend proxy) clones
+# platform/ansible-collection-template into sandbox/<name> with variable
+# expansion, then the entity is registered from the new repo.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: catalog-templates
+  namespace: rhdh
+  annotations:
+    argocd.argoproj.io/sync-wave: '10'
+data:
+  ansible-collection-template.yaml: |
+    apiVersion: scaffolder.backstage.io/v1beta3
+    kind: Template
+    metadata:
+      name: ansible-collection
+      title: Ansible Collection
+      description: >-
+        Scaffold a new david_igou Ansible collection in Forgejo (sandbox org)
+        with a starter role, devfile, and catalog registration — ready to open
+        in OpenShift Dev Spaces.
+      tags:
+        - ansible
+        - forgejo
+        - recommended
+    spec:
+      owner: group:default/admins
+      type: ansible-collection
+      parameters:
+        - title: Collection details
+          required:
+            - collection_name
+            - description
+          properties:
+            collection_name:
+              title: Collection name
+              type: string
+              description: >-
+                lower_snake_case; becomes the repo name and the galaxy
+                collection name (david_igou.<name>)
+              pattern: '^[a-z][a-z0-9_]{1,62}$'
+              maxLength: 63
+            description:
+              title: Description
+              type: string
+              description: One line on what this collection automates
+      steps:
+        - id: generate
+          name: Generate repository from Forgejo template
+          action: http:backstage:request
+          input:
+            method: POST
+            path: /proxy/forgejo/repos/platform/ansible-collection-template/generate
+            headers:
+              content-type: application/json
+            body:
+              owner: sandbox
+              name: ${{ parameters.collection_name }}
+              description: ${{ parameters.description }}
+              git_content: true
+              private: false
+        - id: register
+          name: Register in catalog
+          action: catalog:register
+          input:
+            catalogInfoUrl: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.collection_name }}/src/branch/main/catalog-info.yaml
+      output:
+        links:
+          - title: Forgejo repository
+            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.collection_name }}
+          - title: Open in OpenShift Dev Spaces
+            url: https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.collection_name }}
+          - title: Catalog entity
+            entityRef: component:default/${{ parameters.collection_name }}

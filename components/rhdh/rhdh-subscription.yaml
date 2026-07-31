@@ -7,7 +7,9 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: '9'
 spec:
-  channel: fast
+  # Pinned to the 1.10 minor so version jumps are a deliberate git change,
+  # not an automatic channel ride (matches the rhbk-operator convention).
+  channel: fast-1.10
   installPlanApproval: Automatic
   name: rhdh
   source: redhat-operators

@@ -28,6 +28,11 @@ spec:
     hostname: keycloak.apps.ocp.igou.systems
   ingress:
     enabled: true
+  # Expose /metrics on the management interface (:9000); the operator then
+  # creates a ServiceMonitor for UWM (netpol opens 9000 to UWM).
+  additionalOptions:
+    - name: metrics-enabled
+      value: 'true'
   resources:
     requests:
       cpu: 100m

@@ -31,7 +31,50 @@ data:
             signIn:
               resolvers:
                 - resolver: preferredUsernameMatchingUserEntityName
+    # RBAC: igou is policy admin + superUser (unrestricted); everyone else
+    # only gets what rbac-policies.csv grants (default deny). The example
+    # `developer` role for POC personas lives in the rbac-policies ConfigMap.
+    permission:
+      enabled: true
+      rbac:
+        admin:
+          users:
+            - name: user:default/igou
+          superUsers:
+            - name: user:default/igou
+        pluginsWithPermission:
+          - catalog
+          - scaffolder
+          - permission
+        policies-csv-file: /opt/app-root/src/rbac-policies.csv
+        policyFileReload: true
+    # Forgejo speaks the Gitea API/URL scheme; this integration lets the
+    # catalog read catalog-info.yaml from forgejo repos (scaffolder register).
+    integrations:
+      gitea:
+        - host: forgejo.apps.ocp.igou.systems
+          username: ${FORGEJO_USERNAME}
+          password: ${FORGEJO_TOKEN}
+    # Backend proxy used by the http:backstage:request scaffolder action to
+    # call the Forgejo API with the machine token (repo generate).
+    proxy:
+      endpoints:
+        '/forgejo':
+          target: https://forgejo.apps.ocp.igou.systems/api/v1
+          allowedMethods:
+            - POST
+          headers:
+            Authorization: token ${FORGEJO_TOKEN}
     catalog:
+      locations:
+        # Scaffolder templates shipped via the catalog-templates ConfigMap
+        # (extraFiles mount). Location-scoped rules so the global catalog
+        # rules (and keycloakOrg User/Group ingestion) stay untouched.
+        - type: file
+          target: /opt/app-root/src/ansible-collection-template.yaml
+          rules:
+            - allow:
+                - Template
       providers:
         # Provisions realm users/groups into the software catalog via the rhdh
         # client's service account (realm-management view/query roles).

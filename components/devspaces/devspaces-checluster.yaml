@@ -1,0 +1,23 @@
+---
+# OpenShift Dev Spaces instance. Auth is OpenShift OAuth (htpasswd IdP), the
+# gateway route uses the cluster default (Let's Encrypt) certificate.
+# Workspaces land in per-user <username>-devspaces namespaces.
+apiVersion: org.eclipse.che/v2
+kind: CheCluster
+metadata:
+  name: devspaces
+  namespace: openshift-devspaces
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: '11'
+spec:
+  networking:
+    hostname: devspaces.apps.ocp.igou.systems
+  components:
+    cheServer:
+      logLevel: INFO
+  devEnvironments:
+    defaultNamespace:
+      template: <username>-devspaces
+    storage:
+      pvcStrategy: per-user
