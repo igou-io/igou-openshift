@@ -20,6 +20,16 @@ data:
       # the software catalog (config in app-config-rhdh).
       - package: ./dynamic-plugins/dist/backstage-community-plugin-catalog-backend-module-keycloak-dynamic
         disabled: false
+      # http:backstage:request scaffolder action — drives the Forgejo
+      # template-generate API through the /forgejo backend proxy.
+      - package: ./dynamic-plugins/dist/roadiehq-scaffolder-backend-module-http-request-dynamic
+        disabled: false
+      # RBAC frontend/backend (permission framework config in app-config-rhdh).
+      - package: ./dynamic-plugins/dist/backstage-community-plugin-rbac
+        disabled: false
+      # Telemetry off — this lab does not phone home.
+      - package: ./dynamic-plugins/dist/backstage-plugin-analytics-provider-segment
+        disabled: true
       # Operator-profile defaults (lightspeed), preserved from the generated
       # default ConfigMap.
       - package: oci://registry.access.redhat.com/rhdh/red-hat-developer-hub-backstage-plugin-lightspeed:{{inherit}}

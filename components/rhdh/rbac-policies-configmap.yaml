@@ -1,0 +1,25 @@
+---
+# RBAC policy source-of-truth, mounted into the RHDH pod via the CR's
+# extraFiles. policyFileReload is enabled in app-config, so edits here roll
+# out on sync without a pod restart.
+#
+# Model (deliberately minimal, POC-oriented):
+#   role:default/developer — read the catalog, register entities, run
+#   software templates. Bound to the Keycloak-provisioned `developers` group
+#   (example user: dev1). igou is superUser via app-config and bypasses this.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rbac-policies
+  namespace: rhdh
+  annotations:
+    argocd.argoproj.io/sync-wave: '10'
+data:
+  rbac-policies.csv: |
+    p, role:default/developer, catalog-entity, read, allow
+    p, role:default/developer, catalog.entity.create, create, allow
+    p, role:default/developer, catalog.location.create, create, allow
+    p, role:default/developer, catalog.location.read, read, allow
+    p, role:default/developer, scaffolder-template, read, allow
+    p, role:default/developer, scaffolder-action, use, allow
+    g, group:default/developers, role:default/developer
