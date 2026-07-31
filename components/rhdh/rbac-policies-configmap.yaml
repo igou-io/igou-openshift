@@ -25,4 +25,6 @@ data:
     p, role:default/developer, scaffolder.task.create, create, allow
     p, role:default/developer, scaffolder.task.read, read, allow
     p, role:default/developer, scaffolder.task.cancel, use, allow
+    p, role:default/developer, catalog.entity.delete, delete, allow
+    p, role:default/developer, catalog.location.delete, delete, allow
     g, group:default/developers, role:default/developer

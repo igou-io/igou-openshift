@@ -1,0 +1,17 @@
+---
+# The kubevirt provisioner connects to VMs via NodePort and needs the node
+# InternalIP — the only cluster-scoped read the molecule flow requires.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: devspaces-molecule-node-reader
+  annotations:
+    argocd.argoproj.io/sync-wave: '11'
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+      - list
