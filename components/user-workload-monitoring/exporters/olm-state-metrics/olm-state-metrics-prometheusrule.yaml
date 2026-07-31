@@ -1,0 +1,64 @@
+---
+# Alerts on OLM subscription state. `for: 1h` on OperatorUpdatePending is
+# deliberate: Automatic-approval subscriptions pass through UpgradePending
+# only transiently mid-upgrade; the persistent case is a Manual-approval
+# namespace waiting on a human (OLM quirk: ONE Manual subscription in a
+# namespace makes EVERY InstallPlan there require approval — today that is
+# openshift-operators via servicemeshoperator3). severity warning routes to
+# Gotify/Slack (and the EDA GitHub-issue pipeline once its Alertmanager
+# route is restored). olm_* series only exist in the UWM leaf Prometheus,
+# hence the leaf-prometheus evaluation-scope label.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: olm-state-metrics
+  labels:
+    app.kubernetes.io/name: olm-state-metrics
+    app.kubernetes.io/part-of: olm-state-metrics
+    openshift.io/prometheus-rule-evaluation-scope: leaf-prometheus
+spec:
+  groups:
+    - name: olm-state-metrics.scrape
+      rules:
+        - alert: OlmStateMetricsDown
+          expr: up{job="olm-state-metrics"} == 0
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: olm-state-metrics scrape failing
+            description: |
+              UWM Prometheus cannot scrape olm-state-metrics - operator
+              update availability is invisible until this recovers.
+    - name: olm-state-metrics.updates
+      rules:
+        - alert: OperatorUpdatePending
+          expr: olm_subscription_state{state="UpgradePending"} == 1
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: >-
+              Operator update available for
+              {{ $labels.subscription_namespace }}/{{ $labels.subscription }}
+            description: |
+              Subscription {{ $labels.subscription_namespace }}/{{ $labels.subscription }}
+              has been in UpgradePending for over an hour - an update is
+              available but not installing, almost certainly waiting on
+              InstallPlan approval. Inspect with:
+              oc get installplans -n {{ $labels.subscription_namespace }}
+              and approve the current plan to upgrade.
+        - alert: OperatorUpgradeFailed
+          expr: olm_subscription_state{state="UpgradeFailed"} == 1
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: >-
+              Operator upgrade failed for
+              {{ $labels.subscription_namespace }}/{{ $labels.subscription }}
+            description: |
+              Subscription {{ $labels.subscription_namespace }}/{{ $labels.subscription }}
+              reports UpgradeFailed. Check the Subscription conditions and
+              the failing InstallPlan:
+              oc describe subscription {{ $labels.subscription }} -n {{ $labels.subscription_namespace }}

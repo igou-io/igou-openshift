@@ -7,6 +7,7 @@ resources:
   - exporters/adb-exporter
   - exporters/blackbox-exporter
   - exporters/mktxp
+  - exporters/olm-state-metrics
   - exporters/upsmonitor
   - exporters/truenas
   - exporters/rk8s-federate

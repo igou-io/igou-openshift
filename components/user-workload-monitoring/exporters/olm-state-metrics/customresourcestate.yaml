@@ -1,0 +1,122 @@
+---
+# CustomResourceState config for kube-state-metrics: turn OLM Subscription
+# status.state and InstallPlan status.phase into metrics. OLM itself never
+# exports these (subscription_sync_total has no state label; install_plan_count
+# is an unlabelled gauge), so "an operator update is available" is invisible to
+# Prometheus without this exporter.
+#
+# Label names deliberately avoid `namespace`: UWM's enforcedNamespaceLabel
+# overwrites any scraped `namespace` label with this exporter's own namespace,
+# which would collapse every series. Hence subscription_namespace /
+# installplan_namespace.
+#
+# StateSet metrics emit a 0-valued series for EVERY listed state, so queries
+# and alerts must match `== 1`, not mere series existence.
+kind: CustomResourceStateMetrics
+spec:
+  resources:
+    - groupVersionKind:
+        group: operators.coreos.com
+        version: v1alpha1
+        kind: Subscription
+      metricNamePrefix: olm_subscription
+      labelsFromPath:
+        subscription_namespace:
+          - metadata
+          - namespace
+        subscription:
+          - metadata
+          - name
+      metrics:
+        - name: state
+          help: OLM Subscription status.state, one series per possible state
+          each:
+            type: StateSet
+            stateSet:
+              labelName: state
+              path:
+                - status
+                - state
+              list:
+                - AtLatestKnown
+                - UpgradeAvailable
+                - UpgradePending
+                - UpgradeFailed
+        - name: info
+          help: OLM Subscription package/channel/CSV metadata
+          each:
+            type: Info
+            info:
+              labelsFromPath:
+                package:
+                  - spec
+                  - name
+                channel:
+                  - spec
+                  - channel
+                source:
+                  - spec
+                  - source
+                approval:
+                  - spec
+                  - installPlanApproval
+                installed_csv:
+                  - status
+                  - installedCSV
+                current_csv:
+                  - status
+                  - currentCSV
+                installplan:
+                  - status
+                  - installPlanRef
+                  - name
+    - groupVersionKind:
+        group: operators.coreos.com
+        version: v1alpha1
+        kind: InstallPlan
+      metricNamePrefix: olm_installplan
+      labelsFromPath:
+        installplan_namespace:
+          - metadata
+          - namespace
+        installplan:
+          - metadata
+          - name
+      metrics:
+        - name: phase
+          help: OLM InstallPlan status.phase, one series per possible phase
+          each:
+            type: StateSet
+            stateSet:
+              labelName: phase
+              path:
+                - status
+                - phase
+              list:
+                - Planning
+                - RequiresApproval
+                - Installing
+                - Complete
+                - Failed
+        - name: approved
+          help: 1 if the InstallPlan spec.approved is true
+          each:
+            type: Gauge
+            gauge:
+              path:
+                - spec
+                - approved
+              nilIsZero: true
+        - name: info
+          help: OLM InstallPlan metadata
+          each:
+            type: Info
+            info:
+              labelsFromPath:
+                approval:
+                  - spec
+                  - approval
+                csv:
+                  - spec
+                  - clusterServiceVersionNames
+                  - "0"
