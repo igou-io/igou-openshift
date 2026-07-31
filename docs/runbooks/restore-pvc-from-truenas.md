@@ -23,6 +23,13 @@ persistent data usually still lives on TrueNAS as democratic-csi zvols. This run
 - A single app's PVC was deleted or corrupted and its old zvol is still present.
 - You need to migrate a specific app's on-disk state onto a new cluster/namespace.
 
+**Prefer prevention when the cluster is healthy:** since 2026-07-31 every fast/ssd
+StorageClass has a companion `freenas-<proto>-<pool>-csi-detached` VolumeSnapshotClass that
+stores snapshots as independent datasets on the **cold pool** (`cold/k8sbak/<pool>/<pvc>/<snap>`).
+A PVC restored from one (`dataSource: kind: VolumeSnapshot`) survives source-pool loss with none
+of the manual zvol archaeology below — see "Volume snapshots" in the repo AGENTS.md. This runbook
+remains the path when no snapshot exists (etcd wipe, orphaned zvols).
+
 **Why the old data survives at all (important):** all democratic-csi StorageClasses here are
 `reclaimPolicy: Delete`. The old zvols only survived because **etcd was wiped** — with no PV
 objects left, the CSI controller never issued a `DeleteVolume`, so the zvols were simply orphaned
