@@ -107,33 +107,44 @@ object the dead cluster had: the PV→zvol map for
 `restore-pvc-from-truenas.md`, Secrets that never lived in 1Password,
 VolumeSnapshotContents pointing at cold-pool datasets, etc.
 
-On the devcontainer (rehearsed 2026-07-31):
+On the devcontainer (rehearsed for real 2026-07-31 — extracted 55 PVs
+from a live snapshot, exactly matching `oc get pv`; the resulting catalog
+is at `s3://etcd-backups/catalogs/pv-zvol-catalog-20260731.tsv`, a prefix
+the retention prune never touches):
 
 ```bash
-# 1. materialize the snapshot into a local etcd data dir
-podman run --rm -v "$PWD":/w:z --entrypoint /usr/local/bin/etcdutl \
-  quay.io/coreos/etcd:v3.5.21 snapshot restore /w/snapshot_<ts>.db --data-dir /w/etcd-data
+# 0. download a COMPLETE set (rc runs as non-root by default — --user 0
+#    for volume writes) and verify SHA256SUMS before trusting it.
 
-# 2. serve it read-only
-podman run -d --name mine -v "$PWD/etcd-data":/etcd-data:z -p 2379:2379 \
-  quay.io/coreos/etcd:v3.5.21 etcd --data-dir /etcd-data \
-  --listen-client-urls http://0.0.0.0:2379 --advertise-client-urls http://127.0.0.1:2379
+# 1. materialize the snapshot into a local etcd data dir.
+#    IMAGE VERSION MATTERS: match the snapshot's etcd major.minor —
+#    OCP 4.21 runs etcd 3.6 (backup.env/COMPLETE records it; the job log
+#    prints "Server version 3.6.0").
+podman run --rm --user 0 -v "$PWD":/w:z --entrypoint /usr/local/bin/etcdutl \
+  quay.io/coreos/etcd:v3.6.5 snapshot restore /w/snapshot.db --data-dir /w/etcd-data
 
-# 3. extract objects (k8s stores protobuf — decode with auger)
-go install github.com/etcd-io/auger@latest   # or grab a release binary
-podman exec mine etcdctl get /kubernetes.io/persistentvolumes --prefix --keys-only
-podman exec mine etcdctl get /kubernetes.io/persistentvolumes/<pv> --print-value-only \
-  | auger decode   # yields the PV YAML incl. spec.csi.volumeHandle = the zvol name
+# 2. serve it locally
+podman run -d --name mine --user 0 -v "$PWD/etcd-data":/etcd-data:z \
+  quay.io/coreos/etcd:v3.6.5 etcd --data-dir /etcd-data \
+  --listen-client-urls http://127.0.0.1:2379 --advertise-client-urls http://127.0.0.1:2379
 
-# 4. the PV→zvol catalog in one pass:
-for k in $(podman exec mine etcdctl get /kubernetes.io/persistentvolumes --prefix --keys-only); do
-  podman exec mine etcdctl get "$k" --print-value-only | auger decode \
-    | yq '[.metadata.name, .spec.claimRef.namespace + "/" + .spec.claimRef.name,
-           .spec.storageClassName, .spec.csi.volumeHandle] | @tsv'
-done
+# 3. auger (protobuf decoder) — release binaries exist; no Go needed:
+curl -sL https://github.com/etcd-io/auger/releases/download/v1.0.3/auger_1.0.3_linux_amd64.tar.gz \
+  | tar -xz auger
+
+# 4. the PV→zvol catalog in one pass (PV name, namespace/PVC, SC, zvol):
+for k in $(podman exec mine etcdctl get /kubernetes.io/persistentvolumes --prefix --keys-only | grep .); do
+  podman exec mine etcdctl get "$k" --print-value-only | ./auger decode | python3 -c "
+import sys, yaml
+pv = yaml.safe_load(sys.stdin)
+c = pv['spec'].get('claimRef') or {}; csi = pv['spec'].get('csi') or {}
+print('\t'.join([pv['metadata']['name'], f\"{c.get('namespace','-')}/{c.get('name','-')}\",
+                 pv['spec'].get('storageClassName','-'),
+                 csi.get('volumeHandle', pv['spec'].get('nfs',{}).get('path','non-csi'))]))"
+done > pv-zvol-catalog.tsv
 
 # 5. clean up — the data dir contains every Secret in plaintext
-podman rm -f mine && rm -rf etcd-data snapshot_<ts>.db
+podman rm -f mine && rm -rf etcd-data snapshot.db
 ```
 
 Key prefixes worth knowing: `/kubernetes.io/persistentvolumes/`,
