@@ -1,0 +1,28 @@
+---
+# Custom dynamic-plugins config, referenced by the Backstage CR. Setting
+# dynamicPluginsConfigMapName REPLACES the operator-generated default
+# ConfigMap, so the two lightspeed entries the 1.10 operator profile adds by
+# default are carried over verbatim ({{inherit}} resolves the version from
+# dynamic-plugins.default.yaml) to keep plugin parity.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dynamic-plugins-rhdh
+  namespace: rhdh
+  annotations:
+    argocd.argoproj.io/sync-wave: '10'
+data:
+  dynamic-plugins.yaml: |
+    includes:
+      - dynamic-plugins.default.yaml
+    plugins:
+      # Keycloak catalog provider: provisions igou realm users/groups into
+      # the software catalog (config in app-config-rhdh).
+      - package: ./dynamic-plugins/dist/backstage-community-plugin-catalog-backend-module-keycloak-dynamic
+        disabled: false
+      # Operator-profile defaults (lightspeed), preserved from the generated
+      # default ConfigMap.
+      - package: oci://registry.access.redhat.com/rhdh/red-hat-developer-hub-backstage-plugin-lightspeed:{{inherit}}
+        disabled: false
+      - package: oci://registry.access.redhat.com/rhdh/red-hat-developer-hub-backstage-plugin-lightspeed-backend:{{inherit}}
+        disabled: false

@@ -1,0 +1,34 @@
+---
+# Red Hat build of Keycloak instance. The operator renders a StatefulSet and,
+# with ingress enabled on OpenShift, a passthrough Route for the hostname.
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: Keycloak
+metadata:
+  name: keycloak
+  namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: '11'
+spec:
+  instances: 1
+  db:
+    vendor: postgres
+    host: keycloak-pg-rw.keycloak.svc.cluster.local
+    port: 5432
+    database: keycloak
+    usernameSecret:
+      name: keycloak-pg-credentials
+      key: username
+    passwordSecret:
+      name: keycloak-pg-credentials
+      key: password
+  http:
+    tlsSecret: keycloak-tls
+  hostname:
+    hostname: keycloak.apps.ocp.igou.systems
+  ingress:
+    enabled: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 1Gi

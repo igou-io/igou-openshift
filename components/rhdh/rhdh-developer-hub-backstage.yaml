@@ -14,9 +14,11 @@ spec:
     appConfig:
       configMaps:
         - name: app-config-rhdh
+    dynamicPluginsConfigMapName: dynamic-plugins-rhdh
     route:
       host: rhdh.apps.ocp.igou.systems
     extraEnvs:
       secrets:
         - name: rhdh-postgres-credentials
         - name: rhdh-backend-secret
+        - name: rhdh-keycloak-credentials
