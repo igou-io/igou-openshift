@@ -1,0 +1,46 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: keycloak-pg
+  namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: '10'
+spec:
+  instances: 1
+  # Single-instance Postgres on SNO has no HA value to preserve and CNPG's
+  # auto-PDB fires PodDisruptionBudgetAtLimit. Disable it. Re-enable only
+  # if you raise instances to >= 2.
+  enablePDB: false
+  imagePullPolicy: IfNotPresent
+  # Pin to the always-present control-plane host so a rolling restart never
+  # migrates the RWO NVMe-oF PVC to an (ephemeral CAPI) worker node and trips the
+  # democratic-csi Multi-Attach bug. See docs/runbooks/nvmeof-stuck-multiattach.md.
+  affinity:
+    nodeSelector:
+      node-role.kubernetes.io/control-plane: ""
+    podAntiAffinityType: preferred # CNPG default; declared to avoid ArgoCD drift
+  bootstrap:
+    initdb:
+      database: keycloak
+      owner: keycloak
+      secret:
+        name: keycloak-pg-credentials
+  storage:
+    size: 5Gi
+    storageClass: freenas-nvmeof-ssd-csi
+  monitoring:
+    enablePodMonitor: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  # Barman Cloud Plugin: continuous WAL archiving + backups to the
+  # keycloak-pg-backup ObjectStore. serverName defaults to the cluster name.
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      enabled: true # operator-defaulted; declared so ArgoCD (SSA) stays Synced
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: keycloak-pg-backup

@@ -58,6 +58,7 @@ spec:
                   - forgejo
                   - quay-enterprise
                   - rhdh
+                  - keycloak
       ports:
         - port: 9090
           protocol: TCP
@@ -95,6 +96,7 @@ spec:
                   - forgejo
                   - quay-enterprise
                   - rhdh
+                  - keycloak
       ports:
         - port: 8000
           protocol: TCP

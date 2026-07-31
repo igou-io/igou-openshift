@@ -1,0 +1,27 @@
+---
+# Serving certificate for the Keycloak passthrough route. TLS terminates at
+# the Keycloak pod itself (spec.http.tlsSecret), so RHDH and browsers both see
+# this publicly-trusted cert end to end — no NODE_EXTRA_CA_CERTS needed.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: keycloak-tls
+  namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: '9'
+spec:
+  secretName: keycloak-tls
+  duration: 2160h0m0s # 90d
+  renewBefore: 360h0m0s # 15d
+  privateKey:
+    algorithm: RSA
+    size: 4096
+    encoding: PKCS1
+    rotationPolicy: Always
+  usages:
+    - server auth
+  dnsNames:
+    - keycloak.apps.ocp.igou.systems
+  issuerRef:
+    name: cluster-acme
+    kind: ClusterIssuer

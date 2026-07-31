@@ -11,6 +11,44 @@ data:
     app:
       title: Red Hat Developer Hub
       baseUrl: https://rhdh.apps.ocp.igou.systems
+    # RHBK (Keycloak) is the sign-in provider; `production` removes the Guest
+    # login option. The single resolver matches the Keycloak username against
+    # the user entities the keycloakOrg catalog provider provisions below —
+    # no dangerouslyAllowSignInWithoutUserInCatalog, so only provisioned realm
+    # users can sign in.
+    signInPage: oidc
+    auth:
+      environment: production
+      session:
+        secret: ${SESSION_SECRET}
+      providers:
+        oidc:
+          production:
+            metadataUrl: https://keycloak.apps.ocp.igou.systems/realms/igou
+            clientId: rhdh
+            clientSecret: ${KEYCLOAK_CLIENT_SECRET}
+            prompt: auto
+            signIn:
+              resolvers:
+                - resolver: preferredUsernameMatchingUserEntityName
+    catalog:
+      providers:
+        # Provisions realm users/groups into the software catalog via the rhdh
+        # client's service account (realm-management view/query roles).
+        keycloakOrg:
+          default:
+            baseUrl: https://keycloak.apps.ocp.igou.systems
+            clientId: rhdh
+            clientSecret: ${KEYCLOAK_CLIENT_SECRET}
+            realm: igou
+            loginRealm: igou
+            schedule:
+              frequency:
+                minutes: 30
+              timeout:
+                minutes: 3
+              initialDelay:
+                seconds: 15
     backend:
       baseUrl: https://rhdh.apps.ocp.igou.systems
       cors:

@@ -1,0 +1,13 @@
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: rhbk
+  namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: '9'
+spec:
+  # rhbk-operator is namespace-scoped (OwnNamespace/SingleNamespace only).
+  targetNamespaces:
+    - keycloak
+  upgradeStrategy: Default

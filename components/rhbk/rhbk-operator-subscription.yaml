@@ -1,0 +1,16 @@
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: rhbk-operator
+  namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: '9'
+spec:
+  # Pinned to the 26.6 minor so version jumps are a deliberate git change,
+  # not an automatic channel ride.
+  channel: stable-v26.6
+  installPlanApproval: Automatic
+  name: rhbk-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
