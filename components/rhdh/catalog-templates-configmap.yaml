@@ -74,7 +74,11 @@ data:
         links:
           - title: Forgejo repository
             url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.collection_name }}
+          # Raw devfile URL factory: Dev Spaces has no Gitea/Forgejo provider —
+          # a plain repo URL makes the resolver guess GitHub-style and try
+          # raw.<host> (TLS SAN failure on the single-level wildcard). The
+          # devfile carries a projects section so the repo still gets cloned.
           - title: Open in OpenShift Dev Spaces
-            url: https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.collection_name }}
+            url: https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.collection_name }}/raw/branch/main/devfile.yaml
           - title: Catalog entity
             entityRef: component:default/${{ parameters.collection_name }}
