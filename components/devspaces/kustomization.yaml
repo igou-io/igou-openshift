@@ -6,3 +6,8 @@ resources:
   - devspaces-operatorgroup.yaml
   - devspaces-subscription.yaml
   - devspaces-checluster.yaml
+  - igou-devspaces-namespace.yaml
+  - molecule-kubevirt-role.yaml
+  - molecule-kubevirt-rolebinding.yaml
+  - devspaces-molecule-node-reader-clusterrole.yaml
+  - devspaces-molecule-node-reader-clusterrolebinding.yaml
