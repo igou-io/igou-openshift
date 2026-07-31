@@ -36,11 +36,13 @@ spec:
                   - key: kubernetes.io/hostname
                     operator: NotIn
                     values:
-                      # SHORT hostname — the node's kubernetes.io/hostname label is
-                      # "truenas-w1", not the FQDN (verified on the live cluster;
-                      # every other node uses its FQDN). FQDN here silently never
-                      # matches, so the exclusion is a no-op. See README / #420.
+                      # Both forms: the label was the SHORT hostname on the
+                      # original node but is the FQDN since the 2026-07-31
+                      # rebuild (lifecycle workflow recreates the VM). Listing
+                      # both keeps the exclusion working across rebuilds — a
+                      # wrong single value silently never matches. See README / #420.
                       - truenas-w1
+                      - truenas-w1.igou.systems
       domain:
         cpu:
           # windows.11 client preference requires the 2 vCPUs presented as
