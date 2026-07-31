@@ -13,6 +13,8 @@ metadata:
     tailscale.com/tailnet-fqdn: "racknerd-49580b0.weasel-alioth.ts.net"
     # Override the proxy's device tags (default would be tag:k8s).
     tailscale.com/tags: "tag:openshift"
+    # Readable tailnet device name (default is the generated ts-<svc>-<hash>).
+    tailscale.com/hostname: "ocp-egress-igou-io"
 spec:
   type: ExternalName
   externalName: placeholder  # rewritten by the operator
