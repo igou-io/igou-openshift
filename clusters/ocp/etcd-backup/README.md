@@ -27,10 +27,12 @@ Design notes (the non-obvious bits):
   convenience** for "I fat-fingered a CRD", not a backup — they live on
   the exact disk whose destruction is the scenario this component exists
   for. Newest 2 run dirs are kept (~2GiB).
-- **Alerting**: failures → platform `KubeJobFailed` (failed Jobs persist
-  ~5 nights; no ttlSecondsAfterFinished, deliberately). Staleness →
-  `EtcdBackupStale` AlertingRule in `openshift-monitoring` (>36h without
-  a success).
+- **Alerting**: both alerts live in the `etcd-backup-stale` AlertingRule
+  in `openshift-monitoring` — `EtcdBackupFailed` (a run failed; the
+  platform `KubeJobFailed` is namespace-scoped to `openshift-*` and never
+  covers this namespace) and `EtcdBackupStale` (>36h without a success).
+  Failed Jobs persist ~5 nights (no ttlSecondsAfterFinished,
+  deliberately) so the alert has a subject.
 - **Take a manual backup immediately after every cluster upgrade** —
   restores must be same-z-stream, so pre-upgrade sets become
   non-restorable-in-place the moment the upgrade completes:

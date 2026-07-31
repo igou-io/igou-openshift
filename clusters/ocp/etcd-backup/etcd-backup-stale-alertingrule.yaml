@@ -15,6 +15,23 @@ spec:
   groups:
     - name: etcd-backup
       rules:
+        # The platform KubeJobFailed alert only matches
+        # namespace=~"(openshift-.*|kube-.*|default)" — verified live — so
+        # a failed run in this namespace needs its own rule.
+        - alert: EtcdBackupFailed
+          expr: |
+            kube_job_failed{namespace="etcd-backup"} > 0
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "an etcd-backup job failed"
+            description: >-
+              Job {{ $labels.job_name }} in namespace etcd-backup has
+              failed pods. Check its logs (backup and upload containers)
+              and docs/runbooks/etcd-backup-restore.md in igou-openshift.
+              Failed Jobs persist ~5 nights; delete the Job to clear this
+              alert once resolved.
         - alert: EtcdBackupStale
           # 36h: one missed night plus slack for the 05:00 schedule and
           # DST wobble.
