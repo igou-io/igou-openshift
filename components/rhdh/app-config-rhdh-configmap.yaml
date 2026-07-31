@@ -31,6 +31,23 @@ data:
             signIn:
               resolvers:
                 - resolver: preferredUsernameMatchingUserEntityName
+    # RBAC: igou is policy admin + superUser (unrestricted); everyone else
+    # only gets what rbac-policies.csv grants (default deny). The example
+    # `developer` role for POC personas lives in the rbac-policies ConfigMap.
+    permission:
+      enabled: true
+      rbac:
+        admin:
+          users:
+            - name: user:default/igou
+          superUsers:
+            - name: user:default/igou
+        pluginsWithPermission:
+          - catalog
+          - scaffolder
+          - permission
+        policies-csv-file: /opt/app-root/src/rbac-policies.csv
+        policyFileReload: true
     catalog:
       providers:
         # Provisions realm users/groups into the software catalog via the rhdh

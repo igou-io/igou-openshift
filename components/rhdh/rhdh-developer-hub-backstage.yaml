@@ -10,10 +10,16 @@ metadata:
 spec:
   database:
     enableLocalDb: false
+  monitoring:
+    enabled: true
   application:
     appConfig:
       configMaps:
         - name: app-config-rhdh
+    extraFiles:
+      mountPath: /opt/app-root/src
+      configMaps:
+        - name: rbac-policies
     dynamicPluginsConfigMapName: dynamic-plugins-rhdh
     route:
       host: rhdh.apps.ocp.igou.systems
