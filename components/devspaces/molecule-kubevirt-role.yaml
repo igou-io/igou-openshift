@@ -1,0 +1,45 @@
+---
+# Just enough RBAC for the david_igou.molecule_provisioners kubevirt backend
+# running inside a workspace pod: VMs/VMIs + the per-VM NodePort ssh Service,
+# scoped to THIS namespace only. Node InternalIP lookup needs the separate
+# devspaces-molecule-node-reader ClusterRole.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: molecule-kubevirt
+  namespace: igou-devspaces
+  annotations:
+    argocd.argoproj.io/sync-wave: '11'
+rules:
+  - apiGroups:
+      - kubevirt.io
+    resources:
+      - virtualmachines
+      - virtualmachineinstances
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - patch
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
