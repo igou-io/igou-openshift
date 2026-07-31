@@ -1,15 +1,18 @@
 # Runbook: CloudNativePG backup & restore (Barman Cloud Plugin)
 
 **Applies to:** all CNPG `Cluster` databases on this cluster — `forgejo-pg` (forgejo),
-`quay-pg` (quay-enterprise), `temporalio-pg` (temporalio), `rhdh-pg` (rhdh).
+`quay-pg` (quay-enterprise), `rhdh-pg` (rhdh), `keycloak-pg` (keycloak).
+`applications/temporalio/` is dormant — not referenced by `clusters/ocp/values.yaml`,
+deploys no database.
 **Method:** the first-party **Barman Cloud Plugin** (`barman-cloud.cloudnative-pg.io`)
 to an S3-compatible object store, with **scheduled (non-PITR)** backups + continuous
 WAL archiving. This is the CNPG-maintained replacement for the deprecated in-tree
 `.spec.backup.barmanObjectStore` (deprecated as of 1.26; still present on our 1.29.1,
 removal version unsettled — do not rely on it).
 
-Pilot: **forgejo-pg** is fully wired in-repo. The other three are rolled out by
-copying the same four objects into their namespace (§4).
+All four databases are fully wired in-repo, each with the same four objects in its
+namespace. **forgejo-pg** was the pilot and is the worked example throughout; §4 is
+the pattern for adding the *next* database.
 
 ---
 
@@ -104,17 +107,17 @@ oc cnpg backup forgejo-pg -n forgejo \
 
 ---
 
-## 4. Roll out to the other databases
+## 4. The rollout pattern (for the next database)
 
-For each of `quay-pg` (quay-enterprise, 40Gi), `temporalio-pg` (temporalio),
-`rhdh-pg` (rhdh): copy the four Forgejo objects, swap names/namespaces, and add them to
-that app's `kustomization.yaml`. Per-cluster bits that change:
+To back up a new CNPG database: copy the four Forgejo objects, swap
+names/namespaces, and add them to that app's `kustomization.yaml`. The existing
+clusters, for reference — per-cluster bits that change:
 
 | Cluster | Namespace | destinationPath | Cluster manifest to patch |
 |---|---|---|---|
 | `quay-pg` | `quay-enterprise` | `s3://cnpg-backups/quay-pg` | `components/quay-operator/quay-pg-cluster.yaml` |
-| `temporalio-pg` | `temporalio` | `s3://cnpg-backups/temporalio-pg` | `applications/temporalio/temporalio-pg-cluster.yaml` |
 | `rhdh-pg` | `rhdh` | `s3://cnpg-backups/rhdh-pg` | `components/rhdh/rhdh-pg-cluster.yaml` |
+| `keycloak-pg` | `keycloak` | `s3://cnpg-backups/keycloak-pg` | `components/rhbk/keycloak-pg-cluster.yaml` |
 
 The `cnpg-s3-credentials` ExternalSecret is per-namespace, but all reference the same
 cluster-scoped `ClusterSecretStore/onepassword-sdk-ocp-pull` and the same 1Password
@@ -139,6 +142,12 @@ item, so no new secret material is needed. Add to each Cluster's `.spec`:
 Recovery is **never in-place**. You bootstrap a **new** Cluster that replays from the
 object store, then cut the app over to it.
 
+> 🚨 **`serverName` below is not the cluster name.** Read it out of the source
+> Cluster's `spec.plugins[0].parameters.serverName`, or take it from the map in
+> [`database-total-loss-recovery.md`](database-total-loss-recovery.md) §3. Since the
+> 2026-07-03 DR the bare `<cluster>` prefixes are a frozen 2026-07-02 archive:
+> restoring from one succeeds and hands you month-old data.
+
 ```yaml
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
@@ -159,7 +168,7 @@ spec:
         name: barman-cloud.cloudnative-pg.io
         parameters:
           barmanObjectName: forgejo-pg-backup
-          serverName: forgejo-pg       # the ORIGINAL cluster's serverName — finds the data
+          serverName: forgejo-pg-r20260704   # the serverName the source cluster is ARCHIVING to today
 ```
 
 Then point the app at `forgejo-pg-restored-rw` (update the `*-pg-app`/host secret or the
@@ -180,7 +189,8 @@ Same as §5, run on the fresh cluster, once prerequisites exist there:
    `externalClusters` plugin can read the bucket). The 1Password path makes this
    reproducible.
 3. Apply the §5 recovery `Cluster`. It pulls base backup + WALs from
-   `s3://cnpg-backups/<cluster>` and replays to the latest archived WAL.
+   `s3://cnpg-backups/<cluster>/<serverName>/` — the `<serverName>` subprefix, not the
+   bucket path — and replays to the latest archived WAL.
 
 This only works if the **bucket survived** — see the DR limitation in §1.
 
@@ -191,8 +201,12 @@ This only works if the **bucket survived** — see the DR limitation in §1.
 - **Retention** is `ObjectStore.spec.retentionPolicy` (top-level), **not**
   `.spec.configuration.retentionPolicy`. Format `^[1-9][0-9]*[dwm]$` (e.g. `30d`).
 - **`ObjectStore` `serverName` must be empty.** `serverName` is set on the Cluster's
-  plugin parameters (defaults to the cluster name) and on the `externalClusters` entry
-  at restore. This is the single most important field for restore to find data.
+  plugin parameters and on the `externalClusters` entry at restore. This is the single
+  most important field for restore to find data. It only *defaults* to the cluster name
+  when never set explicitly — after any recovery the cluster archives to an explicit
+  `<cluster>-r<YYYYMMDD>`, and that explicit value is what a later restore must read
+  from. `forgejo-pg`/`quay-pg`/`rhdh-pg` are on `-r20260704`; `keycloak-pg` has never been
+  recovered and is still on its default.
 - **ObjectStore must be same-namespace as the Cluster** (CNPG issues #448/#741) — one
   per DB namespace, not a shared store.
 - **Plugin must live in the operator's namespace** (`cloudnative-pg`, not the upstream

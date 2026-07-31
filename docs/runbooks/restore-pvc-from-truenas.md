@@ -45,10 +45,25 @@ zvol. That is exactly why Step 1 (snapshot + clone) comes first.
   (host is `truenas.igou.systems`, **not** `igounas.igou.systems` which is an nginx VIP and rejects
   the key). Remote shell is **zsh**, sudo is NOPASSWD. Long-running ZFS jobs: `midclt call --job ...`
   (double-dash `--job`; `-job` errors).
-- **Backups / catalog on the devcontainer:**
-  - `/workspace/backups/ocp-pv-catalog-20260703.txt` — full `pool/k8s/vols/pvc-<uuid> | size | mtime | fs-type` list.
-  - `/workspace/backups/hermes/hermes-state-20260703.tar.zst` (11.9G raw = `~/.hermes` contents, xfs-level tar).
-  - `/workspace/backups/hermes/hermes-home-root-20260703.tar.zst` (hermes `/home` non-`.hermes`).
+- **A PV → zvol catalog.** This is the single input Step 2 depends on; get it from the
+  first of these that applies:
+  1. **Cluster still up** — read it live:
+     ```bash
+     oc get pv -o custom-columns=\
+     PV:.metadata.name,CLAIM:.spec.claimRef.namespace/.spec.claimRef.name,\
+     SC:.spec.storageClassName,ZVOL:.spec.csi.volumeHandle
+     ```
+  2. **Cluster gone** — mine the nightly etcd snapshot at
+     `s3://etcd-backups/<z-stream>/<ts>/` per
+     [`etcd-backup-restore.md`](etcd-backup-restore.md) ("Mining a snapshot when the
+     cluster is gone"), or grab the pre-mined
+     `s3://etcd-backups/catalogs/pv-zvol-catalog-20260731.tsv` — the `catalogs/` prefix
+     is exempt from the 3-day retention prune, so it survives when the snapshots don't.
+  3. **Neither** — fall back to content fingerprinting on TrueNAS (Step 2).
+
+  > ⚠️ The 2026-07-03 artifacts on the devcontainer (`/workspace/backups/`: the
+  > `ocp-pv-catalog-20260703.txt` list and the two hermes `.tar.zst` archives) **no
+  > longer exist**. Do not plan a restore around them.
 - **`virtctl`** on PATH (for the KubeVirt-VM case).
 - **democratic-csi layout:** managed volumes live at `<pool>/k8s/vols/pvc-<uuid>` where pool ∈
   `ssd` / `fast` / `cold`. Default StorageClass is `freenas-nvmeof-ssd-csi`. democratic-csi tags each
@@ -107,7 +122,8 @@ Fingerprint them by mounting each read-only and listing the top level. This sess
    partition ro, `ls`.
 4. Records size + mtime + top-level directory names as the fingerprint, then unmounts.
 
-Confirmed mappings from this incident (full list: `/workspace/backups/ocp-pv-catalog-20260703.txt`):
+Confirmed mappings from the 2026-07-03 incident (its `ocp-pv-catalog-20260703.txt` is gone —
+build today's catalog per Prerequisites):
 
 | App / data | Old zvol | FS | Fingerprint (top-level) |
 |---|---|---|---|
