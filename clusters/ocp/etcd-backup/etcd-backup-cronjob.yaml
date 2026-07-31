@@ -1,0 +1,248 @@
+---
+# Nightly etcd backup for the single-master cluster (DR-assessment gap #1,
+# docs/post-mortems/2026-07-31-dr-readiness-assessment.md). Two stages in
+# one pod: a privileged initContainer runs the host's cluster-backup.sh
+# via chroot, then an unprivileged rc container uploads the artifacts to
+# rustfs-cold. Restore + snapshot-mining procedures:
+# docs/runbooks/etcd-backup-restore.md.
+#
+# hostNetwork is REQUIRED (cluster-backup.sh's etcdctl targets
+# localhost:2379, and chroot does not change netns); hostPID for the
+# podman/crictl fallback paths inside the script. Consequence: OVN-K does
+# not enforce NetworkPolicy on host-network pods — the NetworkPolicies in
+# this directory document intent only; the effective controls are the SCC
+# binding and the bucket-scoped etcd-backups_rw S3 policy
+# (igou-inventory host_vars/rustfs-cold.yml).
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: etcd-backup
+  namespace: etcd-backup
+spec:
+  # k8s evaluates cron in UTC unless timeZone is set; the operator wants
+  # 05:00 US-Eastern nightly.
+  schedule: "0 5 * * *"
+  timeZone: America/New_York
+  concurrencyPolicy: Forbid
+  # A node down at 05:00 gets one catch-up run within the hour, not a
+  # burst, and the controller never hits the >100-missed-schedules stop.
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 3
+  # Failures stay visible ~5 days for KubeJobFailed; deliberately NO
+  # ttlSecondsAfterFinished — a TTL deletes the Job the alert needs.
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # One retry absorbs a transient S3/API blip; the .uploaded marker
+      # keeps the retry from re-uploading the first attempt's set.
+      backoffLimit: 1
+      # Bounds a hung etcdctl against an unresponsive endpoint.
+      activeDeadlineSeconds: 3600
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: etcd-backup
+        spec:
+          serviceAccountName: etcd-backup
+          restartPolicy: Never
+          hostNetwork: true
+          hostPID: true
+          dnsPolicy: ClusterFirstWithHostNet
+          nodeSelector:
+            node-role.kubernetes.io/control-plane: ""
+          tolerations:
+            - key: node-role.kubernetes.io/master
+              operator: Exists
+              effect: NoSchedule
+            - key: node-role.kubernetes.io/control-plane
+              operator: Exists
+              effect: NoSchedule
+          volumes:
+            - name: host
+              hostPath:
+                path: /
+                type: Directory
+            - name: backup
+              hostPath:
+                path: /var/backup/etcd
+                type: DirectoryOrCreate
+            - name: tmp
+              emptyDir: {}
+          initContainers:
+            - name: backup
+              # renovate: datasource=docker depName=registry.redhat.io/openshift4/ose-cli
+              image: registry.redhat.io/openshift4/ose-cli:latest@sha256:69762925e16053d77685ff3a08b3b45dd2bfa5d68277851bc6969b368bbd0cb9
+              securityContext:
+                privileged: true
+                runAsUser: 0
+              env:
+                - name: NODE_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: spec.nodeName
+              volumeMounts:
+                - name: host
+                  mountPath: /host
+                  mountPropagation: HostToContainer
+                - name: backup
+                  mountPath: /backup
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                # Generous on purpose: etcdctl (and podman, if the script
+                # needs to extract it) run inside THIS cgroup — chroot does
+                # not change cgroups, and a tight limit OOM-kills the
+                # snapshot mid-write.
+                limits:
+                  cpu: "2"
+                  memory: 2Gi
+              command: ["/bin/bash", "-euo", "pipefail", "-c"]
+              args:
+                - |
+                  TS="$(date -u +%Y%m%d-%H%M%S)"
+                  HOST_DIR="/var/backup/etcd/${TS}"
+                  CTR_DIR="/backup/${TS}"
+
+                  # A snapshot is every cluster Secret in plaintext;
+                  # kubelet creates the hostPath 0755.
+                  chmod 0700 /backup
+
+                  # Serialize against a human running cluster-backup.sh by
+                  # hand (concurrencyPolicy can't see that).
+                  exec 9>/backup/.lock
+                  flock -n 9 || { echo "FATAL: another backup holds the lock"; exit 1; }
+
+                  # Disk guard — a failed backup is recoverable; a
+                  # disk-full single master is the disaster. Scale with the
+                  # live DB instead of a magic constant.
+                  DB_MB=$(du -sm /host/var/lib/etcd/member/snap/db 2>/dev/null | cut -f1 || echo 1024)
+                  FREE_MB=$(df -Pm /host/var | awk 'NR==2{print $4}')
+                  NEED_MB=$(( DB_MB * 2 + 2048 ))
+                  [ "${FREE_MB}" -ge "${NEED_MB}" ] || { echo "FATAL: ${FREE_MB}MB free on /var, need ${NEED_MB}MB"; exit 1; }
+
+                  # Tag with the RUNNING z-stream (history is newest-first;
+                  # .desired would be wrong mid-upgrade).
+                  VERSION=$(oc get clusterversion version -o jsonpath='{range .status.history[?(@.state=="Completed")]}{.version}{"\n"}{end}' | head -1)
+                  [[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "FATAL: bad version '${VERSION}'"; exit 1; }
+                  if [ "$(oc get clusterversion version -o jsonpath='{.status.conditions[?(@.type=="Progressing")].status}')" = "True" ]; then
+                    echo "WARNING: cluster is Progressing; snapshot z-stream may not match at restore time"
+                  fi
+
+                  mkdir -p "${CTR_DIR}" && chmod 0700 "${CTR_DIR}"
+                  chroot /host /usr/bin/env bash -c "/usr/local/bin/cluster-backup.sh '${HOST_DIR}'"
+
+                  SNAP=$(ls -1 "${CTR_DIR}"/snapshot_*.db)
+                  TAR=$(ls -1 "${CTR_DIR}"/static_kuberesources_*.tar.gz)
+                  SNAP_BYTES=$(stat -c %s "${SNAP}")
+                  [ "${SNAP_BYTES}" -ge $((64*1024*1024)) ] || { echo "FATAL: snapshot only ${SNAP_BYTES}B"; exit 1; }
+                  TAR_BYTES=$(stat -c %s "${TAR}")
+                  [ "${TAR_BYTES}" -ge $((64*1024)) ] || { echo "FATAL: kuberesources tarball only ${TAR_BYTES}B"; exit 1; }
+                  tar -tzf "${TAR}" >/dev/null
+                  # Independent integrity check when the host has etcdutl
+                  # (placed by the etcd static pod; path has moved between
+                  # releases, hence the guard).
+                  if chroot /host test -x /usr/local/bin/etcdutl; then
+                    chroot /host /usr/local/bin/etcdutl snapshot status "${HOST_DIR}/$(basename "${SNAP}")" -w table
+                  fi
+                  ( cd "${CTR_DIR}" && sha256sum snapshot_*.db static_kuberesources_*.tar.gz > SHA256SUMS )
+
+                  # Provenance manifest — consumed by the upload container
+                  # and by the restore runbook.
+                  cat > "${CTR_DIR}/backup.env" <<EOF
+                  OCP_VERSION=${VERSION}
+                  NODE=${NODE_NAME}
+                  TIMESTAMP=${TS}
+                  SNAPSHOT=$(basename "${SNAP}")
+                  KUBERESOURCES=$(basename "${TAR}")
+                  SNAPSHOT_BYTES=${SNAP_BYTES}
+                  EOF
+
+                  # Local convenience copies (NOT a backup — same disk the
+                  # restore scenario destroys): keep the newest 2 run dirs
+                  # so a mid-write failure never leaves zero verified local
+                  # sets.
+                  ls -1d /backup/2*/ 2>/dev/null | sort | head -n -2 | xargs -r rm -rf
+                  echo "backup OK: ${CTR_DIR} (${SNAP_BYTES} bytes, ${VERSION})"
+          containers:
+            - name: upload
+              # renovate: datasource=docker depName=docker.io/rustfs/rc
+              image: docker.io/rustfs/rc:v0.1.30@sha256:828c51af0cc7744a581cd1743fc86f7f1bb32b000adc5a0addeb22b397ad0f42
+              securityContext:
+                runAsUser: 0
+                privileged: false
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+              env:
+                - name: S3_ENDPOINT
+                  value: https://truenas.igou.systems:20292
+                - name: S3_BUCKET
+                  value: etcd-backups
+                - name: RETAIN_DAYS
+                  value: "3"
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: etcd-backup-s3
+                      key: access_key_id
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: etcd-backup-s3
+                      key: secret_access_key
+                - name: HOME
+                  value: /tmp
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+                - name: tmp
+                  mountPath: /tmp
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 128Mi
+                limits:
+                  cpu: "1"
+                  memory: 512Mi
+              command: ["/bin/sh", "-euc"]
+              args:
+                - |
+                  rc alias set rustfs "${S3_ENDPOINT}" "${AWS_ACCESS_KEY_ID}" "${AWS_SECRET_ACCESS_KEY}" >/dev/null
+
+                  # Upload every set not yet marked .uploaded (normally 1;
+                  # 2 if last night's S3 was down). COMPLETE is written
+                  # LAST and deleted FIRST: a set is valid iff the marker
+                  # exists.
+                  for d in /backup/2*/; do
+                    [ -f "${d}backup.env" ] || continue
+                    [ -f "${d}.uploaded" ] && continue
+                    . "${d}backup.env"
+                    P="rustfs/${S3_BUCKET}/${OCP_VERSION}/${TIMESTAMP}"
+                    rc put "${d}${KUBERESOURCES}" "${P}/${KUBERESOURCES}"
+                    rc put "${d}${SNAPSHOT}" "${P}/${SNAPSHOT}"
+                    rc put "${d}SHA256SUMS" "${P}/SHA256SUMS"
+                    R=$(rc object stat --json "${P}/${SNAPSHOT}" | sed -n 's/.*"size":\([0-9]*\).*/\1/p')
+                    [ "${R}" = "${SNAPSHOT_BYTES}" ] || { echo "FATAL: remote size ${R} != local ${SNAPSHOT_BYTES}"; exit 1; }
+                    rc put "${d}backup.env" "${P}/COMPLETE"
+                    touch "${d}.uploaded"
+                    echo "uploaded ${P}"
+                  done
+
+                  # Retention: strict 3-day cap (operator direction). Runs
+                  # only on successful nights, so stale sets can outlive
+                  # the cap during a failure streak until the next success.
+                  CUTOFF=$(date -u -d @$(( $(date -u +%s) - RETAIN_DAYS * 86400 )) +%Y%m%d-%H%M%S)
+                  rc object list -r --json "rustfs/${S3_BUCKET}" 2>/dev/null \
+                    | sed -n 's#.*"key": *"\([^"]*\)/COMPLETE".*#\1#p' | sort -u \
+                    | while read -r s; do
+                        [ -n "${s}" ] || continue
+                        ts=${s##*/}
+                        [ "${ts}" \< "${CUTOFF}" ] || continue
+                        echo "pruning ${s} (older than ${RETAIN_DAYS}d)"
+                        rc object remove -f "rustfs/${S3_BUCKET}/${s}/COMPLETE"
+                        rc object remove -r -f "rustfs/${S3_BUCKET}/${s}/"
+                      done
+                  echo "upload stage done"

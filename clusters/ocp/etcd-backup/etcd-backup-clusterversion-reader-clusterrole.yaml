@@ -1,0 +1,17 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: etcd-backup-clusterversion-reader
+rules:
+  # The backup tags every artifact set with the RUNNING z-stream
+  # (restores must be same-z-stream). `get` on the single named object is
+  # all the job ever issues.
+  - apiGroups:
+      - config.openshift.io
+    resources:
+      - clusterversions
+    resourceNames:
+      - version
+    verbs:
+      - get
