@@ -1,0 +1,15 @@
+---
+# NOTE: the etcd-backup pod runs hostNetwork, and OVN-Kubernetes does not
+# enforce NetworkPolicy on host-network pods — these policies document
+# intent (and become real if the design ever drops hostNetwork). The
+# effective controls are the SCC binding and the bucket-scoped S3 policy.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: etcd-backup
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress

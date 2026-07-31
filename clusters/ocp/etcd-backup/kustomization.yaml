@@ -1,0 +1,14 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - etcd-backup-namespace.yaml
+  - etcd-backup-serviceaccount.yaml
+  - allow-privileged-to-etcd-backup-sa-clusterrolebinding.yaml
+  - etcd-backup-clusterversion-reader-clusterrole.yaml
+  - etcd-backup-clusterversion-reader-clusterrolebinding.yaml
+  - etcd-backup-s3-externalsecret.yaml
+  - default-deny-networkpolicy.yaml
+  - allow-etcd-backup-egress-networkpolicy.yaml
+  - etcd-backup-cronjob.yaml
+  - etcd-backup-stale-alertingrule.yaml

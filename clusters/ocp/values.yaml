@@ -190,6 +190,17 @@ applications:
       namespace: openshift-cluster-api
     source:
       path: clusters/ocp/cluster-api
+
+  # Nightly etcd snapshot to rustfs-cold (DR gap #1). Wave 11: only needs
+  # ESO (wave 0); grouped with the other cluster-operations cronjobs.
+  etcd-backup:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '11'
+    destination:
+      namespace: etcd-backup
+    source:
+      path: clusters/ocp/etcd-backup
     # Metal3/CAPM3 patches BMH spec fields when it claims the host (online,
     # consumerRef, image, userData, customDeploy, preprovisioning*). Leave
     # those to the controllers so ArgoCD doesn't fight them back to the

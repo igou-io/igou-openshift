@@ -1,0 +1,37 @@
+---
+# Staleness alert for the nightly etcd backup. KubeJobFailed covers a
+# *failed* run, but not the job silently never running (CronJob suspended,
+# controller wedged, node down past startingDeadlineSeconds) — the failure
+# mode that quietly recreates the 2026-07-03 posture. kube_cronjob_* is
+# platform kube-state-metrics data, invisible to UWM, so this is a
+# monitoring.openshift.io AlertingRule in openshift-monitoring rather
+# than a namespace PrometheusRule.
+apiVersion: monitoring.openshift.io/v1
+kind: AlertingRule
+metadata:
+  name: etcd-backup-stale
+  namespace: openshift-monitoring
+spec:
+  groups:
+    - name: etcd-backup
+      rules:
+        - alert: EtcdBackupStale
+          # 36h: one missed night plus slack for the 05:00 schedule and
+          # DST wobble.
+          expr: |
+            (time() - kube_cronjob_status_last_successful_time{namespace="etcd-backup",cronjob="etcd-backup"}) > 129600
+            or
+            absent(kube_cronjob_status_last_successful_time{namespace="etcd-backup",cronjob="etcd-backup"})
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "etcd backup has not succeeded in 36h"
+            # description is mandatory — the gotify bridge 400s without it.
+            description: >-
+              The nightly etcd-backup CronJob in namespace etcd-backup has
+              no successful run in the last 36 hours (or the CronJob is
+              gone). Restores need a fresh same-z-stream snapshot — see
+              docs/runbooks/etcd-backup-restore.md in igou-openshift.
+              Check: oc get cronjob,jobs -n etcd-backup and the last job's
+              logs.
