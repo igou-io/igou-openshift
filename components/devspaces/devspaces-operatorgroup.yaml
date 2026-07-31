@@ -1,0 +1,12 @@
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: devspaces
+  namespace: openshift-devspaces
+  annotations:
+    argocd.argoproj.io/sync-wave: '9'
+spec:
+  # devspaces-operator is AllNamespaces-only; an empty spec makes this a
+  # global-mode OperatorGroup (same pattern as the rhdh OperatorGroup).
+  upgradeStrategy: Default
