@@ -23,6 +23,7 @@ bootstrap in [`gitops-bootstrap-from-scratch.md`](gitops-bootstrap-from-scratch.
 | `forgejo-pg` (db `forgejo`) | `forgejo` | CNPG Cluster | daily base + WAL → `s3://cnpg-backups/forgejo-pg` | §3 (CNPG recovery) |
 | `quay-pg` (dbs `quay`, `clair`) | `quay-enterprise` | CNPG Cluster | daily base + WAL → `s3://cnpg-backups/quay-pg` | §3 — expect **~1.5 days** of WAL replay |
 | `rhdh-pg` (db `backstage`) | `rhdh` | CNPG Cluster | daily base + WAL → `s3://cnpg-backups/rhdh-pg` | §3 |
+| `keycloak-pg` (db `keycloak`) | `keycloak` | CNPG Cluster (`components/rhbk/`) | daily base + WAL → `s3://cnpg-backups/keycloak-pg` | §3 — **created after the 2026-07-03 DR**, so its READ serverName is the bare `keycloak-pg` |
 | `aap-postgres-15` | `ansible-automation-platform` | AAP-operator StatefulSet | **none automated** (deliberate) | rebuild from config-as-code; job history is lost unless a manual `pg_dump` exists — see the igou-docs page *AAP Backup, Restore, and Rebuild-from-Loss* |
 | `tekton-results-postgres` | `openshift-pipelines` | operator StatefulSet | none | **accepted loss** — pipeline-run history; operator recreates it empty |
 | `firecrawl-nuq-postgres` | `firecrawl` | Deployment | none | **accepted loss** — crawl queue state; comes back empty |
@@ -52,7 +53,7 @@ referenced by `clusters/ocp/values.yaml` and deploy nothing — ignore them.
    2026-07 the flip happened after handover, which cost an extra
    delete-Cluster-and-PVC round per database.
 4. **Wait for each recovery to complete** (§4), then let / make the consuming
-   apps (forgejo, quay, rhdh) roll.
+   apps (forgejo, quay, rhdh, rhbk/keycloak) roll.
 5. **AAP**: rebuild from config-as-code per the AAP runbook (igou-docs). It is
    its own chicken-and-egg (Connect credential seed) and does not block the
    CNPG work.
@@ -66,8 +67,10 @@ Each recovery reads from one object-store prefix and archives forward to a
 - **READ side** (`externalClusters[].plugin.parameters.serverName`): the
   serverName the cluster was archiving to *at the time of loss* — i.e. whatever
   `spec.plugins[0].parameters.serverName` says in the committed cluster
-  manifest. **As of 2026-07-24 that is `<cluster>-r20260704`** for all three
-  (the post-2026-07-03-recovery timelines). It is *not* the cluster name — the
+  manifest. **As of 2026-07-31 that is `<cluster>-r20260704`** for
+  `forgejo-pg` / `quay-pg` / `rhdh-pg` (the post-2026-07-03-recovery
+  timelines) and the bare **`keycloak-pg`** for keycloak, which was created
+  after the DR and has never rolled over. It is *not* the cluster name — the
   bare `<cluster>` prefixes hold the pre-2026-07-03 archive, frozen at
   2026-07-02, and restoring from them silently resurrects month-old data.
 - **WRITE side** (`spec.plugins[].parameters.serverName`): a fresh
@@ -80,7 +83,8 @@ the READ side is the per-cluster server prefix with the **newest** WAL objects
 
 Edit each of `applications/forgejo/forgejo-pg-cluster.yaml`,
 `components/quay-operator/quay-pg-cluster.yaml`,
-`components/rhdh/rhdh-pg-cluster.yaml`: swap `bootstrap.initdb` →
+`components/rhdh/rhdh-pg-cluster.yaml`,
+`components/rhbk/keycloak-pg-cluster.yaml`: swap `bootstrap.initdb` →
 `bootstrap.recovery` + `externalClusters` and bump the archiving serverName,
 exactly as shown step-by-step in `cnpg-barman-recovery.md`. The
 `ObjectStore`/`ScheduledBackup`/`ExternalSecret` objects are unchanged — they

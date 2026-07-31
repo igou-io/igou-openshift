@@ -27,8 +27,8 @@ yet), because Connect itself cannot supply its own credentials.
 - Any time OpenShift GitOps must be re-bootstrapped from zero and the on-cluster
   1Password lookups are unavailable.
 
-Do **not** use this to "repair" a running GitOps — re-running the playbook overwrites
-the live-only ArgoCD CR patches (see Step 5 / Gotchas).
+Do **not** use this to "repair" a running GitOps — the playbook re-creates the ArgoCD CR
+from its own committed spec, overwriting any live edit (see Step 5 / Gotchas).
 
 ### Prerequisites
 
@@ -43,14 +43,23 @@ the live-only ArgoCD CR patches (see Step 5 / Gotchas).
   1Password SaaS — Connect is not running, so it cannot be used.
 - **Repos present** (local checkouts are STALE — always `git fetch origin main` and
   read with `git show origin/main:<path>`):
-  - `/workspace/igou-ansible` — the bootstrap playbook.
+  - `/workspace/igou-ansible` — the bootstrap playbook
+    (`playbooks/openshift/bootstrap_gitops.yaml`).
   - `/workspace/igou-openshift` — the GitOps repo (`github.com/igou-io/igou-openshift`),
     app-of-apps source at `clusters/ocp/`.
 - **Tooling**: `ansible-navigator` (or `ansible-playbook`) with `community.general` +
   `kubernetes.core`; `oc`; `kustomize` + `helm` (the app-of-apps renders with
   `--enable-helm`).
-- Data-restore backups (TrueNAS Barman on RustFS, hermes tars) reachable only if you
-  will proceed to the staged app restore (Step 4) — not required to stand up GitOps.
+- Data-restore inputs, needed only if you proceed to the staged app restore (Step 4), not
+  to stand up GitOps:
+  - **CNPG/Barman on RustFS** — `database-total-loss-recovery.md` (read the serverName
+    map there; the READ side is *not* the cluster name).
+  - **The nightly etcd snapshot** at `s3://etcd-backups/<z-stream>/<ts>/` on rustfs-cold —
+    it cannot be restored into a reinstalled cluster, but mining it gives you the dead
+    cluster's PV→zvol map and any Secret that never lived in 1Password. Procedure:
+    `etcd-backup-restore.md`; the latest mined catalog is at
+    `s3://etcd-backups/catalogs/pv-zvol-catalog-<date>.tsv`.
+  - **Orphaned zvols on TrueNAS** — `restore-pvc-from-truenas.md`.
 
 ### Step-by-step
 
@@ -58,7 +67,8 @@ the live-only ArgoCD CR patches (see Step 5 / Gotchas).
 
 ```bash
 export KUBECONFIG=$HOME/openshift-agent-install/ocp/cluster-manifests/auth/kubeconfig
-oc get clusterversion            # must show 4.21.9 Available
+oc get clusterversion            # must show Available (4.21.9 at the time of the rebuild;
+                                 # 4.21.21 as of 2026-07-31)
 ```
 
 **Kubeconfig CA-rotation gotcha (do this first, it bites early):** once the Machine
@@ -79,9 +89,13 @@ original is preserved at `.../auth/kubeconfig_self_signed`.
 
 #### Step 1 — Provide the service-account token to the lookups
 
-The playbook prompts for the token (`vars_prompt: op_bootstrap_sa_token`). Because the
-`community.general.onepassword*` lookups will otherwise try to reach a (dead) Connect
-server, make sure no Connect env vars are set and the SA token is exported:
+The playbook reads the token **only from the `OP_SERVICE_ACCOUNT_TOKEN` environment
+variable** and asserts it is non-empty as its first task. There is no `vars_prompt` — it was
+deliberately removed because it returns empty under ansible-navigator/AAP (no interactive TTY
+wired to the lookup), which makes the lookup fall through to an interactive sign-in and fail
+with `Missing required parameters`. Because the `community.general.onepassword*` lookups will
+otherwise try to reach a (dead) Connect server, make sure no Connect env vars are set and the
+SA token is exported:
 
 ```bash
 unset OP_CONNECT_HOST OP_CONNECT_TOKEN
@@ -90,20 +104,22 @@ export OP_SERVICE_ACCOUNT_TOKEN=$(cat ~/.secrets/op-dr-sa-token)   # ops_... tok
 
 #### Step 2 — Run the bootstrap playbook
 
-Use the **current** playbook — NOT the drifted one:
-
-- USE: `playbooks/openshift/hub-cluster/bootstrap_gitops.yaml`
-- AVOID: `playbooks/openshift/bootstrap_openshift_gitops.yaml` (its `config/` path is
-  stale; it will render old manifests).
+The **only** bootstrap playbook is `playbooks/openshift/bootstrap_gitops.yaml` in
+`igou-ansible`. The `hub-cluster/` subdirectory and the drifted
+`bootstrap_openshift_gitops.yaml` were both **deleted** from the repo — if a doc, memory, or
+AAP template still names either path, it is stale.
 
 ```bash
 cd /workspace/igou-ansible
 git fetch origin main
-ansible-navigator run playbooks/openshift/hub-cluster/bootstrap_gitops.yaml \
+ansible-navigator run playbooks/openshift/bootstrap_gitops.yaml \
   -e target_cluster=ocp \
   -e kubeconfig="$KUBECONFIG"
-# (paste the ocp-bootstrap SA token at the vars_prompt)
+# OP_SERVICE_ACCOUNT_TOKEN must already be exported (Step 1) — there is no prompt.
 ```
+
+`-e target_cluster=<cluster>` is required: it is the play's `hosts:` value (defaults to
+`all`), so omitting it fans the bootstrap out across the whole inventory.
 
 What the play creates, in order:
 1. `openshift-gitops-operator` namespace + OperatorGroup + Subscription (channel
@@ -153,9 +169,11 @@ Both Secrets are annotated `managed-by: ansible` and set `no_log: true`.
 
 #### Step 3 — Let the app-of-apps take over
 
-`root-applications` renders `clusters/ocp/` (Helm values → ~48 `Application`s) and
-orders them by `argocd.argoproj.io/sync-wave`. Foundation is **wave 0**:
-`external-secrets-operator` + `onepassword-connect`. The wave ladder observed:
+`root-applications` renders `clusters/ocp/` (Helm values → `Application`s; 48 at the time of
+the rebuild, 61 as of 2026-07-31) and orders them by `argocd.argoproj.io/sync-wave`.
+Foundation is **wave 0**: `external-secrets-operator` + `onepassword-connect`. The wave
+ladder observed during the 2026-07-03 rebuild — indicative, not current; read
+`clusters/ocp/values.yaml` for today's list:
 
 ```
  0  external-secrets-operator, onepassword-connect
@@ -204,14 +222,17 @@ waves. Transient operator-install degrades (`service-accounts`, `grafana`,
 `ns + OperatorGroup + Subscription` from its component, wait for the CSV to Succeed,
 then hard-refresh.
 
-#### Step 5 — Codify the two live-only ArgoCD CR patches
+#### Step 5 — ArgoCD CR tuning (now codified — verify, don't re-apply)
 
-Both were applied **live** during the rebuild and are **not** in git yet. The ArgoCD CR
-is created by the playbook (NOT GitOps-managed), so re-running the playbook **wipes
-them** — they must be re-applied, and the standing TODO is to fold them into
-`hub-cluster/bootstrap_gitops.yaml`.
+> ✅ **Resolved since this runbook was written.** The repo-server tuning below is committed
+> in `playbooks/openshift/bootstrap_gitops.yaml` (`spec.repo.env` +
+> `spec.repo.resources`), so a bootstrap re-run no longer reverts it — nothing to hand-patch.
+> The PushSecret health-check override was never needed in the end: the Connect token was
+> widened, all seven `service-accounts` PushSecrets are `Synced`, and the app is
+> Synced/Healthy. Both subsections are retained as **diagnosis aids** for if the symptom
+> returns; treat them as history, not as steps.
 
-**Patch A — lenient PushSecret health check (unblocks the wave gate).**
+**Patch A (historical — no longer applied) — lenient PushSecret health check.**
 `service-accounts` (wave 40) went Degraded because 6 PushSecrets returned 403 — the
 Connect token is **read-only** on the `claude` + `ocp-push` vaults, and the operator
 chose to leave outbound 1P publishing broken rather than widen the token. That Degraded
@@ -243,7 +264,7 @@ The health-check body to embed in the ArgoCD CR `spec.resourceHealthChecks`:
 `root-applications` has `prune: true` and treats a not-yet-due app as extraneous, so it
 gets pruned. Open the gate with the health check; do not force-create.)
 
-**Patch B — repo-server performance (cpu=2 / mem=2Gi + `ARGOCD_EXEC_TIMEOUT=3m`).**
+**Patch B (codified in the playbook — do not re-apply) — repo-server performance.**
 Heavy Helm render of `clusters/ocp/` (app-of-apps with `--enable-helm`) exceeded the
 default 90s exec timeout on 1 CPU, producing recurring `Unknown` / `DeadlineExceeded`
 states that stalled the wave march. Fix:
@@ -254,18 +275,24 @@ oc -n openshift-gitops patch argocd openshift-gitops --type=merge -p \
 "env":[{"name":"ARGOCD_EXEC_TIMEOUT","value":"3m"}]}}}'
 ```
 
-The equivalent YAML to fold into the playbook's ArgoCD CR under `spec.repo`
-(the committed playbook currently sets `cpu: "1" / memory: 1Gi` and no env):
+The committed playbook now carries this under `spec.repo` — the live values to expect are
+`cpu: "2"` / `memory: 1Gi` and `ARGOCD_EXEC_TIMEOUT=3m` (the memory limit was left at 1Gi;
+only the CPU limit and the timeout mattered):
 
 ```yaml
 repo:
+  env:
+    - name: KUSTOMIZE_PLUGIN_HOME
+      value: /etc/kustomize/plugin
+    - name: ARGOCD_EXEC_TIMEOUT
+      value: 3m
   resources:
     limits:
       cpu: "2"
-      memory: 2Gi
-  env:
-    - name: ARGOCD_EXEC_TIMEOUT
-      value: 3m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 256Mi
 ```
 
 ### Verification
@@ -286,13 +313,12 @@ oc -n openshift-gitops get applications \
   -o custom-columns=NAME:.metadata.name,SYNC:.status.sync.status,HEALTH:.status.health.status
 #   observed at hand-off: 42 Synced / 43 Healthy of 48
 
-# 4) The two live patches are in effect
+# 4) Repo-server tuning came through from the playbook (no hand-patching needed)
 oc -n openshift-gitops get argocd openshift-gitops \
   -o jsonpath='{.spec.repo.resources.limits}{"  "}{.spec.repo.env[*].name}={.spec.repo.env[*].value}{"\n"}'
-#   {"cpu":"2","memory":"2Gi"}  ARGOCD_EXEC_TIMEOUT=3m
-oc -n openshift-gitops get argocd openshift-gitops \
-  -o jsonpath='{range .spec.resourceHealthChecks[*]}{.group}/{.kind}{"\n"}{end}' | grep PushSecret
-#   external-secrets.io/PushSecret
+#   {"cpu":"2","memory":"1Gi"}  KUSTOMIZE_PLUGIN_HOME ARGOCD_EXEC_TIMEOUT=/etc/kustomize/plugin 3m
+# There is deliberately NO external-secrets.io/PushSecret health check (Step 5). Instead:
+oc -n service-accounts get pushsecrets       # all Synced
 
 # 5) Kubeconfig CA stripped
 grep -c certificate-authority-data "$KUBECONFIG"                  # -> 0
@@ -312,16 +338,18 @@ namespaces that hold restored data.
   (`oc -n openshift-gitops delete application root-applications`; if it hangs on the
   `resources-finalizer.argocd.argoproj.io` finalizer, remove the finalizer), then
   re-run the Step 2 playbook.
-- **After ANY playbook re-run, re-apply Patch A + Patch B** (Step 5) — the re-created
-  ArgoCD CR does not contain them, so the wave gate will re-wedge on `service-accounts`
-  and the repo-server will re-hit `DeadlineExceeded`.
+- **A playbook re-run no longer loses the repo-server tuning** — `cpu: "2"` and
+  `ARGOCD_EXEC_TIMEOUT=3m` are committed in `bootstrap_gitops.yaml` (Step 5). Re-running
+  still overwrites *live* edits you made outside git, so if you hand-tuned the ArgoCD CR,
+  fold the change into the playbook instead.
 - A gated (wave > 40) app that keeps disappearing was **pruned** by `root-applications`,
   not failed — do not re-create it by hand; open its wave gate instead.
 
 ### Gotchas & pitfalls (from this incident)
 
-1. **Right playbook.** Use `playbooks/openshift/hub-cluster/bootstrap_gitops.yaml`, NOT
-   the drifted `playbooks/openshift/bootstrap_openshift_gitops.yaml`.
+1. **Right playbook.** `playbooks/openshift/bootstrap_gitops.yaml` with
+   `-e target_cluster=<cluster>`. The old `hub-cluster/bootstrap_gitops.yaml` and
+   `bootstrap_openshift_gitops.yaml` paths no longer exist — both were deleted.
 2. **Connect JWT field.** The real Connect JWT is in the item's `credential` field; the
    `token` field is an 83-char stub. Wrong field = Connect never authenticates.
 3. **`onepassword_doc` bytes.** Returns bytes → `data:` + `| b64encode`, never
@@ -342,9 +370,9 @@ namespaces that hold restored data.
 8. **repo-server perf.** Default 90s / 1 CPU is too small for the Helm app-of-apps
    render → `Unknown` / `DeadlineExceeded` stalls. Bump `cpu: 2 / memory: 2Gi` and
    `ARGOCD_EXEC_TIMEOUT=3m`.
-9. **Live-only patches are ephemeral.** The ArgoCD CR is playbook-managed, not
-   GitOps-managed — Patch A + Patch B are lost on any re-run. Codify them into
-   `bootstrap_gitops.yaml`; until then, re-apply after every run.
+9. **The ArgoCD CR is playbook-managed, not GitOps-managed.** Any live edit is lost on the
+   next run, so tuning must land in `bootstrap_gitops.yaml`. The 2026-07 repo-server tuning
+   has been folded in; the PushSecret health check was dropped as unnecessary (Step 5).
 10. **Stale local checkouts.** `/workspace/igou-openshift` (and `igou-ansible`) local
     HEAD lags origin by 100+ commits. `oc kustomize` / `kustomize build` from a stale
     checkout renders OLD manifests (e.g. CNPG `initdb` instead of `recovery`). Always

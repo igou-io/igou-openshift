@@ -45,10 +45,15 @@ zvol. That is exactly why Step 1 (snapshot + clone) comes first.
   (host is `truenas.igou.systems`, **not** `igounas.igou.systems` which is an nginx VIP and rejects
   the key). Remote shell is **zsh**, sudo is NOPASSWD. Long-running ZFS jobs: `midclt call --job ...`
   (double-dash `--job`; `-job` errors).
-- **Backups / catalog on the devcontainer:**
-  - `/workspace/backups/ocp-pv-catalog-20260703.txt` — full `pool/k8s/vols/pvc-<uuid> | size | mtime | fs-type` list.
-  - `/workspace/backups/hermes/hermes-state-20260703.tar.zst` (11.9G raw = `~/.hermes` contents, xfs-level tar).
-  - `/workspace/backups/hermes/hermes-home-root-20260703.tar.zst` (hermes `/home` non-`.hermes`).
+- **PVC → zvol catalog.** ⚠️ `/workspace/backups/` **no longer exists** (verified
+  2026-07-31) — the 2026-07-03 `ocp-pv-catalog-20260703.txt` and the hermes `.tar.zst`
+  archives are gone. The replacement is the nightly etcd snapshot:
+  - Live cluster: `oc get pv -o custom-columns=NAME:.metadata.name,CLAIM:.spec.claimRef.namespace,PVC:.spec.claimRef.name,HANDLE:.spec.csi.volumeHandle`.
+  - Cluster gone: mine a snapshot from `s3://etcd-backups/<z-stream>/<ts>/` per
+    `etcd-backup-restore.md` ("Mining a snapshot when the cluster is gone"). The most
+    recent pre-mined catalog is `s3://etcd-backups/catalogs/pv-zvol-catalog-20260731.tsv`
+    (a prefix the 3-day retention prune never touches).
+  - Last resort, no snapshot: fingerprint orphaned zvols by content (Step 2 below).
 - **`virtctl`** on PATH (for the KubeVirt-VM case).
 - **democratic-csi layout:** managed volumes live at `<pool>/k8s/vols/pvc-<uuid>` where pool ∈
   `ssd` / `fast` / `cold`. Default StorageClass is `freenas-nvmeof-ssd-csi`. democratic-csi tags each
@@ -107,7 +112,8 @@ Fingerprint them by mounting each read-only and listing the top level. This sess
    partition ro, `ls`.
 4. Records size + mtime + top-level directory names as the fingerprint, then unmounts.
 
-Confirmed mappings from this incident (full list: `/workspace/backups/ocp-pv-catalog-20260703.txt`):
+Confirmed mappings from this incident (the `/workspace/backups/ocp-pv-catalog-20260703.txt`
+full list no longer exists — mine the etcd snapshot instead, see Prerequisites):
 
 | App / data | Old zvol | FS | Fingerprint (top-level) |
 |---|---|---|---|
@@ -155,6 +161,12 @@ done **inside the guest**, not with a temp pod.
    ```
 
 4. **Stream + extract the backup, EXCLUDING the regenerable `./containers` podman storage.**
+
+   > ⚠️ The `/workspace/backups/hermes/*.tar.zst` paths below are the **2026-07-03 incident's**
+   > archives and **no longer exist**. Substitute whatever archive you produced this time —
+   > `zfs-snapshot-rescue.md` is how you make one from a zvol clone. The commands are otherwise
+   > verbatim-correct.
+
    The tar is xfs *contents* (not a raw image), so extract into the mounted fs. `./containers` is
    ~10.5G of podman image storage the agent re-pulls on convergence — excluding it is what let the
    transfer fit past the port-forward's size limit (see next note). ~1.4G of essential state was

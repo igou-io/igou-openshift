@@ -73,14 +73,17 @@ operator-driven step.
   user's authorized key (non-secret). The private key is used for the post-boot
   restore SSH session.
 
-- **State backup present** on the devcontainer:
-  ```
-  /workspace/backups/hermes/hermes-state-20260703.tar.zst      # ~4.9G file, 11.9G raw = ~/.hermes (auth.json/config.yaml/SOUL.md/…)
-  /workspace/backups/hermes/hermes-home-root-20260703.tar.zst  # ~4.9G file, 6.8G raw = /home/hermes non-.hermes (see note)
-  ```
-  `zstd -t` the archive first. (Original source was TrueNAS zvol clones
-  `ssd/k8s/rescue-hermes-{root,state}` snapshotted at `@rescue-20260703`; the tars
-  are the extracted, verified copies.)
+- **A state archive to restore from.** ⚠️ The 2026-07-03 tarballs this runbook was written
+  against — `/workspace/backups/hermes/hermes-state-20260703.tar.zst` and
+  `hermes-home-root-20260703.tar.zst` — **no longer exist** (`/workspace/backups/` is gone,
+  verified 2026-07-31). Before starting, produce or locate a current archive:
+  - Preferred: a **detached VolumeSnapshot** of `hermes-state`
+    (`freenas-nvmeof-ssd-csi-detached`, lands on the cold pool) — restore by creating the
+    PVC with `dataSource`, no tar step at all. See "Volume snapshots" in the repo AGENTS.md.
+  - Otherwise: snapshot + clone the `hermes-state` zvol on TrueNAS and stream it off per
+    `zfs-snapshot-rescue.md`, then `zstd -t` the result before trusting it.
+
+  The step-4 commands below still name the 2026-07-03 paths; substitute your archive.
 
 - `virtctl` on PATH (mise) for the port-forward SSH path.
 

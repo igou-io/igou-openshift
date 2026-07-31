@@ -42,12 +42,16 @@ recoverable by this procedure.
   `ssd`, `fast`, and `cold` pools. While the cluster is alive, get the handle from
   `oc get pv <name> -o jsonpath='{.spec.csi.volumeHandle}'`. After a disaster, fingerprint
   orphaned zvols by mounting them ro and inspecting content (the incident's `/tmp/idvol.sh`
-  helper looped `blkid`/`file -s`/`ls` over `/dev/zvol/<pool>/k8s/vols/*`). A catalog of the
-  survivors is at `/workspace/backups/ocp-pv-catalog-20260703.txt`
-  (`<pool>/k8s/vols/pvc-… | size mtime | TYPE=/PTTYPE=`).
-- **Durable landing space for the stream:** the devcontainer's `/workspace/backups/` — it is
-  bind-mounted from the host and **survives container rebuilds**. Do NOT stage multi-GB
-  backups in `/tmp` or anywhere on the container filesystem (ephemeral, lost on rebuild).
+  helper looped `blkid`/`file -s`/`ls` over `/dev/zvol/<pool>/k8s/vols/*`). The 2026-07-03
+  catalog `/workspace/backups/ocp-pv-catalog-20260703.txt` **no longer exists** (verified
+  2026-07-31); the current source of a PV→zvol map after a total loss is the nightly etcd
+  snapshot — mine it per `etcd-backup-restore.md`, or use the pre-mined
+  `s3://etcd-backups/catalogs/pv-zvol-catalog-20260731.tsv`.
+- **Landing space for the stream:** `/workspace` is a host bind-mount and survives container
+  rebuilds, but `/workspace/backups/` is **not pre-created** — `mkdir -p` it yourself, and
+  treat anything left there as scratch, not as a backup of record. Do NOT stage multi-GB
+  archives in `/tmp` or elsewhere on the container filesystem (ephemeral, lost on rebuild).
+  For anything you need to keep, push it to rustfs-cold.
 - `zstd` available on the devcontainer (it is), and enough free space on `/workspace`.
 
 Known mapping from the incident (for reference):
@@ -166,17 +170,20 @@ zstd -t /workspace/backups/hermes/hermes-state-20260703.tar.zst
 zstd -t /workspace/backups/hermes/hermes-home-root-20260703.tar.zst
 ```
 
-### Where the rescue artifacts live
+### Where the 2026-07-03 rescue artifacts went (historical)
 
-- **Clones (on TrueNAS, still present):** `ssd/k8s/rescue-hermes-root` (→ `/dev/zd576`),
+> ⚠️ Everything the incident left on the devcontainer is **gone** — `/workspace/backups/`
+> does not exist (verified 2026-07-31). Do not plan a restore around it. The TrueNAS-side
+> clones/snapshots may or may not still be present; check before assuming.
+
+- **Clones (on TrueNAS):** `ssd/k8s/rescue-hermes-root` (→ `/dev/zd576`),
   `ssd/k8s/rescue-hermes-state` (→ `/dev/zd624`).
 - **Snapshots (on TrueNAS):** `…/pvc-bf4dc3cf-…@rescue-20260703`,
   `…/pvc-2d19e419-…@rescue-20260703` (created 2026-07-03 13:57).
 - **Read-only mounts (on TrueNAS):** `/mnt/rescue-root` (loop1), `/mnt/rescue-state` (zd624).
-- **Off-box archives (devcontainer, durable):**
-  `/workspace/backups/hermes/hermes-home-root-20260703.tar.zst`,
-  `/workspace/backups/hermes/hermes-state-20260703.tar.zst`.
-- **Orphan-zvol catalog:** `/workspace/backups/ocp-pv-catalog-20260703.txt`.
+- **Off-box archives:** were at `/workspace/backups/hermes/*.tar.zst` — **deleted**.
+- **Orphan-zvol catalog:** was `/workspace/backups/ocp-pv-catalog-20260703.txt` —
+  **deleted**; use the etcd-snapshot mining path instead (see Prerequisites).
 
 ### Verification
 
@@ -244,9 +251,10 @@ sudo zfs destroy ssd/k8s/vols/pvc-2d19e419-…@rescue-20260703
    not `igounas.igou.systems` (nginx VIP rejects the key). Remote shell is zsh.
 6. **Devcontainer ssh-agent wedges** — always `SSH_AUTH_SOCK= … -o IdentitiesOnly=yes
    -i ~/.ssh/id_ed25519`.
-7. **Stage backups on `/workspace/backups` only** — it is a durable host bind-mount. `/tmp`
-   and the container FS are ephemeral (lost on rebuild); a multi-GB archive there would
-   vanish exactly when you need it.
+7. **Stage archives under `/workspace` (a host bind-mount), never `/tmp` or the container
+   FS** — those are ephemeral and a multi-GB archive there vanishes exactly when you need
+   it. `mkdir -p /workspace/backups/...` first; the directory is not pre-created, and it is
+   scratch — nothing there is backed up. Push anything you need to keep to rustfs-cold.
 8. **`--numeric-owner` on tar** — guest uids (hermes 1001) aren't in TrueNAS' passwd; without
    it you lose ownership on restore.
 9. **Prefer tar-of-contents over `dd` of the block device** for the general case — it is
