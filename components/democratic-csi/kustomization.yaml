@@ -77,6 +77,7 @@ helmCharts:
       allowVolumeExpansion: true
       parameters:
         fsType: ext4
+        detachedVolumesFromSnapshots: true
       mountOptions: []
       secrets:
         provisioner-secret:
@@ -164,6 +165,7 @@ helmCharts:
       allowVolumeExpansion: true
       parameters:
         fsType: ext4
+        detachedVolumesFromSnapshots: true
       mountOptions: []
       secrets:
         provisioner-secret:
@@ -324,6 +326,7 @@ helmCharts:
       allowVolumeExpansion: true
       parameters:
         fsType: nfs
+        detachedVolumesFromSnapshots: true
       mountOptions:
         - noatime
         - nfsvers=4
@@ -410,6 +413,7 @@ helmCharts:
       allowVolumeExpansion: true
       parameters:
         fsType: nfs
+        detachedVolumesFromSnapshots: true
       mountOptions:
         - noatime
         - nfsvers=4
