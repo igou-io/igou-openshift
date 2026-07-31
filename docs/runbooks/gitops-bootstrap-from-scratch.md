@@ -381,8 +381,10 @@ namespaces that hold restored data.
    wave > 40. **2026-07-03 symptom only** — the token was fixed and the PushSecrets are
    Synced; the health-check override discussed at the time was never adopted (Step 5).
 8. **repo-server perf.** Default 90s / 1 CPU is too small for the Helm app-of-apps
-   render → `Unknown` / `DeadlineExceeded` stalls. Bump `cpu: 2 / memory: 2Gi` and
-   `ARGOCD_EXEC_TIMEOUT=3m`.
+   render → `Unknown` / `DeadlineExceeded` stalls. The fix (`cpu: 2 / memory: 2Gi`,
+   `ARGOCD_EXEC_TIMEOUT=3m`) is already codified in `bootstrap_gitops.yaml`'s ArgoCD
+   CR — nothing to patch by hand; if you see these stalls, verify the playbook's
+   tuning actually applied (see Gotcha 9).
 9. **Hand-patching the ArgoCD CR is ephemeral — so don't.** The CR is playbook-managed,
    not GitOps-managed, and a re-run recreates it. The repo-server tuning that used to be
    lost this way is now in `bootstrap_gitops.yaml`; anything else you patch live must be

@@ -286,8 +286,9 @@ Two distinct "reverts" apply here — do not confuse them:
    silently re-triggering a recovery from a now-stale backup. This was tracked as an explicit
    remaining item after #389.
 
-2. **Keep the archiving `serverName` at `<db>-r20260704` — do NOT roll it back.** That new
-   prefix is now the cluster's live WAL timeline. Reverting it to the base cluster name would
+2. **Keep the archiving `serverName` at its current recovery value (`<db>-r20260704`
+   today; `<db>-r<date>` after any future recovery) — do NOT roll it back.** That
+   prefix is the cluster's live WAL timeline. Reverting it to the base cluster name would
    re-collide with the old archive and re-trigger `Expected empty archive`. Leave the
    `spec.plugins[].parameters.serverName` at the recovery value permanently. (When you next
    need to restore, the recover-from `externalClusters` serverName is what changes, not this.)
