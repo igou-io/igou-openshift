@@ -224,7 +224,7 @@ spec:
                     rc put "${d}${KUBERESOURCES}" "${P}/${KUBERESOURCES}"
                     rc put "${d}${SNAPSHOT}" "${P}/${SNAPSHOT}"
                     rc put "${d}SHA256SUMS" "${P}/SHA256SUMS"
-                    R=$(rc object stat --json "${P}/${SNAPSHOT}" | sed -n 's/.*"size":\([0-9]*\).*/\1/p')
+                    R=$(rc object stat --json "${P}/${SNAPSHOT}" | sed -n 's/.*"size_bytes": *\([0-9]*\).*/\1/p')
                     [ "${R}" = "${SNAPSHOT_BYTES}" ] || { echo "FATAL: remote size ${R} != local ${SNAPSHOT_BYTES}"; exit 1; }
                     rc put "${d}backup.env" "${P}/COMPLETE"
                     touch "${d}.uploaded"
