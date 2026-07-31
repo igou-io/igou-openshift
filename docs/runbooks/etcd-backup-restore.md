@@ -24,8 +24,9 @@ gap #1.
   `/var/backup/etcd/` — same-disk convenience for quick rollbacks, **not**
   a backup.
 - Retention: strict 3-day cap, pruned by the job on successful nights.
-- Alerts: `KubeJobFailed` (a run failed), `EtcdBackupStale` (no success
-  in 36h).
+- Alerts: `EtcdBackupFailed` (a run failed), `EtcdBackupStale` (no
+  success in 36h) — both in the `etcd-backup-stale` AlertingRule in
+  openshift-monitoring.
 - **A snapshot contains every cluster Secret in plaintext.** Treat the
   bucket and any downloaded copy as secret material; delete local copies
   after use.
