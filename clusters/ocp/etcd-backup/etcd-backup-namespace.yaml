@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: etcd-backup
+  annotations:
+    openshift.io/display-name: etcd backup
+    argocd.argoproj.io/sync-wave: '0'
+  labels:
+    # The backup pod is privileged + hostPath / + hostNetwork/hostPID —
+    # PSA restricted (the 4.19+ default for new namespaces) would reject
+    # it. Label-sync pinned off so the SCC label-syncer doesn't fight
+    # ArgoCD over these labels.
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged
+    security.openshift.io/scc.podSecurityLabelSync: "false"
