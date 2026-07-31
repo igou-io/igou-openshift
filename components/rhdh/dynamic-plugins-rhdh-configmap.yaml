@@ -20,6 +20,10 @@ data:
       # the software catalog (config in app-config-rhdh).
       - package: ./dynamic-plugins/dist/backstage-community-plugin-catalog-backend-module-keycloak-dynamic
         disabled: false
+      # http:backstage:request scaffolder action — drives the Forgejo
+      # template-generate API through the /forgejo backend proxy.
+      - package: ./dynamic-plugins/dist/roadiehq-scaffolder-backend-module-http-request-dynamic
+        disabled: false
       # RBAC frontend/backend (permission framework config in app-config-rhdh).
       - package: ./dynamic-plugins/dist/backstage-community-plugin-rbac
         disabled: false

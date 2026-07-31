@@ -1,0 +1,17 @@
+---
+# devspaces-operator only supports AllNamespaces, so it subscribes in
+# openshift-operators (global OperatorGroup); the CheCluster operand lives in
+# openshift-devspaces.
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: devspaces
+  namespace: openshift-operators
+  annotations:
+    argocd.argoproj.io/sync-wave: '9'
+spec:
+  channel: stable
+  installPlanApproval: Automatic
+  name: devspaces
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
