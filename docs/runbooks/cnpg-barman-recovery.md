@@ -8,6 +8,17 @@
 > [igou-openshift#387](https://github.com/igou-io/igou-openshift/pull/387) (recovery bootstrap)
 > and [#388](https://github.com/igou-io/igou-openshift/pull/388) (the serverName fix).
 
+> 🚨 **Read the serverName map before you copy any YAML below.** The READ-side
+> `serverName` is **not** the cluster name. Since the 2026-07-03 DR the bare
+> `<cluster>` prefixes are a frozen 2026-07-02 archive; recovering from them
+> silently restores month-old data with no error. The authoritative map is
+> [`database-total-loss-recovery.md`](database-total-loss-recovery.md) §3 —
+> today: `forgejo-pg-r20260704`, `quay-pg-r20260704`, `rhdh-pg-r20260704`,
+> `keycloak-pg`. The ground truth is `spec.plugins[0].parameters.serverName` in
+> the committed cluster manifest. If git is unavailable, list the bucket and
+> take the per-cluster server prefix holding the **newest** WAL objects
+> (`s3://cnpg-backups/<cluster>/<serverName>/wals/`).
+
 ### Purpose
 
 Rebuild a CNPG `Cluster`'s data from its Barman Cloud backup (base backup + WAL replay)
@@ -87,13 +98,19 @@ a different (and destructive) operation. This runbook is for rebuild-from-nothin
    SSH_AUTH_SOCK= git fetch origin main
    ```
 
-Namespace / cluster / database map for this cluster (for reference):
+Namespace / cluster / database map for this cluster (for reference). The last
+column is the READ-side `serverName` — the one value that changes per recovery;
+re-check it against the manifest before you use it:
 
-| ArgoCD source path                          | Namespace         | Cluster      | Database    |
-| ------------------------------------------- | ----------------- | ------------ | ----------- |
-| `applications/forgejo/forgejo-pg-cluster.yaml` | `forgejo`         | `forgejo-pg` | `forgejo`   |
-| `components/rhdh/rhdh-pg-cluster.yaml`          | `rhdh`            | `rhdh-pg`    | `backstage` |
-| `components/quay-operator/quay-pg-cluster.yaml` | `quay-enterprise` | `quay-pg`    | `quay`      |
+| ArgoCD source path                          | Namespace         | Cluster      | Database    | READ `serverName` |
+| ------------------------------------------- | ----------------- | ------------ | ----------- | ----------------- |
+| `applications/forgejo/forgejo-pg-cluster.yaml` | `forgejo`         | `forgejo-pg` | `forgejo`   | `forgejo-pg-r20260704` |
+| `components/rhdh/rhdh-pg-cluster.yaml`          | `rhdh`            | `rhdh-pg`    | `backstage` | `rhdh-pg-r20260704` |
+| `components/quay-operator/quay-pg-cluster.yaml` | `quay-enterprise` | `quay-pg`    | `quay`      | `quay-pg-r20260704` |
+| `components/rhbk/keycloak-pg-cluster.yaml`      | `keycloak`        | `keycloak-pg`| `keycloak`  | `keycloak-pg` (created after the DR — still on its bare prefix) |
+
+`applications/temporalio/` is dormant (not referenced by `clusters/ocp/values.yaml`)
+and deploys no database — skip it.
 
 ### Step-by-step
 
@@ -121,12 +138,15 @@ with a `recovery` bootstrap plus an `externalClusters` entry that names the Barm
       plugin:
         name: barman-cloud.cloudnative-pg.io
         parameters:
-          barmanObjectName: forgejo-pg-backup   # the ObjectStore CR name
-          serverName: forgejo-pg                # READ side: the ORIGINAL (pre-disaster) serverName
+          barmanObjectName: forgejo-pg-backup      # the ObjectStore CR name
+          serverName: forgejo-pg-r20260704         # READ side: the serverName the cluster was ARCHIVING to at the time of loss
 ```
 
-`serverName: forgejo-pg` here is the **read/recover** side — it tells CNPG which historical
-server's base+WAL to replay (the pre-disaster archive, which defaults to the cluster name).
+The READ side tells CNPG which historical server's base+WAL to replay. It is the value
+currently in `spec.plugins[0].parameters.serverName` of the committed manifest — **not**
+the cluster name. `forgejo-pg` (bare) is the pre-2026-07-03 archive, frozen at 2026-07-02;
+recovering from it comes up healthy with month-old data. See
+[`database-total-loss-recovery.md`](database-total-loss-recovery.md) §3.
 
 #### 2. CRITICAL — archive the recovered cluster to a NEW serverName
 
@@ -150,11 +170,16 @@ name — the convention used here is `<db>-r<YYYYMMDD>`:
       isWALArchiver: true
       parameters:
         barmanObjectName: forgejo-pg-backup
-        serverName: forgejo-pg-r20260704       # WRITE side: NEW, empty prefix for the post-recovery timeline
+        serverName: forgejo-pg-r20260731       # WRITE side: NEW, empty prefix — <db>-r<TODAY>, never a prefix already in use
 ```
 
-Net effect: recover **from** `s3://cnpg-backups/forgejo-pg/forgejo-pg/…` (old, populated),
-archive **to** `s3://cnpg-backups/forgejo-pg/forgejo-pg-r20260704/…` (new, empty). The
+Date the WRITE side **today**. Do not reuse `forgejo-pg-r20260704`: that is the *live*
+prefix these clusters have been archiving to since the 2026-07-03 DR, so archiving into it
+trips `Expected empty archive` all over again.
+
+Net effect (with a recovery run on 2026-07-31): recover **from**
+`s3://cnpg-backups/forgejo-pg/forgejo-pg-r20260704/…` (the live, populated timeline),
+archive **to** `s3://cnpg-backups/forgejo-pg/forgejo-pg-r20260731/…` (new, empty). The
 ObjectStore `destinationPath` is unchanged.
 
 #### 3. Apply the change
