@@ -32,6 +32,10 @@ network:
 
 auth:
   enabled: true
+  # dev1 (and any other non-admin htpasswd persona) must not create arbitrary
+  # projects; their workspaces are pre-provisioned with scoped RBAC instead.
+  # NOTE: also affects ava — plain users lose `oc new-project`.
+  disableSelfProvisioning: true
   htpasswdDisplayName: igou
   globalAdmins:
     - igou
