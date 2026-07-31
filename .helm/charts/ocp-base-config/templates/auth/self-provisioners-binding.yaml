@@ -1,0 +1,17 @@
+{{- if and .Values.auth.enabled .Values.auth.disableSelfProvisioning -}}
+# Takes over the default self-provisioners binding with an empty subject list
+# so plain authenticated users (htpasswd personas like dev1) cannot create
+# arbitrary projects. autoupdate=false stops the cluster from restoring the
+# default subjects on API-server restart. globalAdmins keep cluster-admin.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: self-provisioners
+  annotations:
+    rbac.authorization.kubernetes.io/autoupdate: "false"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: self-provisioner
+subjects: []
+{{ end }}
