@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: drill-data
+  namespace: dr-restore-drill
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: freenas-nvmeof-ssd-csi
+  resources:
+    requests:
+      storage: 1Gi
