@@ -17,6 +17,33 @@ persistent data usually still lives on TrueNAS as democratic-csi zvols. This run
    (`hermes-state`), a **filesystem PVC for a normal pod** (jellyfin pattern), byte-exact `dd`,
    and low-copy **static import** of the zvol as a new PV.
 
+### Restore by NAME first (primary path since 2026-08-01)
+
+Before any of the archaeology below, check whether the volume is covered by
+the **name-addressed protection** rolled out for DR gap #2 — if it is, the
+restore is one AAP job, no UUID hunting:
+
+- Every democratic-csi volume carries `k8s:cluster` / `k8s:pvc_namespace` /
+  `k8s:pvc_name` ZFS properties (stamped at provision time). The 13 volumes
+  in `igou-inventory group_vars/truenas.yml` → `truenas_k8s_protected_volumes`
+  get a **daily snapshot** (7d) and a nightly **replica on the cold pool**
+  (`cold/backups/k8s/<pvc-uuid>`, 30d, properties preserved — replicas
+  self-describe even if the ssd pool is lost).
+- Restore flow (e2e-rehearsed 2026-08-01, checksum-verified): let GitOps
+  recreate the PVC (it is auto-stamped with the same name) → scale the app
+  to zero → launch AAP JT **`truenas_restore_volume`** with
+  `volume_cluster` / `volume_namespace` / `volume_pvc` /
+  `target_dataset=<the fresh PVC's dataset>` → scale up. The play resolves
+  the newest snapshot on the live source, falls back to the cold replica,
+  and refuses ambiguous matches (a Released-PV zvol awaiting destroy can
+  briefly hold the same name — wait for it to clear).
+- The same 13 volumes are patched `reclaimPolicy: Retain` (live-only state —
+  a rebuilt cluster reverts to Delete until re-patched; the allow-list is
+  the source of truth for which PVs get the patch).
+
+Everything below remains the fallback for volumes outside the allow-list,
+or when the cluster/etcd is gone entirely.
+
 ### When to use
 
 - A cluster rebuild left blank/fresh PVCs but the old data is intact on TrueNAS (this incident).
