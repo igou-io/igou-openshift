@@ -1,0 +1,18 @@
+---
+# Velero's snapshot class for the nvmeof-ssd driver: Velero selects the
+# one class per CSI driver carrying the velero.io/csi-volumesnapshot-class
+# label (nothing else in the cluster may carry it for this driver). Local
+# attached snapshot on purpose — the data mover reads it, pushes the data
+# to S3 via kopia, then deletes the VolumeSnapshot, so Delete + local
+# leaves no long-lived ZFS state behind. The -detached classes stay out of
+# the Velero path.
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: freenas-nvmeof-ssd-csi-velero
+  labels:
+    velero.io/csi-volumesnapshot-class: "true"
+driver: org.democratic-csi.nvmeof-ssd
+deletionPolicy: Delete
+parameters:
+  detachedSnapshots: "false"

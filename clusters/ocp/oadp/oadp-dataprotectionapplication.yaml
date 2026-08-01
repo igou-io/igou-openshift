@@ -1,0 +1,51 @@
+---
+# defaultSnapshotMoveData is the core design decision: every backup CSI-
+# snapshots its PVCs, then the node-agent kopia-moves the data into the S3
+# bucket and deletes the snapshot. Backups therefore leave the TrueNAS
+# chassis as self-contained kopia repos — no dependency on ZFS snapshots
+# surviving (the SPOF the etcd-backup README flags).
+apiVersion: oadp.openshift.io/v1alpha1
+kind: DataProtectionApplication
+metadata:
+  name: oadp
+  namespace: openshift-adp
+  annotations:
+    argocd.argoproj.io/sync-wave: '11'
+spec:
+  configuration:
+    velero:
+      defaultPlugins:
+        - openshift
+        - aws
+        - csi
+        - kubevirt
+      defaultSnapshotMoveData: true
+    nodeAgent:
+      enable: true
+      uploaderType: kopia
+      podConfig:
+        tolerations:
+          - effect: NoSchedule
+            key: node-role.kubernetes.io/master
+          - effect: NoSchedule
+            key: workload
+            operator: Exists
+  backupLocations:
+    - name: default
+      velero:
+        provider: aws
+        default: true
+        credential:
+          name: cloud-credentials
+          key: cloud
+        objectStorage:
+          bucket: velero
+          # Per-cluster prefix so rk8s Velero can share the bucket later.
+          prefix: ocp
+        config:
+          region: us-east-1
+          s3Url: https://truenas.igou.systems:20292
+          s3ForcePathStyle: "true"
+          # The AWS SDK's default CRC32 checksum trailer breaks non-AWS S3
+          # implementations; empty disables it (house RustFS requirement).
+          checksumAlgorithm: ""

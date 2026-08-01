@@ -3,6 +3,9 @@ kind: PersistentVolumeClaim
 metadata:
   name: jellyfin-media
   namespace: jellyfin
+  labels:
+    # See jellyfin-media-nfs-pv.yaml — excluded from OADP backups.
+    velero.io/exclude-from-backup: "true"
 spec:
   accessModes:
     - ReadOnlyMany

@@ -3,11 +3,14 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
   name: redhat-oadp-operator
-  namespace: redhat-oadp-operator
+  namespace: openshift-adp
   annotations:
     argocd.argoproj.io/sync-wave: '9'
 spec:
-  channel: stable
+  # OADP 1.5 is the 4.21-aligned track (Red Hat ships one OADP version per
+  # OCP minor from 2025 on); 1.6 targets 4.22+ and drops the restic
+  # uploader entirely.
+  channel: stable-1.5
   installPlanApproval: Automatic
   name: redhat-oadp-operator
   source: redhat-operators

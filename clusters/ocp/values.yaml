@@ -224,6 +224,21 @@ applications:
         jsonPointers:
           - /spec/replicas
 
+  # OADP/Velero: scheduled app-consistent backups (namespace objects + PV
+  # data via CSI snapshot -> kopia data mover) to rustfs-cold. DR P1 from
+  # the 2026-07-03 post-mortem. Wave 12: needs ESO (0) and the
+  # democratic-csi drivers (7); grouped with cluster-operations after
+  # etcd-backup (11). IgnoreExtraneous: Velero mints Backup/Restore/
+  # PodVolume CRs at runtime.
+  oadp:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '12'
+    destination:
+      namespace: openshift-adp
+    source:
+      path: clusters/ocp/oadp
+
   cluster-api-autoscaler:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous

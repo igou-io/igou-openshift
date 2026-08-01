@@ -1,0 +1,21 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# DPA and Schedules use CRDs the operator itself installs at sync time.
+commonAnnotations:
+  argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+resources:
+  - ../../../components/redhat-oadp-operator
+  - velero-cloud-credentials-externalsecret.yaml
+  - freenas-nvmeof-ssd-csi-velero-volumesnapshotclass.yaml
+  - freenas-nvmeof-fast-csi-velero-volumesnapshotclass.yaml
+  - freenas-nvmeof-cold-csi-velero-volumesnapshotclass.yaml
+  - oadp-dataprotectionapplication.yaml
+  - daily-apps-schedule.yaml
+  - daily-platform-schedule.yaml
+  - weekly-heavy-schedule.yaml
+  - default-deny-networkpolicy.yaml
+  - allow-oadp-egress-networkpolicy.yaml
+  - allow-monitoring-ingress-networkpolicy.yaml
+  - oadp-velero-servicemonitor.yaml
+  - oadp-backup-alerts-prometheusrule.yaml

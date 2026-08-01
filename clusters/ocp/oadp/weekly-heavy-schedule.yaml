@@ -1,0 +1,17 @@
+---
+# Large, slow-changing volumes: weekly is enough and keeps the daily
+# window short. Saturday 06:00 UTC = 02:00 ET.
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: weekly-heavy
+  namespace: openshift-adp
+  annotations:
+    argocd.argoproj.io/sync-wave: '12'
+spec:
+  schedule: "0 6 * * 6"
+  template:
+    includedNamespaces:
+      - windows-images
+    snapshotMoveData: true
+    ttl: 2160h0m0s
