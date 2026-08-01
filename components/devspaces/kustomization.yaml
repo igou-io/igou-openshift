@@ -6,6 +6,11 @@ resources:
   - devspaces-operatorgroup.yaml
   - devspaces-subscription.yaml
   - devspaces-checluster.yaml
+helmGlobals:
+  # In-tree chart home (kustomize load restrictions forbid ../../.helm from a
+  # plain Kustomization). Named `chart/` — singular — because `make clean`
+  # deletes dirs named `charts/` (kustomize pull caches).
+  chartHome: chart
 helmCharts:
   # Per-user devspace namespace + scoped molecule/KubeVirt RBAC.
   # Onboard a persona by adding their username here (plus their htpasswd/
