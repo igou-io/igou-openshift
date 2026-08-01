@@ -1,0 +1,58 @@
+{{- range .Values.users }}
+---
+# Pre-provisioned Dev Spaces user namespace (Che workspaces-namespace
+# adoption contract) so the molecule RBAC below exists before first login.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ . }}-devspaces
+  labels:
+    app.kubernetes.io/part-of: che.eclipse.org
+    app.kubernetes.io/component: workspaces-namespace
+  annotations:
+    che.eclipse.org/username: {{ . }}
+    argocd.argoproj.io/sync-wave: '10'
+---
+# Least-privilege grant for the molecule_provisioners kubevirt backend in
+# PodIP mode: VMs/VMIs in THIS namespace only. No services (no NodePort in
+# PodIP mode), no cluster-scoped node read (no InternalIP lookup).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: molecule-kubevirt
+  namespace: {{ . }}-devspaces
+  annotations:
+    argocd.argoproj.io/sync-wave: '11'
+rules:
+  - apiGroups:
+      - kubevirt.io
+    resources:
+      - virtualmachines
+      - virtualmachineinstances
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+---
+# Bound to the namespace's ServiceAccount group (workspace SA names are
+# DevWorkspace-managed) — single-user namespace, so this stays scoped.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: molecule-kubevirt
+  namespace: {{ . }}-devspaces
+  annotations:
+    argocd.argoproj.io/sync-wave: '11'
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: molecule-kubevirt
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: system:serviceaccounts:{{ . }}-devspaces
+{{- end }}
