@@ -39,12 +39,33 @@ First executed end-to-end 2026-08-01.
    creates/updates but does not prune), destroy the drill replica under
    `cold/backups/k8s/`, and `oc delete -k` the workload.
 
-## Known sharp edges (by design / discovered in the first run)
+## Findings from the first full run (2026-08-01) — read before drilling
 
-- While the destroyed volume's name is still in the allow-list, the
-  weekly converge FAILS its resolution assert (loud, intentional) —
-  do step 6's allow-list removal promptly.
-- Allow-list removals do not prune the per-volume snapshot task on
-  TrueNAS; delete it manually (step 6).
-- If the old PV lingers `Released` (destroy retry), the restore play
-  refuses the ambiguous name until the zvol clears.
+1. **`sync` before any manual snapshot.** Round 1 snapshotted seconds
+   after unsynced writes: the blocks landed but ext4's metadata was still
+   in the guest page cache — every restored file existed with ZERO bytes.
+   Crash-consistency is real: for a meaningful manual backup run
+   `sync` in the pod (or quiesce the app) before firing the snapshot
+   task. The nightly 00:20 cycle mostly catches quiesced apps, but the
+   same physics applies.
+2. **Protected volumes are delete-blocked.** democratic-csi refuses
+   `DeleteVolume` while snapshots exist (`filesystem has dependent
+   snapshots`) — deleting a protected PVC leaves the PV `Released` and
+   retrying until the snapshots age out (7d) or are destroyed by hand.
+   Accidental extra safety; plan teardowns accordingly.
+3. **Restored volumes carry the received snapshot** (`zfs recv`
+   transfers it). Free local rollback point — and the same
+   delete-block applies until it is removed.
+4. **Stale replicas accumulate.** After a destroy+recreate cycle the old
+   replica still self-describes under the same name; the restore play's
+   ambiguity guard refuses (proven live) until the obsolete replica is
+   pruned (`zfs destroy -r cold/backups/k8s/<old-uuid>`) or 30d retention
+   removes it.
+5. **TrueNAS auto-prunes snapshot tasks whose dataset is destroyed** —
+   softer than feared; but the replication task's `source_datasets` still
+   lists the dead volume until the next converge, which would fail the
+   nightly replication ("no matching snapshots"). **Re-converge promptly
+   after any allow-list change or protected-volume deletion** (the weekly
+   Saturday converge also self-heals this).
+6. While a destroyed volume's name is still in the allow-list, the
+   converge FAILS its resolution assert (loud, intentional).
