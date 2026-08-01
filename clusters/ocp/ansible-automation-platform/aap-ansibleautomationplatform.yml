@@ -58,3 +58,16 @@ spec:
     #   replicas: 1
   eda:
     disabled: false
+  # Ansible MCP server (GA since the 2026-06-03 AAP 2.6 patch; in 2.7):
+  # streamable-HTTP MCP endpoint fronting the platform API so MCP clients
+  # (Claude Code in the devcontainer / Dev Spaces workspaces) can query and
+  # launch automation with a gateway OAuth bearer token. Write operations stay
+  # enabled because the whole point is launching job templates; authorization
+  # is the token owner's AAP RBAC (dev1 = sandbox org only). Operator creates
+  # AnsibleMCPServer CR `aap-mcp` -> route aap-mcp-ansible-automation-platform.
+  # NOTE: the operator only reconciles allow_write_operations on
+  # AnsibleMCPServer creation — to flip it later, delete the AnsibleMCPServer
+  # CR and let the operator recreate it.
+  mcp:
+    disabled: false
+    allow_write_operations: true
