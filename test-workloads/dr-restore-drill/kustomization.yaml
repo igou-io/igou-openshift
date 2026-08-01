@@ -1,0 +1,7 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - dr-restore-drill-namespace.yaml
+  - drill-data-persistentvolumeclaim.yaml
+  - drill-app-deployment.yaml
