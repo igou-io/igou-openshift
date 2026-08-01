@@ -51,13 +51,14 @@ spec:
           protocol: TCP
         - port: 8080
           protocol: TCP
-        # aap-mcp (Ansible MCP server): router -> pod, edge route
-        # aap-mcp-ansible-automation-platform. Hand-modeled (not NetObserv
-        # observed): upstream MCP_PORT default 3000 — verify against the
-        # operator-created Service on first deploy. Its egress (bearer-token
+        # aap-mcp (Ansible MCP server): router -> pod plus kubelet readiness
+        # probes, edge route aap-mcp-ansible-automation-platform. Hand-modeled
+        # (not NetObserv observed): 8086 verified against the operator-created
+        # Service/containerPort on first deploy (upstream MCP_PORT default of
+        # 3000 does NOT apply to the operator image). Its egress (bearer-token
         # validation against the public AAP URL) rides the existing
         # off-cluster egress allow.
-        - port: 3000
+        - port: 8086
           protocol: TCP
   egress:
     # cluster DNS (always required)
