@@ -115,6 +115,18 @@ Every fast/ssd release ships two VolumeSnapshotClasses (cold releases have none)
 
 Snapshots stay on the same TrueNAS box either way — detached snapshots protect against source-pool loss, not chassis loss.
 
+## Scheduled protection + Retain (DR gap #2, live 2026-08-01)
+
+TrueNAS-side (cluster-independent): 13 valuable volumes — the allow-list in
+`igou-inventory group_vars/truenas.yml` (`truenas_k8s_protected_volumes`,
+by namespace/pvc-name, resolved via the `k8s:*` ZFS properties every volume
+carries) — get daily ZFS snapshots (7d) plus a nightly replica on
+`cold/backups/k8s` (30d). Restore-by-name = AAP JT `truenas_restore_volume`
+(see docs/runbooks/restore-pvc-from-truenas.md). The same volumes' PVs are
+patched `reclaimPolicy: Retain` (live-only — re-patch after any rebuild).
+Postgres volumes are deliberately excluded (CNPG Barman owns those);
+monitoring/loki, recreatable goldens, and model stores are excluded too.
+
 # Bare metal scaling (Cluster API)
 
 Worker scaling on this cluster is done via **upstream Cluster API + CAPM3**, not OpenShift's native Machine API. The OCP Machine API (`machine.openshift.io/v1beta1` MachineSets in `openshift-machine-api`) **cannot manage workers on a single-control-plane-node cluster** — it assumes a separate worker MachineSet topology, and a SNO-style cluster has no MAPI seam to attach extra workers to. Upstream CAPI is the only path that works for "one control plane host + on-demand bare metal workers".
