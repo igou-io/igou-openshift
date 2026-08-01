@@ -60,15 +60,21 @@ spec:
             - name: adbkey
               mountPath: /etc/adb-exporter
               readOnly: true
+          # Probe the static landing page, NOT /metrics: collection is
+          # per-scrape, so /metrics blocks on adb work and slows to seconds
+          # while the device is unreachable (a sleeping Shield black-holes
+          # connects). Probing /metrics with the default 1s timeout made the
+          # kubelet kill the pod in a crashloop exactly when the exporter
+          # should be up publishing adb_up=0.
           livenessProbe:
             httpGet:
-              path: /metrics
+              path: /
               port: 9836
             initialDelaySeconds: 15
             periodSeconds: 30
           readinessProbe:
             httpGet:
-              path: /metrics
+              path: /
               port: 9836
             initialDelaySeconds: 5
             periodSeconds: 15
