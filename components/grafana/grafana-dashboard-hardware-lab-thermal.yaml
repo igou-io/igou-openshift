@@ -1,0 +1,27 @@
+---
+# Fleet-wide hardware thermal board: 8 cells covering OCP nodes (hwmon +
+# DCGM GPU when casval is up), rk8s nodes (federated, cluster="rk8s",
+# hwmon-or-thermal-zone for ARM boards), TrueNAS (IPMI sensors, smartctl
+# drive temps, fan RPM), MikroTik gear (mktxp health collector), the Shield
+# (adb-exporter), and the upsmonitor Pi. Threshold lines mirror the
+# PrometheusRule alerts (disks warn 50 / crit 60, MB_NIC 88).
+# JSON in dashboards/hardware/lab-thermal.json.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-hardware-lab-thermal
+  namespace: grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: '12'
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  folder: hardware
+  resyncPeriod: 24h
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: thanos-querier
+  configMapRef:
+    name: grafana-dashboard-hardware-lab-thermal-json
+    key: lab-thermal.json
