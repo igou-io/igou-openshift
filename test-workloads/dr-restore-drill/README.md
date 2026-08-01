@@ -69,3 +69,29 @@ First executed end-to-end 2026-08-01.
    Saturday converge also self-heals this).
 6. While a destroyed volume's name is still in the allow-list, the
    converge FAILS its resolution assert (loud, intentional).
+
+## VM-drill addendum (codex-desktop, 2026-08-01)
+
+The same cycle was run against the production Windows 11 VM
+(clean-shutdown backup → VM delete under Retain → manifest re-apply →
+restore-by-name → bit-perfect boot disk + vTPM + EFI NVRAM → Windows
+booted with agent + RDP). Extra findings:
+
+7. **`zfs recv -F` erases the target's LOCAL identity properties** —
+   only the stream's *received* (old-name) properties remain, which the
+   converge's `-s local` resolution ignores: the restored volume silently
+   drops out of protection until re-stamped. The restore play now
+   captures and re-applies the target's local identity automatically
+   (igou-ansible#471); older restores need a manual `zfs set`.
+8. **Retain leaves the share plumbing live**: deleting a Retain PV never
+   runs `DeleteVolume`, so the NVMe-oF namespace/subsystem (or NFS
+   share) stays wired and `zfs destroy` reports `dataset is busy`.
+   Teardown order: `nvmet.namespace.delete` → `nvmet.port_subsys.delete`
+   → `nvmet.subsys.delete` (port-bound subsystems refuse deletion), or
+   `sharing.nfs.delete`, then destroy.
+9. **KubeVirt VMs**: the persistent-state PVC holds **vTPM state** +
+   EFI NVRAM keyed by the firmware UUID — save the VM manifest (with
+   `firmware.serial`/`uuid`) before deletion, and expect the PVC's name
+   suffix to change on recreation (allow-list must follow). Restore
+   resolves the *old* stamped name into the *new* PVC's dataset —
+   cross-name restore is supported.
