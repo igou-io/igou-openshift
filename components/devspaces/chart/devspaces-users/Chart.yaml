@@ -1,0 +1,9 @@
+---
+apiVersion: v2
+name: devspaces-users
+description: >-
+  Per-user Dev Spaces namespace pre-provisioning + scoped molecule/KubeVirt
+  RBAC, generated from a single users list. Onboarding a persona = one entry
+  in the consuming kustomization's valuesInline.
+type: application
+version: 0.1.0

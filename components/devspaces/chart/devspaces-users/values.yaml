@@ -1,0 +1,4 @@
+---
+# Usernames with a pre-provisioned <user>-devspaces namespace + molecule
+# RBAC. Overridden via valuesInline in the component kustomization.
+users: []

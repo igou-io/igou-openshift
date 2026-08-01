@@ -6,11 +6,18 @@ resources:
   - devspaces-operatorgroup.yaml
   - devspaces-subscription.yaml
   - devspaces-checluster.yaml
-  - igou-devspaces-namespace.yaml
-  - molecule-kubevirt-role.yaml
-  - molecule-kubevirt-rolebinding.yaml
-  - dev1-devspaces-namespace.yaml
-  - dev1-molecule-kubevirt-role.yaml
-  - dev1-molecule-kubevirt-rolebinding.yaml
-  - devspaces-molecule-node-reader-clusterrole.yaml
-  - devspaces-molecule-node-reader-clusterrolebinding.yaml
+helmGlobals:
+  # In-tree chart home (kustomize load restrictions forbid ../../.helm from a
+  # plain Kustomization). Named `chart/` — singular — because `make clean`
+  # deletes dirs named `charts/` (kustomize pull caches).
+  chartHome: chart
+helmCharts:
+  # Per-user devspace namespace + scoped molecule/KubeVirt RBAC.
+  # Onboard a persona by adding their username here (plus their htpasswd/
+  # Keycloak/Forgejo identities — see igou-docs "Using the Ansible Golden Path").
+  - name: devspaces-users
+    releaseName: devspaces-users
+    valuesInline:
+      users:
+        - igou
+        - dev1
