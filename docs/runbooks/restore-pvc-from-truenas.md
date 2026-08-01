@@ -40,6 +40,14 @@ restore is one AAP job, no UUID hunting:
 - The same 13 volumes are patched `reclaimPolicy: Retain` (live-only state —
   a rebuilt cluster reverts to Delete until re-patched; the allow-list is
   the source of truth for which PVs get the patch).
+- **Drill-proven caveats** (full cycle executed 2026-08-01, see
+  `test-workloads/dr-restore-drill/README.md`): `sync` in the pod before
+  any manual snapshot (crash-consistent snapshots of unsynced writes
+  restore as zero-byte files); protected volumes are delete-blocked while
+  snapshots exist; restored volumes carry the received snapshot; stale
+  replicas of recreated volumes trip the ambiguity guard until pruned;
+  re-converge after any protected-volume deletion so the replication
+  drops the dead source.
 
 Everything below remains the fallback for volumes outside the allow-list,
 or when the cluster/etcd is gone entirely.
