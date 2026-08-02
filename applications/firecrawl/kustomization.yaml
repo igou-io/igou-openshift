@@ -518,7 +518,7 @@ helmCharts:
                   fi
               image:
                 repository: docker.io/redis
-                tag: "alpine@sha256:e8eb6f2980c06c6a25c08f62cb2e00dc7d2fead9aa492cfdd8b54a42109ae0f2"
+                tag: "alpine@sha256:978f0e01593e65eed801f2402944efcd936d43b5027e4908a7897baf88ed6241"
                 pullPolicy: IfNotPresent
               env:
                 REDIS_PASSWORD:
