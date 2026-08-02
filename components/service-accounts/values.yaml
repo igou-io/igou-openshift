@@ -320,6 +320,13 @@ serviceAccounts:
       - namespace: sands-of-time
         clusterRoles:
           - edit
+      # Grafana dashboard lifecycle (create/prune GrafanaDashboard CRs and
+      # their generated ConfigMaps): OLM aggregates the grafana-operator
+      # CRD roles into `edit`, so a namespace-scoped edit grant covers the
+      # grafana.integreatly.org resources without a custom Role.
+      - namespace: grafana
+        clusterRoles:
+          - edit
     pushSecrets:
       - name: claude-edit-token-push
         refreshInterval: "0"
