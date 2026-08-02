@@ -115,17 +115,23 @@ Every fast/ssd release ships two VolumeSnapshotClasses (cold releases have none)
 
 Snapshots stay on the same TrueNAS box either way — detached snapshots protect against source-pool loss, not chassis loss.
 
-## Scheduled protection + Retain (DR gap #2, live 2026-08-01)
+## Scheduled backups + Retain (DR gap #2)
 
-TrueNAS-side (cluster-independent): 13 valuable volumes — the allow-list in
-`igou-inventory group_vars/truenas.yml` (`truenas_k8s_protected_volumes`,
-by namespace/pvc-name, resolved via the `k8s:*` ZFS properties every volume
-carries) — get daily ZFS snapshots (7d) plus a nightly replica on
-`cold/backups/k8s` (30d). Restore-by-name = AAP JT `truenas_restore_volume`
-(see docs/runbooks/restore-pvc-from-truenas.md). The same volumes' PVs are
-patched `reclaimPolicy: Retain` (live-only — re-patch after any rebuild).
-Postgres volumes are deliberately excluded (CNPG Barman owns those);
-monitoring/loki, recreatable goldens, and model stores are excluded too.
+Scheduled app-level backups are **OADP/Velero** (`clusters/ocp/oadp`):
+daily/weekly Schedules capture namespace objects + PV data (CSI snapshot →
+kopia data mover) into `s3://velero/ocp/` on rustfs-cold — restore
+quickstart in that README. The former TrueNAS name-addressed schedules
+(daily snapshots + `cold/backups/k8s` replicas of a 13-volume allow-list)
+were removed in favor of OADP.
+
+Still in place from that machinery: every volume carries `k8s:cluster` /
+`k8s:pvc_namespace` / `k8s:pvc_name` ZFS properties (stamped at provision
+time by democratic-csi); AAP JT `truenas_restore_volume` restores by name
+from a live zvol — take a manual `zfs snapshot` first — or a leftover
+replica (see docs/runbooks/restore-pvc-from-truenas.md, which also holds
+the Retain-patch roster); those PVs stay `reclaimPolicy: Retain`
+(live-only — re-patch after any rebuild). Postgres volumes are deliberately
+out of scope for both layers' data path (CNPG Barman owns those).
 
 # Bare metal scaling (Cluster API)
 
