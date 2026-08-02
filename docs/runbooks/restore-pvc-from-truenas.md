@@ -17,39 +17,64 @@ persistent data usually still lives on TrueNAS as democratic-csi zvols. This run
    (`hermes-state`), a **filesystem PVC for a normal pod** (jellyfin pattern), byte-exact `dd`,
    and low-copy **static import** of the zvol as a new PV.
 
-### Restore by NAME first (primary path since 2026-08-01)
+### Scheduled backups moved to OADP (primary path since 2026-08)
 
-Before any of the archaeology below, check whether the volume is covered by
-the **name-addressed protection** rolled out for DR gap #2 — if it is, the
-restore is one AAP job, no UUID hunting:
+App-level scheduled backups are **OADP/Velero** (`clusters/ocp/oadp` —
+restore quickstart in its README): namespace objects + PV data land as
+kopia repos in `s3://velero/ocp/` on rustfs-cold, restorable onto a
+rebuilt cluster with `velero restore`. **Check there first.** The TrueNAS
+name-addressed snapshot/replication schedules that used to cover 13
+allow-listed volumes were removed in favor of OADP — there are no
+scheduled per-volume ZFS snapshots or `cold/backups/k8s` replicas anymore
+(pre-removal replicas persist — with the replication task deleted nothing
+prunes them — but they only age, never refresh).
 
-- Every democratic-csi volume carries `k8s:cluster` / `k8s:pvc_namespace` /
-  `k8s:pvc_name` ZFS properties (stamped at provision time). The 13 volumes
-  in `igou-inventory group_vars/truenas.yml` → `truenas_k8s_protected_volumes`
-  get a **daily snapshot** (7d) and a nightly **replica on the cold pool**
-  (`cold/backups/k8s/<pvc-uuid>`, 30d, properties preserved — replicas
-  self-describe even if the ssd pool is lost).
+### Restore by NAME (ZFS path — still works, now snapshot-on-demand)
+
+Every democratic-csi volume still carries `k8s:cluster` /
+`k8s:pvc_namespace` / `k8s:pvc_name` ZFS properties (stamped at provision
+time), and AAP JT **`truenas_restore_volume`** still restores by name from
+a live zvol or a remaining `cold/backups/k8s` replica:
+
+- **Take a snapshot first if none exists**: with the daily tasks gone, a
+  live/Retain-held zvol usually has no snapshots and the play fails its
+  "a snapshot exists" assert. `sync` in the pod (or clean-shutdown the
+  VM), then `sudo zfs snapshot <dataset>@manual-$(date +%F)` on TrueNAS,
+  then launch the JT. Unsynced writes snapshot as zero-byte files.
 - Restore flow (e2e-rehearsed 2026-08-01, checksum-verified): let GitOps
-  recreate the PVC (it is auto-stamped with the same name) → scale the app
-  to zero → launch AAP JT **`truenas_restore_volume`** with
-  `volume_cluster` / `volume_namespace` / `volume_pvc` /
-  `target_dataset=<the fresh PVC's dataset>` → scale up. The play resolves
-  the newest snapshot on the live source, falls back to the cold replica,
-  and refuses ambiguous matches (a Released-PV zvol awaiting destroy can
-  briefly hold the same name — wait for it to clear).
-- The same 13 volumes are patched `reclaimPolicy: Retain` (live-only state —
-  a rebuilt cluster reverts to Delete until re-patched; the allow-list is
-  the source of truth for which PVs get the patch).
-- **Drill-proven caveats** (full cycle executed 2026-08-01, see
-  `test-workloads/dr-restore-drill/README.md`): `sync` in the pod before
-  any manual snapshot (crash-consistent snapshots of unsynced writes
-  restore as zero-byte files); protected volumes are delete-blocked while
-  snapshots exist; restored volumes carry the received snapshot; stale
-  replicas of recreated volumes trip the ambiguity guard until pruned;
-  re-converge after any protected-volume deletion so the replication
-  drops the dead source.
+  recreate the PVC (auto-stamped with the same name) → scale the app to
+  zero → launch **`truenas_restore_volume`** with `volume_cluster` /
+  `volume_namespace` / `volume_pvc` / `target_dataset=<fresh PVC's
+  dataset>` → scale up. The play prefers the live source's newest
+  snapshot, falls back to a cold replica, and refuses ambiguous matches.
+- Restored volumes carry the received snapshot; a snapshot on a zvol
+  blocks the driver's delete retry until destroyed.
 
-Everything below remains the fallback for volumes outside the allow-list,
+### Retain-patch roster (formerly `truenas_k8s_protected_volumes`)
+
+These PVs were patched `reclaimPolicy: Retain` while the allow-list
+existed. **The patch is live-only state** — a rebuilt cluster reverts to
+Delete until re-patched — and with the allow-list deleted from
+igou-inventory, this table is now the source of truth for which PVs get
+the patch:
+
+| Cluster | Namespace | PVC |
+|---|---|---|
+| ocp | forgejo | forgejo-shared-storage |
+| ocp | gitea-mirror | gitea-mirror-config |
+| ocp | comfyui | comfyui-data |
+| ocp | sands-of-time | sands-of-time-data |
+| ocp | jellyfin | jellyfin-config |
+| ocp | hermes | hermes-root |
+| ocp | hermes | hermes-state |
+| ocp | windows-images | codex-desktop-boot |
+| ocp | windows-images | persistent-state-for-codex-desktop-lckkw (vTPM/EFI; suffix changes on VM recreation) |
+| ocp | stackrox | central-db |
+| ocp | stackrox | central-db-backup |
+| ocp | openshift-virtualization-os-images | win2k25 |
+| ocp | openshift-virtualization-os-images | win11 |
+
+Everything below remains the fallback for anything OADP does not cover,
 or when the cluster/etcd is gone entirely.
 
 ### When to use
