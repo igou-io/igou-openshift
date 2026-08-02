@@ -14,7 +14,7 @@ spec:
   # server-cuda13 (CUDA 13 drops Pascal -> CPU fallback). Pinned by digest.
   # The new Qwen3.5 Gated-DeltaNet+MoE hybrid arch loads and runs on the P620
   # with this mainline build.
-  image: ghcr.io/ggml-org/llama.cpp:server-cuda@sha256:657694ff6b0ceba64cbaed4502b2c3e5c52812c9911bc813cd1f65b3499b2e72
+  image: ghcr.io/ggml-org/llama.cpp:server-cuda@sha256:46e98996dc99f01079018769dd7531707c206c261584525474e92a343143a001
   replicas: 1
   # 64K context via KV-cache offload to system RAM (noKvOffload). On the 2 GB
   # P620 64K will NOT fit fully GPU-resident: f16 KV OOMs at load, q8_0-K-without-FA
