@@ -10,13 +10,13 @@ metadata:
 data:
   config.yaml: |
     enableUserWorkload: true
-    prometheusK8s:
-      # Stamp platform series with a cluster identity (visible through
-      # Thanos Querier) so cluster-scoped Grafana boards can tell ocp
-      # apart from the federated rk8s series (cluster="rk8s"). Also lands
-      # on alerts sent to Alertmanager — extra label, no routing impact.
-      externalLabels:
-        cluster: ocp
+    # NOTE: do NOT set prometheusK8s.externalLabels.cluster — the
+    # monitoringconfigmaps.openshift.io admission webhook reserves
+    # prometheus/prometheus_replica/cluster and rejects the ConfigMap,
+    # wedging this app in a retry loop. CMO already stamps platform
+    # series with cluster=<ClusterVersion UUID>, which is what the
+    # kubernetes-folder Grafana boards' $cluster variable resolves for
+    # ocp (rk8s series carry cluster="rk8s" from federation).
     alertmanagerMain:
       # Receive alerts from user-workload Prometheus too (UWM AM is
       # disabled in user-workload-monitoring-config) so user-namespace
