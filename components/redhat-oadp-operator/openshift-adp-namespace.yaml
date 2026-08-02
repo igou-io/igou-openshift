@@ -1,0 +1,11 @@
+---
+# openshift-adp is the namespace OADP's docs, must-gather, and defaults
+# assume; the operator's operands (velero, node-agent) and all DPA/BSL/
+# Schedule CRs must live here.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-adp
+  annotations:
+    argocd.argoproj.io/sync-wave: '8'
+    openshift.io/display-name: "OADP (Velero backups)"

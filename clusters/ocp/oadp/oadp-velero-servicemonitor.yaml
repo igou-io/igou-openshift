@@ -1,0 +1,19 @@
+---
+# OADP's documented monitoring path: UWM scrapes the operator-created
+# openshift-adp-velero-metrics-svc. (openshift-adp is the one openshift-*
+# namespace UWM is documented to cover — the OADP docs' own flow.)
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: oadp-velero
+  namespace: openshift-adp
+  labels:
+    app.kubernetes.io/name: oadp
+    app.kubernetes.io/part-of: oadp
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: velero
+  endpoints:
+    - port: monitoring
+      interval: 30s

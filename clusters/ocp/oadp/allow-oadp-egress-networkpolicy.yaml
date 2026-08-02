@@ -1,0 +1,48 @@
+---
+# Egress for all OADP pods (operator, velero, node-agent): DNS, the
+# kube-apiserver, and rustfs-cold. The node-agent kopia-writes snapshot
+# data straight to S3.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-oadp-egress
+  namespace: openshift-adp
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    # DNS
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+        - protocol: UDP
+          port: 5353
+        - protocol: TCP
+          port: 5353
+    # kube-apiserver: node IP form and the in-cluster ClusterIP form.
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.10/32
+      ports:
+        - protocol: TCP
+          port: 6443
+    - to:
+        - ipBlock:
+            cidr: 172.30.0.1/32
+      ports:
+        - protocol: TCP
+          port: 443
+    # RustFS cold on TrueNAS (truenas.igou.systems).
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.213/32
+      ports:
+        - protocol: TCP
+          port: 20292

@@ -1,0 +1,30 @@
+---
+# Tier-1 stateful apps with no other backup path (DR assessment ❌ list):
+# git data, dashboards, agent VM state, app configs. CNPG databases in
+# these namespaces are double-covered (Barman WAL to s3://cnpg-backups is
+# authoritative; the PVC snapshot here is a crash-consistent second copy —
+# kopia dedup keeps the cost low). Cron is UTC: 08:00 = 04:00 ET, clear of
+# the 05:00 ET etcd backup.
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: daily-apps
+  namespace: openshift-adp
+  annotations:
+    argocd.argoproj.io/sync-wave: '12'
+spec:
+  schedule: "0 8 * * *"
+  template:
+    includedNamespaces:
+      - forgejo
+      - gitea-mirror
+      - grafana
+      - hermes
+      - sands-of-time
+      - ntfy
+      - gotify
+      - n8n
+      - searxng
+      - jellyfin
+    snapshotMoveData: true
+    ttl: 720h0m0s
