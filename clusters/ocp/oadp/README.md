@@ -7,8 +7,9 @@ off the source pools, with staleness/failure alerting.
 
 ## Architecture
 
-- **Operator**: `redhat-oadp-operator`, channel `stable-1.5` (the OCP
-  4.21-aligned track, Velero 1.16), namespace `openshift-adp`
+- **Operator**: `redhat-oadp-operator`, channel `stable` — the 4.21
+  catalog's only channel, pinned to the 4.21-aligned OADP 1.5.x / Velero
+  1.16 track — namespace `openshift-adp`
   (`components/redhat-oadp-operator`).
 - **Data flow**: backup → CSI `VolumeSnapshot` (local ZFS snapshot via the
   `*-velero` VolumeSnapshotClasses) → node-agent **kopia data mover**

@@ -7,10 +7,12 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: '9'
 spec:
-  # OADP 1.5 is the 4.21-aligned track (Red Hat ships one OADP version per
-  # OCP minor from 2025 on); 1.6 targets 4.22+ and drops the restic
-  # uploader entirely.
-  channel: stable-1.5
+  # The 4.21 redhat-operators catalog publishes a single `stable` channel
+  # for OADP, pinned to the 4.21-aligned 1.5.x track (one OADP version per
+  # OCP minor from 2025 on; verified live: stable -> oadp-operator.v1.5.7,
+  # no stable-1.x channels exist). 1.6 arrives with the 4.22 catalog and
+  # drops the restic uploader entirely.
+  channel: stable
   installPlanApproval: Automatic
   name: redhat-oadp-operator
   source: redhat-operators
