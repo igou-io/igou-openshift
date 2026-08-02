@@ -1,0 +1,25 @@
+---
+# "Kubernetes / Persistent Volumes" from kube-prometheus-stack (chart 87.2.1), pristine
+# upstream JSON (real `namespace` labels). Cluster-agnostic: pick the
+# cluster with the board's own $datasource variable — thanos-querier for
+# ocp (platform series carry the cluster=ocp external label), the
+# rk8s-prometheus datasource (prometheus.rk8s.igou.systems) for rk8s.
+# Federated rk8s series in Thanos keep namespace=rk8s-federate (UWM
+# enforcedNamespaceLabel is not liftable for scrapes), which is exactly
+# why rk8s queries go direct instead. Vendored JSON + configMapGenerator.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-kubernetes-persistentvolumesusage
+  namespace: grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: '12'
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  resyncPeriod: 24h
+  folder: kubernetes
+  configMapRef:
+    name: grafana-dashboard-kubernetes-persistentvolumesusage-json
+    key: persistentvolumesusage.json

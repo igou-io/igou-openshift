@@ -1,0 +1,31 @@
+---
+# Direct query datasource for the rk8s cluster's Prometheus, via the
+# full-API HTTPRoute at prometheus.rk8s.igou.systems (cluster-wildcard
+# Gateway, VLAN9/admin-only reachability, ACME cert — see
+# igou-kubernetes/components/kube-prometheus-stack/prometheus-httproute.yaml).
+# Exists so the kubernetes-folder dashboards can show rk8s with pristine
+# upstream `namespace` labels: the UWM-federated copies of these series in
+# Thanos carry namespace=rk8s-federate (enforcedNamespaceLabel cannot be
+# lifted for scrapes), so namespace-scoped boards must query rk8s directly.
+# No auth on the endpoint; access control is network reachability, same
+# posture as the /federate route.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDatasource
+metadata:
+  name: rk8s-prometheus
+  namespace: grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: '11'
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  datasource:
+    name: rk8s-prometheus
+    type: prometheus
+    access: proxy
+    url: https://prometheus.rk8s.igou.systems
+    isDefault: false
+    editable: false
+    jsonData:
+      timeInterval: 30s
