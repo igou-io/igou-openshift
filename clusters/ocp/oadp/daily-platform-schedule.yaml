@@ -1,0 +1,19 @@
+---
+# Platform state that is painful or impossible to rebuild: AAP (its
+# Fernet SECRET_KEY is flagged unrecoverable in the DR assessment — a
+# namespace backup captures it) and RHACS central-db.
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: daily-platform
+  namespace: openshift-adp
+  annotations:
+    argocd.argoproj.io/sync-wave: '12'
+spec:
+  schedule: "30 8 * * *"
+  template:
+    includedNamespaces:
+      - ansible-automation-platform
+      - stackrox
+    snapshotMoveData: true
+    ttl: 720h0m0s

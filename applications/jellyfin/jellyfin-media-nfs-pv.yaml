@@ -2,6 +2,10 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: jellyfin-media-nfs
+  labels:
+    # 1Ti read-only media library — kept out of the OADP daily-apps
+    # backup (the library is rebuildable; only jellyfin-config matters).
+    velero.io/exclude-from-backup: "true"
 spec:
   capacity:
     storage: 1Ti

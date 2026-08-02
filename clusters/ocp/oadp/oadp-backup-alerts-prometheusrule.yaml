@@ -1,0 +1,78 @@
+---
+# Alerts on velero_* metrics (UWM-scraped via the ServiceMonitor). The
+# platform KubeJobFailed alert never covers this namespace's outcomes —
+# backup health must come from Velero's own counters, including the
+# "silently never ran" case (absent()).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: oadp-backup-alerts
+  namespace: openshift-adp
+  labels:
+    app.kubernetes.io/name: oadp
+    app.kubernetes.io/part-of: oadp
+    openshift.io/prometheus-rule-evaluation-scope: leaf-prometheus
+spec:
+  groups:
+    - name: oadp.backups
+      rules:
+        - alert: VeleroBackupFailed
+          expr: |
+            increase(velero_backup_failure_total[1h]) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "a Velero backup failed"
+            description: >-
+              Velero reported a failed backup for schedule
+              {{ $labels.schedule }} in the last hour. Check: oc -n
+              openshift-adp get backup and describe the failed Backup for
+              errors (BSL unavailable, snapshot or data-mover failure).
+              See clusters/ocp/oadp/README.md in igou-openshift.
+        - alert: VeleroBackupPartiallyFailed
+          expr: |
+            increase(velero_backup_partial_failure_total[1h]) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "a Velero backup partially failed"
+            description: >-
+              Velero reported a partially-failed backup for schedule
+              {{ $labels.schedule }} — some resources or volumes were
+              skipped or errored. oc -n openshift-adp describe the Backup
+              and check velero logs for the per-item errors.
+        - alert: VeleroDailyBackupStale
+          # 36h: one missed night plus slack, matching EtcdBackupStale.
+          expr: |
+            (time() - max by (schedule) (velero_backup_last_successful_timestamp{schedule=~"daily-.*"})) > 129600
+            or
+            absent(velero_backup_last_successful_timestamp{schedule="daily-apps"})
+            or
+            absent(velero_backup_last_successful_timestamp{schedule="daily-platform"})
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "a daily Velero backup has not succeeded in 36h"
+            description: >-
+              Schedule {{ $labels.schedule }} has no successful backup in
+              36 hours (or has never reported one — absent() also fires
+              while OADP is first coming up). Check: oc -n openshift-adp
+              get schedule,backup and the velero deployment logs.
+        - alert: VeleroWeeklyBackupStale
+          # 8.5 days: one missed week plus slack.
+          expr: |
+            (time() - max by (schedule) (velero_backup_last_successful_timestamp{schedule="weekly-heavy"})) > 734400
+            or
+            absent(velero_backup_last_successful_timestamp{schedule="weekly-heavy"})
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "the weekly Velero backup has not succeeded in 8.5d"
+            description: >-
+              Schedule weekly-heavy has no successful backup in 8.5 days
+              (or has never reported one). Check: oc -n openshift-adp get
+              schedule,backup and the velero deployment logs.

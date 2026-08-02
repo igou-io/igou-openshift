@@ -1,0 +1,28 @@
+---
+# Large, slow-changing volumes: weekly is enough and keeps the daily
+# window short. Saturday 06:00 UTC = 02:00 ET. This schedule (plus
+# daily-*) fully supersedes the TrueNAS name-addressed snapshot/
+# replication schedules (igou-inventory truenas_k8s_protected_volumes,
+# removed in favor of OADP):
+# - windows-images: codex-desktop boot + vTPM/EFI persistent-state PVCs.
+# - comfyui: comfyui-data only (comfyui-models carries the
+#   velero.io/exclude-from-backup label — re-downloadable weights).
+# - openshift-virtualization-os-images: the manually-built win2k25/win11
+#   goldens; DataImportCron-managed goldens ride along (not in git, no
+#   way to name-exclude — rebuildable, but cheap enough weekly).
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: weekly-heavy
+  namespace: openshift-adp
+  annotations:
+    argocd.argoproj.io/sync-wave: '12'
+spec:
+  schedule: "0 6 * * 6"
+  template:
+    includedNamespaces:
+      - windows-images
+      - comfyui
+      - openshift-virtualization-os-images
+    snapshotMoveData: true
+    ttl: 2160h0m0s

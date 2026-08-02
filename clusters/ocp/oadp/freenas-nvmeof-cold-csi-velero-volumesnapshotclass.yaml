@@ -1,0 +1,15 @@
+---
+# See freenas-nvmeof-ssd-csi-velero-volumesnapshotclass.yaml. The cold
+# driver deliberately ships no snapshot classes from democratic-csi; this
+# Velero-only class enables backups of cold-pool PVCs (a local ZFS
+# snapshot on cold, deleted after the data move).
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: freenas-nvmeof-cold-csi-velero
+  labels:
+    velero.io/csi-volumesnapshot-class: "true"
+driver: org.democratic-csi.nvmeof-cold
+deletionPolicy: Delete
+parameters:
+  detachedSnapshots: "false"

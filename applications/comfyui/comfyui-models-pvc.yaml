@@ -4,6 +4,10 @@ kind: PersistentVolumeClaim
 metadata:
   name: comfyui-models
   namespace: comfyui
+  labels:
+    # 200Gi of re-downloadable model weights — kept out of the OADP
+    # weekly-heavy backup (comfyui-data is what matters).
+    velero.io/exclude-from-backup: "true"
 spec:
   accessModes:
     - ReadWriteOnce

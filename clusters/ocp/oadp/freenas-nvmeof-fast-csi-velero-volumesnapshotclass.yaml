@@ -1,0 +1,12 @@
+---
+# See freenas-nvmeof-ssd-csi-velero-volumesnapshotclass.yaml.
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: freenas-nvmeof-fast-csi-velero
+  labels:
+    velero.io/csi-volumesnapshot-class: "true"
+driver: org.democratic-csi.nvmeof-fast
+deletionPolicy: Delete
+parameters:
+  detachedSnapshots: "false"
