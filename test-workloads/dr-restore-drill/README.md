@@ -1,8 +1,21 @@
 # dr-restore-drill
 
+> **Partially historical (2026-08):** the scheduled half of this drill —
+> `truenas_k8s_protected_volumes`, the per-volume snapshot tasks, and the
+> `k8s-valuable-to-cold` replication — was **removed in favor of
+> OADP/Velero** (`clusters/ocp/oadp`). Scheduled-backup drills now mean a
+> Velero backup + restore into a scratch namespace (see that README's
+> restore quickstart). To rerun *this* drill against the surviving ZFS
+> path (`truenas_restore_volume` by stamped name), replace step 2 with
+> nothing, step 3's task/replication runs with a manual
+> `zfs snapshot <dataset>@manual-<date>` plus a one-shot
+> `zfs send | zfs recv` (or `replication.run_onetime`) to
+> `cold/backups/k8s/<pvc-uuid>`, and step 6 with destroying the manual
+> snapshot + replica. The findings below all still apply.
+
 A repeatable disaster-recovery drill for the name-addressed volume
 protection stack (`docs/runbooks/restore-pvc-from-truenas.md`, "Restore by
-NAME first"). A trivial stateful app (HTTP server over a PVC) is deployed,
+NAME"). A trivial stateful app (HTTP server over a PVC) is deployed,
 protected, destroyed, and restored from its cold replica — proving the
 whole chain an operator would rely on after real data loss.
 
