@@ -15,7 +15,7 @@ spec:
   # digest. This digest is build b9664, the same mainline build verified to load
   # the gemma4 architecture. Renovate may bump it; keep it on the CPU `server`
   # image (no `-cuda` suffix).
-  image: ghcr.io/ggml-org/llama.cpp:server@sha256:8b7f05d7d14d040463ef9191b24da93724574abd6bfea9bf12899100f62e98db
+  image: ghcr.io/ggml-org/llama.cpp:server@sha256:2ab03529fa9ea9b7a0bcafad00b14619d733c255a9817232c450fe316e03f557
   replicas: 1
   # Full 128K trained window. No GPU, so the KV cache lives in host RAM natively
   # (noKvOffload is a GPU->RAM flag and is irrelevant here). MQA + sliding-window
