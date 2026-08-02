@@ -15,6 +15,19 @@ This gets the VM **provisioned, running, and holding restored state**. It does
 **not** converge Hermes (install/configure) or bring the agent online — those stay
 operator-gated (see "What stays operator-deferred").
 
+> **Primary restore path since 2026-08-02: OADP.** The `hermes` namespace is in
+> the OADP `daily-apps` schedule (VM + DataVolumes + PVC data as one set, RPO
+> ≤24h, kopia repos on rustfs-cold — see
+> `docs/runbooks/oadp-restore.md`). For VM loss *without* cluster loss, try a
+> Velero restore of the namespace first — it recreates the VM and both disks
+> from S3 and needs none of the tar/zvol surgery below. Caveats: hermes backups
+> are currently **crash-consistent** (guest fsfreeze fails, #636), and a
+> Velero *VM* restore has not yet been drilled — if it misbehaves, fall back to
+> this runbook with a state source of either a leftover `cold/backups/k8s`
+> replica (restore-by-name, see `restore-pvc-from-truenas.md`) or the tar
+> backups referenced below (which no longer exist on freshly-rebuilt
+> devcontainers — re-create per `zfs-snapshot-rescue.md` §6 if needed).
+
 ## When to use
 
 - The `hermes` VM was deleted/lost (disaster, node loss, or full cluster reinstall)
