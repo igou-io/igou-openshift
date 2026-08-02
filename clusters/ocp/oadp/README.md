@@ -5,6 +5,11 @@ RustFS/S3") and DR-assessment gaps #2/#5: scheduled, app-consistent
 backups of namespace objects **and** PV data as one restorable set, stored
 off the source pools, with staleness/failure alerting.
 
+**Live since 2026-08-02** (OADP 1.5.7). Drill-verified same day: a
+sands-of-time backup (66 items, 1.3GB through the data mover) restored via
+`namespaceMapping` into a scratch namespace with data intact. Restores:
+see `docs/runbooks/oadp-restore.md`.
+
 ## Architecture
 
 - **Operator**: `redhat-oadp-operator`, channel `stable` — the 4.21
@@ -47,41 +52,38 @@ removed in favor of OADP. ZFS identity stamping, the Retain patches, and
 the `truenas_restore_volume` JT remain as the archaeology/prevention
 layer.
 
-## Prerequisites (cross-repo, in order)
+## Prerequisites (cross-repo — all provisioned 2026-08-02)
+
+Recorded for rebuilds; all in place today:
 
 1. igou-inventory `host_vars/rustfs-cold.yml`: `velero` bucket + `velero`
-   user + `velero_rw` policy → AAP `rustfs_state_converge`.
+   user + `velero_rw` policy → AAP `rustfs_state_converge` (JT 78).
 2. 1Password item `velero-user-rustfs-cold` (username/password) in vault
-   `lab_s3`.
-3. Merge this app. Verify: `oc -n openshift-adp get dpa oadp -o
-   jsonpath='{.status.conditions}'` → Reconciled, and the BSL reports
-   `Available`.
+   `lab_s3` — must exist **before** the converge (the role never generates
+   secrets).
+3. Sync this app. Verify: `oc -n openshift-adp get dpa oadp -o
+   jsonpath='{.status.conditions}'` → Reconciled, and
+   `backupstoragelocation default` reports `Available`.
 
-## Restore quickstart
+## Restores
 
-```sh
-# What exists?
-oc -n openshift-adp get backup
-# Whole-namespace restore (existing resources are not overwritten):
-cat <<EOF | oc create -f -
-apiVersion: velero.io/v1
-kind: Restore
-metadata:
-  generateName: restore-
-  namespace: openshift-adp
-spec:
-  backupName: <backup>
-  includedNamespaces: ["<ns>"]
-EOF
-oc -n openshift-adp get restore -w
-```
+See `docs/runbooks/oadp-restore.md` (drill-verified commands: inspect
+backups, whole-namespace restore, scratch-namespace drill via
+`namespaceMapping`, VM notes, troubleshooting).
 
-Restored PVCs are recreated from the kopia data via the data mover —
-independent of any surviving ZFS state. For selective restores add
-`labelSelector`/`includedResources`. Test restores go to a scratch
-namespace via `namespaceMapping`.
+## Known issues
+
+- **hermes fsfreeze (#636)**: the guest agent cannot freeze
+  `/home/hermes/.hermes`, so every backup containing `hermes` completes
+  its data movement but reports `PartiallyFailed` (crash-consistent — the
+  same consistency the retired ZFS snapshot layer had). Expect
+  `VeleroBackupPartiallyFailed` to fire daily until the guest mount is
+  fixed.
 
 ## Gotchas
+
+- `oc get backup`/`restore` resolve to **CNPG's** CRDs — always use
+  `backups.velero.io` / `restores.velero.io`.
 
 - `checksumAlgorithm: ""` on the BSL is mandatory against RustFS (AWS SDK
   CRC32 trailer breaks non-AWS S3).
