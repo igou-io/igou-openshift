@@ -31,15 +31,20 @@ off the source pools, with staleness/failure alerting.
 |---|---|---|---|
 | `daily-apps` | 08:00 (04:00 ET) | forgejo, gitea-mirror, grafana, hermes, sands-of-time, ntfy, gotify, n8n, searxng, jellyfin | 30d |
 | `daily-platform` | 08:30 | ansible-automation-platform (Fernet key!), stackrox | 30d |
-| `weekly-heavy` | Sat 06:00 | windows-images | 90d |
+| `weekly-heavy` | Sat 06:00 | windows-images, comfyui, openshift-virtualization-os-images | 90d |
 
-`jellyfin-media` (1Ti static NFS PV) carries
-`velero.io/exclude-from-backup: "true"` — media is not backed up, config
-is. To add a namespace, extend the right Schedule; if its PVCs use a
-driver other than nvmeof-{ssd,fast,cold}, also add a `*-velero`
+`jellyfin-media` (1Ti static NFS PV) and `comfyui-models` (200Gi of
+re-downloadable weights) carry `velero.io/exclude-from-backup: "true"`.
+To add a namespace, extend the right Schedule; if its PVCs use a driver
+other than nvmeof-{ssd,fast,cold}, also add a `*-velero`
 VolumeSnapshotClass for that driver (exactly one Velero-labeled class per
-driver may exist). comfyui (500Gi, mostly re-downloadable models) is
-deliberately out for v1.
+driver may exist).
+
+These schedules supersede the TrueNAS name-addressed snapshot/replication
+schedules (`truenas_k8s_protected_volumes` in igou-inventory) — those are
+removed in favor of OADP. ZFS identity stamping, the Retain patches, and
+the `truenas_restore_volume` JT remain as the archaeology/prevention
+layer.
 
 ## Prerequisites (cross-repo, in order)
 
