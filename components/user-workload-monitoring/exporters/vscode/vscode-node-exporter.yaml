@@ -1,0 +1,60 @@
+---
+# node_exporter on the vscode devhost (CentOS netboot host, VLAN9), scraped
+# DIRECTLY over the LAN - no in-cluster proxy. Selectorless Service + manual
+# Endpoints point UWM Prometheus at the host's static MAC-pinned address
+# (rb5009 lease). Classic Endpoints (not EndpointSlice): the mirroring
+# controller derives the slice automatically, so discovery works for both
+# endpoint roles.
+apiVersion: v1
+kind: Service
+metadata:
+  name: vscode-node-exporter
+  labels:
+    app.kubernetes.io/name: vscode-node-exporter
+    app.kubernetes.io/part-of: vscode
+spec:
+  clusterIP: None
+  ports:
+    - name: metrics
+      port: 9100
+      targetPort: 9100
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  # Must match the Service name for endpoint discovery.
+  name: vscode-node-exporter
+  labels:
+    app.kubernetes.io/name: vscode-node-exporter
+    app.kubernetes.io/part-of: vscode
+subsets:
+  - addresses:
+      - ip: 10.10.9.22
+    ports:
+      - name: metrics
+        port: 9100
+        protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: vscode-node-exporter
+  labels:
+    app.kubernetes.io/name: vscode-node-exporter
+    app.kubernetes.io/part-of: vscode
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vscode-node-exporter
+  endpoints:
+    - port: metrics
+      interval: 30s
+      scrapeTimeout: 10s
+      relabelings:
+        # The target address is a bare IP; name the real source.
+        # action: replace is the CRD default - set explicitly so the
+        # rendered manifest matches the live object and ArgoCD stays Synced.
+        - action: replace
+          targetLabel: instance
+          replacement: vscode.igou.systems
