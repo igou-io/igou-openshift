@@ -21,9 +21,7 @@ spec:
       - grafana
       - hermes
       - sands-of-time
-      - ntfy
       - gotify
-      - n8n
       - searxng
       - jellyfin
     snapshotMoveData: true
