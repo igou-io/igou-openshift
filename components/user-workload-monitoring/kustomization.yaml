@@ -9,6 +9,7 @@ resources:
   - exporters/mktxp
   - exporters/olm-state-metrics
   - exporters/upsmonitor
+  - exporters/vscode
   - exporters/truenas
   - exporters/rk8s-federate
   - exporters/snmp-exporter
