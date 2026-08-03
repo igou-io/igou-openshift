@@ -64,9 +64,12 @@ spec:
   filters:
     - name: multiline
       type: detectMultilineException
-    # kube-apiserver audit at the Default profile is ~17GB/day, dominated
+    # kube-apiserver audit was ~17GB/day on the Default profile, dominated
     # by read-only requests (#382 sizing assumed ~15GB/day TOTAL). Keep
-    # every mutation auditable; drop reads. The audit input meta transform
+    # every mutation auditable; drop reads. This filter is now load-bearing
+    # for cost: apiserver/cluster runs the WriteRequestBodies profile, so
+    # the events that survive carry request bodies and are individually
+    # larger. The audit input meta transform
     # merges the parsed event into ._internal before pipeline filters run,
     # so .verb is addressable here.
     - name: drop-audit-read-verbs
