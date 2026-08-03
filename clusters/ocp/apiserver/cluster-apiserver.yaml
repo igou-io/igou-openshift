@@ -5,6 +5,13 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "3"
 spec:
+  # ocp4-cis-audit-profile-set (CIS-OCP 1.2.19): the Default profile omits
+  # request bodies, so mutations are not fully auditable. WriteRequestBodies
+  # keeps read requests at metadata level and adds bodies for create/update/
+  # patch/delete only. Changing this rolls out kube-apiserver — on this SNO
+  # that is a short API outage; running workloads are unaffected.
+  audit:
+    profile: WriteRequestBodies
   encryption:
     type: identity
   servingCerts:

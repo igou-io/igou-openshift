@@ -10,6 +10,25 @@ spec:
     name: acme-apps
   routeAdmission:
     wildcardPolicy: WildcardsAllowed
+  # ocp4-cis-ingress-controller-tls-cipher-suites: the implicit Intermediate
+  # profile also offers the DHE-RSA-AES{128,256}-GCM ciphers, which the rule
+  # rejects. This is Intermediate minus those two — ECDHE + TLS 1.3 only,
+  # matching the ComplianceRemediation the operator generated. Applying it
+  # restarts the router pods (brief per-pod connection reset).
+  tlsSecurityProfile:
+    type: Custom
+    custom:
+      minTLSVersion: VersionTLS12
+      ciphers:
+        - ECDHE-ECDSA-AES128-GCM-SHA256
+        - ECDHE-RSA-AES128-GCM-SHA256
+        - ECDHE-ECDSA-AES256-GCM-SHA384
+        - ECDHE-RSA-AES256-GCM-SHA384
+        - ECDHE-ECDSA-CHACHA20-POLY1305
+        - ECDHE-RSA-CHACHA20-POLY1305
+        - TLS_AES_128_GCM_SHA256
+        - TLS_AES_256_GCM_SHA384
+        - TLS_CHACHA20_POLY1305_SHA256
   nodePlacement:
     tolerations:
       - effect: NoSchedule
