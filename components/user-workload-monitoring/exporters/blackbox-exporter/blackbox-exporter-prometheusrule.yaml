@@ -44,7 +44,7 @@ spec:
     - name: blackbox.tls
       rules:
         - alert: BlackboxSSLCertExpiringSoon
-          expr: (probe_ssl_earliest_cert_expiry - time()) / 86400 < 14
+          expr: (probe_ssl_earliest_cert_expiry - time()) / 86400 < 9
           for: 1h
           labels:
             severity: warning
@@ -52,7 +52,7 @@ spec:
             summary: TLS cert for {{ $labels.instance }} expires in {{ $value | humanize }}d
             description: |
               Certificate presented by {{ $labels.instance }} will expire in
-              under 14 days.
+              under 9 days.
         - alert: BlackboxSSLCertExpiringCritical
           expr: (probe_ssl_earliest_cert_expiry - time()) / 86400 < 3
           for: 15m

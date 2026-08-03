@@ -37,6 +37,13 @@ route:
         - alertname =~ "Alertmanager(Cluster)?FailedToSendAlerts"
         - integration = webhook
       receiver: 'null'
+    # The netobserv and openshift-logging operators ship Loki PDBs with
+    # replicas == minAvailable, so they sit at-limit permanently on a
+    # single-node cluster (11 chronically-firing series, pure noise).
+    - matchers:
+        - alertname = PodDisruptionBudgetAtLimit
+        - namespace =~ "netobserv|openshift-logging"
+      receiver: 'null'
     - matchers:
         - severity =~ "critical|warning"
       receiver: eda-github-issue
@@ -59,7 +66,7 @@ receivers:
   - name: eda-github-issue
     webhook_configs:
       - url_file: /etc/alertmanager/secrets/alertmanager-eda-event-stream/url
-        send_resolved: false
+        send_resolved: true
         http_config:
           authorization:
             type: Bearer

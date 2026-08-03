@@ -20,7 +20,7 @@ Alerts shipped out of the box (`blackbox-exporter-prometheusrule.yaml`):
 | `BlackboxProbeFailed` | `probe_success == 0` for 5m |
 | `BlackboxProbeFailedCritical` | `probe_success{tier="critical"} == 0` for 2m |
 | `BlackboxProbeSlow` | `probe_duration_seconds > 5` for 10m |
-| `BlackboxSSLCertExpiringSoon` | cert expires within 14 days |
+| `BlackboxSSLCertExpiringSoon` | cert expires within 9 days |
 | `BlackboxSSLCertExpiringCritical` | cert expires within 3 days |
 
 All rules use `openshift.io/prometheus-rule-evaluation-scope: leaf-prometheus`
