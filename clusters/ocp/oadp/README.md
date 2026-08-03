@@ -35,7 +35,7 @@ see `docs/runbooks/oadp-restore.md`.
 
 | Schedule | When | Namespaces | TTL |
 |---|---|---|---|
-| `daily-apps` | 08:00 (04:00 ET) | forgejo, gitea-mirror, grafana, hermes, sands-of-time, ntfy, gotify, n8n, searxng, jellyfin | 30d |
+| `daily-apps` | 08:00 (04:00 ET) | forgejo, gitea-mirror, grafana, hermes, sands-of-time, gotify, searxng, jellyfin | 30d |
 | `daily-platform` | 08:30 | ansible-automation-platform (Fernet key!), stackrox | 30d |
 | `weekly-heavy` | Sat 06:00 | windows-images, comfyui, openshift-virtualization-os-images | 90d |
 
