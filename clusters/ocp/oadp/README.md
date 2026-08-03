@@ -73,12 +73,39 @@ backups, whole-namespace restore, scratch-namespace drill via
 
 ## Known issues
 
-- **hermes fsfreeze (#636)**: the guest agent cannot freeze
-  `/home/hermes/.hermes`, so every backup containing `hermes` completes
-  its data movement but reports `PartiallyFailed` (crash-consistent — the
-  same consistency the retired ZFS snapshot layer had). Expect
-  `VeleroBackupPartiallyFailed` to fire daily until the guest mount is
-  fixed.
+- **hermes fsfreeze (#636)**: the failing pre-backup hook is KubeVirt's
+  own, not ours — `virt-controller` stamps every virt-launcher pod with
+  `pre.hook.backup.velero.io/command = virt-freezer --freeze` on container
+  `compute`, and the backup log records `hookSource=annotation
+  hookOnError=Fail`. There is no annotation in git to adjust. On hermes it
+  fails with `guest-fsfreeze-freeze ... failed to open
+  /home/hermes/.hermes: Permission denied`, and the call is all-or-nothing
+  — nothing is frozen. Data movement still completes; the VM disks are
+  crash-consistent (the same consistency the retired ZFS snapshot layer
+  had), and hermes state additionally has the weekly
+  application-consistent tarball from igou-ansible
+  `playbooks/hermes/backup.yml`.
+
+  Worse than one noisy alert: a `PartiallyFailed` backup never publishes
+  `velero_backup_last_successful_timestamp`, and that series is absent for
+  `daily-apps` today, so `VeleroDailyBackupStale`'s `absent()` arm fires
+  permanently alongside `VeleroBackupPartiallyFailed`. Fixing the
+  stale-namespace errors will not clear it.
+
+  The fix is guest-side (igou-ansible / igou-inventory), but the mechanism
+  is **not yet pinned down** — do not guess at it. `/home/hermes/.hermes`
+  is `0700 hermes:hermes` (igou-ansible `playbooks/hermes/setup-os.yml`)
+  under a `/home/hermes` that is also `0700` (`hermes_home_mode` in
+  igou-inventory `group_vars/hermes.yml`), yet plain DAC does not explain
+  the `EACCES`: the CentOS Stream 10 `qemu-guest-agent` unit sets no
+  `User=` and no capability bounding, and the targeted policy already
+  allows `virt_qemu_ga_t self:capability { dac_override dac_read_search }`
+  unconditionally. Diagnose in the guest first — `getenforce`,
+  `ausearch -m AVC -c qemu-ga -ts recent`, `ls -ldZ /home/hermes
+  /home/hermes/.hermes`. A mislabeled mount point is a live candidate:
+  the policy grants `virt_qemu_ga_t` directory access on `mountpoint`
+  types (which `user_home_t` carries) and otherwise only behind the
+  off-by-default `virt_qemu_ga_read_nonsecurity_files` boolean.
 
 ## Gotchas
 
