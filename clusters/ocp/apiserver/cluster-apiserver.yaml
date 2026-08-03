@@ -8,8 +8,13 @@ spec:
   # ocp4-cis-audit-profile-set (CIS-OCP 1.2.19): the Default profile omits
   # request bodies, so mutations are not fully auditable. WriteRequestBodies
   # keeps read requests at metadata level and adds bodies for create/update/
-  # patch/delete only. Changing this rolls out kube-apiserver — on this SNO
-  # that is a short API outage; running workloads are unaffected.
+  # patch/delete only. Sensitive resources (secrets, routes, oauthclients)
+  # stay at metadata level in every profile, so no bodies of those reach
+  # Loki. This field is consumed by kube-apiserver, openshift-apiserver AND
+  # oauth-apiserver, so all three roll out — on this SNO that is a short API
+  # outage plus a console/oauth login blip; running workloads are unaffected.
+  # Volume: the CLF drop-audit-read-verbs filter (clusters/ocp/openshift-
+  # logging) already discards get/list/watch, so only the write path grows.
   audit:
     profile: WriteRequestBodies
   encryption:
