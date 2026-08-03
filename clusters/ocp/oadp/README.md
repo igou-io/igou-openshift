@@ -73,12 +73,31 @@ backups, whole-namespace restore, scratch-namespace drill via
 
 ## Known issues
 
-- **hermes fsfreeze (#636)**: the guest agent cannot freeze
-  `/home/hermes/.hermes`, so every backup containing `hermes` completes
-  its data movement but reports `PartiallyFailed` (crash-consistent — the
-  same consistency the retired ZFS snapshot layer had). Expect
-  `VeleroBackupPartiallyFailed` to fire daily until the guest mount is
-  fixed.
+- **hermes fsfreeze (#636)**: KubeVirt stamps every virt-launcher pod with
+  `pre.hook.backup.velero.io/command = virt-freezer --freeze` (in-tree,
+  unconditional, not in git and not configurable), and Velero defaults an
+  annotation hook to `onError: Fail`. On hermes that hook fails. `qemu-ga`
+  runs as root but in SELinux domain `virt_qemu_ga_t`, which the targeted
+  policy grants **no `capability` permissions at all**, so it cannot fall
+  back on `dac_read_search` to open `/home/hermes/.hermes` — mode `0700`
+  `hermes:hermes`, under a `/home/hermes` that is also `0700`
+  (`hermes_home_mode` in igou-inventory `group_vars/hermes.yml`). `/`
+  freezes fine because it is world-traversable, but
+  `guest-fsfreeze-freeze` is all-or-nothing: one unopenable mount aborts
+  the whole call, so nothing is frozen.
+  Data movement still completes; the VM disks are crash-consistent (the
+  same consistency the retired ZFS snapshot layer had), and hermes state
+  additionally has an application-consistent tarball from igou-ansible
+  `playbooks/hermes/backup.yml`. But a `PartiallyFailed` backup never
+  publishes `velero_backup_last_successful_timestamp`, so with `hermes` in
+  `daily-apps` both `VeleroBackupPartiallyFailed` **and**
+  `VeleroDailyBackupStale` (via its `absent()` arm) fire permanently.
+  The fix is guest-side, in igou-ansible `playbooks/hermes/setup-os.yml`
+  (+ igou-inventory `group_vars/hermes.yml`): either ship a local SELinux
+  module granting `virt_qemu_ga_t self:capability dac_read_search`, which
+  keeps both directories at `0700`, or make the mount reachable by root —
+  `/home/hermes` `0711` (traverse, still no listing) and
+  `/home/hermes/.hermes` owned `root:hermes` mode `0770`.
 
 ## Gotchas
 
