@@ -1462,25 +1462,24 @@
           "value": "default"
         },
         "hide": 0,
-        "label": "Data source",
+        "label": "cluster (thanos-querier = ocp, rk8s-prometheus = rk8s)",
         "name": "datasource",
         "query": "prometheus",
         "regex": "",
         "type": "datasource"
       },
       {
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${datasource}"
-        },
-        "hide": 0,
-        "label": "cluster",
         "name": "cluster",
-        "query": "label_values(up{job=\"kube-state-metrics\"}, cluster)",
-        "refresh": 2,
-        "sort": 1,
-        "type": "query",
-        "allValue": ".*"
+        "type": "constant",
+        "label": "cluster",
+        "hide": 2,
+        "query": "",
+        "skipUrlSync": true,
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        }
       },
       {
         "datasource": {

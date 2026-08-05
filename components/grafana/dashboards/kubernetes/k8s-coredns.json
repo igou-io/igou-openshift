@@ -1452,35 +1452,21 @@
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
-        "type": "datasource"
+        "type": "datasource",
+        "label": "cluster (thanos-querier = ocp, rk8s-prometheus = rk8s)"
       },
       {
-        "allValue": ".*",
+        "name": "cluster",
+        "type": "constant",
+        "label": "cluster",
+        "hide": 2,
+        "query": "",
+        "skipUrlSync": true,
         "current": {
           "selected": false,
-          "text": "All",
-          "value": "$__all"
-        },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "$datasource"
-        },
-        "definition": "label_values(coredns_dns_requests_total, cluster)",
-        "hide": 0,
-        "includeAll": true,
-        "label": "Cluster",
-        "multi": false,
-        "name": "cluster",
-        "options": [],
-        "query": "label_values(coredns_dns_requests_total, cluster)",
-        "refresh": 2,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 1,
-        "tagValuesQuery": "",
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
+          "text": "",
+          "value": ""
+        }
       },
       {
         "allValue": ".*",
