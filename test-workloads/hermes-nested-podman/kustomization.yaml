@@ -7,6 +7,5 @@ resources:
   - scc-rbac.yaml
   - serviceaccount.yaml
   - bootstrap-configmap.yaml
-  - subuid-configmap.yaml
   - persistentvolumeclaim.yaml
   - deployment.yaml

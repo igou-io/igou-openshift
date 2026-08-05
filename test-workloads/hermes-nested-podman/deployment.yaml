@@ -35,22 +35,8 @@ spec:
       automountServiceAccountToken: false
       containers:
       - args:
-        - "set -u\nmkdir -p \"$HOME\" \"$XDG_RUNTIME_DIR\" \"$HOME/.config/containers\"\
-          \n# Deterministic fuse-overlayfs storage (Dev Spaces recipe)\ncat > \"$HOME/.config/containers/storage.conf\"\
-          \ <<'EOF'\n[storage]\ndriver = \"overlay\"\n[storage.options.overlay]\n\
-          mount_program = \"/usr/bin/fuse-overlayfs\"\nEOF\n# No SELinux label separation\
-          \ for nested containers: crun's fsetxattr on\n# tmpfs copy-up is denied\
-          \ inside the userns; pod-level SELinux+userns is\n# the boundary (same model\
-          \ as the VM guest).\ncat > \"$HOME/.config/containers/containers.conf\"\
-          \ <<'EOF'\n[containers]\nlabel = false\nEOF\nif [ ! -x \"$HOME/.local/bin/hermes\"\
-          \ ]; then\n  echo \"[bootstrap] installing hermes-agent\"\n  curl -fsSL\
-          \ https://hermes-agent.nousresearch.com/install.sh \\\n    | bash -s --\
-          \ --non-interactive --skip-setup --skip-browser \\\n    || echo \"[bootstrap]\
-          \ hermes install FAILED (rc=$?), pod stays up for debugging\"\nfi\necho\
-          \ \"[bootstrap] ready\"\nexec sleep infinity\n"
-        command:
-        - /bin/bash
-        - -c
+        - gateway
+        - run
         env:
         - name: HERMES_HOME
           value: /opt/data
@@ -62,14 +48,16 @@ spec:
           value: ''
         - name: GATEWAY_ALLOW_ALL_USERS
           value: 'false'
-        - name: HERMES_DOCKER_BINARY
-          value: /usr/bin/podman
+        - name: HERMES_GID
+          value: '1000'
         - name: HERMES_HUMAN_DELAY_MAX_MS
           value: '2500'
         - name: HERMES_HUMAN_DELAY_MIN_MS
           value: '800'
         - name: HERMES_HUMAN_DELAY_MODE
           value: 'off'
+        - name: HERMES_UID
+          value: '1000'
         - name: IMAGE_TOOLS_DEBUG
           value: 'false'
         - name: MOA_TOOLS_DEBUG
@@ -84,10 +72,6 @@ spec:
           value: ''
         - name: TELEGRAM_HOME_CHANNEL
           value: ''
-        - name: TERMINAL_DOCKER_IMAGE
-          value: ghcr.io/igou-io/igou-devenv:2026.07.27
-        - name: TERMINAL_ENV
-          value: docker
         - name: VISION_TOOLS_DEBUG
           value: 'false'
         - name: WEB_TOOLS_DEBUG
@@ -96,10 +80,8 @@ spec:
           value: ''
         - name: WHATSAPP_ENABLED
           value: 'false'
-        - name: XDG_RUNTIME_DIR
-          value: /tmp/xdg-runtime
-        image: ghcr.io/igou-io/igou-devenv:2026.07.27
-        imagePullPolicy: IfNotPresent
+        image: ghcr.io/igou-io/hermes-agent-podman:latest
+        imagePullPolicy: Always
         name: hermes-agent
         resources:
           limits:
@@ -112,6 +94,8 @@ spec:
           allowPrivilegeEscalation: true
           capabilities:
             add:
+            - CHOWN
+            - FOWNER
             - SETUID
             - SETGID
             - DAC_OVERRIDE
@@ -128,14 +112,6 @@ spec:
           name: data
         - mountPath: /tmp
           name: tmp
-        - mountPath: /etc/subuid
-          name: subuid-fix
-          readOnly: true
-          subPath: subuid
-        - mountPath: /etc/subgid
-          name: subuid-fix
-          readOnly: true
-          subPath: subgid
         workingDir: /opt/data
       hostUsers: false
       initContainers:
@@ -152,13 +128,15 @@ spec:
         env:
         - name: HERMES_HOME
           value: /opt/data
-        image: ghcr.io/igou-io/igou-devenv:2026.07.27
-        imagePullPolicy: IfNotPresent
+        image: ghcr.io/igou-io/hermes-agent-podman:latest
+        imagePullPolicy: Always
         name: bootstrap-config
         securityContext:
           allowPrivilegeEscalation: true
           capabilities:
             add:
+            - CHOWN
+            - FOWNER
             - SETUID
             - SETGID
             - DAC_OVERRIDE
@@ -181,9 +159,9 @@ spec:
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
-        runAsGroup: 1000
-        runAsNonRoot: true
-        runAsUser: 1000
+        runAsGroup: 0
+        runAsNonRoot: false
+        runAsUser: 0
         seccompProfile:
           type: Unconfined
       serviceAccountName: hermes-agent-test
@@ -197,6 +175,3 @@ spec:
         name: bootstrap
       - emptyDir: {}
         name: tmp
-      - configMap:
-          name: hermes-agent-test-subuid
-        name: subuid-fix

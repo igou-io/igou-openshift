@@ -15,7 +15,9 @@ allowHostPorts: false
 allowPrivilegedContainer: false
 allowPrivilegeEscalation: true
 allowedCapabilities:
+  - CHOWN
   - DAC_OVERRIDE
+  - FOWNER
   - SETFCAP
   - SYS_ADMIN
   - SETUID
@@ -28,8 +30,9 @@ fsGroup:
     - min: 1000
       max: 65534
 runAsUser:
-  type: MustRunAs
-  uid: 1000
+  # upstream s6 bootstrap must start as container-root (unprivileged on the
+  # host via hostUsers: false) and drops to HERMES_UID itself
+  type: RunAsAny
 seLinuxContext:
   type: MustRunAs
   seLinuxOptions:
