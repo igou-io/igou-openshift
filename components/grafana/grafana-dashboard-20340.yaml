@@ -1,4 +1,9 @@
 ---
+# Vendored locally (2026-08-05 dashboard audit): the upstream board's
+# $namespace variable scanned exported_namespace across all metrics and
+# defaulted to a namespace with no certificates, opening the board empty.
+# Re-vendor by refreshing dashboards/cert-manager.json and re-scoping the
+# namespace variable to certmanager_certificate_expiration_timestamp_seconds.
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -11,8 +16,6 @@ spec:
     matchLabels:
       dashboards: grafana
   resyncPeriod: 24h
-  datasources:
-    - inputName: DS_PROMETHEUS
-      datasourceName: thanos-querier
-  grafanaCom:
-    id: 20340
+  configMapRef:
+    name: grafana-dashboard-20340-json
+    key: cert-manager.json

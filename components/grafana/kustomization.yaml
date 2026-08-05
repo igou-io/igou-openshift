@@ -90,6 +90,22 @@ resources:
 # it cannot come from spec.grafanaCom). Stable name: the GrafanaDashboard
 # CR references the ConfigMap by name.
 configMapGenerator:
+  - name: grafana-dashboard-20340-json
+    namespace: grafana
+    files:
+      - dashboards/cert-manager.json
+  - name: grafana-dashboard-15765-json
+    namespace: grafana
+    files:
+      - dashboards/ipmi.json
+  - name: grafana-dashboard-external-secrets-json
+    namespace: grafana
+    files:
+      - dashboards/external-secrets.json
+  - name: grafana-dashboard-13679-json
+    namespace: grafana
+    files:
+      - dashboards/mktxp.json
   - name: grafana-dashboard-14584-json
     namespace: grafana
     files:
