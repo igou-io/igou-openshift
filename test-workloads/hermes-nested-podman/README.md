@@ -112,8 +112,16 @@ hence template→patch→apply rather than a helm release).
   namespace carries no enforce label.
 - No EgressFirewall/NetworkPolicy/nftables layers here, unlike the
   production hermes namespace — full egress.
-- Sandbox containers default to root-in-namespace; production parity would
-  add the VM's `--userns=keep-id` `docker_extra_args` to `config.yaml`.
+- Sandbox containers run with the VM's `--userns=keep-id:uid=1000,gid=1000
+  --user=1000:1000` `docker_extra_args` — in-sandbox identity is
+  `igou (1000)` with `HOME=/home/igou`, and files land uid-1000 on the
+  PVC. First keep-id use per image builds an ownership-shifted layer copy
+  through fuse-overlayfs (~4 min for the devenv image; one-time, persisted
+  on the PVC). A persistent sandbox created before a config change is
+  reused as-is — `podman rm -f` it to pick up new `docker_extra_args`.
+- Nested-sandbox networking verified: external DNS + HTTPS, cluster DNS,
+  and cluster services (kube-apiserver `/healthz`) all reachable via
+  pasta — remember this namespace has no egress restrictions.
 - The chart's default image tag (`0.8.0`) does not exist upstream — tags
   are date-based; `helm-values.yaml` points at
   `ghcr.io/igou-io/hermes-agent-podman` instead.

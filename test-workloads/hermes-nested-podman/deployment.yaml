@@ -21,7 +21,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: cb3bb77625c4d616d6525ed9f68b902d837cf3e327f82e6817e8d8d6de163738
+        checksum/config: d39b7dc29726b8c7636cdaf75f608e6e3cf0def3b4041abbfc61230e07623652
         checksum/secret: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
         io.kubernetes.cri-o.Devices: /dev/fuse,/dev/net/tun
       labels:

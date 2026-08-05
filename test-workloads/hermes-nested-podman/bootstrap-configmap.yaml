@@ -7,8 +7,9 @@ data:
     \ true\n  tool_progress: all\nmodel:\n  base_url: https://openrouter.ai/api/v1\n\
     \  default: anthropic/claude-opus-4.6\n  provider: auto\nsecurity:\n  redact_secrets:\
     \ true\n  tirith_enabled: true\n  tirith_fail_open: true\nterminal:\n  backend:\
-    \ docker\n  container_persistent: true\n  cwd: /workspace\n  docker_image: ghcr.io/igou-io/igou-devenv:2026.07.27\n\
-    \  timeout: 300\n"
+    \ docker\n  container_persistent: true\n  cwd: /workspace\n  docker_extra_args:\n\
+    \  - --userns=keep-id:uid=1000,gid=1000\n  - --user=1000:1000\n  docker_image:\
+    \ ghcr.io/igou-io/igou-devenv:2026.07.27\n  timeout: 300\n"
 kind: ConfigMap
 metadata:
   labels:

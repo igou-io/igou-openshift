@@ -26,6 +26,11 @@ config:
       cwd: /workspace
       timeout: 300
       container_persistent: true
+      # VM parity (hermes_terminal_config): sandbox runs as igou 1000 with
+      # keep-id so files land owned by the hermes user on the PVC
+      docker_extra_args:
+        - --userns=keep-id:uid=1000,gid=1000
+        - --user=1000:1000
 
 
 persistence:
