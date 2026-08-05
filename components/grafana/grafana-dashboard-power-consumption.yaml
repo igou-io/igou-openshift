@@ -1,0 +1,25 @@
+---
+# Consumption-focused companion to Lab Power (2026-08-05, user request:
+# 8-cell power consumption board). Inherits Lab Power's accounting model:
+# totals sum exactly one measurement tier (WALL / BRANCH / HOST-ACTUAL);
+# cross-tier data is comparison-only, never summed. JSON in
+# dashboards/power/power-consumption.json.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-power-consumption
+  namespace: grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: '12'
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  folder: power
+  resyncPeriod: 24h
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: thanos-querier
+  configMapRef:
+    name: grafana-dashboard-power-consumption-json
+    key: power-consumption.json

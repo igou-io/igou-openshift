@@ -1,0 +1,429 @@
+{
+  "uid": "power-consumption",
+  "title": "Power Consumption",
+  "description": "Consumption-focused view of lab power. Accounting model (same as Lab Power): totals sum exactly one measurement tier - WALL (UPS estimated watts), BRANCH (PDU bank / PoE), HOST-ACTUAL (IPMI). Cross-tier panels are comparison-only, never summed: the AP7900 hangs off a UPS, so UPS+PDU sums double-count.",
+  "editable": true,
+  "graphTooltip": 1,
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "power",
+    "lab"
+  ],
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "ups",
+        "type": "query",
+        "label": "UPS",
+        "query": "label_values(network_ups_tools_ups_load, ups)",
+        "refresh": 2,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        }
+      },
+      {
+        "name": "pdu_voltage",
+        "type": "constant",
+        "label": "PDU line voltage",
+        "query": "120",
+        "hide": 2
+      },
+      {
+        "name": "kwh_cost",
+        "type": "textbox",
+        "label": "$/kWh",
+        "query": "0.16",
+        "current": {
+          "text": "0.16",
+          "value": "0.16"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "WALL — total power now",
+      "description": "Estimated: UPS load% x realpower rating, summed over selected UPSes.",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(network_ups_tools_ups_load{ups=~\"$ups\"} / 100 * on(ups) group_left() network_ups_tools_ups_realpower_nominal)"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "WALL — energy last 24h",
+      "description": "24h average wall watts x 24h.",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "avg_over_time((sum(network_ups_tools_ups_load{ups=~\"$ups\"} / 100 * on(ups) group_left() network_ups_tools_ups_realpower_nominal))[24h:5m]) * 24 / 1000"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "WALL — projected cost / month",
+      "description": "24h average extrapolated to a month at $kwh_cost per kWh.",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "avg_over_time((sum(network_ups_tools_ups_load{ups=~\"$ups\"} / 100 * on(ups) group_left() network_ups_tools_ups_realpower_nominal))[24h:5m]) * 24 * 30.44 * $kwh_cost / 1000"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "HOST-ACTUAL — TrueNAS chassis",
+      "description": "Actual DCMI reading. Comparison-only vs WALL/BRANCH tiers.",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "ipmi_dcmi_power_consumption_watts{job=\"truenas-ipmi\"}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "WALL — watts per UPS",
+      "description": "Estimated wall draw per UPS (load% x rating). Stacked: total = lab wall power.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 5
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "custom": {
+            "fillOpacity": 12,
+            "lineWidth": 2,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "network_ups_tools_ups_load{ups=~\"$ups\"} / 100 * on(ups) group_left() network_ups_tools_ups_realpower_nominal",
+          "legendFormat": "{{ups}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "BRANCH — PDU bank & PoE delivered",
+      "description": "Branch circuits downstream of the UPSes. Never sum with WALL.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 5
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "custom": {
+            "fillOpacity": 12,
+            "lineWidth": 2,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rPDULoadStatusLoad{job=\"probe/snmp-exporter/apc-pdu\"} / 10 * $pdu_voltage",
+          "legendFormat": "AP7900 PDU bank"
+        },
+        {
+          "refId": "B",
+          "expr": "sum(mktxp_poe_out_power{routerboard_name=\"CRS328\", name!~\"ether24.*\"})",
+          "legendFormat": "PoE (CRS328)"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "DEVICE — actual watts (IPMI + PoE ports)",
+      "description": "Per-device actual readings - the only tier measured at the device itself.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "custom": {
+            "fillOpacity": 12,
+            "lineWidth": 2,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "ipmi_dcmi_power_consumption_watts{job=\"truenas-ipmi\"}",
+          "legendFormat": "TrueNAS (IPMI)"
+        },
+        {
+          "refId": "B",
+          "expr": "mktxp_poe_out_power{routerboard_name=\"CRS328\", name!~\"ether24.*\"}",
+          "legendFormat": "PoE {{name}}"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "WALL — daily energy trend",
+      "description": "Rolling 24h wall energy - flat line = steady consumption.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "custom": {
+            "fillOpacity": 12,
+            "lineWidth": 2,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "lastNotNull"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "avg_over_time((sum(network_ups_tools_ups_load{ups=~\"$ups\"} / 100 * on(ups) group_left() network_ups_tools_ups_realpower_nominal))[1d:5m]) * 24 / 1000",
+          "legendFormat": "kWh per day (rolling 24h)"
+        }
+      ]
+    }
+  ]
+}

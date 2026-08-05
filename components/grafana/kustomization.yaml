@@ -82,6 +82,7 @@ resources:
   - grafana-dashboard-sre-golden-signals-vms.yaml
   - grafana-dashboard-sre-use-storage.yaml
   - grafana-dashboard-power-lab-power.yaml
+  - grafana-dashboard-power-consumption.yaml
   # Fleet hardware thermals (hardware folder)
   - grafana-dashboard-hardware-lab-thermal.yaml
   # NetObserv flow analytics (network folder)
@@ -307,6 +308,10 @@ configMapGenerator:
     namespace: grafana
     files:
       - dashboards/power/lab-power.json
+  - name: grafana-dashboard-power-consumption-json
+    namespace: grafana
+    files:
+      - dashboards/power/power-consumption.json
   - name: grafana-dashboard-hardware-lab-thermal-json
     namespace: grafana
     files:
