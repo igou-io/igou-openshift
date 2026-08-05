@@ -19,9 +19,13 @@ model. See "Caveats" and the memory/docs trail before promoting any of it.
 
 ## What's in here
 
-The agent container *is* the devenv image (upstream's
-`nousresearch/hermes-agent` image is not anonymously pullable, and the
-devenv image already carries podman + fuse-overlayfs + setuid newuidmap).
+The agent container *is* the devenv image. The official upstream image
+(`docker.io/nousresearch/hermes-agent`, date-based tags — the chart's
+`0.8.0` default tag does not exist) runs as root under s6-overlay and
+ships no podman/fuse-overlayfs/newuidmap; its container-execution model is
+`docker-cli` against a bind-mounted host docker socket, which is a
+non-starter here. The devenv image already carries the full nested-podman
+stack.
 The entrypoint installs Hermes onto the PVC with the same installer flags
 as `igou-ansible/playbooks/hermes/setup-hermes.yml`, writes a
 fuse-overlayfs `storage.conf`, and idles; the terminal backend is
