@@ -3549,7 +3549,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(rate(storage_operation_errors_total{metrics_path=\"/metrics\", instance=~\"$instance\"}[5m])) by (instance, operation_name, volume_plugin)",
+          "expr": "sum(rate(storage_operation_duration_seconds_count{status!=\"success\", metrics_path=\"/metrics\", instance=~\"$instance\"}[5m])) by (instance, operation_name, volume_plugin)",
           "interval": "",
           "legendFormat": "{{instance}} {{operation_name}} {{volume_plugin}}",
           "queryType": "randomWalk",
@@ -3861,7 +3861,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(etcd_db_total_size_in_bytes{instance=~\"$instance\"}) by (instance)",
+          "expr": "sum(etcd_mvcc_db_total_size_in_bytes{instance=~\"$instance\"}) by (instance)",
           "interval": "",
           "legendFormat": "{{instance}} ",
           "queryType": "randomWalk",
@@ -3968,101 +3968,6 @@
       "timeRegions": [],
       "timeShift": null,
       "title": "99th %ile all Etcd Wal Fsync Duration",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "s",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "${datasource}",
-      "fieldConfig": {
-        "defaults": {
-          "custom": {}
-        },
-        "overrides": []
-      },
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 8,
-        "y": 73
-      },
-      "hiddenSeries": false,
-      "id": 74,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "alertThreshold": true
-      },
-      "percentage": false,
-      "pluginVersion": "7.3.4",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "histogram_quantile(0.99, rate(etcd_network_peer_round_trip_time_seconds_bucket{instance=~\"$instance\"}[2m])) > 0",
-          "interval": "",
-          "legendFormat": "{{instance}} ",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "99th %ile all Etcd RTT Duration",
       "tooltip": {
         "shared": true,
         "sort": 0,
