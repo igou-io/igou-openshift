@@ -3725,9 +3725,9 @@
     "list": [
       {
         "current": {
-          "selected": false,
-          "text": "Prometheus",
-          "value": "Prometheus"
+          "selected": true,
+          "text": "thanos-querier",
+          "value": "thanos-querier"
         },
         "description": null,
         "error": null,
@@ -3739,15 +3739,19 @@
         "options": [],
         "query": "prometheus",
         "refresh": 1,
-        "regex": "",
+        "regex": "/thanos-querier/",
         "skipUrlSync": false,
         "type": "datasource"
       },
       {
         "allValue": ".*",
-        "current": {},
+        "current": {
+          "selected": true,
+          "text": "openshift-gitops",
+          "value": "openshift-gitops"
+        },
         "datasource": "$datasource",
-        "definition": "label_values(kube_pod_info, namespace)",
+        "definition": "label_values(argocd_app_info, namespace)",
         "description": null,
         "error": null,
         "hide": 0,
@@ -3757,11 +3761,11 @@
         "name": "namespace",
         "options": [],
         "query": {
-          "query": "label_values(kube_pod_info, namespace)",
+          "query": "label_values(argocd_app_info, namespace)",
           "refId": "Prometheus-namespace-Variable-Query"
         },
         "refresh": 1,
-        "regex": ".*argocd.*",
+        "regex": "",
         "skipUrlSync": false,
         "sort": 0,
         "tagValuesQuery": "",
