@@ -1,4 +1,9 @@
 ---
+# Vendored locally (2026-08-05 dashboard audit): the upstream board uses
+# metric names from an older ipmi_exporter (ipmi_power_state,
+# ipmi_power_watts); the deployed exporter emits ipmi_chassis_power_state
+# and ipmi_dcmi_power_consumption_watts. Re-vendor by refreshing
+# dashboards/ipmi.json and re-applying the two metric renames.
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -11,8 +16,6 @@ spec:
     matchLabels:
       dashboards: grafana
   resyncPeriod: 24h
-  datasources:
-    - inputName: DS_PROMETHEUS
-      datasourceName: thanos-querier
-  grafanaCom:
-    id: 15765
+  configMapRef:
+    name: grafana-dashboard-15765-json
+    key: ipmi.json

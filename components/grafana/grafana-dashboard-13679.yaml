@@ -1,4 +1,12 @@
 ---
+# Vendored locally (2026-08-05 dashboard audit): the upstream board targets
+# a fuller mktxp feature set than this fleet emits. Removed panel groups
+# whose metrics can never appear here (WLAN/CAPsMAN - no wireless hardware;
+# kid-control, simple/tree queues, netwatch, connection-stats, firewall
+# address lists, bandwidth test - unused features), and renamed
+# mktxp_system_routerboard_{temperature,voltage} to the deployed exporter's
+# mktxp_system_cpu_temperature / mktxp_system_psu1_voltage. Re-vendor by
+# refreshing dashboards/mktxp.json and re-applying those patches.
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:
@@ -11,8 +19,6 @@ spec:
     matchLabels:
       dashboards: grafana
   resyncPeriod: 24h
-  datasources:
-    - inputName: DS_PROMETHEUS
-      datasourceName: thanos-querier
-  grafanaCom:
-    id: 13679
+  configMapRef:
+    name: grafana-dashboard-13679-json
+    key: mktxp.json
