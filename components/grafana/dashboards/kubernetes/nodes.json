@@ -676,21 +676,21 @@
       {
         "name": "datasource",
         "query": "prometheus",
-        "type": "datasource"
+        "type": "datasource",
+        "label": "cluster (thanos-querier = ocp, rk8s-prometheus = rk8s)"
       },
       {
-        "allValue": ".*",
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${datasource}"
-        },
-        "hide": 0,
-        "includeAll": true,
-        "label": "Cluster",
         "name": "cluster",
-        "query": "label_values(node_uname_info{job=\"node-exporter\", sysname!=\"Darwin\"}, cluster)",
-        "refresh": 2,
-        "type": "query"
+        "type": "constant",
+        "label": "cluster",
+        "hide": 2,
+        "query": "",
+        "skipUrlSync": true,
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        }
       },
       {
         "datasource": {
