@@ -1,0 +1,202 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: hermes-agent-test
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/part-of: hermes-agent
+    app.kubernetes.io/version: 0.8.0
+    helm.sh/chart: hermes-agent-0.1.0
+  name: hermes-agent-test
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: hermes-agent-test
+      app.kubernetes.io/name: hermes-agent
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        checksum/config: cb3bb77625c4d616d6525ed9f68b902d837cf3e327f82e6817e8d8d6de163738
+        checksum/secret: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+        io.kubernetes.cri-o.Devices: /dev/fuse,/dev/net/tun
+      labels:
+        app.kubernetes.io/instance: hermes-agent-test
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: hermes-agent
+        app.kubernetes.io/part-of: hermes-agent
+        app.kubernetes.io/version: 0.8.0
+        helm.sh/chart: hermes-agent-0.1.0
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - args:
+        - "set -u\nmkdir -p \"$HOME\" \"$XDG_RUNTIME_DIR\" \"$HOME/.config/containers\"\
+          \n# Deterministic fuse-overlayfs storage (Dev Spaces recipe)\ncat > \"$HOME/.config/containers/storage.conf\"\
+          \ <<'EOF'\n[storage]\ndriver = \"overlay\"\n[storage.options.overlay]\n\
+          mount_program = \"/usr/bin/fuse-overlayfs\"\nEOF\n# No SELinux label separation\
+          \ for nested containers: crun's fsetxattr on\n# tmpfs copy-up is denied\
+          \ inside the userns; pod-level SELinux+userns is\n# the boundary (same model\
+          \ as the VM guest).\ncat > \"$HOME/.config/containers/containers.conf\"\
+          \ <<'EOF'\n[containers]\nlabel = false\nEOF\nif [ ! -x \"$HOME/.local/bin/hermes\"\
+          \ ]; then\n  echo \"[bootstrap] installing hermes-agent\"\n  curl -fsSL\
+          \ https://hermes-agent.nousresearch.com/install.sh \\\n    | bash -s --\
+          \ --non-interactive --skip-setup --skip-browser \\\n    || echo \"[bootstrap]\
+          \ hermes install FAILED (rc=$?), pod stays up for debugging\"\nfi\necho\
+          \ \"[bootstrap] ready\"\nexec sleep infinity\n"
+        command:
+        - /bin/bash
+        - -c
+        env:
+        - name: HERMES_HOME
+          value: /opt/data
+        - name: HOME
+          value: /opt/data/home
+        - name: DISCORD_ALLOWED_USERS
+          value: ''
+        - name: DISCORD_HOME_CHANNEL
+          value: ''
+        - name: GATEWAY_ALLOW_ALL_USERS
+          value: 'false'
+        - name: HERMES_DOCKER_BINARY
+          value: /usr/bin/podman
+        - name: HERMES_HUMAN_DELAY_MAX_MS
+          value: '2500'
+        - name: HERMES_HUMAN_DELAY_MIN_MS
+          value: '800'
+        - name: HERMES_HUMAN_DELAY_MODE
+          value: 'off'
+        - name: IMAGE_TOOLS_DEBUG
+          value: 'false'
+        - name: MOA_TOOLS_DEBUG
+          value: 'false'
+        - name: SIGNAL_ALLOWED_USERS
+          value: ''
+        - name: SIGNAL_GROUP_ALLOWED_USERS
+          value: ''
+        - name: SLACK_ALLOWED_USERS
+          value: ''
+        - name: TELEGRAM_ALLOWED_USERS
+          value: ''
+        - name: TELEGRAM_HOME_CHANNEL
+          value: ''
+        - name: TERMINAL_DOCKER_IMAGE
+          value: ghcr.io/igou-io/igou-devenv:2026.07.27
+        - name: TERMINAL_ENV
+          value: docker
+        - name: VISION_TOOLS_DEBUG
+          value: 'false'
+        - name: WEB_TOOLS_DEBUG
+          value: 'false'
+        - name: WHATSAPP_ALLOWED_USERS
+          value: ''
+        - name: WHATSAPP_ENABLED
+          value: 'false'
+        - name: XDG_RUNTIME_DIR
+          value: /tmp/xdg-runtime
+        image: ghcr.io/igou-io/igou-devenv:2026.07.27
+        imagePullPolicy: IfNotPresent
+        name: hermes-agent
+        resources:
+          limits:
+            cpu: '4'
+            memory: 6Gi
+          requests:
+            cpu: 500m
+            memory: 1Gi
+        securityContext:
+          allowPrivilegeEscalation: true
+          capabilities:
+            add:
+            - SETUID
+            - SETGID
+            - DAC_OVERRIDE
+            - SETFCAP
+            - SYS_ADMIN
+            drop:
+            - ALL
+          procMount: Unmasked
+          readOnlyRootFilesystem: false
+          seccompProfile:
+            type: Unconfined
+        volumeMounts:
+        - mountPath: /opt/data
+          name: data
+        - mountPath: /tmp
+          name: tmp
+        - mountPath: /etc/subuid
+          name: subuid-fix
+          readOnly: true
+          subPath: subuid
+        - mountPath: /etc/subgid
+          name: subuid-fix
+          readOnly: true
+          subPath: subgid
+        workingDir: /opt/data
+      hostUsers: false
+      initContainers:
+      - args:
+        - "set -eu\nmkdir -p \"/opt/data/home\"\nif [ -f \"/bootstrap/config.yaml\"\
+          \ ]; then\n  if [ \"true\" = \"true\" ] || [ ! -f \"/opt/data/config.yaml\"\
+          \ ]; then\n    cp \"/bootstrap/config.yaml\" \"/opt/data/config.yaml\"\n\
+          \  fi\nfi\nif [ -f \"/bootstrap/SOUL.md\" ]; then\n  if [ \"true\" = \"\
+          true\" ] || [ ! -f \"/opt/data/SOUL.md\" ]; then\n    cp \"/bootstrap/SOUL.md\"\
+          \ \"/opt/data/SOUL.md\"\n  fi\nfi\n"
+        command:
+        - /bin/sh
+        - -ec
+        env:
+        - name: HERMES_HOME
+          value: /opt/data
+        image: ghcr.io/igou-io/igou-devenv:2026.07.27
+        imagePullPolicy: IfNotPresent
+        name: bootstrap-config
+        securityContext:
+          allowPrivilegeEscalation: true
+          capabilities:
+            add:
+            - SETUID
+            - SETGID
+            - DAC_OVERRIDE
+            - SETFCAP
+            - SYS_ADMIN
+            drop:
+            - ALL
+          procMount: Unmasked
+          readOnlyRootFilesystem: false
+          seccompProfile:
+            type: Unconfined
+        volumeMounts:
+        - mountPath: /opt/data
+          name: data
+        - mountPath: /bootstrap
+          name: bootstrap
+          readOnly: true
+        - mountPath: /tmp
+          name: tmp
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: Unconfined
+      serviceAccountName: hermes-agent-test
+      terminationGracePeriodSeconds: 5
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: hermes-agent-test-data
+      - configMap:
+          name: hermes-agent-test-config
+        name: bootstrap
+      - emptyDir: {}
+        name: tmp
+      - configMap:
+          name: hermes-agent-test-subuid
+        name: subuid-fix

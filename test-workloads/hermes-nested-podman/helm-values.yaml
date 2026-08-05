@@ -1,0 +1,139 @@
+# hermes-agent chart on OCP with nested rootless podman terminal backend.
+# Agent container runs igou-devenv (has podman/fuse-overlayfs/newuidmap);
+# hermes itself is installed into the PVC by the entrypoint, mirroring
+# playbooks/hermes/setup-hermes.yml.
+image:
+  repository: ghcr.io/igou-io/igou-devenv
+  tag: "2026.07.27"
+  pullPolicy: IfNotPresent
+
+command:
+  - /bin/bash
+  - -c
+args:
+  - |
+    set -u
+    mkdir -p "$HOME" "$XDG_RUNTIME_DIR" "$HOME/.config/containers"
+    # Deterministic fuse-overlayfs storage (Dev Spaces recipe)
+    cat > "$HOME/.config/containers/storage.conf" <<'EOF'
+    [storage]
+    driver = "overlay"
+    [storage.options.overlay]
+    mount_program = "/usr/bin/fuse-overlayfs"
+    EOF
+    # No SELinux label separation for nested containers: crun's fsetxattr on
+    # tmpfs copy-up is denied inside the userns; pod-level SELinux+userns is
+    # the boundary (same model as the VM guest).
+    cat > "$HOME/.config/containers/containers.conf" <<'EOF'
+    [containers]
+    label = false
+    EOF
+    if [ ! -x "$HOME/.local/bin/hermes" ]; then
+      echo "[bootstrap] installing hermes-agent"
+      curl -fsSL https://hermes-agent.nousresearch.com/install.sh \
+        | bash -s -- --non-interactive --skip-setup --skip-browser \
+        || echo "[bootstrap] hermes install FAILED (rc=$?), pod stays up for debugging"
+    fi
+    echo "[bootstrap] ready"
+    exec sleep infinity
+
+workingDir: /opt/data
+
+bootstrap:
+  enabled: true
+  overwrite: true
+
+config:
+  values:
+    terminal:
+      backend: docker
+      docker_image: ghcr.io/igou-io/igou-devenv:2026.07.27
+      cwd: /workspace
+      timeout: 300
+      container_persistent: true
+
+env:
+  HERMES_DOCKER_BINARY: /usr/bin/podman
+  TERMINAL_ENV: docker
+  TERMINAL_DOCKER_IMAGE: ghcr.io/igou-io/igou-devenv:2026.07.27
+  XDG_RUNTIME_DIR: /tmp/xdg-runtime
+
+persistence:
+  enabled: true
+  mountPath: /opt/data
+  accessMode: ReadWriteOnce
+  size: 20Gi
+  storageClass: freenas-nvmeof-ssd-csi
+
+podAnnotations:
+  io.kubernetes.cri-o.Devices: /dev/fuse,/dev/net/tun
+
+podSecurityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  fsGroupChangePolicy: OnRootMismatch
+  runAsNonRoot: true
+  # RuntimeDefault denies unshare/clone(CLONE_NEWUSER) (ENOSYS), which nested
+  # rootless podman needs; the pod-level user namespace is the isolation
+  # boundary here (same posture as Dev Spaces workspaces).
+  seccompProfile:
+    type: Unconfined
+
+securityContext:
+  allowPrivilegeEscalation: true
+  readOnlyRootFilesystem: false
+  procMount: Unmasked
+  capabilities:
+    drop:
+      - ALL
+    add:
+      - SETUID
+      - SETGID
+      - DAC_OVERRIDE
+      # kernel verify_root_map: mapping uid 0 in a child userns needs SETFCAP
+      - SETFCAP
+      - SYS_ADMIN
+  seccompProfile:
+    type: Unconfined
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: "4"
+    memory: 6Gi
+
+terminationGracePeriodSeconds: 5
+
+browser:
+  shm:
+    enabled: false
+
+# Pod-userns-sized subuid ranges: the image's igou:524288:65536 exceeds the
+# pod's 65536-UID namespace, so newuidmap gets EPERM. 0->1000 root line plus
+# 1..63536 -> 2000..65535 fits exactly.
+extraObjects:
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: hermes-agent-test-subuid
+    data:
+      subuid: "igou:2000:63536"
+      subgid: "igou:2000:63536"
+
+extraVolumes:
+  - name: subuid-fix
+    configMap:
+      name: hermes-agent-test-subuid
+
+extraVolumeMounts:
+  - name: subuid-fix
+    mountPath: /etc/subuid
+    subPath: subuid
+    readOnly: true
+  - name: subuid-fix
+    mountPath: /etc/subgid
+    subPath: subgid
+    readOnly: true

@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  subgid: igou:2000:63536
+  subuid: igou:2000:63536
+kind: ConfigMap
+metadata:
+  name: hermes-agent-test-subuid
