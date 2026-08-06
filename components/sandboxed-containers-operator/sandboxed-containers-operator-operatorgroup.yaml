@@ -1,0 +1,12 @@
+---
+# OSC 1.13.1 supports OwnNamespace/SingleNamespace only (AllNamespaces is not
+# supported), so targetNamespaces must name this namespace explicitly.
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: sandboxed-containers-operator
+  namespace: openshift-sandboxed-containers-operator
+spec:
+  targetNamespaces:
+    - openshift-sandboxed-containers-operator
+  upgradeStrategy: Default

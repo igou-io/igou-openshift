@@ -268,6 +268,18 @@ applications:
       argocd.argoproj.io/sync-wave: '10'
     source:
       path: components/netobserv-operator
+  sandboxed-containers-operator:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '10'
+    source:
+      path: components/sandboxed-containers-operator
+  agent-sandbox-operator:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '10'
+    source:
+      path: components/agent-sandbox-operator
 
   # LokiStack + ClusterLogForwarder operands for central logging (issue
   # #382): store = RustFS S3 (hot instance) via ESO, tenants

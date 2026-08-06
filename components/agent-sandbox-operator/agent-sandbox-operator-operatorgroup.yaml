@@ -1,0 +1,10 @@
+---
+# agent-sandbox-operator v0.9.0 supports AllNamespaces ONLY, so the
+# OperatorGroup must omit targetNamespaces (empty = watch all namespaces).
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: agent-sandbox-operator
+  namespace: agent-sandbox-system
+spec:
+  upgradeStrategy: Default

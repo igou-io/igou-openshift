@@ -1,0 +1,22 @@
+---
+# Enables the `kata` RuntimeClass on selected nodes.
+#
+# ⚠ Applying this DRAINS AND REBOOTS every matching node (10-60 min each).
+# Scope is deliberately narrow via kataConfigPoolSelector: only nodes labelled
+# kata-runtime=enabled are converted. Label them with:
+#   oc label node hpg5.igou.systems kata-runtime=enabled
+#
+# Excluded on purpose:
+#   - truenas-w1 : it is a KubeVirt VM; OSC does not support nested virtualization
+#   - ocp        : control plane
+apiVersion: kataconfiguration.openshift.io/v1
+kind: KataConfig
+metadata:
+  name: cluster-kataconfig
+  annotations:
+    argocd.argoproj.io/sync-wave: '10'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  kataConfigPoolSelector:
+    matchLabels:
+      kata-runtime: enabled
