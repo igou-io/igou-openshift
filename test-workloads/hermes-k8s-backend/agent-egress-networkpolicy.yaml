@@ -1,0 +1,42 @@
+---
+# The operator's own NetworkPolicy allows egress on 53 and 443, which is
+# correct on vanilla Kubernetes but NOT on OVN-Kubernetes: the load-balancer
+# DNAT from ClusterIP to the backend pod happens BEFORE egress ACLs are
+# evaluated, so the rule must match the POST-DNAT port. kube-apiserver's
+# 172.30.0.1:443 becomes :6443, and OpenShift CoreDNS's 172.30.0.10:53
+# becomes :5353. Neither matched, so the agent could reach nothing —
+# in-cluster auth failed and DNS timed out.
+#
+# NetworkPolicies are additive, so this supplements rather than replaces the
+# operator's policy.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hermes-agent-openshift-egress
+  namespace: hermes-k8s-test
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: hermes-k8s
+      app.kubernetes.io/name: hermes-agent
+  policyTypes:
+    - Egress
+  egress:
+    # Cluster DNS: OpenShift CoreDNS listens on 5353 behind the :53 service.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - protocol: UDP
+          port: 5353
+        - protocol: TCP
+          port: 5353
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # kube-apiserver: needed to create session pods and open exec streams.
+    - ports:
+        - protocol: TCP
+          port: 6443

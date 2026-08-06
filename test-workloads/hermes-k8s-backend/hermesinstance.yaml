@@ -1,0 +1,102 @@
+---
+# PoC instance driving the kubernetes terminal backend. No LLM provider is
+# configured on purpose: the backend is exercised directly (see the verify
+# procedure), which is how the nested-podman workload was proven too.
+apiVersion: hermes.agent/v1
+kind: HermesInstance
+metadata:
+  name: hermes-k8s
+  namespace: hermes-k8s-test
+spec:
+  image:
+    # Built by the fork's own CI (.github/workflows/docker-fork.yml) from the
+    # project's real Dockerfile — not the layered igou-containers variant.
+    # Built from the project's real 5-stage Dockerfile (locally, with a
+    # buildah-compatible chmod; CI builds the identical thing with BuildKit)
+    # and hosted on the cluster's own Quay.
+    repository: quay.apps.ocp.igou.systems/igou-io/hermes-agent
+    tag: k8s-backend
+    digest: sha256:240a67ed61444233349968e3cd47c182be1392f8fb23f7e33b9c226a26d51511
+    pullPolicy: IfNotPresent
+  security:
+    # We own the SA: the kubernetes backend needs pod create/get/delete and
+    # pods/exec get, which the operator's RBACSpec cannot express.
+    rbac:
+      createServiceAccount: false
+      serviceAccountName: hermes-agent
+    # The upstream s6 image refuses an arbitrary UID ("started with --user
+    # <n> ... not supported") — its stage2 bootstrap must start as root and
+    # remaps the hermes user to HERMES_UID itself. So: no runAsUser, no
+    # fsGroup (both are what restricted-v2 rejected), and the SA is granted
+    # the anyuid SCC. Verified by running the image at UID 1234: it refuses.
+    podSecurityContext:
+      # runAsUser: 0 explicitly, so restricted-v2 CANNOT admit this pod (0 is
+      # outside the namespace UID range) and admission must fall to anyuid.
+      # Leaving it unset let restricted-v2 win and rewrite the UID to
+      # 1001430000, which s6 stage2 then refused.
+      runAsNonRoot: false
+      runAsUser: 0
+      # The agent drops to the hermes user (uid/gid 1000) but the projected
+      # ServiceAccount token is root-only, so in-cluster auth failed with
+      # "could not authenticate to a cluster". fsGroup makes kubelet
+      # group-own the projected volume so uid 1000 can read the token.
+      # restricted-v2 rejected fsGroup 1000 earlier; hermes-agent-root
+      # allows it (fsGroup: RunAsAny).
+      fsGroup: 1000
+      seccompProfile:
+        type: RuntimeDefault
+    containerSecurityContext:
+      # s6-overlay writes to /run and /var/run during boot.
+      readOnlyRootFilesystem: false
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+        add:
+          # s6 stage2: chown /opt/data, then drop privileges to hermes.
+          - CHOWN
+          - DAC_OVERRIDE
+          - FOWNER
+          - SETGID
+          - SETUID
+  env:
+    - name: HERMES_UID
+      value: "1000"
+    - name: HERMES_GID
+      value: "1000"
+  storage:
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClassName: freenas-nvmeof-ssd-csi
+  config:
+    raw:
+      terminal:
+        backend: kubernetes
+        cwd: /workspace
+        kubernetes:
+          # Schema per upstream issue #79869: one pod_template dict, no
+          # enumerated pod keys. The hardened base already pins the session SA
+          # (hermes-session-noperms), restartPolicy, capabilities and the
+          # workspace mount, so pod_template only carries what we add.
+          # Sandbox CR reconciled by the Red Hat build of Agent Sandbox; the
+          # session pod runs under Kata (per-session VM isolation), pinned to
+          # the only node currently in the kata-oc pool.
+          provisioner: sandbox
+          namespace: hermes-k8s-test
+          image: ghcr.io/igou-io/igou-devenv:2026.07.27
+          ready_timeout_seconds: 180
+          pod_template:
+            spec:
+              runtimeClassName: kata
+              nodeSelector:
+                kata-runtime: enabled
+              containers:
+                - name: workspace
+                  resources:
+                    requests:
+                      cpu: 250m
+                      memory: 512Mi
+                    limits:
+                      cpu: "2"
+                      memory: 4Gi

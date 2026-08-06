@@ -1,0 +1,34 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# NOTE: deliberately no top-level `namespace:` transformer. Every resource
+# below already declares its own namespace, and the transformer would stamp
+# one onto the SecurityContextConstraints too — kustomize has no scope
+# information for that CRD-backed kind and treats it as namespaced.
+
+# The hermes-operator is a dependency of this workload, not something to
+# `helm install` by hand. kustomize inflates the OCI chart in place, so the
+# whole thing is one `kustomize build`.
+#
+# Requires --enable-helm (see README): `oc apply -k` does NOT pass it, so
+# build and pipe rather than applying the directory directly.
+helmCharts:
+  - name: hermes-operator
+    repo: oci://ghcr.io/paperclipinc/charts
+    version: 0.1.20
+    releaseName: hermes-operator
+    namespace: hermes-operator
+    includeCRDs: true
+
+resources:
+  - namespace.yaml
+  - operator-namespace.yaml
+  - scc.yaml
+  - scc-rbac.yaml
+  - rbac.yaml
+  - rbac-sandbox.yaml
+  - session-networkpolicy.yaml
+  - agent-egress-networkpolicy.yaml
+  - quay-pull-externalsecret.yaml
+  - hermesinstance.yaml
