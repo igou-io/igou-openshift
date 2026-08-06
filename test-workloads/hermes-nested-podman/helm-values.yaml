@@ -1,0 +1,93 @@
+# hermes-agent chart on OCP with nested rootless podman terminal backend.
+# Image: ghcr.io/igou-io/hermes-agent-podman (igou-containers) — the official
+# hermes-agent image with the podman stack, subuid ranges, storage/containers
+# conf, and the notmpcopyup patch baked in. No install-at-startup.
+image:
+  repository: ghcr.io/igou-io/hermes-agent-podman
+  tag: "latest"
+  pullPolicy: Always
+
+# command/args omitted: official s6 entrypoint supervises gateway run
+workingDir: /opt/data
+
+bootstrap:
+  enabled: true
+  overwrite: true
+
+env:
+  HERMES_UID: "1000"
+  HERMES_GID: "1000"
+
+config:
+  values:
+    terminal:
+      backend: docker
+      docker_image: ghcr.io/igou-io/igou-devenv:2026.07.27
+      cwd: /workspace
+      timeout: 300
+      container_persistent: true
+      # VM parity (hermes_terminal_config): sandbox runs as igou 1000 with
+      # keep-id so files land owned by the hermes user on the PVC
+      docker_extra_args:
+        - --userns=keep-id:uid=1000,gid=1000
+        - --user=1000:1000
+
+
+persistence:
+  enabled: true
+  mountPath: /opt/data
+  accessMode: ReadWriteOnce
+  size: 20Gi
+  storageClass: freenas-nvmeof-ssd-csi
+
+podAnnotations:
+  io.kubernetes.cri-o.Devices: /dev/fuse,/dev/net/tun
+
+podSecurityContext:
+  # Container-root start is upstream's supported mode (s6 bootstrap remaps
+  # the hermes user to HERMES_UID and drops privileges); root here is
+  # unprivileged on the host because the pod runs in a user namespace.
+  runAsUser: 0
+  runAsGroup: 0
+  fsGroup: 1000
+  fsGroupChangePolicy: OnRootMismatch
+  runAsNonRoot: false
+  # RuntimeDefault denies unshare/clone(CLONE_NEWUSER) (ENOSYS), which nested
+  # rootless podman needs; the pod-level user namespace is the isolation
+  # boundary here (same posture as Dev Spaces workspaces).
+  seccompProfile:
+    type: Unconfined
+
+securityContext:
+  allowPrivilegeEscalation: true
+  readOnlyRootFilesystem: false
+  procMount: Unmasked
+  capabilities:
+    drop:
+      - ALL
+    add:
+      # s6-overlay preinit chowns /run to the run-as uid (gateway mode)
+      - CHOWN
+      - FOWNER
+      - SETUID
+      - SETGID
+      - DAC_OVERRIDE
+      # kernel verify_root_map: mapping uid 0 in a child userns needs SETFCAP
+      - SETFCAP
+      - SYS_ADMIN
+  seccompProfile:
+    type: Unconfined
+
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: "4"
+    memory: 6Gi
+
+terminationGracePeriodSeconds: 5
+
+browser:
+  shm:
+    enabled: false

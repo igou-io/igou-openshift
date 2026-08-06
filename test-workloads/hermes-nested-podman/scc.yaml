@@ -1,0 +1,58 @@
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: hermes-nested-podman
+  annotations:
+    kubernetes.io/description: >-
+      Nested rootless podman for the hermes-agent chart test in
+      hermes-nested-test. Dev Spaces-style: SETUID/SETGID for newuidmap,
+      container_engine_t, user-namespaced pods. Not for general use.
+allowHostDirVolumePlugin: false
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegedContainer: false
+allowPrivilegeEscalation: true
+allowedCapabilities:
+  - CHOWN
+  - DAC_OVERRIDE
+  - FOWNER
+  - SETFCAP
+  - SYS_ADMIN
+  - SETUID
+  - SETGID
+defaultAddCapabilities: null
+requiredDropCapabilities: null
+fsGroup:
+  type: MustRunAs
+  ranges:
+    - min: 1000
+      max: 65534
+runAsUser:
+  # upstream s6 bootstrap must start as container-root (unprivileged on the
+  # host via hostUsers: false) and drops to HERMES_UID itself
+  type: RunAsAny
+seLinuxContext:
+  type: MustRunAs
+  seLinuxOptions:
+    type: container_engine_t
+supplementalGroups:
+  type: MustRunAs
+  ranges:
+    - min: 1000
+      max: 65534
+userNamespaceLevel: RequirePodLevel
+readOnlyRootFilesystem: false
+seccompProfiles:
+  - runtime/default
+  - unconfined
+volumes:
+  - configMap
+  - downwardAPI
+  - emptyDir
+  - persistentVolumeClaim
+  - projected
+  - secret
+users: []
+groups: []
