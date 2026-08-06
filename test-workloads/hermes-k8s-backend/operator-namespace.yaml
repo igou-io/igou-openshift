@@ -1,0 +1,10 @@
+---
+# `helm install --create-namespace` has no kustomize equivalent: chart
+# inflation renders the chart's own resources but never the release namespace,
+# so it is declared here.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hermes-operator
+  labels:
+    openshift.io/cluster-monitoring: "true"

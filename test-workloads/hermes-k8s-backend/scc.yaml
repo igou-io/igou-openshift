@@ -1,0 +1,56 @@
+---
+# restricted-v2 with RunAsAny, nothing else loosened.
+#
+# The upstream hermes s6 image must start as container-root (its stage2
+# bootstrap remaps the hermes user to HERMES_UID and drops privileges itself;
+# it refuses any arbitrary UID). restricted-v2 rejects uid 0, and the legacy
+# `anyuid` SCC rejects the operator's seccompProfile: RuntimeDefault, so
+# neither stock SCC fits. This grants exactly the one thing needed.
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: hermes-agent-root
+  annotations:
+    kubernetes.io/description: >-
+      restricted-v2 plus runAsUser: RunAsAny, for the upstream hermes-agent s6
+      image which must begin as container-root. No host access, no extra
+      capabilities, seccomp RuntimeDefault required.
+allowHostDirVolumePlugin: false
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegeEscalation: false
+allowPrivilegedContainer: false
+# s6-overlay's stage2 chowns /opt/data and then drops privileges to the hermes
+# user (s6-applyuidgid -> setgroups/setuid), which needs these back after the
+# blanket drop. Nothing here grants host access.
+allowedCapabilities:
+  - CHOWN
+  - DAC_OVERRIDE
+  - FOWNER
+  - SETGID
+  - SETUID
+defaultAddCapabilities: null
+requiredDropCapabilities:
+  - ALL
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: MustRunAs
+fsGroup:
+  type: RunAsAny
+supplementalGroups:
+  type: RunAsAny
+seccompProfiles:
+  - runtime/default
+readOnlyRootFilesystem: false
+volumes:
+  - configMap
+  - downwardAPI
+  - emptyDir
+  - persistentVolumeClaim
+  - projected
+  - secret
+users: []
+groups: []
