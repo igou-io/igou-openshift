@@ -1,0 +1,177 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: hermes-agent-test
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hermes-agent
+    app.kubernetes.io/part-of: hermes-agent
+    app.kubernetes.io/version: 0.8.0
+    helm.sh/chart: hermes-agent-0.1.0
+  name: hermes-agent-test
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: hermes-agent-test
+      app.kubernetes.io/name: hermes-agent
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        checksum/config: d39b7dc29726b8c7636cdaf75f608e6e3cf0def3b4041abbfc61230e07623652
+        checksum/secret: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+        io.kubernetes.cri-o.Devices: /dev/fuse,/dev/net/tun
+      labels:
+        app.kubernetes.io/instance: hermes-agent-test
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/name: hermes-agent
+        app.kubernetes.io/part-of: hermes-agent
+        app.kubernetes.io/version: 0.8.0
+        helm.sh/chart: hermes-agent-0.1.0
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - args:
+        - gateway
+        - run
+        env:
+        - name: HERMES_HOME
+          value: /opt/data
+        - name: HOME
+          value: /opt/data/home
+        - name: DISCORD_ALLOWED_USERS
+          value: ''
+        - name: DISCORD_HOME_CHANNEL
+          value: ''
+        - name: GATEWAY_ALLOW_ALL_USERS
+          value: 'false'
+        - name: HERMES_GID
+          value: '1000'
+        - name: HERMES_HUMAN_DELAY_MAX_MS
+          value: '2500'
+        - name: HERMES_HUMAN_DELAY_MIN_MS
+          value: '800'
+        - name: HERMES_HUMAN_DELAY_MODE
+          value: 'off'
+        - name: HERMES_UID
+          value: '1000'
+        - name: IMAGE_TOOLS_DEBUG
+          value: 'false'
+        - name: MOA_TOOLS_DEBUG
+          value: 'false'
+        - name: SIGNAL_ALLOWED_USERS
+          value: ''
+        - name: SIGNAL_GROUP_ALLOWED_USERS
+          value: ''
+        - name: SLACK_ALLOWED_USERS
+          value: ''
+        - name: TELEGRAM_ALLOWED_USERS
+          value: ''
+        - name: TELEGRAM_HOME_CHANNEL
+          value: ''
+        - name: VISION_TOOLS_DEBUG
+          value: 'false'
+        - name: WEB_TOOLS_DEBUG
+          value: 'false'
+        - name: WHATSAPP_ALLOWED_USERS
+          value: ''
+        - name: WHATSAPP_ENABLED
+          value: 'false'
+        image: ghcr.io/igou-io/hermes-agent-podman:latest
+        imagePullPolicy: Always
+        name: hermes-agent
+        resources:
+          limits:
+            cpu: '4'
+            memory: 6Gi
+          requests:
+            cpu: 500m
+            memory: 1Gi
+        securityContext:
+          allowPrivilegeEscalation: true
+          capabilities:
+            add:
+            - CHOWN
+            - FOWNER
+            - SETUID
+            - SETGID
+            - DAC_OVERRIDE
+            - SETFCAP
+            - SYS_ADMIN
+            drop:
+            - ALL
+          procMount: Unmasked
+          readOnlyRootFilesystem: false
+          seccompProfile:
+            type: Unconfined
+        volumeMounts:
+        - mountPath: /opt/data
+          name: data
+        - mountPath: /tmp
+          name: tmp
+        workingDir: /opt/data
+      hostUsers: false
+      initContainers:
+      - args:
+        - "set -eu\nmkdir -p \"/opt/data/home\"\nif [ -f \"/bootstrap/config.yaml\"\
+          \ ]; then\n  if [ \"true\" = \"true\" ] || [ ! -f \"/opt/data/config.yaml\"\
+          \ ]; then\n    cp \"/bootstrap/config.yaml\" \"/opt/data/config.yaml\"\n\
+          \  fi\nfi\nif [ -f \"/bootstrap/SOUL.md\" ]; then\n  if [ \"true\" = \"\
+          true\" ] || [ ! -f \"/opt/data/SOUL.md\" ]; then\n    cp \"/bootstrap/SOUL.md\"\
+          \ \"/opt/data/SOUL.md\"\n  fi\nfi\n"
+        command:
+        - /bin/sh
+        - -ec
+        env:
+        - name: HERMES_HOME
+          value: /opt/data
+        image: ghcr.io/igou-io/hermes-agent-podman:latest
+        imagePullPolicy: Always
+        name: bootstrap-config
+        securityContext:
+          allowPrivilegeEscalation: true
+          capabilities:
+            add:
+            - CHOWN
+            - FOWNER
+            - SETUID
+            - SETGID
+            - DAC_OVERRIDE
+            - SETFCAP
+            - SYS_ADMIN
+            drop:
+            - ALL
+          procMount: Unmasked
+          readOnlyRootFilesystem: false
+          seccompProfile:
+            type: Unconfined
+        volumeMounts:
+        - mountPath: /opt/data
+          name: data
+        - mountPath: /bootstrap
+          name: bootstrap
+          readOnly: true
+        - mountPath: /tmp
+          name: tmp
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        runAsGroup: 0
+        runAsNonRoot: false
+        runAsUser: 0
+        seccompProfile:
+          type: Unconfined
+      serviceAccountName: hermes-agent-test
+      terminationGracePeriodSeconds: 5
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: hermes-agent-test-data
+      - configMap:
+          name: hermes-agent-test-config
+        name: bootstrap
+      - emptyDir: {}
+        name: tmp

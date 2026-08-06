@@ -1,0 +1,28 @@
+# Equivalent of: oc adm policy add-scc-to-user hermes-nested-podman -z hermes-agent-test
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:openshift:scc:hermes-nested-podman
+rules:
+  - apiGroups:
+      - security.openshift.io
+    resources:
+      - securitycontextconstraints
+    resourceNames:
+      - hermes-nested-podman
+    verbs:
+      - use
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: system:openshift:scc:hermes-nested-podman
+  namespace: hermes-nested-test
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:openshift:scc:hermes-nested-podman
+subjects:
+  - kind: ServiceAccount
+    name: hermes-agent-test
+    namespace: hermes-nested-test
