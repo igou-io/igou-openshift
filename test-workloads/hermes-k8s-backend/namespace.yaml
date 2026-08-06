@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hermes-k8s-test
+---
+# The agent's own ServiceAccount. Created here rather than by the operator
+# because hermes-operator's RBACSpec has no extra-rules field, and the
+# kubernetes terminal backend needs pod create/get/delete + pods/exec get.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: hermes-agent
+  namespace: hermes-k8s-test
