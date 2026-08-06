@@ -19,7 +19,7 @@ The contrast is the point:
 | Sandbox is | a container inside the agent pod | its own pod |
 | Agent pod needs | `SYS_ADMIN`, userns, `procMount: Unmasked`, unconfined seccomp | root start only (s6 requirement) |
 | Sandbox pod SCC | n/a | **`restricted-v2`** — the strictest one |
-| Kata/gVisor | impossible (no nested virt in a pod) | `runtime_class_name: kata` |
+| Kata/gVisor | impossible (no nested virt in a pod) | `pod_template.spec.runtimeClassName: kata` |
 
 ## Layout
 
@@ -75,6 +75,23 @@ Session pods are ephemeral; watch them with
 `oc -n hermes-k8s-test get pods -w` during a call, or look for
 `hermes-ws-*` in the namespace events after one.
 
+## Status
+
+Proven end to end 2026-08-06 on this cluster, on the image built from the
+project's own Dockerfile:
+
+* `provisioner: pod` — `terminal_tool` exit 0 in a session pod.
+* `provisioner: sandbox` + `pod_template.spec.runtimeClassName: kata` — exit 0
+  with the session container reporting `product_name=KVM`, i.e. a per-session
+  Kata VM. The `Sandbox` CR carried `managed-by=hermes-agent`, an
+  ownerReference to the agent pod, and the `hermes-session-noperms` SA.
+
+Config follows the collapsed schema from upstream issue #79869: one
+`pod_template` dict rather than ~42 enumerated keys, `provisioner: pod|sandbox`,
+strict server-side field validation, and a reserved core Hermes rejects
+overrides of. The old enumerated keys are **rejected**, so a config written
+against the earlier revision of this workload will now fail loudly.
+
 ## Findings this workload encodes
 
 Each of these cost real debugging; none are cosmetic.
@@ -110,7 +127,7 @@ SCC changes need the pod **deleted** to re-run admission — restarts do not.
 - The image is hosted on the cluster's own Quay and is not anonymously
   pullable, hence the ExternalSecret. It requires 1Password item
   `igou-local-quay-modify` in vault `lab_container_registries`.
-- `runtime_class_name` is empty until OpenShift sandboxed containers is
+- `pod_template.spec.runtimeClassName` is empty until OpenShift sandboxed containers is
   installed (see `components/sandboxed-containers-operator`). With `kata`,
   raise `ready_timeout_seconds` — cold starts exceed the 120 s default.
 - This is a **test workload**: it is not wired into `clusters/ocp/values.yaml`

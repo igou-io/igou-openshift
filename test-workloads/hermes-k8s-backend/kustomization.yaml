@@ -27,6 +27,7 @@ resources:
   - scc.yaml
   - scc-rbac.yaml
   - rbac.yaml
+  - rbac-sandbox.yaml
   - session-networkpolicy.yaml
   - agent-egress-networkpolicy.yaml
   - quay-pull-externalsecret.yaml

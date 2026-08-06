@@ -16,7 +16,7 @@ spec:
     # and hosted on the cluster's own Quay.
     repository: quay.apps.ocp.igou.systems/igou-io/hermes-agent
     tag: k8s-backend
-    digest: sha256:9abb39a589219db2b9eb104128e8a0ae6af6dfbd8c4dc85b852f8823c5eabb82
+    digest: sha256:240a67ed61444233349968e3cd47c182be1392f8fb23f7e33b9c226a26d51511
     pullPolicy: IfNotPresent
   security:
     # We own the SA: the kubernetes backend needs pod create/get/delete and
@@ -75,19 +75,28 @@ spec:
         backend: kubernetes
         cwd: /workspace
         kubernetes:
-          provisioner: direct
+          # Schema per upstream issue #79869: one pod_template dict, no
+          # enumerated pod keys. The hardened base already pins the session SA
+          # (hermes-session-noperms), restartPolicy, capabilities and the
+          # workspace mount, so pod_template only carries what we add.
+          # Sandbox CR reconciled by the Red Hat build of Agent Sandbox; the
+          # session pod runs under Kata (per-session VM isolation), pinned to
+          # the only node currently in the kata-oc pool.
+          provisioner: sandbox
           namespace: hermes-k8s-test
           image: ghcr.io/igou-io/igou-devenv:2026.07.27
-          service_account: hermes-session-noperms
-          # OpenShift restricted-v2 assigns the session pod's UID; pinning one
-          # is rejected. runtime_class_name stays empty until sandboxed
-          # containers are installed.
-          runtime_class_name: ""
           ready_timeout_seconds: 180
-          resources:
-            requests:
-              cpu: "250m"
-              memory: 512Mi
-            limits:
-              cpu: "2"
-              memory: 4Gi
+          pod_template:
+            spec:
+              runtimeClassName: kata
+              nodeSelector:
+                kata-runtime: enabled
+              containers:
+                - name: workspace
+                  resources:
+                    requests:
+                      cpu: 250m
+                      memory: 512Mi
+                    limits:
+                      cpu: "2"
+                      memory: 4Gi
