@@ -1,0 +1,49 @@
+# An extra volume, plus scheduling fields the old enumerated schema could not
+# express at all (priorityClassName, affinity).
+#
+# Merge behaviour: lists REPLACE. Both `volumes` and the container's
+# `volumeMounts` are restated in full — the workspace entries are repeated
+# deliberately. Omit them and the session's working directory does not exist,
+# and every command fails with "no such file or directory".
+#
+# priorityClassName llmkube-low keeps ephemeral agent sandboxes below real
+# workloads; they are preemptible by design.
+spec:
+  config:
+    raw:
+      terminal:
+        backend: kubernetes
+        cwd: /workspace
+        kubernetes:
+          provisioner: pod
+          namespace: hermes-k8s-test
+          image: ghcr.io/igou-io/igou-devenv:2026.07.27
+          ready_timeout_seconds: 300
+          pod_template:
+            spec:
+              priorityClassName: llmkube-low
+              affinity:
+                nodeAffinity:
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                      - matchExpressions:
+                          - key: node-role.kubernetes.io/kata-oc
+                            operator: Exists
+              volumes:
+                - name: workspace
+                  emptyDir: {}
+                - name: tmp
+                  emptyDir: {}
+                - name: scratch
+                  emptyDir:
+                    medium: Memory
+                    sizeLimit: 64Mi
+              containers:
+                - name: workspace
+                  volumeMounts:
+                    - name: workspace
+                      mountPath: /workspace
+                    - name: tmp
+                      mountPath: /tmp
+                    - name: scratch
+                      mountPath: /scratch

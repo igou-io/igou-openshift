@@ -1,0 +1,43 @@
+# Tune the workspace container and add a sidecar.
+#
+# Merge behaviour: `spec.containers` is the ONE list that merges element-wise by
+# `name`. The `workspace` entry merges into the base container, so its image,
+# command, volumeMounts and securityContext are preserved and only `resources`
+# and `env` are added. The `notes` entry matches no base container, so it is
+# appended.
+#
+# `container_name` still selects `workspace` as the exec target, so the sidecar
+# is along for the ride and never receives commands.
+spec:
+  config:
+    raw:
+      terminal:
+        backend: kubernetes
+        cwd: /workspace
+        kubernetes:
+          provisioner: pod
+          namespace: hermes-k8s-test
+          image: ghcr.io/igou-io/igou-devenv:2026.07.27
+          container_name: workspace
+          ready_timeout_seconds: 300
+          pod_template:
+            spec:
+              containers:
+                - name: workspace
+                  resources:
+                    requests:
+                      cpu: 500m
+                      memory: 1Gi
+                    limits:
+                      cpu: "2"
+                      memory: 4Gi
+                  env:
+                    - name: EXAMPLE_MARKER
+                      value: container-tuning
+                - name: notes
+                  image: registry.access.redhat.com/ubi9/ubi-minimal:latest
+                  command: ["sh", "-c", "sleep infinity"]
+                  resources:
+                    requests:
+                      cpu: 10m
+                      memory: 32Mi

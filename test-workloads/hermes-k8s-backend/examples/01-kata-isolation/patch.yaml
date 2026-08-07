@@ -1,0 +1,26 @@
+# Per-session VM isolation via OpenShift sandboxed containers (Kata).
+#
+# Two things change: the provisioner creates a Sandbox CR instead of a bare Pod,
+# and the pod asks for the `kata` RuntimeClass. Neither required a change to
+# Hermes — runtimeClassName is an ordinary PodSpec field, and it composes
+# because the sandbox is a pod.
+#
+# Merge behaviour: maps merge recursively. `spec.runtimeClassName` and
+# `spec.nodeSelector` are added; everything the default base puts under `spec`
+# (restartPolicy, securityContext, containers, volumes) survives untouched.
+spec:
+  config:
+    raw:
+      terminal:
+        backend: kubernetes
+        cwd: /workspace
+        kubernetes:
+          provisioner: sandbox
+          namespace: hermes-k8s-test
+          image: ghcr.io/igou-io/igou-devenv:2026.07.27
+          ready_timeout_seconds: 300
+          pod_template:
+            spec:
+              runtimeClassName: kata
+              nodeSelector:
+                kata-runtime: enabled
