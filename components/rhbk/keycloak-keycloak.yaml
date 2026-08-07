@@ -28,6 +28,9 @@ spec:
     hostname: keycloak.apps.ocp.igou.systems
   ingress:
     enabled: true
+    # Without a class the ingress-to-route controller still admits it but
+    # fires IngressWithoutClassName after 24h (igou-inventory#306).
+    className: openshift-default
   # Expose /metrics on the management interface (:9000); the operator then
   # creates a ServiceMonitor for UWM (netpol opens 9000 to UWM).
   additionalOptions:
