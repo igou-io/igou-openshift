@@ -1,0 +1,14 @@
+---
+# See freenas-nvmeof-ssd-csi-velero-volumesnapshotclass.yaml. Velero needs
+# one labeled class per CSI driver; without this one, weekly-heavy fails on
+# every nfs-ssd PVC (e.g. windows-images/persistent-state-for-codex-desktop).
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: freenas-nfs-ssd-csi-velero
+  labels:
+    velero.io/csi-volumesnapshot-class: "true"
+driver: org.democratic-csi.nfs-ssd
+deletionPolicy: Delete
+parameters:
+  detachedSnapshots: "false"
