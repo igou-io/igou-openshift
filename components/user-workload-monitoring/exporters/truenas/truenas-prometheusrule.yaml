@@ -57,8 +57,11 @@ spec:
               {{ $value | humanize }}C. Check the SMART serial/model labels
               for stable drive identity.
         - alert: DiskTempWarn
+          # Warn floor 55C: the fast-pool NVMe drives (P3, rated 70C) sit in
+          # the low 40s idle and brush 50-53C under sustained load, which
+          # flapped this alert several times a day at the old 50C floor.
           expr: >
-            (smartctl_device_temperature{device!="sdk", temperature_type="current"} > 50)
+            (smartctl_device_temperature{device!="sdk", temperature_type="current"} > 55)
               and
             (smartctl_device_temperature{device!="sdk", temperature_type="current"} <= 60)
           for: 10m
@@ -68,7 +71,7 @@ spec:
             summary: Disk {{ $labels.device }} temperature elevated
             description: |
               Disk {{ $labels.device }} on {{ $labels.instance }} is
-              {{ $value | humanize }}C (warn band 50-60C). Check the SMART
+              {{ $value | humanize }}C (warn band 55-60C). Check the SMART
               serial/model labels for stable drive identity.
     # NIC die temperatures. History: the onboard X540s (MB_NIC_Temp1/2, crit
     # 100C) caused unclean host resets at >=100C before their retirement
