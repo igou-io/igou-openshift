@@ -77,20 +77,25 @@ Session pods are ephemeral; watch them with
 
 ## Status
 
-Proven end to end 2026-08-06 on this cluster, on the image built from the
-project's own Dockerfile:
+Proven end to end 2026-08-09 on this cluster, on the image built from the
+project's own Dockerfile (`quay.apps.ocp.igou.systems/igou-io/hermes-agent:k8s-defaultspec`):
 
-* `provisioner: pod` — `terminal_tool` exit 0 in a session pod.
-* `provisioner: sandbox` + `pod_template.spec.runtimeClassName: kata` — exit 0
-  with the session container reporting `product_name=KVM`, i.e. a per-session
-  Kata VM. The `Sandbox` CR carried `managed-by=hermes-agent`, an
-  ownerReference to the agent pod, and the `hermes-session-noperms` SA.
+* **No `spec` configured** — `terminal_tool` exit 0 in the backend's built-in
+  default session pod (`ubuntu:26.04`, emptyDir workspace, `restricted-v2`
+  SCC with an assigned UID, ownerReference to the agent pod, 4 h deadline).
+* **Explicit `spec` with `runtimeClassName: kata`** (the CR in this
+  directory) — exit 0 with the session container reporting
+  `product_name=KVM`, i.e. a per-session Kata VM running the devenv image,
+  under the `hermes-session-noperms` SA.
+* `hermes doctor` fully green in-cluster: provisioner resolution, all five
+  RBAC `SelfSubjectAccessReview`s, `preflight_spec`, and a
+  `fieldValidation=Strict` dry-run of the rendered pod.
 
-Config follows the collapsed schema from upstream issue #79869: one
-`pod_template` dict rather than ~42 enumerated keys, `provisioner: pod|sandbox`,
-strict server-side field validation, and a reserved core Hermes rejects
-overrides of. The old enumerated keys are **rejected**, so a config written
-against the earlier revision of this workload will now fail loudly.
+Config is manifest-shaped: `terminal.kubernetes.apiVersion` / `kind` select
+the provisioner (`v1`/`Pod` is the only pair) and `spec` is the whole PodSpec,
+posted verbatim. `spec` is optional — unset, the backend uses its shipped
+default pod; a non-empty `spec` replaces the default entirely (no merge). The
+earlier `provisioner:` / `image:` / `pod_template:` keys no longer exist.
 
 ## Findings this workload encodes
 
@@ -115,8 +120,10 @@ Each of these cost real debugging; none are cosmetic.
    volume was group-owned.
 4. **RBAC under `spec.security.rbac`**, not `spec.rbac` — the latter is
    silently ignored and the operator creates its own SA lacking pod/exec rights.
-5. **`get pods/exec`, not `create`** — the python client opens exec with
-   `connect_get_namespaced_pod_exec`, a websocket-upgrading GET.
+5. **`pods/exec` needs BOTH `get` and `create`** — the python client opens
+   exec with `connect_get_namespaced_pod_exec` (a websocket-upgrading GET),
+   but the API server also authorizes `create` on the exec subresource;
+   granting only `get` yields a healthy startup on which every command 403s.
 6. **The operator rejects a floating `:latest`** tag; the image is pinned by
    digest.
 
@@ -127,8 +134,8 @@ SCC changes need the pod **deleted** to re-run admission — restarts do not.
 - The image is hosted on the cluster's own Quay and is not anonymously
   pullable, hence the ExternalSecret. It requires 1Password item
   `igou-local-quay-modify` in vault `lab_container_registries`.
-- `pod_template.spec.runtimeClassName` is empty until OpenShift sandboxed containers is
-  installed (see `components/sandboxed-containers-operator`). With `kata`,
-  raise `ready_timeout_seconds` — cold starts exceed the 120 s default.
+- `spec.runtimeClassName: kata` requires OpenShift sandboxed containers
+  (see `components/sandboxed-containers-operator`). With `kata`, raise
+  `ready_timeout_seconds` — cold starts exceed the 120 s default.
 - This is a **test workload**: it is not wired into `clusters/ocp/values.yaml`
   and ArgoCD does not manage it.
