@@ -15,8 +15,8 @@ spec:
     # buildah-compatible chmod; CI builds the identical thing with BuildKit)
     # and hosted on the cluster's own Quay.
     repository: quay.apps.ocp.igou.systems/igou-io/hermes-agent
-    tag: k8s-backend
-    digest: sha256:240a67ed61444233349968e3cd47c182be1392f8fb23f7e33b9c226a26d51511
+    tag: k8s-defaultspec
+    digest: sha256:0eb5c30dacb0a60b39fdc905115b5a7e139de3e3927766f88af2aec6613b12a0
     pullPolicy: IfNotPresent
   security:
     # We own the SA: the kubernetes backend needs pod create/get/delete and
@@ -74,29 +74,65 @@ spec:
       terminal:
         backend: kubernetes
         cwd: /workspace
+        lifetime_seconds: 14400
         kubernetes:
-          # Schema per upstream issue #79869: one pod_template dict, no
-          # enumerated pod keys. The hardened base already pins the session SA
-          # (hermes-session-noperms), restartPolicy, capabilities and the
-          # workspace mount, so pod_template only carries what we add.
-          # Sandbox CR reconciled by the Red Hat build of Agent Sandbox; the
-          # session pod runs under Kata (per-session VM isolation), pinned to
-          # the only node currently in the kata-oc pool.
-          provisioner: sandbox
+          # Manifest-shaped schema: apiVersion/kind select the provisioner
+          # (v1/Pod is the only pair), and `spec` is the WHOLE PodSpec, posted
+          # verbatim — no base, no merge. Omit `spec` entirely and the backend
+          # uses its built-in default (a minimal ephemeral ubuntu:26.04 pod) —
+          # verified live 2026-08-09. The spec below is the kata variant: the
+          # session runs as a per-session Kata VM on the kata-oc pool.
           namespace: hermes-k8s-test
-          image: ghcr.io/igou-io/igou-devenv:2026.07.27
-          ready_timeout_seconds: 180
-          pod_template:
-            spec:
-              runtimeClassName: kata
-              nodeSelector:
-                kata-runtime: enabled
-              containers:
-                - name: workspace
-                  resources:
-                    requests:
-                      cpu: 250m
-                      memory: 512Mi
-                    limits:
-                      cpu: "2"
-                      memory: 4Gi
+          ready_timeout_seconds: 300
+          spec:
+            runtimeClassName: kata
+            priorityClassName: llmkube-low
+            affinity:
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                    - matchExpressions:
+                        - key: node-role.kubernetes.io/kata-oc
+                          operator: Exists
+            serviceAccountName: hermes-session-noperms
+            automountServiceAccountToken: false
+            enableServiceLinks: false
+            restartPolicy: Never
+            shareProcessNamespace: true
+            terminationGracePeriodSeconds: 1
+            activeDeadlineSeconds: 14400
+            securityContext:
+              runAsNonRoot: true
+              seccompProfile:
+                type: RuntimeDefault
+            containers:
+              - name: workspace
+                image: ghcr.io/igou-io/igou-devenv@sha256:d069bca847a4dfb26906dbe0ec8232811526c21d3b470bc0bbecd7ec01245d02
+                command:
+                  - sleep
+                  - infinity
+                workingDir: /workspace
+                volumeMounts:
+                  - name: workspace
+                    mountPath: /workspace
+                  - name: tmp
+                    mountPath: /tmp
+                resources:
+                  requests:
+                    cpu: 500m
+                    memory: 2Gi
+                  limits:
+                    cpu: "2"
+                    memory: 6Gi
+                    ephemeral-storage: 8Gi
+                securityContext:
+                  runAsNonRoot: true
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop:
+                      - ALL
+            volumes:
+              - name: workspace
+                emptyDir: {}
+              - name: tmp
+                emptyDir: {}
