@@ -84,7 +84,7 @@ spec:
           # the only node currently in the kata-oc pool.
           provisioner: sandbox
           namespace: hermes-k8s-test
-          image: ghcr.io/igou-io/igou-devenv:2026.07.27
+          image: ghcr.io/igou-io/igou-devenv:2026.07.27@sha256:a9a9c02400bddde762b8ff09503a8b4ff68a7ce3539d2982d7c6ec694f5b4503
           ready_timeout_seconds: 180
           pod_template:
             spec:

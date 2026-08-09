@@ -4,7 +4,7 @@
 # conf, and the notmpcopyup patch baked in. No install-at-startup.
 image:
   repository: ghcr.io/igou-io/hermes-agent-podman
-  tag: "latest"
+  tag: "latest@sha256:17f72be9b1cf2d4ff2db178ec0af031cb894fb22ce5af7f2ede0371a6ce60b38"
   pullPolicy: Always
 
 # command/args omitted: official s6 entrypoint supervises gateway run
@@ -22,7 +22,7 @@ config:
   values:
     terminal:
       backend: docker
-      docker_image: ghcr.io/igou-io/igou-devenv:2026.07.27
+      docker_image: ghcr.io/igou-io/igou-devenv:2026.07.27@sha256:a9a9c02400bddde762b8ff09503a8b4ff68a7ce3539d2982d7c6ec694f5b4503
       cwd: /workspace
       timeout: 300
       container_persistent: true
