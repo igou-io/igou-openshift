@@ -11,6 +11,7 @@ resources:
   - rhdh-backend-secret-externalsecret.yaml
   - rhdh-keycloak-credentials-externalsecret.yaml
   - rhdh-forgejo-credentials-externalsecret.yaml
+  - rhdh-github-app-externalsecret.yaml
   - cnpg-s3-credentials-externalsecret.yaml
   - rhdh-pg-objectstore.yaml
   - rhdh-pg-scheduledbackup.yaml

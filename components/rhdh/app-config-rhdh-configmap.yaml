@@ -55,14 +55,27 @@ data:
         - host: forgejo.apps.ocp.igou.systems
           username: ${FORGEJO_USERNAME}
           password: ${FORGEJO_TOKEN}
+      # igou-dev GitHub App: publish:github golden-path destination + catalog
+      # reads of github.com catalog-info. Installed on igou-io and david-igou
+      # with administration:write (repo creation); repos an App creates are
+      # auto-added to its installation selection.
+      github:
+        - host: github.com
+          apps:
+            - appId: ${GITHUB_APP_ID}
+              clientId: ${GITHUB_APP_CLIENT_ID}
+              privateKey: ${GITHUB_APP_PRIVATE_KEY}
     # Backend proxy used by the http:backstage:request scaffolder action to
-    # call the Forgejo API with the machine token (repo generate).
+    # call the Forgejo API with the machine token. POST = template generate;
+    # DELETE = removing the sandbox staging repo on the GitHub destination
+    # path (the machine token can only touch org repos it owns).
     proxy:
       endpoints:
         '/forgejo':
           target: https://forgejo.apps.ocp.igou.systems/api/v1
           allowedMethods:
             - POST
+            - DELETE
           headers:
             Authorization: token ${FORGEJO_TOKEN}
     catalog:
