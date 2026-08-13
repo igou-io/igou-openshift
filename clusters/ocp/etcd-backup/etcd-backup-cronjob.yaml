@@ -166,8 +166,7 @@ spec:
                   echo "backup OK: ${CTR_DIR} (${SNAP_BYTES} bytes, ${VERSION})"
           containers:
             - name: upload
-              # renovate: datasource=docker depName=docker.io/rustfs/rc
-              image: docker.io/rustfs/rc:v0.1.30@sha256:828c51af0cc7744a581cd1743fc86f7f1bb32b000adc5a0addeb22b397ad0f42
+              image: docker.io/rustfs/rc:v0.1.31@sha256:f3dc331f76b14a852a1dc0bffc80509cc41424eaa9ea0306d9584edc211dcad6
               securityContext:
                 runAsUser: 0
                 privileged: false
