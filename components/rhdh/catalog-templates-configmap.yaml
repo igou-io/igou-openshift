@@ -117,7 +117,9 @@ data:
           if: ${{ parameters.destination != 'sandbox' }}
           action: fetch:plain
           input:
-            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
+            # branch-qualified: GiteaUrlReader derives the ref from the URL
+            # path; a bare repo URL yields git/commits/undefined -> 404
+            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/src/branch/main
         - id: cleanup-staged
           name: Delete staging repo
           if: ${{ parameters.destination != 'sandbox' }}
@@ -279,7 +281,9 @@ data:
           if: ${{ parameters.destination != 'sandbox' }}
           action: fetch:plain
           input:
-            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
+            # branch-qualified: GiteaUrlReader derives the ref from the URL
+            # path; a bare repo URL yields git/commits/undefined -> 404
+            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/src/branch/main
         - id: cleanup-staged
           name: Delete staging repo
           if: ${{ parameters.destination != 'sandbox' }}
@@ -442,7 +446,9 @@ data:
           if: ${{ parameters.destination != 'sandbox' }}
           action: fetch:plain
           input:
-            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
+            # branch-qualified: GiteaUrlReader derives the ref from the URL
+            # path; a bare repo URL yields git/commits/undefined -> 404
+            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/src/branch/main
         - id: cleanup-staged
           name: Delete staging repo
           if: ${{ parameters.destination != 'sandbox' }}
@@ -604,7 +610,9 @@ data:
           if: ${{ parameters.destination != 'sandbox' }}
           action: fetch:plain
           input:
-            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
+            # branch-qualified: GiteaUrlReader derives the ref from the URL
+            # path; a bare repo URL yields git/commits/undefined -> 404
+            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/src/branch/main
         - id: cleanup-staged
           name: Delete staging repo
           if: ${{ parameters.destination != 'sandbox' }}
@@ -766,7 +774,9 @@ data:
           if: ${{ parameters.destination != 'sandbox' }}
           action: fetch:plain
           input:
-            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
+            # branch-qualified: GiteaUrlReader derives the ref from the URL
+            # path; a bare repo URL yields git/commits/undefined -> 404
+            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/src/branch/main
         - id: cleanup-staged
           name: Delete staging repo
           if: ${{ parameters.destination != 'sandbox' }}
@@ -929,7 +939,9 @@ data:
           if: ${{ parameters.destination != 'sandbox' }}
           action: fetch:plain
           input:
-            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
+            # branch-qualified: GiteaUrlReader derives the ref from the URL
+            # path; a bare repo URL yields git/commits/undefined -> 404
+            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/src/branch/main
         - id: cleanup-staged
           name: Delete staging repo
           if: ${{ parameters.destination != 'sandbox' }}
@@ -1091,7 +1103,9 @@ data:
           if: ${{ parameters.destination != 'sandbox' }}
           action: fetch:plain
           input:
-            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
+            # branch-qualified: GiteaUrlReader derives the ref from the URL
+            # path; a bare repo URL yields git/commits/undefined -> 404
+            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/src/branch/main
         - id: cleanup-staged
           name: Delete staging repo
           if: ${{ parameters.destination != 'sandbox' }}
