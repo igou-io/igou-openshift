@@ -6,6 +6,10 @@ kind: NetworkPolicy
 metadata:
   name: allow-observed
   namespace: rhdh
+  annotations:
+    # After the namespace (wave 8): CreateNamespace=false, so a wave-0 apply
+    # into a not-yet-created namespace wedges a from-scratch sync.
+    argocd.argoproj.io/sync-wave: '9'
 spec:
   podSelector: {}
   policyTypes:
@@ -18,12 +22,17 @@ spec:
       ports:
         - port: 5432
           protocol: TCP
+    # UWM scrapes: CNPG postgres exporter (:9187, PodMonitor rhdh-pg) and the
+    # Backstage app metrics (:9464 http-metrics, ServiceMonitor from the CR's
+    # monitoring.enabled — missed by the original sampled capture).
     - from:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: openshift-user-workload-monitoring
       ports:
         - port: 9187
+          protocol: TCP
+        - port: 9464
           protocol: TCP
     # cnpg-controller-manager polls the instance status webserver (pod:8000).
     - from:
