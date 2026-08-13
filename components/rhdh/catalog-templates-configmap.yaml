@@ -149,9 +149,9 @@ data:
                 name: ${{ parameters.name }}
                 description: ${{ parameters.description }}
                 annotations:
-                  github.com/project-slug: ${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                  github.com/project-slug: ${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}/${{ parameters.name }}
                 links:
-                  - url: https://github.com/${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                  - url: https://github.com/${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}/${{ parameters.name }}
                     title: GitHub repository
                     icon: scm
               spec:
@@ -163,7 +163,7 @@ data:
           if: ${{ parameters.destination != 'sandbox' }}
           action: publish:github
           input:
-            repoUrl: github.com?owner=${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}&repo=${{ parameters.name }}
+            repoUrl: github.com?owner=${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}&repo=${{ parameters.name }}
             description: ${{ parameters.description }}
             repoVisibility: public
             defaultBranch: main
@@ -313,9 +313,9 @@ data:
                 name: ${{ parameters.name }}
                 description: ${{ parameters.description }}
                 annotations:
-                  github.com/project-slug: ${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                  github.com/project-slug: ${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}/${{ parameters.name }}
                 links:
-                  - url: https://github.com/${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                  - url: https://github.com/${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}/${{ parameters.name }}
                     title: GitHub repository
                     icon: scm
               spec:
@@ -327,7 +327,7 @@ data:
           if: ${{ parameters.destination != 'sandbox' }}
           action: publish:github
           input:
-            repoUrl: github.com?owner=${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}&repo=${{ parameters.name }}
+            repoUrl: github.com?owner=${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}&repo=${{ parameters.name }}
             description: ${{ parameters.description }}
             repoVisibility: public
             defaultBranch: main
@@ -478,9 +478,9 @@ data:
                 name: ${{ parameters.name }}
                 description: ${{ parameters.description }}
                 annotations:
-                  github.com/project-slug: ${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                  github.com/project-slug: ${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}/${{ parameters.name }}
                 links:
-                  - url: https://github.com/${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                  - url: https://github.com/${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}/${{ parameters.name }}
                     title: GitHub repository
                     icon: scm
               spec:
@@ -492,7 +492,7 @@ data:
           if: ${{ parameters.destination != 'sandbox' }}
           action: publish:github
           input:
-            repoUrl: github.com?owner=${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}&repo=${{ parameters.name }}
+            repoUrl: github.com?owner=${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}&repo=${{ parameters.name }}
             description: ${{ parameters.description }}
             repoVisibility: public
             defaultBranch: main
@@ -642,9 +642,9 @@ data:
                 name: ${{ parameters.name }}
                 description: ${{ parameters.description }}
                 annotations:
-                  github.com/project-slug: ${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                  github.com/project-slug: ${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}/${{ parameters.name }}
                 links:
-                  - url: https://github.com/${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                  - url: https://github.com/${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}/${{ parameters.name }}
                     title: GitHub repository
                     icon: scm
               spec:
@@ -656,7 +656,7 @@ data:
           if: ${{ parameters.destination != 'sandbox' }}
           action: publish:github
           input:
-            repoUrl: github.com?owner=${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}&repo=${{ parameters.name }}
+            repoUrl: github.com?owner=${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}&repo=${{ parameters.name }}
             description: ${{ parameters.description }}
             repoVisibility: public
             defaultBranch: main
@@ -806,9 +806,9 @@ data:
                 name: ${{ parameters.name }}
                 description: ${{ parameters.description }}
                 annotations:
-                  github.com/project-slug: ${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                  github.com/project-slug: ${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}/${{ parameters.name }}
                 links:
-                  - url: https://github.com/${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                  - url: https://github.com/${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}/${{ parameters.name }}
                     title: GitHub repository
                     icon: scm
               spec:
@@ -820,7 +820,7 @@ data:
           if: ${{ parameters.destination != 'sandbox' }}
           action: publish:github
           input:
-            repoUrl: github.com?owner=${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}&repo=${{ parameters.name }}
+            repoUrl: github.com?owner=${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}&repo=${{ parameters.name }}
             description: ${{ parameters.description }}
             repoVisibility: public
             defaultBranch: main
@@ -971,9 +971,9 @@ data:
                 name: ${{ parameters.name }}
                 description: ${{ parameters.description }}
                 annotations:
-                  github.com/project-slug: ${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                  github.com/project-slug: ${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}/${{ parameters.name }}
                 links:
-                  - url: https://github.com/${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                  - url: https://github.com/${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}/${{ parameters.name }}
                     title: GitHub repository
                     icon: scm
               spec:
@@ -985,7 +985,7 @@ data:
           if: ${{ parameters.destination != 'sandbox' }}
           action: publish:github
           input:
-            repoUrl: github.com?owner=${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}&repo=${{ parameters.name }}
+            repoUrl: github.com?owner=${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}&repo=${{ parameters.name }}
             description: ${{ parameters.description }}
             repoVisibility: public
             defaultBranch: main
@@ -1135,9 +1135,9 @@ data:
                 name: ${{ parameters.name }}
                 description: ${{ parameters.description }}
                 annotations:
-                  github.com/project-slug: ${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                  github.com/project-slug: ${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}/${{ parameters.name }}
                 links:
-                  - url: https://github.com/${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                  - url: https://github.com/${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}/${{ parameters.name }}
                     title: GitHub repository
                     icon: scm
               spec:
@@ -1149,7 +1149,7 @@ data:
           if: ${{ parameters.destination != 'sandbox' }}
           action: publish:github
           input:
-            repoUrl: github.com?owner=${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}&repo=${{ parameters.name }}
+            repoUrl: github.com?owner=${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}&repo=${{ parameters.name }}
             description: ${{ parameters.description }}
             repoVisibility: public
             defaultBranch: main
