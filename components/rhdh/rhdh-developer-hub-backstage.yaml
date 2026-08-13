@@ -30,3 +30,4 @@ spec:
         - name: rhdh-backend-secret
         - name: rhdh-keycloak-credentials
         - name: rhdh-forgejo-credentials
+        - name: rhdh-github-app

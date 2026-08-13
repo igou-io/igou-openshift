@@ -27,6 +27,10 @@ data:
       # RBAC frontend/backend (permission framework config in app-config-rhdh).
       - package: ./dynamic-plugins/dist/backstage-community-plugin-rbac
         disabled: false
+      # publish:github scaffolder action — GitHub destination on the golden
+      # paths (integrations.github App creds in app-config-rhdh).
+      - package: ./dynamic-plugins/dist/backstage-plugin-scaffolder-backend-module-github-dynamic
+        disabled: false
       # Telemetry off — this lab does not phone home.
       - package: ./dynamic-plugins/dist/backstage-plugin-analytics-provider-segment
         disabled: true

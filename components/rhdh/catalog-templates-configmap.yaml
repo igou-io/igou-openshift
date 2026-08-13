@@ -1,12 +1,20 @@
 ---
 # Scaffolder Template entities, mounted via the CR's extraFiles and registered
-# as a file location in app-config (rules allow Template).
+# as file locations in app-config (rules allow Template).
 #
-# ansible-collection: RHDH 1.10 ships no gitea/forgejo publish module, so the
-# golden path leans on Forgejo's native template-repository feature — one
-# synchronous `generate` API call (via the /forgejo backend proxy) clones
-# platform/ansible-collection-template into sandbox/<name> with variable
-# expansion, then the entity is registered from the new repo.
+# All templates share one shape and a destination dropdown:
+#   sandbox      — Forgejo native template-generate (expansion) + register.
+#   github-*     — RHDH 1.10 ships no gitea/forgejo publish module and
+#                  regex:replace only transforms strings (not files), so the
+#                  GitHub path STAGES through Forgejo's expander (generate
+#                  into sandbox under the real name — expansion derives from
+#                  the generated repo's name), fetches the expanded tree,
+#                  deletes the staging repo, strips Dev Spaces artifacts
+#                  (graduated GitHub repos use the devcontainer flow),
+#                  rewrites catalog-info via catalog:write, then
+#                  publish:github + register.
+# Known warts on the GitHub path, accepted for v1: README/galaxy.yml may
+# still reference forgejo sandbox URLs baked by the staging expansion.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -22,9 +30,7 @@ data:
       name: ansible-collection
       title: Ansible Collection
       description: >-
-        Scaffold a new david_igou Ansible collection in Forgejo (sandbox org)
-        with a starter role, devfile, and catalog registration — ready to open
-        in OpenShift Dev Spaces.
+        Scaffold a new david_igou Ansible collection with a starter role, devfile, and catalog registration — ready to open in OpenShift Dev Spaces.
       tags:
         - ansible
         - forgejo
@@ -33,26 +39,42 @@ data:
       owner: group:default/admins
       type: ansible-collection
       parameters:
-        - title: Collection details
+        - title: Ansible Collection details
           required:
-            - collection_name
+            - name
             - description
           properties:
-            collection_name:
+            name:
               title: Collection name
               type: string
               description: >-
-                lower_snake_case; becomes the repo name and the galaxy
-                collection name (david_igou.<name>)
+                lower_snake_case; becomes the repo name and the galaxy collection name (david_igou.<name>)
               pattern: '^[a-z][a-z0-9_]{1,62}$'
-              maxLength: 63
             description:
               title: Description
               type: string
-              description: One line on what this collection automates
+              description: One line on what this does
+            destination:
+              title: Destination
+              type: string
+              description: >-
+                Forgejo sandbox is the POC space (Dev Spaces devfile kept);
+                GitHub destinations create a graduated repo (Dev Spaces
+                artifacts stripped, devcontainer workflow assumed)
+              default: sandbox
+              enum:
+                - sandbox
+                - github-igou-io
+                - github-david-igou
+              enumNames:
+                - Forgejo sandbox (POC)
+                - GitHub igou-io
+                - GitHub david-igou
       steps:
+        # --- Forgejo sandbox destination: native template generation
         - id: generate
           name: Generate repository from Forgejo template
+          if: ${{ parameters.destination == 'sandbox' }}
           action: http:backstage:request
           input:
             method: POST
@@ -61,27 +83,109 @@ data:
               content-type: application/json
             body:
               owner: sandbox
-              name: ${{ parameters.collection_name }}
+              name: ${{ parameters.name }}
               description: ${{ parameters.description }}
               git_content: true
               private: false
         - id: register
-          name: Register in catalog
+          name: Register in catalog (Forgejo)
+          if: ${{ parameters.destination == 'sandbox' }}
           action: catalog:register
           input:
-            catalogInfoUrl: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.collection_name }}/src/branch/main/catalog-info.yaml
+            catalogInfoUrl: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/src/branch/main/catalog-info.yaml
+        # --- GitHub destinations: stage through Forgejo's expander (the only
+        # thing that substitutes the skeleton placeholders), fetch the
+        # expanded tree, drop the staging repo, strip Dev Spaces artifacts,
+        # write a GitHub-correct catalog-info, publish, register.
+        - id: stage
+          name: Stage expanded copy in sandbox
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: http:backstage:request
+          input:
+            method: POST
+            path: /proxy/forgejo/repos/platform/ansible-collection-template/generate
+            headers:
+              content-type: application/json
+            body:
+              owner: sandbox
+              name: ${{ parameters.name }}
+              description: ${{ parameters.description }}
+              git_content: true
+              private: false
+        - id: fetch-staged
+          name: Fetch expanded content
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: fetch:plain
+          input:
+            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
+        - id: cleanup-staged
+          name: Delete staging repo
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: http:backstage:request
+          input:
+            method: DELETE
+            path: /proxy/forgejo/repos/sandbox/${{ parameters.name }}
+        - id: strip-devspaces
+          name: Strip Dev Spaces artifacts
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: fs:delete
+          input:
+            files:
+              - .gitea/template
+              - catalog-info.yaml
+              - devfile.yaml
+              - scripts/install-agents.sh
+        - id: entity
+          name: Write GitHub catalog-info
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: catalog:write
+          input:
+            entity:
+              apiVersion: backstage.io/v1alpha1
+              kind: Component
+              metadata:
+                name: ${{ parameters.name }}
+                description: ${{ parameters.description }}
+                annotations:
+                  github.com/project-slug: ${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                links:
+                  - url: https://github.com/${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                    title: GitHub repository
+                    icon: scm
+              spec:
+                type: ansible-collection
+                lifecycle: experimental
+                owner: group:default/developers
+        - id: publish-github
+          name: Publish to GitHub
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: publish:github
+          input:
+            repoUrl: github.com?owner=${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}&repo=${{ parameters.name }}
+            description: ${{ parameters.description }}
+            repoVisibility: public
+            defaultBranch: main
+        - id: register-github
+          name: Register in catalog (GitHub)
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: catalog:register
+          input:
+            catalogInfoUrl: ${{ steps['publish-github'].output.repoContentsUrl }}/catalog-info.yaml
       output:
         links:
-          - title: Forgejo repository
-            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.collection_name }}
-          # Raw devfile URL factory: Dev Spaces has no Gitea/Forgejo provider —
-          # a plain repo URL makes the resolver guess GitHub-style and try
-          # raw.<host> (TLS SAN failure on the single-level wildcard). The
-          # devfile carries a projects section so the repo still gets cloned.
+          - title: Repository
+            url: ${{ steps['publish-github'].output.remoteUrl if parameters.destination != 'sandbox' else 'https://forgejo.apps.ocp.igou.systems/sandbox/' + parameters.name }}
+          # Sandbox repos open via the raw devfile URL (Dev Spaces has no
+          # Forgejo provider); GitHub repos open via the native provider.
           - title: Open in OpenShift Dev Spaces
-            url: https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.collection_name }}/raw/branch/main/devfile.yaml
+            url: >-
+              ${{ 'https://devspaces.apps.ocp.igou.systems/#https://github.com/'
+              + ('igou-io' if parameters.destination == 'github-igou-io' else 'david-igou')
+              + '/' + parameters.name if parameters.destination != 'sandbox'
+              else 'https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/'
+              + parameters.name + '/raw/branch/main/devfile.yaml' }}
           - title: Catalog entity
-            entityRef: component:default/${{ parameters.collection_name }}
+            entityRef: component:default/${{ parameters.name }}
   ansible-role-template.yaml: |
     apiVersion: scaffolder.backstage.io/v1beta3
     kind: Template
@@ -89,7 +193,7 @@ data:
       name: ansible-role
       title: Ansible Role
       description: >-
-        Scaffold a standalone Ansible role repo (role at repo root, argument_specs contract, molecule KubeVirt scenario) in the sandbox org.
+        Scaffold a standalone Ansible role repo (role at repo root, argument_specs contract, molecule KubeVirt scenario).
       tags:
         - ansible
         - forgejo
@@ -111,10 +215,28 @@ data:
             description:
               title: Description
               type: string
-              description: One line on what this automates or serves
+              description: One line on what this does
+            destination:
+              title: Destination
+              type: string
+              description: >-
+                Forgejo sandbox is the POC space (Dev Spaces devfile kept);
+                GitHub destinations create a graduated repo (Dev Spaces
+                artifacts stripped, devcontainer workflow assumed)
+              default: sandbox
+              enum:
+                - sandbox
+                - github-igou-io
+                - github-david-igou
+              enumNames:
+                - Forgejo sandbox (POC)
+                - GitHub igou-io
+                - GitHub david-igou
       steps:
+        # --- Forgejo sandbox destination: native template generation
         - id: generate
           name: Generate repository from Forgejo template
+          if: ${{ parameters.destination == 'sandbox' }}
           action: http:backstage:request
           input:
             method: POST
@@ -128,18 +250,102 @@ data:
               git_content: true
               private: false
         - id: register
-          name: Register in catalog
+          name: Register in catalog (Forgejo)
+          if: ${{ parameters.destination == 'sandbox' }}
           action: catalog:register
           input:
             catalogInfoUrl: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/src/branch/main/catalog-info.yaml
+        # --- GitHub destinations: stage through Forgejo's expander (the only
+        # thing that substitutes the skeleton placeholders), fetch the
+        # expanded tree, drop the staging repo, strip Dev Spaces artifacts,
+        # write a GitHub-correct catalog-info, publish, register.
+        - id: stage
+          name: Stage expanded copy in sandbox
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: http:backstage:request
+          input:
+            method: POST
+            path: /proxy/forgejo/repos/platform/ansible-role-template/generate
+            headers:
+              content-type: application/json
+            body:
+              owner: sandbox
+              name: ${{ parameters.name }}
+              description: ${{ parameters.description }}
+              git_content: true
+              private: false
+        - id: fetch-staged
+          name: Fetch expanded content
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: fetch:plain
+          input:
+            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
+        - id: cleanup-staged
+          name: Delete staging repo
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: http:backstage:request
+          input:
+            method: DELETE
+            path: /proxy/forgejo/repos/sandbox/${{ parameters.name }}
+        - id: strip-devspaces
+          name: Strip Dev Spaces artifacts
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: fs:delete
+          input:
+            files:
+              - .gitea/template
+              - catalog-info.yaml
+              - devfile.yaml
+              - scripts/install-agents.sh
+        - id: entity
+          name: Write GitHub catalog-info
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: catalog:write
+          input:
+            entity:
+              apiVersion: backstage.io/v1alpha1
+              kind: Component
+              metadata:
+                name: ${{ parameters.name }}
+                description: ${{ parameters.description }}
+                annotations:
+                  github.com/project-slug: ${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                links:
+                  - url: https://github.com/${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                    title: GitHub repository
+                    icon: scm
+              spec:
+                type: ansible-role
+                lifecycle: experimental
+                owner: group:default/developers
+        - id: publish-github
+          name: Publish to GitHub
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: publish:github
+          input:
+            repoUrl: github.com?owner=${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}&repo=${{ parameters.name }}
+            description: ${{ parameters.description }}
+            repoVisibility: public
+            defaultBranch: main
+        - id: register-github
+          name: Register in catalog (GitHub)
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: catalog:register
+          input:
+            catalogInfoUrl: ${{ steps['publish-github'].output.repoContentsUrl }}/catalog-info.yaml
       output:
         links:
-          - title: Forgejo repository
-            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
-          # Raw devfile URL factory — see the ansible-collection template above
-          # for why a plain repo URL breaks the Dev Spaces resolver.
+          - title: Repository
+            url: ${{ steps['publish-github'].output.remoteUrl if parameters.destination != 'sandbox' else 'https://forgejo.apps.ocp.igou.systems/sandbox/' + parameters.name }}
+          # Sandbox repos open via the raw devfile URL (Dev Spaces has no
+          # Forgejo provider); GitHub repos open via the native provider.
           - title: Open in OpenShift Dev Spaces
-            url: https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/raw/branch/main/devfile.yaml
+            url: >-
+              ${{ 'https://devspaces.apps.ocp.igou.systems/#https://github.com/'
+              + ('igou-io' if parameters.destination == 'github-igou-io' else 'david-igou')
+              + '/' + parameters.name if parameters.destination != 'sandbox'
+              else 'https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/'
+              + parameters.name + '/raw/branch/main/devfile.yaml' }}
           - title: Catalog entity
             entityRef: component:default/${{ parameters.name }}
   ansible-project-template.yaml: |
@@ -172,10 +378,28 @@ data:
             description:
               title: Description
               type: string
-              description: One line on what this automates or serves
+              description: One line on what this does
+            destination:
+              title: Destination
+              type: string
+              description: >-
+                Forgejo sandbox is the POC space (Dev Spaces devfile kept);
+                GitHub destinations create a graduated repo (Dev Spaces
+                artifacts stripped, devcontainer workflow assumed)
+              default: sandbox
+              enum:
+                - sandbox
+                - github-igou-io
+                - github-david-igou
+              enumNames:
+                - Forgejo sandbox (POC)
+                - GitHub igou-io
+                - GitHub david-igou
       steps:
+        # --- Forgejo sandbox destination: native template generation
         - id: generate
           name: Generate repository from Forgejo template
+          if: ${{ parameters.destination == 'sandbox' }}
           action: http:backstage:request
           input:
             method: POST
@@ -189,18 +413,102 @@ data:
               git_content: true
               private: false
         - id: register
-          name: Register in catalog
+          name: Register in catalog (Forgejo)
+          if: ${{ parameters.destination == 'sandbox' }}
           action: catalog:register
           input:
             catalogInfoUrl: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/src/branch/main/catalog-info.yaml
+        # --- GitHub destinations: stage through Forgejo's expander (the only
+        # thing that substitutes the skeleton placeholders), fetch the
+        # expanded tree, drop the staging repo, strip Dev Spaces artifacts,
+        # write a GitHub-correct catalog-info, publish, register.
+        - id: stage
+          name: Stage expanded copy in sandbox
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: http:backstage:request
+          input:
+            method: POST
+            path: /proxy/forgejo/repos/platform/ansible-project-template/generate
+            headers:
+              content-type: application/json
+            body:
+              owner: sandbox
+              name: ${{ parameters.name }}
+              description: ${{ parameters.description }}
+              git_content: true
+              private: false
+        - id: fetch-staged
+          name: Fetch expanded content
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: fetch:plain
+          input:
+            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
+        - id: cleanup-staged
+          name: Delete staging repo
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: http:backstage:request
+          input:
+            method: DELETE
+            path: /proxy/forgejo/repos/sandbox/${{ parameters.name }}
+        - id: strip-devspaces
+          name: Strip Dev Spaces artifacts
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: fs:delete
+          input:
+            files:
+              - .gitea/template
+              - catalog-info.yaml
+              - devfile.yaml
+              - scripts/install-agents.sh
+        - id: entity
+          name: Write GitHub catalog-info
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: catalog:write
+          input:
+            entity:
+              apiVersion: backstage.io/v1alpha1
+              kind: Component
+              metadata:
+                name: ${{ parameters.name }}
+                description: ${{ parameters.description }}
+                annotations:
+                  github.com/project-slug: ${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                links:
+                  - url: https://github.com/${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                    title: GitHub repository
+                    icon: scm
+              spec:
+                type: ansible-project
+                lifecycle: experimental
+                owner: group:default/developers
+        - id: publish-github
+          name: Publish to GitHub
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: publish:github
+          input:
+            repoUrl: github.com?owner=${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}&repo=${{ parameters.name }}
+            description: ${{ parameters.description }}
+            repoVisibility: public
+            defaultBranch: main
+        - id: register-github
+          name: Register in catalog (GitHub)
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: catalog:register
+          input:
+            catalogInfoUrl: ${{ steps['publish-github'].output.repoContentsUrl }}/catalog-info.yaml
       output:
         links:
-          - title: Forgejo repository
-            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
-          # Raw devfile URL factory — see the ansible-collection template above
-          # for why a plain repo URL breaks the Dev Spaces resolver.
+          - title: Repository
+            url: ${{ steps['publish-github'].output.remoteUrl if parameters.destination != 'sandbox' else 'https://forgejo.apps.ocp.igou.systems/sandbox/' + parameters.name }}
+          # Sandbox repos open via the raw devfile URL (Dev Spaces has no
+          # Forgejo provider); GitHub repos open via the native provider.
           - title: Open in OpenShift Dev Spaces
-            url: https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/raw/branch/main/devfile.yaml
+            url: >-
+              ${{ 'https://devspaces.apps.ocp.igou.systems/#https://github.com/'
+              + ('igou-io' if parameters.destination == 'github-igou-io' else 'david-igou')
+              + '/' + parameters.name if parameters.destination != 'sandbox'
+              else 'https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/'
+              + parameters.name + '/raw/branch/main/devfile.yaml' }}
           - title: Catalog entity
             entityRef: component:default/${{ parameters.name }}
   helm-chart-template.yaml: |
@@ -233,9 +541,27 @@ data:
               title: Description
               type: string
               description: One line on what this does
+            destination:
+              title: Destination
+              type: string
+              description: >-
+                Forgejo sandbox is the POC space (Dev Spaces devfile kept);
+                GitHub destinations create a graduated repo (Dev Spaces
+                artifacts stripped, devcontainer workflow assumed)
+              default: sandbox
+              enum:
+                - sandbox
+                - github-igou-io
+                - github-david-igou
+              enumNames:
+                - Forgejo sandbox (POC)
+                - GitHub igou-io
+                - GitHub david-igou
       steps:
+        # --- Forgejo sandbox destination: native template generation
         - id: generate
           name: Generate repository from Forgejo template
+          if: ${{ parameters.destination == 'sandbox' }}
           action: http:backstage:request
           input:
             method: POST
@@ -249,18 +575,102 @@ data:
               git_content: true
               private: false
         - id: register
-          name: Register in catalog
+          name: Register in catalog (Forgejo)
+          if: ${{ parameters.destination == 'sandbox' }}
           action: catalog:register
           input:
             catalogInfoUrl: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/src/branch/main/catalog-info.yaml
+        # --- GitHub destinations: stage through Forgejo's expander (the only
+        # thing that substitutes the skeleton placeholders), fetch the
+        # expanded tree, drop the staging repo, strip Dev Spaces artifacts,
+        # write a GitHub-correct catalog-info, publish, register.
+        - id: stage
+          name: Stage expanded copy in sandbox
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: http:backstage:request
+          input:
+            method: POST
+            path: /proxy/forgejo/repos/platform/helm-chart-template/generate
+            headers:
+              content-type: application/json
+            body:
+              owner: sandbox
+              name: ${{ parameters.name }}
+              description: ${{ parameters.description }}
+              git_content: true
+              private: false
+        - id: fetch-staged
+          name: Fetch expanded content
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: fetch:plain
+          input:
+            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
+        - id: cleanup-staged
+          name: Delete staging repo
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: http:backstage:request
+          input:
+            method: DELETE
+            path: /proxy/forgejo/repos/sandbox/${{ parameters.name }}
+        - id: strip-devspaces
+          name: Strip Dev Spaces artifacts
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: fs:delete
+          input:
+            files:
+              - .gitea/template
+              - catalog-info.yaml
+              - devfile.yaml
+              - scripts/install-agents.sh
+        - id: entity
+          name: Write GitHub catalog-info
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: catalog:write
+          input:
+            entity:
+              apiVersion: backstage.io/v1alpha1
+              kind: Component
+              metadata:
+                name: ${{ parameters.name }}
+                description: ${{ parameters.description }}
+                annotations:
+                  github.com/project-slug: ${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                links:
+                  - url: https://github.com/${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                    title: GitHub repository
+                    icon: scm
+              spec:
+                type: helm-chart
+                lifecycle: experimental
+                owner: group:default/developers
+        - id: publish-github
+          name: Publish to GitHub
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: publish:github
+          input:
+            repoUrl: github.com?owner=${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}&repo=${{ parameters.name }}
+            description: ${{ parameters.description }}
+            repoVisibility: public
+            defaultBranch: main
+        - id: register-github
+          name: Register in catalog (GitHub)
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: catalog:register
+          input:
+            catalogInfoUrl: ${{ steps['publish-github'].output.repoContentsUrl }}/catalog-info.yaml
       output:
         links:
-          - title: Forgejo repository
-            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
-          # Raw devfile URL factory — see the ansible-collection template above
-          # for why a plain repo URL breaks the Dev Spaces resolver.
+          - title: Repository
+            url: ${{ steps['publish-github'].output.remoteUrl if parameters.destination != 'sandbox' else 'https://forgejo.apps.ocp.igou.systems/sandbox/' + parameters.name }}
+          # Sandbox repos open via the raw devfile URL (Dev Spaces has no
+          # Forgejo provider); GitHub repos open via the native provider.
           - title: Open in OpenShift Dev Spaces
-            url: https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/raw/branch/main/devfile.yaml
+            url: >-
+              ${{ 'https://devspaces.apps.ocp.igou.systems/#https://github.com/'
+              + ('igou-io' if parameters.destination == 'github-igou-io' else 'david-igou')
+              + '/' + parameters.name if parameters.destination != 'sandbox'
+              else 'https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/'
+              + parameters.name + '/raw/branch/main/devfile.yaml' }}
           - title: Catalog entity
             entityRef: component:default/${{ parameters.name }}
   go-app-template.yaml: |
@@ -293,9 +703,27 @@ data:
               title: Description
               type: string
               description: One line on what this does
+            destination:
+              title: Destination
+              type: string
+              description: >-
+                Forgejo sandbox is the POC space (Dev Spaces devfile kept);
+                GitHub destinations create a graduated repo (Dev Spaces
+                artifacts stripped, devcontainer workflow assumed)
+              default: sandbox
+              enum:
+                - sandbox
+                - github-igou-io
+                - github-david-igou
+              enumNames:
+                - Forgejo sandbox (POC)
+                - GitHub igou-io
+                - GitHub david-igou
       steps:
+        # --- Forgejo sandbox destination: native template generation
         - id: generate
           name: Generate repository from Forgejo template
+          if: ${{ parameters.destination == 'sandbox' }}
           action: http:backstage:request
           input:
             method: POST
@@ -309,18 +737,102 @@ data:
               git_content: true
               private: false
         - id: register
-          name: Register in catalog
+          name: Register in catalog (Forgejo)
+          if: ${{ parameters.destination == 'sandbox' }}
           action: catalog:register
           input:
             catalogInfoUrl: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/src/branch/main/catalog-info.yaml
+        # --- GitHub destinations: stage through Forgejo's expander (the only
+        # thing that substitutes the skeleton placeholders), fetch the
+        # expanded tree, drop the staging repo, strip Dev Spaces artifacts,
+        # write a GitHub-correct catalog-info, publish, register.
+        - id: stage
+          name: Stage expanded copy in sandbox
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: http:backstage:request
+          input:
+            method: POST
+            path: /proxy/forgejo/repos/platform/go-app-template/generate
+            headers:
+              content-type: application/json
+            body:
+              owner: sandbox
+              name: ${{ parameters.name }}
+              description: ${{ parameters.description }}
+              git_content: true
+              private: false
+        - id: fetch-staged
+          name: Fetch expanded content
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: fetch:plain
+          input:
+            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
+        - id: cleanup-staged
+          name: Delete staging repo
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: http:backstage:request
+          input:
+            method: DELETE
+            path: /proxy/forgejo/repos/sandbox/${{ parameters.name }}
+        - id: strip-devspaces
+          name: Strip Dev Spaces artifacts
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: fs:delete
+          input:
+            files:
+              - .gitea/template
+              - catalog-info.yaml
+              - devfile.yaml
+              - scripts/install-agents.sh
+        - id: entity
+          name: Write GitHub catalog-info
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: catalog:write
+          input:
+            entity:
+              apiVersion: backstage.io/v1alpha1
+              kind: Component
+              metadata:
+                name: ${{ parameters.name }}
+                description: ${{ parameters.description }}
+                annotations:
+                  github.com/project-slug: ${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                links:
+                  - url: https://github.com/${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                    title: GitHub repository
+                    icon: scm
+              spec:
+                type: go-app
+                lifecycle: experimental
+                owner: group:default/developers
+        - id: publish-github
+          name: Publish to GitHub
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: publish:github
+          input:
+            repoUrl: github.com?owner=${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}&repo=${{ parameters.name }}
+            description: ${{ parameters.description }}
+            repoVisibility: public
+            defaultBranch: main
+        - id: register-github
+          name: Register in catalog (GitHub)
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: catalog:register
+          input:
+            catalogInfoUrl: ${{ steps['publish-github'].output.repoContentsUrl }}/catalog-info.yaml
       output:
         links:
-          - title: Forgejo repository
-            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
-          # Raw devfile URL factory — see the ansible-collection template above
-          # for why a plain repo URL breaks the Dev Spaces resolver.
+          - title: Repository
+            url: ${{ steps['publish-github'].output.remoteUrl if parameters.destination != 'sandbox' else 'https://forgejo.apps.ocp.igou.systems/sandbox/' + parameters.name }}
+          # Sandbox repos open via the raw devfile URL (Dev Spaces has no
+          # Forgejo provider); GitHub repos open via the native provider.
           - title: Open in OpenShift Dev Spaces
-            url: https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/raw/branch/main/devfile.yaml
+            url: >-
+              ${{ 'https://devspaces.apps.ocp.igou.systems/#https://github.com/'
+              + ('igou-io' if parameters.destination == 'github-igou-io' else 'david-igou')
+              + '/' + parameters.name if parameters.destination != 'sandbox'
+              else 'https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/'
+              + parameters.name + '/raw/branch/main/devfile.yaml' }}
           - title: Catalog entity
             entityRef: component:default/${{ parameters.name }}
   gitops-cluster-template.yaml: |
@@ -353,10 +865,28 @@ data:
             description:
               title: Description
               type: string
-              description: One line on what this repo manages
+              description: One line on what this does
+            destination:
+              title: Destination
+              type: string
+              description: >-
+                Forgejo sandbox is the POC space (Dev Spaces devfile kept);
+                GitHub destinations create a graduated repo (Dev Spaces
+                artifacts stripped, devcontainer workflow assumed)
+              default: sandbox
+              enum:
+                - sandbox
+                - github-igou-io
+                - github-david-igou
+              enumNames:
+                - Forgejo sandbox (POC)
+                - GitHub igou-io
+                - GitHub david-igou
       steps:
+        # --- Forgejo sandbox destination: native template generation
         - id: generate
           name: Generate repository from Forgejo template
+          if: ${{ parameters.destination == 'sandbox' }}
           action: http:backstage:request
           input:
             method: POST
@@ -370,18 +900,102 @@ data:
               git_content: true
               private: false
         - id: register
-          name: Register in catalog
+          name: Register in catalog (Forgejo)
+          if: ${{ parameters.destination == 'sandbox' }}
           action: catalog:register
           input:
             catalogInfoUrl: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/src/branch/main/catalog-info.yaml
+        # --- GitHub destinations: stage through Forgejo's expander (the only
+        # thing that substitutes the skeleton placeholders), fetch the
+        # expanded tree, drop the staging repo, strip Dev Spaces artifacts,
+        # write a GitHub-correct catalog-info, publish, register.
+        - id: stage
+          name: Stage expanded copy in sandbox
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: http:backstage:request
+          input:
+            method: POST
+            path: /proxy/forgejo/repos/platform/gitops-cluster-template/generate
+            headers:
+              content-type: application/json
+            body:
+              owner: sandbox
+              name: ${{ parameters.name }}
+              description: ${{ parameters.description }}
+              git_content: true
+              private: false
+        - id: fetch-staged
+          name: Fetch expanded content
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: fetch:plain
+          input:
+            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
+        - id: cleanup-staged
+          name: Delete staging repo
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: http:backstage:request
+          input:
+            method: DELETE
+            path: /proxy/forgejo/repos/sandbox/${{ parameters.name }}
+        - id: strip-devspaces
+          name: Strip Dev Spaces artifacts
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: fs:delete
+          input:
+            files:
+              - .gitea/template
+              - catalog-info.yaml
+              - devfile.yaml
+              - scripts/install-agents.sh
+        - id: entity
+          name: Write GitHub catalog-info
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: catalog:write
+          input:
+            entity:
+              apiVersion: backstage.io/v1alpha1
+              kind: Component
+              metadata:
+                name: ${{ parameters.name }}
+                description: ${{ parameters.description }}
+                annotations:
+                  github.com/project-slug: ${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                links:
+                  - url: https://github.com/${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                    title: GitHub repository
+                    icon: scm
+              spec:
+                type: gitops-cluster
+                lifecycle: experimental
+                owner: group:default/developers
+        - id: publish-github
+          name: Publish to GitHub
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: publish:github
+          input:
+            repoUrl: github.com?owner=${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}&repo=${{ parameters.name }}
+            description: ${{ parameters.description }}
+            repoVisibility: public
+            defaultBranch: main
+        - id: register-github
+          name: Register in catalog (GitHub)
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: catalog:register
+          input:
+            catalogInfoUrl: ${{ steps['publish-github'].output.repoContentsUrl }}/catalog-info.yaml
       output:
         links:
-          - title: Forgejo repository
-            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
-          # Raw devfile URL factory — see the ansible-collection template above
-          # for why a plain repo URL breaks the Dev Spaces resolver.
+          - title: Repository
+            url: ${{ steps['publish-github'].output.remoteUrl if parameters.destination != 'sandbox' else 'https://forgejo.apps.ocp.igou.systems/sandbox/' + parameters.name }}
+          # Sandbox repos open via the raw devfile URL (Dev Spaces has no
+          # Forgejo provider); GitHub repos open via the native provider.
           - title: Open in OpenShift Dev Spaces
-            url: https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/raw/branch/main/devfile.yaml
+            url: >-
+              ${{ 'https://devspaces.apps.ocp.igou.systems/#https://github.com/'
+              + ('igou-io' if parameters.destination == 'github-igou-io' else 'david-igou')
+              + '/' + parameters.name if parameters.destination != 'sandbox'
+              else 'https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/'
+              + parameters.name + '/raw/branch/main/devfile.yaml' }}
           - title: Catalog entity
             entityRef: component:default/${{ parameters.name }}
   python-app-template.yaml: |
@@ -414,9 +1028,27 @@ data:
               title: Description
               type: string
               description: One line on what this does
+            destination:
+              title: Destination
+              type: string
+              description: >-
+                Forgejo sandbox is the POC space (Dev Spaces devfile kept);
+                GitHub destinations create a graduated repo (Dev Spaces
+                artifacts stripped, devcontainer workflow assumed)
+              default: sandbox
+              enum:
+                - sandbox
+                - github-igou-io
+                - github-david-igou
+              enumNames:
+                - Forgejo sandbox (POC)
+                - GitHub igou-io
+                - GitHub david-igou
       steps:
+        # --- Forgejo sandbox destination: native template generation
         - id: generate
           name: Generate repository from Forgejo template
+          if: ${{ parameters.destination == 'sandbox' }}
           action: http:backstage:request
           input:
             method: POST
@@ -430,17 +1062,101 @@ data:
               git_content: true
               private: false
         - id: register
-          name: Register in catalog
+          name: Register in catalog (Forgejo)
+          if: ${{ parameters.destination == 'sandbox' }}
           action: catalog:register
           input:
             catalogInfoUrl: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/src/branch/main/catalog-info.yaml
+        # --- GitHub destinations: stage through Forgejo's expander (the only
+        # thing that substitutes the skeleton placeholders), fetch the
+        # expanded tree, drop the staging repo, strip Dev Spaces artifacts,
+        # write a GitHub-correct catalog-info, publish, register.
+        - id: stage
+          name: Stage expanded copy in sandbox
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: http:backstage:request
+          input:
+            method: POST
+            path: /proxy/forgejo/repos/platform/python-app-template/generate
+            headers:
+              content-type: application/json
+            body:
+              owner: sandbox
+              name: ${{ parameters.name }}
+              description: ${{ parameters.description }}
+              git_content: true
+              private: false
+        - id: fetch-staged
+          name: Fetch expanded content
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: fetch:plain
+          input:
+            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
+        - id: cleanup-staged
+          name: Delete staging repo
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: http:backstage:request
+          input:
+            method: DELETE
+            path: /proxy/forgejo/repos/sandbox/${{ parameters.name }}
+        - id: strip-devspaces
+          name: Strip Dev Spaces artifacts
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: fs:delete
+          input:
+            files:
+              - .gitea/template
+              - catalog-info.yaml
+              - devfile.yaml
+              - scripts/install-agents.sh
+        - id: entity
+          name: Write GitHub catalog-info
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: catalog:write
+          input:
+            entity:
+              apiVersion: backstage.io/v1alpha1
+              kind: Component
+              metadata:
+                name: ${{ parameters.name }}
+                description: ${{ parameters.description }}
+                annotations:
+                  github.com/project-slug: ${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                links:
+                  - url: https://github.com/${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}/${{ parameters.name }}
+                    title: GitHub repository
+                    icon: scm
+              spec:
+                type: python-app
+                lifecycle: experimental
+                owner: group:default/developers
+        - id: publish-github
+          name: Publish to GitHub
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: publish:github
+          input:
+            repoUrl: github.com?owner=${{{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}}&repo=${{ parameters.name }}
+            description: ${{ parameters.description }}
+            repoVisibility: public
+            defaultBranch: main
+        - id: register-github
+          name: Register in catalog (GitHub)
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: catalog:register
+          input:
+            catalogInfoUrl: ${{ steps['publish-github'].output.repoContentsUrl }}/catalog-info.yaml
       output:
         links:
-          - title: Forgejo repository
-            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
-          # Raw devfile URL factory — see the ansible-collection template above
-          # for why a plain repo URL breaks the Dev Spaces resolver.
+          - title: Repository
+            url: ${{ steps['publish-github'].output.remoteUrl if parameters.destination != 'sandbox' else 'https://forgejo.apps.ocp.igou.systems/sandbox/' + parameters.name }}
+          # Sandbox repos open via the raw devfile URL (Dev Spaces has no
+          # Forgejo provider); GitHub repos open via the native provider.
           - title: Open in OpenShift Dev Spaces
-            url: https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/raw/branch/main/devfile.yaml
+            url: >-
+              ${{ 'https://devspaces.apps.ocp.igou.systems/#https://github.com/'
+              + ('igou-io' if parameters.destination == 'github-igou-io' else 'david-igou')
+              + '/' + parameters.name if parameters.destination != 'sandbox'
+              else 'https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/'
+              + parameters.name + '/raw/branch/main/devfile.yaml' }}
           - title: Catalog entity
             entityRef: component:default/${{ parameters.name }}
