@@ -64,6 +64,10 @@ data:
           apps:
             - appId: ${GITHUB_APP_ID}
               clientId: ${GITHUB_APP_CLIENT_ID}
+              # Required by the config reader but only consumed by GitHub
+              # OAuth user sign-in (not configured here) — the 1P field holds
+              # a labeled placeholder. App auth uses appId+privateKey only.
+              clientSecret: ${GITHUB_APP_CLIENT_SECRET}
               privateKey: ${GITHUB_APP_PRIVATE_KEY}
     # Backend proxy used by the http:backstage:request scaffolder action to
     # call the Forgejo API with the machine token. POST = template generate;
