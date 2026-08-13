@@ -29,6 +29,10 @@ spec:
       secret:
         name: keycloak-realm-secrets
         key: DEV1_TEMP_PASSWORD
+    AGENTS_TEMP_PASSWORD:
+      secret:
+        name: keycloak-realm-secrets
+        key: AGENTS_TEMP_PASSWORD
   realm:
     id: igou
     realm: igou
@@ -94,3 +98,19 @@ spec:
           - type: password
             value: "${DEV1_TEMP_PASSWORD}"
             temporary: true
+      # Machine persona for AI agents scaffolding via the golden-path skill.
+      # Same developer role as dev1; Forgejo counterpart is the `agents` user
+      # (lab_forgejo/agents-forgejo). Created live via the admin API
+      # 2026-08-13 — this block keeps the bootstrap record complete.
+      - username: agents
+        enabled: true
+        firstName: Lab
+        lastName: Agents
+        email: agents@igou.systems
+        emailVerified: true
+        groups:
+          - /developers
+        credentials:
+          - type: password
+            value: "${AGENTS_TEMP_PASSWORD}"
+            temporary: false
