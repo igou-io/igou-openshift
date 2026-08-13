@@ -9,4 +9,6 @@ resources:
   - truenas-ipmi.yaml
   - truenas-hwmon.yaml
   - truenas-zfs.yaml
+  - truenas-docker-health.yaml
+  - truenas-cadvisor.yaml
   - truenas-prometheusrule.yaml
