@@ -7,6 +7,10 @@ kind: NetworkPolicy
 metadata:
   name: default-deny
   namespace: rhdh
+  annotations:
+    # After the namespace (wave 8): CreateNamespace=false, so a wave-0 apply
+    # into a not-yet-created namespace wedges a from-scratch sync.
+    argocd.argoproj.io/sync-wave: '9'
 spec:
   podSelector: {}
   policyTypes:
