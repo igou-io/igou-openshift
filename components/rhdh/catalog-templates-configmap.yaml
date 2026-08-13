@@ -82,3 +82,365 @@ data:
             url: https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.collection_name }}/raw/branch/main/devfile.yaml
           - title: Catalog entity
             entityRef: component:default/${{ parameters.collection_name }}
+  ansible-role-template.yaml: |
+    apiVersion: scaffolder.backstage.io/v1beta3
+    kind: Template
+    metadata:
+      name: ansible-role
+      title: Ansible Role
+      description: >-
+        Scaffold a standalone Ansible role repo (role at repo root, argument_specs contract, molecule KubeVirt scenario) in the sandbox org.
+      tags:
+        - ansible
+        - forgejo
+    spec:
+      owner: group:default/admins
+      type: ansible-role
+      parameters:
+        - title: Ansible Role details
+          required:
+            - name
+            - description
+          properties:
+            name:
+              title: Role name
+              type: string
+              description: >-
+                lower_snake_case; becomes the repo name, the role name, and the variable prefix
+              pattern: '^[a-z][a-z0-9_]{2,48}$'
+            description:
+              title: Description
+              type: string
+              description: One line on what this automates or serves
+      steps:
+        - id: generate
+          name: Generate repository from Forgejo template
+          action: http:backstage:request
+          input:
+            method: POST
+            path: /proxy/forgejo/repos/platform/ansible-role-template/generate
+            headers:
+              content-type: application/json
+            body:
+              owner: sandbox
+              name: ${{ parameters.name }}
+              description: ${{ parameters.description }}
+              git_content: true
+              private: false
+        - id: register
+          name: Register in catalog
+          action: catalog:register
+          input:
+            catalogInfoUrl: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/src/branch/main/catalog-info.yaml
+      output:
+        links:
+          - title: Forgejo repository
+            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
+          # Raw devfile URL factory — see the ansible-collection template above
+          # for why a plain repo URL breaks the Dev Spaces resolver.
+          - title: Open in OpenShift Dev Spaces
+            url: https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/raw/branch/main/devfile.yaml
+          - title: Catalog entity
+            entityRef: component:default/${{ parameters.name }}
+  ansible-project-template.yaml: |
+    apiVersion: scaffolder.backstage.io/v1beta3
+    kind: Template
+    metadata:
+      name: ansible-project
+      title: Ansible Project (AAP)
+      description: >-
+        Scaffold an Ansible project repo shaped for an AAP Project: playbooks/<domain>/, navigator config, pinned execution environment.
+      tags:
+        - ansible
+        - aap
+        - forgejo
+    spec:
+      owner: group:default/admins
+      type: ansible-project
+      parameters:
+        - title: Ansible Project (AAP) details
+          required:
+            - name
+            - description
+          properties:
+            name:
+              title: Project name
+              type: string
+              description: >-
+                kebab-case; becomes the repo name and the AAP project name
+              pattern: '^[a-z][a-z0-9]*(-[a-z0-9]+)*$'
+            description:
+              title: Description
+              type: string
+              description: One line on what this automates or serves
+      steps:
+        - id: generate
+          name: Generate repository from Forgejo template
+          action: http:backstage:request
+          input:
+            method: POST
+            path: /proxy/forgejo/repos/platform/ansible-project-template/generate
+            headers:
+              content-type: application/json
+            body:
+              owner: sandbox
+              name: ${{ parameters.name }}
+              description: ${{ parameters.description }}
+              git_content: true
+              private: false
+        - id: register
+          name: Register in catalog
+          action: catalog:register
+          input:
+            catalogInfoUrl: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/src/branch/main/catalog-info.yaml
+      output:
+        links:
+          - title: Forgejo repository
+            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
+          # Raw devfile URL factory — see the ansible-collection template above
+          # for why a plain repo URL breaks the Dev Spaces resolver.
+          - title: Open in OpenShift Dev Spaces
+            url: https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/raw/branch/main/devfile.yaml
+          - title: Catalog entity
+            entityRef: component:default/${{ parameters.name }}
+  helm-chart-template.yaml: |
+    apiVersion: scaffolder.backstage.io/v1beta3
+    kind: Template
+    metadata:
+      name: helm-chart
+      title: Helm Chart
+      description: >-
+        Scaffold a Helm chart repo the way lab charts are written: kustomize-rendered, restricted-v2 clean, helm lint green out of the box.
+      tags:
+        - helm
+        - forgejo
+    spec:
+      owner: group:default/admins
+      type: helm-chart
+      parameters:
+        - title: Helm Chart details
+          required:
+            - name
+            - description
+          properties:
+            name:
+              title: Chart name
+              type: string
+              description: >-
+                DNS-1123 label; becomes the repo name, the Chart.yaml name, and every resource-name prefix
+              pattern: '^[a-z0-9]([a-z0-9-]{0,38}[a-z0-9])?$'
+            description:
+              title: Description
+              type: string
+              description: One line on what this does
+      steps:
+        - id: generate
+          name: Generate repository from Forgejo template
+          action: http:backstage:request
+          input:
+            method: POST
+            path: /proxy/forgejo/repos/platform/helm-chart-template/generate
+            headers:
+              content-type: application/json
+            body:
+              owner: sandbox
+              name: ${{ parameters.name }}
+              description: ${{ parameters.description }}
+              git_content: true
+              private: false
+        - id: register
+          name: Register in catalog
+          action: catalog:register
+          input:
+            catalogInfoUrl: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/src/branch/main/catalog-info.yaml
+      output:
+        links:
+          - title: Forgejo repository
+            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
+          # Raw devfile URL factory — see the ansible-collection template above
+          # for why a plain repo URL breaks the Dev Spaces resolver.
+          - title: Open in OpenShift Dev Spaces
+            url: https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/raw/branch/main/devfile.yaml
+          - title: Catalog entity
+            entityRef: component:default/${{ parameters.name }}
+  go-app-template.yaml: |
+    apiVersion: scaffolder.backstage.io/v1beta3
+    kind: Template
+    metadata:
+      name: go-app
+      title: Go Application
+      description: >-
+        Scaffold a Go service/exporter repo with /healthz + /metrics starter, Containerfile, and local-quay dev loop.
+      tags:
+        - go
+        - forgejo
+    spec:
+      owner: group:default/admins
+      type: go-app
+      parameters:
+        - title: Go Application details
+          required:
+            - name
+            - description
+          properties:
+            name:
+              title: Application name
+              type: string
+              description: >-
+                kebab-case; becomes the repo name, the module path suffix, and the binary name
+              pattern: '^[a-z][a-z0-9-]{1,49}$'
+            description:
+              title: Description
+              type: string
+              description: One line on what this does
+      steps:
+        - id: generate
+          name: Generate repository from Forgejo template
+          action: http:backstage:request
+          input:
+            method: POST
+            path: /proxy/forgejo/repos/platform/go-app-template/generate
+            headers:
+              content-type: application/json
+            body:
+              owner: sandbox
+              name: ${{ parameters.name }}
+              description: ${{ parameters.description }}
+              git_content: true
+              private: false
+        - id: register
+          name: Register in catalog
+          action: catalog:register
+          input:
+            catalogInfoUrl: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/src/branch/main/catalog-info.yaml
+      output:
+        links:
+          - title: Forgejo repository
+            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
+          # Raw devfile URL factory — see the ansible-collection template above
+          # for why a plain repo URL breaks the Dev Spaces resolver.
+          - title: Open in OpenShift Dev Spaces
+            url: https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/raw/branch/main/devfile.yaml
+          - title: Catalog entity
+            entityRef: component:default/${{ parameters.name }}
+  gitops-cluster-template.yaml: |
+    apiVersion: scaffolder.backstage.io/v1beta3
+    kind: Template
+    metadata:
+      name: gitops-cluster
+      title: Cluster GitOps Repo
+      description: >-
+        Scaffold an ArgoCD app-of-apps cluster GitOps repo shaped like igou-openshift: clusters/values.yaml, components/, make test green.
+      tags:
+        - gitops
+        - argocd
+        - forgejo
+    spec:
+      owner: group:default/admins
+      type: gitops-cluster
+      parameters:
+        - title: Cluster GitOps Repo details
+          required:
+            - name
+            - description
+          properties:
+            name:
+              title: Repo name
+              type: string
+              description: >-
+                kebab-case; becomes the repo name and the app-source label on rendered Applications
+              pattern: '^[a-z][a-z0-9-]{1,38}$'
+            description:
+              title: Description
+              type: string
+              description: One line on what this repo manages
+      steps:
+        - id: generate
+          name: Generate repository from Forgejo template
+          action: http:backstage:request
+          input:
+            method: POST
+            path: /proxy/forgejo/repos/platform/gitops-cluster-template/generate
+            headers:
+              content-type: application/json
+            body:
+              owner: sandbox
+              name: ${{ parameters.name }}
+              description: ${{ parameters.description }}
+              git_content: true
+              private: false
+        - id: register
+          name: Register in catalog
+          action: catalog:register
+          input:
+            catalogInfoUrl: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/src/branch/main/catalog-info.yaml
+      output:
+        links:
+          - title: Forgejo repository
+            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
+          # Raw devfile URL factory — see the ansible-collection template above
+          # for why a plain repo URL breaks the Dev Spaces resolver.
+          - title: Open in OpenShift Dev Spaces
+            url: https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/raw/branch/main/devfile.yaml
+          - title: Catalog entity
+            entityRef: component:default/${{ parameters.name }}
+  python-app-template.yaml: |
+    apiVersion: scaffolder.backstage.io/v1beta3
+    kind: Template
+    metadata:
+      name: python-app
+      title: Python Application
+      description: >-
+        Scaffold a Python (FastAPI) service repo with pyproject, ruff/pytest devfile gates, Containerfile, and kustomize deploy base.
+      tags:
+        - python
+        - forgejo
+    spec:
+      owner: group:default/admins
+      type: python-app
+      parameters:
+        - title: Python Application details
+          required:
+            - name
+            - description
+          properties:
+            name:
+              title: Application name
+              type: string
+              description: >-
+                kebab-case; becomes the repo name, the distribution name, and the Kubernetes resource names
+              pattern: '^[a-z][a-z0-9-]{1,62}$'
+            description:
+              title: Description
+              type: string
+              description: One line on what this does
+      steps:
+        - id: generate
+          name: Generate repository from Forgejo template
+          action: http:backstage:request
+          input:
+            method: POST
+            path: /proxy/forgejo/repos/platform/python-app-template/generate
+            headers:
+              content-type: application/json
+            body:
+              owner: sandbox
+              name: ${{ parameters.name }}
+              description: ${{ parameters.description }}
+              git_content: true
+              private: false
+        - id: register
+          name: Register in catalog
+          action: catalog:register
+          input:
+            catalogInfoUrl: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/src/branch/main/catalog-info.yaml
+      output:
+        links:
+          - title: Forgejo repository
+            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}
+          # Raw devfile URL factory — see the ansible-collection template above
+          # for why a plain repo URL breaks the Dev Spaces resolver.
+          - title: Open in OpenShift Dev Spaces
+            url: https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/raw/branch/main/devfile.yaml
+          - title: Catalog entity
+            entityRef: component:default/${{ parameters.name }}

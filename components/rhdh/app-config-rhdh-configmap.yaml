@@ -75,6 +75,36 @@ data:
           rules:
             - allow:
                 - Template
+        - type: file
+          target: /opt/app-root/src/ansible-role-template.yaml
+          rules:
+            - allow:
+                - Template
+        - type: file
+          target: /opt/app-root/src/ansible-project-template.yaml
+          rules:
+            - allow:
+                - Template
+        - type: file
+          target: /opt/app-root/src/helm-chart-template.yaml
+          rules:
+            - allow:
+                - Template
+        - type: file
+          target: /opt/app-root/src/go-app-template.yaml
+          rules:
+            - allow:
+                - Template
+        - type: file
+          target: /opt/app-root/src/gitops-cluster-template.yaml
+          rules:
+            - allow:
+                - Template
+        - type: file
+          target: /opt/app-root/src/python-app-template.yaml
+          rules:
+            - allow:
+                - Template
       providers:
         # Provisions realm users/groups into the software catalog via the rhdh
         # client's service account (realm-management view/query roles).
