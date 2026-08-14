@@ -5,6 +5,8 @@
 # Each tenant also needs a one-time Tailscale ACL grant (impersonate group
 # "<name>-operator") — see the chart NOTES / README.
 #
+# Tenants are added/removed via the /tenant-onboarding skill.
+#
 # Example:
 # tenants:
 #   - name: alice-dev
