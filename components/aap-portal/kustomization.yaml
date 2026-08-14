@@ -7,6 +7,8 @@ resources:
   - allow-portal-networkpolicy.yaml
   - secrets-rhaap-portal-externalsecret.yaml
   - aap-portal-dynamic-plugins-registry-auth-externalsecret.yaml
+  - aap-portal-postgresql-auth-externalsecret.yaml
+  - aap-portal-backend-auth-externalsecret.yaml
 
 helmCharts:
   - name: redhat-rhaap-portal
@@ -27,7 +29,17 @@ helmCharts:
           # secret. Tag pinned to the chart appVersion.
           pluginMode: oci
           imageTagInfo: "2.2.5"
+          # Pin the backend service-to-service secret; without existingSecret
+          # the chart regenerates it every render (ArgoCD sync = rotation).
+          auth:
+            backend:
+              existingSecret: aap-portal-backend-auth
         upstream:
+          # Same regenerate-on-render problem for the postgres passwords —
+          # see aap-portal-postgresql-auth-externalsecret.yaml.
+          postgresql:
+            auth:
+              existingSecret: aap-portal-postgresql-auth
           backstage:
             appConfig:
               catalog:
