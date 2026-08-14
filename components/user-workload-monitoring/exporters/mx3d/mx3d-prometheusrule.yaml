@@ -7,17 +7,12 @@ metadata:
 spec:
   groups:
     - name: mx3d.rules
+      # No exporter-down / host-down alert here BY OPERATOR DECISION
+      # (2026-08-14): mx3d is a personal desktop that sleeps and powers
+      # off routinely - an up==0 alert would open a GitHub issue via the
+      # EDA pipeline every night. Metrics gaps while it sleeps are
+      # expected and fine.
       rules:
-        - alert: Mx3dWindowsExporterDown
-          expr: up{job="mx3d-windows-exporter"} == 0
-          for: 15m
-          labels:
-            severity: warning
-          annotations:
-            summary: mx3d windows_exporter scrape failing
-            description: |
-              windows_exporter on {{ $labels.instance }} is not answering -
-              the mx3d host may be down or the service stopped.
         - alert: Mx3dDiskSpaceLow
           expr: 100 * (1 - windows_logical_disk_free_bytes{job="mx3d-windows-exporter",volume="C:"} / windows_logical_disk_size_bytes{job="mx3d-windows-exporter",volume="C:"}) > 85
           for: 30m
