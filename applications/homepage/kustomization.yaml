@@ -5,6 +5,8 @@ resources:
   - homepage-namespace.yaml
   - homepage-clusterrole.yaml
   - homepage-clusterrolebinding.yaml
+  - homepage-monitoring-clusterrolebinding.yaml
+  - homepage-thanos-token-secret.yaml
   - homepage-truenas-externalsecret.yaml
   - default-deny-networkpolicy.yaml
   - homepage-ingress-networkpolicy.yaml
@@ -48,6 +50,11 @@ helmCharts:
               pullPolicy: IfNotPresent
             env:
               HOMEPAGE_ALLOWED_HOSTS: home.apps.ocp.igou.systems
+              HOMEPAGE_VAR_THANOS_TOKEN:
+                valueFrom:
+                  secretKeyRef:
+                    name: homepage-thanos-token
+                    key: token
             envFrom:
               - secretRef:
                   name: homepage-truenas

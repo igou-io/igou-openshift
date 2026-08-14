@@ -113,6 +113,10 @@ spec:
           - '{job="kube-prometheus-stack-operator"}'
           - '{job="cdi-prometheus-metrics"}'
           - '{__name__=~".+:.+"}'
+          # Firing/pending alert series so the homepage Fleet Alerts widget can
+          # count both clusters from thanos-querier alone (cluster="rk8s"
+          # external label survives federation).
+          - '{__name__="ALERTS"}'
       metricRelabelings:
         # Restore the labels honor_labels=false renamed to exported_*. The
         # regex (.+) guard means recording-rule series that legitimately have
