@@ -58,3 +58,16 @@ spec:
       ports:
         - port: 443
           protocol: TCP
+    # external https for the GitHub work-queue widgets (api.github.com has
+    # no stable IPs to pin); RFC1918 excluded to block lateral movement,
+    # same shape as sands-of-time.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - port: 443
+          protocol: TCP
