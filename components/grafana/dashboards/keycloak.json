@@ -1,0 +1,148 @@
+{
+ "uid": "keycloak-app",
+ "title": "Keycloak",
+ "tags": [
+  "keycloak",
+  "sso"
+ ],
+ "timezone": "browser",
+ "schemaVersion": 39,
+ "editable": true,
+ "refresh": "1m",
+ "time": {
+  "from": "now-6h",
+  "to": "now"
+ },
+ "templating": {
+  "list": [
+   {
+    "current": {
+     "selected": true,
+     "text": "thanos-querier",
+     "value": "thanos-querier"
+    },
+    "hide": 0,
+    "includeAll": false,
+    "multi": false,
+    "name": "datasource",
+    "options": [],
+    "query": "prometheus",
+    "refresh": 1,
+    "regex": "/thanos-querier/",
+    "skipUrlSync": false,
+    "type": "datasource"
+   }
+  ]
+ },
+ "annotations": {
+  "list": []
+ },
+ "links": [],
+ "panels": [
+  {
+   "type": "timeseries",
+   "title": "HTTP request rate by outcome",
+   "datasource": "$datasource",
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 0
+   },
+   "targets": [
+    {
+     "expr": "sum by (outcome) (rate(http_server_requests_seconds_count{job=\"keycloak-service\"}[5m]))",
+     "refId": "A",
+     "datasource": "$datasource",
+     "legendFormat": "{{outcome}}"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "reqps"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "JVM heap used",
+   "datasource": "$datasource",
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 0
+   },
+   "targets": [
+    {
+     "expr": "sum(jvm_memory_used_bytes{job=\"keycloak-service\",area=\"heap\"})",
+     "refId": "A",
+     "datasource": "$datasource",
+     "legendFormat": "heap"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "stat",
+   "title": "DB pool active",
+   "datasource": "$datasource",
+   "gridPos": {
+    "h": 4,
+    "w": 6,
+    "x": 0,
+    "y": 8
+   },
+   "targets": [
+    {
+     "expr": "sum(agroal_active_count{job=\"keycloak-service\"})",
+     "refId": "A",
+     "datasource": "$datasource"
+    }
+   ]
+  },
+  {
+   "type": "stat",
+   "title": "DB pool available",
+   "datasource": "$datasource",
+   "gridPos": {
+    "h": 4,
+    "w": 6,
+    "x": 6,
+    "y": 8
+   },
+   "targets": [
+    {
+     "expr": "sum(agroal_available_count{job=\"keycloak-service\"})",
+     "refId": "A",
+     "datasource": "$datasource"
+    }
+   ]
+  },
+  {
+   "type": "timeseries",
+   "title": "Active sessions (http)",
+   "datasource": "$datasource",
+   "gridPos": {
+    "h": 6,
+    "w": 12,
+    "x": 12,
+    "y": 8
+   },
+   "targets": [
+    {
+     "expr": "sum(http_server_active_requests{job=\"keycloak-service\"})",
+     "refId": "A",
+     "datasource": "$datasource",
+     "legendFormat": "active requests"
+    }
+   ]
+  }
+ ]
+}

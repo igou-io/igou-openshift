@@ -5,3 +5,4 @@ namespace: mx3d
 resources:
   - mx3d-namespace.yaml
   - mx3d-windows-exporter.yaml
+  - mx3d-prometheusrule.yaml

@@ -5,3 +5,4 @@ namespace: vscode
 resources:
   - vscode-namespace.yaml
   - vscode-node-exporter.yaml
+  - vscode-prometheusrule.yaml

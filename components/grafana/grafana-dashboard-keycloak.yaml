@@ -1,0 +1,18 @@
+---
+# Authored in-repo (2026-08-14): Keycloak quarkus/micrometer overview - no
+# histogram buckets are exported, so rates + pool + heap only.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-keycloak
+  namespace: grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: '12'
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  resyncPeriod: 24h
+  configMapRef:
+    name: grafana-dashboard-keycloak-json
+    key: keycloak.json
