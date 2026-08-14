@@ -1,0 +1,22 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: homepage-ingress
+  namespace: homepage
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    # edge Route (home.apps.ocp.igou.systems) fronts the pod on :3000.
+    # router-default runs HostNetwork; under OVN-K its source is matched by the
+    # openshift-host-network namespace label (an ipBlock does NOT match it) —
+    # same recipe as sands-of-time/llmkube.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/host-network: ""
+      ports:
+        - port: 3000
+          protocol: TCP
