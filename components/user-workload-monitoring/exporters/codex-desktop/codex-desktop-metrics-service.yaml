@@ -1,0 +1,18 @@
+---
+# Selects the virt-launcher pod via the stable vm.kubevirt.io/name label so
+# the target survives VM restarts (the VMI IP does not).
+apiVersion: v1
+kind: Service
+metadata:
+  name: codex-desktop-metrics
+  namespace: windows-images
+  labels:
+    app.kubernetes.io/name: codex-desktop-metrics
+spec:
+  selector:
+    vm.kubevirt.io/name: codex-desktop
+  ports:
+    - name: metrics
+      port: 9182
+      targetPort: 9182
+      protocol: TCP

@@ -17,6 +17,16 @@ spec:
         - https://automation.apps.ocp.igou.systems
         - https://grafana.apps.ocp.igou.systems
         - https://truenas.igou.systems
+        - https://home.apps.ocp.igou.systems
+        - https://forgejo.apps.ocp.igou.systems
+        - https://rhdh.apps.ocp.igou.systems
+        - https://openshift-gitops-server-openshift-gitops.apps.ocp.igou.systems
+        - https://keycloak.apps.ocp.igou.systems
+        - https://console-openshift-console.apps.ocp.igou.systems
+        - https://devspaces.apps.ocp.igou.systems
+        - https://hermes-dashboard.apps.ocp.igou.systems
+        - https://headlamp.rk8s.igou.systems
+        - https://prometheus.rk8s.igou.systems
       labels:
         tier: standard
         category: infra

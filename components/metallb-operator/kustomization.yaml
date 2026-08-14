@@ -5,3 +5,4 @@ resources:
   - metallb-operator-operatorgroup.yaml
   - metallb-operator-subscription.yaml
   - metallb-metallb.yaml
+  - metallb-alerts-prometheusrule.yaml

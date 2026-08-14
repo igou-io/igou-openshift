@@ -322,3 +322,25 @@ spec:
           expr: >
             sum by (dimension, instance) ({__name__=~"netdata_Read_Write_for_disk_.*_KiB_persec_average",
             disk=~"S753NS0X206644B|S753NS0X206645D|2515E9B3E0E1|2515E9B3E121|ZC16MM71|YVKX3BSK|YVKU4R7K|YHJBKNGA|YHJDPJTA|PN2234P9JSE1UW|ZC16Q4Z6|P9JTUH8W"}) * 1024
+    - name: truenas.capacity
+      rules:
+        - alert: ZFSPoolUsageHigh
+          expr: 100 * zfs_pool_allocated_bytes{job="truenas-zfs"} / zfs_pool_size_bytes{job="truenas-zfs"} > 70
+          for: 6h
+          labels:
+            severity: warning
+          annotations:
+            summary: ZFS pool {{ $labels.pool }} above 70%
+            description: |
+              Pool {{ $labels.pool }} is {{ $value | printf "%.0f" }}% allocated.
+              cold is RAIDZ2 and degrades hard when full - plan cleanup or expansion.
+        - alert: ZFSPoolUsageCritical
+          expr: 100 * zfs_pool_allocated_bytes{job="truenas-zfs"} / zfs_pool_size_bytes{job="truenas-zfs"} > 85
+          for: 30m
+          labels:
+            severity: critical
+          annotations:
+            summary: ZFS pool {{ $labels.pool }} above 85%
+            description: |
+              Pool {{ $labels.pool }} is {{ $value | printf "%.0f" }}% allocated -
+              CoW performance and snapshots are at risk. Free space now.

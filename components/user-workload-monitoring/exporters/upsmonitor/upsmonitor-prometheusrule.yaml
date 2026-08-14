@@ -117,3 +117,14 @@ spec:
             description: |
               node_exporter on {{ $labels.instance }} is not answering -
               the UPS monitoring host itself may be down.
+    - name: upsmonitor.capacity
+      rules:
+        - alert: UPSMonitorRootFilesystemHigh
+          expr: 100 * (1 - node_filesystem_avail_bytes{job="upsmonitor-node-exporter",mountpoint="/"} / node_filesystem_size_bytes{job="upsmonitor-node-exporter",mountpoint="/"}) > 80
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: upsmonitor Pi root filesystem above 80%
+            description: |
+              SD card on {{ $labels.instance }} is {{ $value | printf "%.0f" }}% full.

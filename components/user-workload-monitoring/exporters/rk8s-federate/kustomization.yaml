@@ -5,3 +5,4 @@ namespace: rk8s-federate
 resources:
   - rk8s-federate-namespace.yaml
   - rk8s-federate.yaml
+  - rk8s-federate-prometheusrule.yaml

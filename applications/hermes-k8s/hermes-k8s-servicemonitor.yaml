@@ -1,0 +1,15 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: hermes-k8s
+  namespace: hermes-k8s
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hermes-agent
+      app.kubernetes.io/instance: hermes-k8s
+  endpoints:
+    - port: metrics
+      interval: 60s
+      path: /metrics

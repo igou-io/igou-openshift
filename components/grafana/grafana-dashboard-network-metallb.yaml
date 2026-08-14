@@ -1,0 +1,19 @@
+---
+# Authored in-repo (2026-08-14): BGP/BFD session health from the platform
+# scrape of metallb-system (speaker-monitor-service job).
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-network-metallb
+  namespace: grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: '12'
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  resyncPeriod: 24h
+  folder: network
+  configMapRef:
+    name: grafana-dashboard-network-metallb-json
+    key: metallb.json

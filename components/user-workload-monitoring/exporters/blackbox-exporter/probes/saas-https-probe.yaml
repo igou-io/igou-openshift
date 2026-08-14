@@ -13,7 +13,9 @@ spec:
     url: blackbox-exporter.blackbox-exporter.svc:9115
   targets:
     staticConfig:
-      static: []
+      static:
+        # ghapp tokens, Renovate, and every git push depend on GitHub
+        - https://github.com
       labels:
         tier: standard
         category: saas

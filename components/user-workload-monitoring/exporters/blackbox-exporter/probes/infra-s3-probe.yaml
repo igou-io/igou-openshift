@@ -1,0 +1,25 @@
+---
+# rustfs-cold S3 on TrueNAS: velero, loki-cold and etcd backups all write
+# here. Anonymous GET / returns 403 AccessDenied when the service is
+# healthy, so probe with the 403-accepting module - a connection failure or
+# 5xx means the backup substrate is down.
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: infra-s3
+  namespace: blackbox-exporter
+  labels:
+    app.kubernetes.io/name: blackbox-exporter
+spec:
+  interval: 60s
+  module: http_403_ok
+  prober:
+    url: blackbox-exporter.blackbox-exporter.svc:9115
+  targets:
+    staticConfig:
+      static:
+        - https://truenas.igou.systems:20292
+      labels:
+        tier: critical
+        category: backup
+        owner: platform

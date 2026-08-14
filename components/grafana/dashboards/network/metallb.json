@@ -1,0 +1,135 @@
+{
+ "uid": "metallb-bgp",
+ "title": "MetalLB BGP",
+ "tags": [
+  "metallb",
+  "network"
+ ],
+ "timezone": "browser",
+ "schemaVersion": 39,
+ "editable": true,
+ "refresh": "1m",
+ "time": {
+  "from": "now-6h",
+  "to": "now"
+ },
+ "templating": {
+  "list": [
+   {
+    "current": {
+     "selected": true,
+     "text": "thanos-querier",
+     "value": "thanos-querier"
+    },
+    "hide": 0,
+    "includeAll": false,
+    "multi": false,
+    "name": "datasource",
+    "options": [],
+    "query": "prometheus",
+    "refresh": 1,
+    "regex": "/thanos-querier/",
+    "skipUrlSync": false,
+    "type": "datasource"
+   }
+  ]
+ },
+ "annotations": {
+  "list": []
+ },
+ "links": [],
+ "panels": [
+  {
+   "type": "stat",
+   "title": "BGP sessions up",
+   "datasource": "$datasource",
+   "gridPos": {
+    "h": 4,
+    "w": 6,
+    "x": 0,
+    "y": 0
+   },
+   "targets": [
+    {
+     "expr": "sum(metallb_bgp_session_up)",
+     "refId": "A",
+     "datasource": "$datasource"
+    }
+   ]
+  },
+  {
+   "type": "stat",
+   "title": "BFD sessions up",
+   "datasource": "$datasource",
+   "gridPos": {
+    "h": 4,
+    "w": 6,
+    "x": 6,
+    "y": 0
+   },
+   "targets": [
+    {
+     "expr": "sum(metallb_bfd_session_up)",
+     "refId": "A",
+     "datasource": "$datasource"
+    }
+   ]
+  },
+  {
+   "type": "stat",
+   "title": "Announced prefixes",
+   "datasource": "$datasource",
+   "gridPos": {
+    "h": 4,
+    "w": 6,
+    "x": 12,
+    "y": 0
+   },
+   "targets": [
+    {
+     "expr": "sum(metallb_bgp_announced_prefixes_total)",
+     "refId": "A",
+     "datasource": "$datasource"
+    }
+   ]
+  },
+  {
+   "type": "timeseries",
+   "title": "BGP session state by speaker",
+   "datasource": "$datasource",
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 4
+   },
+   "targets": [
+    {
+     "expr": "metallb_bgp_session_up",
+     "refId": "A",
+     "datasource": "$datasource",
+     "legendFormat": "{{pod}} -> {{peer}}"
+    }
+   ]
+  },
+  {
+   "type": "timeseries",
+   "title": "BGP keepalives received (rate)",
+   "datasource": "$datasource",
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 4
+   },
+   "targets": [
+    {
+     "expr": "rate(metallb_bgp_keepalives_received[5m])",
+     "refId": "A",
+     "datasource": "$datasource",
+     "legendFormat": "{{pod}}"
+    }
+   ]
+  }
+ ]
+}

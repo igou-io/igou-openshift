@@ -1,0 +1,41 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: vscode-alerts
+  namespace: vscode
+spec:
+  groups:
+    - name: vscode.rules
+      rules:
+        - alert: VscodeNodeExporterDown
+          expr: up{job="vscode-node-exporter"} == 0
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: vscode devhost node metrics scrape failing
+            description: |
+              node_exporter on {{ $labels.instance }} is not answering -
+              the devcontainer host may be down.
+        - alert: VscodeRootFilesystemHigh
+          expr: 100 * (1 - node_filesystem_avail_bytes{job="vscode-node-exporter",mountpoint="/"} / node_filesystem_size_bytes{job="vscode-node-exporter",mountpoint="/"}) > 80
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: vscode root filesystem above 80%
+            description: |
+              Root filesystem on {{ $labels.instance }} is {{ $value | printf "%.0f" }}% full.
+              VG has 0 free extents (no lvextend headroom) - prune container/build
+              caches; see the devhost disk pressure recipe in igou-docs.
+        - alert: VscodeRootFilesystemCritical
+          expr: 100 * (1 - node_filesystem_avail_bytes{job="vscode-node-exporter",mountpoint="/"} / node_filesystem_size_bytes{job="vscode-node-exporter",mountpoint="/"}) > 90
+          for: 15m
+          labels:
+            severity: critical
+          annotations:
+            summary: vscode root filesystem above 90%
+            description: |
+              Root filesystem on {{ $labels.instance }} is {{ $value | printf "%.0f" }}% full
+              and the host will start failing writes soon.

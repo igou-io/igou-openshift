@@ -28,6 +28,8 @@ resources:
   - default-egressfirewall.yaml
   - session-networkpolicy.yaml
   - agent-egress-networkpolicy.yaml
+  - hermes-k8s-servicemonitor.yaml
+  - allow-uwm-metrics-networkpolicy.yaml
   - quay-pull-externalsecret.yaml
   - hermes-env-externalsecret.yaml
   - hermes-workspace-pvc.yaml
