@@ -1,0 +1,50 @@
+---
+# Starter allow policy for goldenpath-pr-probe: cluster DNS + kube-apiserver egress and
+# host-network ingress (router Routes, kubelet probes). Grow this from
+# observed NetObserv flows. Remember: enumerate EVERY ServiceMonitor/
+# PodMonitor port in the UWM ingress rule — sampled captures miss scrapes.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-observed
+  namespace: goldenpath-pr-probe
+  annotations:
+    argocd.argoproj.io/sync-wave: '9'
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # host-network sources (kubelet probes, host-network webhooks). Under
+    # OVN-K these SNAT to the node host network; node-subnet ipBlocks never
+    # match them — use the synthetic host-network namespace label.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/host-network: ""
+      ports:
+        - port: 8443
+          protocol: TCP
+  egress:
+    # cluster DNS (always required)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+        - port: 5353
+          protocol: UDP
+        - port: 5353
+          protocol: TCP
+    # kube-apiserver (post-DNAT endpoint)
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.10/32
+      ports:
+        - port: 6443
+          protocol: TCP

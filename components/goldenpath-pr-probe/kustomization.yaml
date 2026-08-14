@@ -1,0 +1,9 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - default-deny-networkpolicy.yaml
+  - allow-observed-networkpolicy.yaml
+  - goldenpath-pr-probe-namespace.yaml
+  - goldenpath-pr-probe-operatorgroup.yaml
+  - goldenpath-pr-probe-subscription.yaml

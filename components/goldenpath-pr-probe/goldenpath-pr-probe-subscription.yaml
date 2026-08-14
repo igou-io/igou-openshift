@@ -1,0 +1,16 @@
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: goldenpath-pr-probe
+  namespace: goldenpath-pr-probe
+  annotations:
+    argocd.argoproj.io/sync-wave: '9'
+spec:
+  # Pin the minor channel so version jumps are a deliberate git change,
+  # not an automatic channel ride (lab convention; see rhbk/rhdh).
+  channel: stable-v9.9
+  installPlanApproval: Automatic
+  name: goldenpath-pr-probe
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace

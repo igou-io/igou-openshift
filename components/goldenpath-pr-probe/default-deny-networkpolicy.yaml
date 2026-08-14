@@ -1,0 +1,17 @@
+---
+# Default-deny (ingress + egress) for namespace goldenpath-pr-probe. allow-observed opens
+# the known-required flows; extend it from NetObserv evidence, not guesses.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: goldenpath-pr-probe
+  annotations:
+    # After the namespace (wave 8): CreateNamespace=false, so a wave-0 apply
+    # into a not-yet-created namespace wedges a from-scratch sync.
+    argocd.argoproj.io/sync-wave: '9'
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress

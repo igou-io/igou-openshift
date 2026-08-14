@@ -1,0 +1,15 @@
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: goldenpath-pr-probe
+  namespace: goldenpath-pr-probe
+  annotations:
+    argocd.argoproj.io/sync-wave: '9'
+spec:
+  # OwnNamespace mode. If the operator only advertises AllNamespaces
+  # (check its CSV installModes), drop targetNamespaces — see
+  # components/rhdh for that variant.
+  targetNamespaces:
+    - goldenpath-pr-probe
+  upgradeStrategy: Default
