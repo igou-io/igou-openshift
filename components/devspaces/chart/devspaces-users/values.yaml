@@ -2,3 +2,8 @@
 # Usernames with a pre-provisioned <user>-devspaces namespace + molecule
 # RBAC. Overridden via valuesInline in the component kustomization.
 users: []
+
+# Subset of users whose workspaces get 1Password Connect credentials
+# auto-mounted (op-connect ExternalSecret). The token reads the lab
+# claude/awx vaults — never add sandbox personas here.
+opConnectUsers: []

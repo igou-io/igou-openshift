@@ -21,3 +21,7 @@ helmCharts:
       users:
         - igou
         - dev1
+      # 1P Connect creds for igou-devenv workspaces (op-connect ExternalSecret).
+      # Lab-vault-scoped token — sandbox personas (dev1) stay off this list.
+      opConnectUsers:
+        - igou
