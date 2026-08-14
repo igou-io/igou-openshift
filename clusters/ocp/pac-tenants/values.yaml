@@ -2,7 +2,7 @@
 # PaC tenants for the OCP cluster.
 # Schema and defaults: see .helm/charts/pac-tenant/values.yaml
 #
-# Tenants are added/removed via the /scaffold-pac-tenant skill.
+# Tenants are added/removed via the /tenant-onboarding skill.
 
 # This cluster uses the 1Password SDK as its ESO provider. Any other
 # ESO-compatible store would work the same — point secretStore.name at
