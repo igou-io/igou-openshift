@@ -31,7 +31,7 @@
         description: automation controller
         widget:
           type: customapi
-          url: https://automation.apps.ocp.igou.systems/api/controller/v2/jobs/?order_by=-started&page_size=4
+          url: https://automation.apps.ocp.igou.systems/api/controller/v2/jobs/?order_by=-created&page_size=4
           headers:
             Authorization: "Bearer {{HOMEPAGE_VAR_AAP_TOKEN}}"
           refreshInterval: 120000
