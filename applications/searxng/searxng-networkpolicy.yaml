@@ -17,6 +17,10 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: hermes
+        # containerized hermes (applications/hermes-k8s), parallel-run + post-cutover
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-k8s
       ports:
         - protocol: TCP
           port: 8080

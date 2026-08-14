@@ -402,6 +402,17 @@ applications:
     source:
       path: applications/hermes-agent
 
+  # Container/operator-based hermes (kubernetes terminal backend, Kata
+  # sessions). Runs in parallel with the hermes VM until cutover, when
+  # applications/hermes-agent (the VM) is retired.
+  hermes-k8s:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/hermes-k8s
+
   comfyui:
     project: cluster-apps
     annotations:
