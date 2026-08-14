@@ -7,9 +7,9 @@ metadata:
   labels:
     app: hermes-k8s
 spec:
-  # Parallel-run hostname. At cutover this becomes
-  # hermes-dashboard.apps.ocp.igou.systems (currently held by the VM app).
-  host: hermes-k8s-dashboard.apps.ocp.igou.systems
+  # The production hostname, taken over from the VM app at cutover
+  # (2026-08-14); the VM's Route is removed in the same commit.
+  host: hermes-dashboard.apps.ocp.igou.systems
   to:
     kind: Service
     # Operator-created Service, named after the HermesInstance.
