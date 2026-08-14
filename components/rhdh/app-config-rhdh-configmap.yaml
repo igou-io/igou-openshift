@@ -132,6 +132,21 @@ data:
           rules:
             - allow:
                 - Template
+        - type: file
+          target: /opt/app-root/src/mcp-server-template.yaml
+          rules:
+            - allow:
+                - Template
+        - type: file
+          target: /opt/app-root/src/aap-job-template-template.yaml
+          rules:
+            - allow:
+                - Template
+        - type: file
+          target: /opt/app-root/src/grafana-dashboard-template.yaml
+          rules:
+            - allow:
+                - Template
       providers:
         # Provisions realm users/groups into the software catalog via the rhdh
         # client's service account (realm-management view/query roles).

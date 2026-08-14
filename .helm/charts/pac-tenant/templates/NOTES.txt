@@ -1,0 +1,48 @@
+{{- if .Values.tenants }}
+pac-tenant rendered {{ len .Values.tenants }} CI tenant namespace(s).
+
+For EACH tenant below: (1) create the Forgejo webhook by hand (PaC has no CLI
+helper for Forgejo), (2) make sure every remote secret key listed exists with
+the fields shown, and (3) land a .tekton/*.yaml PipelineRun in the repo.
+
+Webhook target URL (same for every tenant):
+  oc get route -n openshift-pipelines pipelines-as-code-controller \
+    -o jsonpath='https://{.spec.host}'
+{{ range $tenant := .Values.tenants }}
+{{- $ns := include "pac-tenant.namespace" (dict "root" $ "tenant" $tenant) }}
+== {{ $tenant.name }}  (namespace: {{ $ns }}) ==
+  webhook: {{ $tenant.url }}/settings/hooks -> Add Webhook -> Forgejo
+    - Target URL:   the pipelines-as-code-controller Route (see above)
+    - Method POST, content type application/json
+    - Secret:       field `webhook.secret` of remote item {{ $tenant.gitProvider.remoteRef.key | quote }}
+    - Events:       Push, PR Opened / Reopened / Synchronized / Label updated /
+                    Closed, Issue Comment
+  remote secrets:
+    - {{ $tenant.gitProvider.remoteRef.key }} needs fields `provider.token`
+      (Forgejo PAT, write:repository + write:issue) and `webhook.secret`
+{{- range $secret := (dig "secrets" "imagePullSecrets" list $tenant) }}
+    - {{ $secret.remoteRef.key }} needs field {{ $secret.dockerconfigField | default "dockerconfigjson" }} (imagePullSecret {{ $secret.name }})
+{{- end }}
+{{- range $secret := (dig "secrets" "serviceAccountSecrets" list $tenant) }}
+    - {{ $secret.remoteRef.key }} needs field {{ $secret.dockerconfigField | default "dockerconfigjson" }} (serviceAccountSecret {{ $secret.name }})
+{{- end }}
+{{- range $secret := (dig "secrets" "workspaceSecrets" list $tenant) }}
+    - {{ $secret.remoteRef.key }} — all fields projected as-is (workspaceSecret {{ $secret.name }})
+{{- end }}
+{{- if include "pac-tenant.hasSecrets" (dict "tenant" $tenant) }}
+  secrets present -> ok_to_test collapsed to pull_request; add reviewers by
+  commit, not by /ok-to-test.
+{{- end }}
+{{- if $tenant.imageStreams }}
+{{- $routed := false }}
+{{- range $rule := ($tenant.extraEgress | default list) }}
+{{- if eq ($rule.cidr | default "") "10.10.9.10/32" }}{{ $routed = true }}{{ end }}
+{{- end }}
+{{- if not $routed }}
+  WARNING: container-builder tenant with no apps-router egress rule
+  (extraEgress cidr 10.10.9.10/32) — Quay push and Forgejo clone will hang.
+{{- end }}
+{{- end }}
+  the repo needs a .tekton/*.yaml PipelineRun before anything runs.
+{{ end }}
+{{- end }}

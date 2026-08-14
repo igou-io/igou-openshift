@@ -1316,3 +1316,396 @@ data:
         links:
           - title: Pull request
             url: ${{ steps['publish-pr'].output.remoteUrl }}
+  mcp-server-template.yaml: |
+    apiVersion: scaffolder.backstage.io/v1beta3
+    kind: Template
+    metadata:
+      name: mcp-server
+      title: MCP Server
+      description: >-
+        Scaffold a Python MCP server repo (official mcp SDK, stdio + Bearer-authed streamable-http transports, ruff/pytest gates, Containerfile, kustomize deploy base).
+      tags:
+        - mcp
+        - python
+        - forgejo
+    spec:
+      owner: group:default/admins
+      type: mcp-server
+      parameters:
+        - title: MCP Server details
+          required:
+            - name
+            - description
+          properties:
+            name:
+              title: Application name
+              type: string
+              description: >-
+                kebab-case; becomes the repo name, the distribution name, and the Kubernetes resource names
+              pattern: '^[a-z][a-z0-9-]{1,62}$'
+            description:
+              title: Description
+              type: string
+              description: One line on what this does
+            destination:
+              title: Destination
+              type: string
+              description: >-
+                Forgejo sandbox is the POC space (Dev Spaces devfile kept);
+                GitHub destinations create a graduated repo (Dev Spaces
+                artifacts stripped, devcontainer workflow assumed)
+              default: sandbox
+              enum:
+                - sandbox
+                - github-igou-io
+                - github-david-igou
+              enumNames:
+                - Forgejo sandbox (POC)
+                - GitHub igou-io
+                - GitHub david-igou
+      steps:
+        # --- Forgejo sandbox destination: native template generation
+        - id: generate
+          name: Generate repository from Forgejo template
+          if: ${{ parameters.destination == 'sandbox' }}
+          action: http:backstage:request
+          input:
+            method: POST
+            path: /proxy/forgejo/repos/platform/mcp-server-template/generate
+            headers:
+              content-type: application/json
+            body:
+              owner: sandbox
+              name: ${{ parameters.name }}
+              description: ${{ parameters.description }}
+              git_content: true
+              private: false
+        - id: register
+          name: Register in catalog (Forgejo)
+          if: ${{ parameters.destination == 'sandbox' }}
+          action: catalog:register
+          input:
+            catalogInfoUrl: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/src/branch/main/catalog-info.yaml
+        # --- GitHub destinations: stage through Forgejo's expander (the only
+        # thing that substitutes the skeleton placeholders), fetch the
+        # expanded tree, drop the staging repo, strip Dev Spaces artifacts,
+        # write a GitHub-correct catalog-info, publish, register.
+        - id: stage
+          name: Stage expanded copy in sandbox
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: http:backstage:request
+          input:
+            method: POST
+            path: /proxy/forgejo/repos/platform/mcp-server-template/generate
+            headers:
+              content-type: application/json
+            body:
+              owner: sandbox
+              name: ${{ parameters.name }}
+              description: ${{ parameters.description }}
+              git_content: true
+              private: false
+        - id: fetch-staged
+          name: Fetch expanded content
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: fetch:plain
+          input:
+            # branch-qualified: GiteaUrlReader derives the ref from the URL
+            # path; a bare repo URL yields git/commits/undefined -> 404
+            url: https://forgejo.apps.ocp.igou.systems/sandbox/${{ parameters.name }}/src/branch/main
+        - id: cleanup-staged
+          name: Delete staging repo
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: http:backstage:request
+          input:
+            method: DELETE
+            path: /proxy/forgejo/repos/sandbox/${{ parameters.name }}
+        - id: strip-devspaces
+          name: Strip Dev Spaces artifacts
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: fs:delete
+          input:
+            files:
+              - .gitea/template
+              - catalog-info.yaml
+              - devfile.yaml
+              - scripts/install-agents.sh
+        - id: entity
+          name: Write GitHub catalog-info
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: catalog:write
+          input:
+            entity:
+              apiVersion: backstage.io/v1alpha1
+              kind: Component
+              metadata:
+                name: ${{ parameters.name }}
+                description: ${{ parameters.description }}
+                annotations:
+                  github.com/project-slug: ${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}/${{ parameters.name }}
+                links:
+                  - url: https://github.com/${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}/${{ parameters.name }}
+                    title: GitHub repository
+                    icon: scm
+              spec:
+                type: mcp-server
+                lifecycle: experimental
+                owner: group:default/developers
+        - id: publish-github
+          name: Publish to GitHub
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: publish:github
+          input:
+            repoUrl: github.com?owner=${{ 'igou-io' if parameters.destination == 'github-igou-io' else 'david-igou' }}&repo=${{ parameters.name }}
+            description: ${{ parameters.description }}
+            repoVisibility: public
+            defaultBranch: main
+        - id: register-github
+          name: Register in catalog (GitHub)
+          if: ${{ parameters.destination != 'sandbox' }}
+          action: catalog:register
+          input:
+            catalogInfoUrl: ${{ steps['publish-github'].output.repoContentsUrl }}/catalog-info.yaml
+      output:
+        links:
+          - title: Repository
+            url: ${{ steps['publish-github'].output.remoteUrl if parameters.destination != 'sandbox' else 'https://forgejo.apps.ocp.igou.systems/sandbox/' + parameters.name }}
+          # Sandbox repos open via the raw devfile URL (Dev Spaces has no
+          # Forgejo provider); GitHub repos open via the native provider.
+          - title: Open in OpenShift Dev Spaces
+            url: >-
+              ${{ 'https://devspaces.apps.ocp.igou.systems/#https://github.com/'
+              + ('igou-io' if parameters.destination == 'github-igou-io' else 'david-igou')
+              + '/' + parameters.name if parameters.destination != 'sandbox'
+              else 'https://devspaces.apps.ocp.igou.systems/#https://forgejo.apps.ocp.igou.systems/sandbox/'
+              + parameters.name + '/raw/branch/main/devfile.yaml' }}
+          - title: Catalog entity
+            entityRef: component:default/${{ parameters.name }}
+  aap-job-template-template.yaml: |
+    apiVersion: scaffolder.backstage.io/v1beta3
+    kind: Template
+    metadata:
+      name: aap-job-template
+      title: AAP Playbook + Job Template (PR to igou-ansible)
+      description: >-
+        Open a PR adding playbooks/<domain>/<name>.yml to igou-ansible with
+        the ready-to-paste controller_templates entry embedded in the
+        playbook header and PR body. The igou-inventory splice into
+        group_vars/aap/job_templates.yml stays a manual follow-up.
+      tags:
+        - ansible
+        - aap
+        - pull-request
+    spec:
+      owner: group:default/admins
+      type: aap-job-template
+      parameters:
+        - title: Playbook details
+          required:
+            - name
+            - domain
+            - title
+            - description
+            - targeting
+          properties:
+            name:
+              title: Playbook name
+              type: string
+              description: lower_snake_case; becomes playbooks/<domain>/<name>.yml and JT name <domain>_<name>
+              pattern: '^[a-z][a-z0-9_]{1,50}$'
+            domain:
+              title: Domain
+              type: string
+              description: Existing playbooks/ subdirectory
+              enum:
+                - aap
+                - devenv
+                - hermes
+                - kubernetes
+                - kubevirt
+                - linux
+                - logging
+                - netboot
+                - openshift
+                - openshift_virtualization
+                - rhel
+                - routeros
+                - rustfs
+                - tailscale
+                - truenas
+                - upsmonitor
+                - windows
+            title:
+              title: Play title
+              type: string
+              description: Imperative Title-cased play name (no quotes or braces)
+              pattern: "^[A-Z][A-Za-z0-9 ,./()'-]{4,72}$"
+            description:
+              title: Description
+              type: string
+              description: One line on what this playbook automates
+            targeting:
+              title: Targeting
+              type: string
+              default: limit
+              enum:
+                - limit
+                - localhost
+              enumNames:
+                - Managed hosts (ansible_limit contract)
+                - Localhost / API-driven
+            default_group:
+              title: Default host group
+              type: string
+              default: none
+              description: >-
+                Managed-hosts only — hosts pattern when ansible_limit is not
+                passed; 'none' keeps the no-limit-runs-nothing safety contract
+              pattern: '^[a-z][a-z0-9_.:-]{1,62}$'
+            execution_environment:
+              title: Execution environment
+              type: string
+              default: igou-awx-ee
+              enum:
+                - igou-awx-ee
+                - igou-aap-ee-rhel9
+      steps:
+        - id: fetch
+          name: Render playbook skeleton
+          action: fetch:template
+          input:
+            url: https://forgejo.apps.ocp.igou.systems/platform/aap-job-template-template/src/branch/main/skeletons/${{ parameters.targeting }}
+            targetPath: playbooks/${{ parameters.domain }}
+            values:
+              name: ${{ parameters.name }}
+              domain: ${{ parameters.domain }}
+              title: ${{ parameters.title }}
+              description: ${{ parameters.description }}
+              default_group: ${{ parameters.default_group }}
+              execution_environment: ${{ parameters.execution_environment }}
+        - id: publish-pr
+          name: Open pull request
+          action: publish:github:pull-request
+          input:
+            repoUrl: github.com?owner=igou-io&repo=igou-ansible
+            branchName: goldenpath/playbook-${{ parameters.name }}
+            title: 'feat(${{ parameters.domain }}): scaffold ${{ parameters.name }} playbook'
+            description: >-
+              Scaffolded by the aap-job-template golden path
+              (${{ parameters.description }}). Manual follow-ups before use:
+              splice the controller_templates entry from the playbook header
+              comment into igou-inventory group_vars/aap/job_templates.yml
+              (config-as-code), then run the aap_sync_templates JT; flesh out
+              the task list; keep ansible-lint production green.
+            targetBranchName: main
+      output:
+        links:
+          - title: Pull request
+            url: ${{ steps['publish-pr'].output.remoteUrl }}
+  grafana-dashboard-template.yaml: |
+    apiVersion: scaffolder.backstage.io/v1beta3
+    kind: Template
+    metadata:
+      name: grafana-dashboard
+      title: Grafana Dashboard (PR to igou-openshift)
+      description: >-
+        Open a PR adding a GrafanaDashboard CR to components/grafana —
+        grafana.com id import or a vendored placeholder JSON. The
+        kustomization.yaml wiring lines stay a manual follow-up listed in
+        the PR body.
+      tags:
+        - grafana
+        - observability
+        - pull-request
+    spec:
+      owner: group:default/admins
+      type: grafana-dashboard
+      parameters:
+        - title: Dashboard details
+          required:
+            - name
+            - description
+            - folder
+            - source
+          properties:
+            name:
+              title: Dashboard slug
+              type: string
+              description: kebab-case; CR name suffix, JSON filename, configmap key
+              pattern: '^[a-z][a-z0-9-]{1,38}$'
+            description:
+              title: Description
+              type: string
+              description: One line on what this dashboard shows
+            folder:
+              title: Grafana folder
+              type: string
+              description: 'Existing folders: hardware, kubernetes, logging, network, power, sre'
+              pattern: '^[a-z][a-z0-9-]{1,29}$'
+            source:
+              title: Source
+              type: string
+              default: custom-json
+              enum:
+                - custom-json
+                - grafanaCom
+              enumNames:
+                - Hand-authored JSON (vendored placeholder)
+                - grafana.com dashboard id
+            title:
+              title: Dashboard title
+              type: string
+              description: custom-json only; defaults to the slug
+            grafana_com_id:
+              title: grafana.com id
+              type: integer
+              description: grafanaCom source only — numeric id from the dashboard URL
+            datasource:
+              title: Datasource
+              type: string
+              default: thanos-querier
+              enum:
+                - thanos-querier
+                - rk8s-prometheus
+                - loki-infrastructure
+                - loki-application
+                - loki-network
+            input_name:
+              title: Dashboard input name
+              type: string
+              default: DS_PROMETHEUS
+              description: __inputs[].name in the JSON to bind (exact, case-sensitive)
+      steps:
+        - id: fetch
+          name: Render dashboard skeleton
+          action: fetch:template
+          input:
+            url: https://forgejo.apps.ocp.igou.systems/platform/grafana-dashboard-template/src/branch/main/skeletons/${{ parameters.source }}
+            targetPath: components/grafana
+            values:
+              name: ${{ parameters.name }}
+              description: ${{ parameters.description }}
+              folder: ${{ parameters.folder }}
+              title: ${{ parameters.title }}
+              grafana_com_id: ${{ parameters.grafana_com_id }}
+              datasource: ${{ parameters.datasource }}
+              input_name: ${{ parameters.input_name }}
+        - id: publish-pr
+          name: Open pull request
+          action: publish:github:pull-request
+          input:
+            repoUrl: github.com?owner=igou-io&repo=igou-openshift
+            branchName: goldenpath/dashboard-${{ parameters.folder }}-${{ parameters.name }}
+            title: 'feat(grafana): ${{ parameters.folder }}/${{ parameters.name }} dashboard'
+            description: >-
+              Scaffolded by the grafana-dashboard golden path
+              (${{ parameters.description }}). Manual follow-ups before merge:
+              add the CR file (and for custom-json the configMapGenerator
+              stanza) to components/grafana/kustomization.yaml, and for
+              custom-json replace the placeholder panels with the real
+              dashboard model.
+            targetBranchName: main
+      output:
+        links:
+          - title: Pull request
+            url: ${{ steps['publish-pr'].output.remoteUrl }}
