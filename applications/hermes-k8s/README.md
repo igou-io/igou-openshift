@@ -45,10 +45,19 @@ Deployment after changes). Proven live 2026-08-14 from a Kata session pod:
 mint + GitHub API call with the token, out-of-policy repo and over-asked
 permission both 403.
 
-Until the plugin release after PR #32 reaches the devenv image
-(`GHAPP_VERSION` Renovate pin), the baked `ghapp`/`gh-app` CLIs in sessions do
-not read `GHAPP_BROKER_URL`; raw `curl $GHAPP_BROKER_URL/token` works
-meanwhile.
+The session image (`igou-devenv:latest`, digest-pinned) carries ghapp >= 0.3.0,
+so `gh-app`/`git` in sessions mint via the broker natively.
+
+## Coding-agent dispatch from sessions
+
+Sessions can run the baked coding-agent CLIs (claude, codex, opencode,
+cursor-agent) with the same identities the VM's terminal containers had: the
+credential/state dirs live on the workspace PVC's `home/` subtree and are
+subPath-mounted into `/home/igou` (see the HermesInstance), so OAuth token
+refreshes persist across sessions. `OPENCODE_GO_API_KEY` is forwarded from
+`hermes-env`. GitHub writes go through the ghapp broker (policy-clamped,
+repo-scoped); the devenv image's system gitconfig wires the credential helper,
+so plain `git push` on HTTPS remotes mints automatically.
 
 ## Known gaps (deliberate, tracked for cutover)
 
