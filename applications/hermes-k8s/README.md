@@ -44,6 +44,20 @@ needing both `get` and `create`). This directory only documents what is
   wrappers).
 * AAP `hermes_*` job templates / schedules become obsolete at cutover.
 
+## Updating the image
+
+Until the upstream PR merges, updates follow the fork loop — rebase
+`feat/kubernetes-terminal-backend` onto upstream main (regenerate `uv.lock`),
+run the backend test suite, rebuild with the podman Dockerfile variant, push to
+Quay, then bump the tag + digest **in both places** in `hermesinstance.yaml`
+(`spec.image` and the dashboard `spec.sidecars[0].image`). Full runbook with
+the exact commands and failure modes: igou-docs →
+`openshift/Hermes Agent Container Update - Fork Rebase, Image Rebuild, and Rollout`.
+
+Two rollout behaviors to remember: an image change rolls the StatefulSet by
+itself; a `spec.config.raw`-only change does not — the pod copies config at
+boot, so delete `hermes-k8s-0` after the sync.
+
 ## Verify
 
 `hermes doctor` in the agent pod must be fully green, and:
