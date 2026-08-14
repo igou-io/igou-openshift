@@ -1,0 +1,23 @@
+---
+# mx3d desktop thermals + fan telemetry, built from the sensors OhmGraphite
+# actually reports on this hardware (Arc B580, Radeon 610M, 2x NVMe).
+# See the JSON's description/text panel for the 7945HX3D CPU-sensor gap.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-mx3d-thermals
+  namespace: grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: '12'
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  folder: hardware
+  resyncPeriod: 24h
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: thanos-querier
+  configMapRef:
+    name: grafana-dashboard-mx3d-thermals-json
+    key: mx3d-thermals.json

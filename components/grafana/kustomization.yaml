@@ -93,6 +93,7 @@ resources:
   - grafana-dashboard-power-consumption.yaml
   # Fleet hardware thermals (hardware folder)
   - grafana-dashboard-hardware-lab-thermal.yaml
+  - grafana-dashboard-mx3d-thermals.yaml
   # NetObserv flow analytics (network folder)
   - grafana-dashboard-network-netobserv-traffic.yaml
 # Vendored dashboard JSON (see grafana-dashboard-nut-exporter.yaml for why
@@ -344,6 +345,10 @@ configMapGenerator:
     namespace: grafana
     files:
       - dashboards/hardware/lab-thermal.json
+  - name: grafana-dashboard-mx3d-thermals-json
+    namespace: grafana
+    files:
+      - dashboards/hardware/mx3d-thermals.json
   - name: grafana-dashboard-network-netobserv-traffic-json
     namespace: grafana
     files:

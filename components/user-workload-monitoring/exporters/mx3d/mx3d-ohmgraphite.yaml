@@ -1,0 +1,59 @@
+---
+# OhmGraphite (LibreHardwareMonitor) hardware sensors on the mx3d desktop,
+# deployed by igou-ansible playbooks/windows/deploy_ohmgraphite.yaml.
+# Covers what windows_exporter can't: GPU temps, GPU fan tach, NVMe temps.
+# Same selectorless Service + manual Endpoints pattern as the
+# windows_exporter scrape beside this file.
+apiVersion: v1
+kind: Service
+metadata:
+  name: mx3d-ohmgraphite
+  labels:
+    app.kubernetes.io/name: mx3d-ohmgraphite
+    app.kubernetes.io/part-of: mx3d
+spec:
+  clusterIP: None
+  ports:
+    - name: metrics
+      port: 4445
+      targetPort: 4445
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  # Must match the Service name for endpoint discovery.
+  name: mx3d-ohmgraphite
+  labels:
+    app.kubernetes.io/name: mx3d-ohmgraphite
+    app.kubernetes.io/part-of: mx3d
+subsets:
+  - addresses:
+      - ip: 10.10.10.23
+    ports:
+      - name: metrics
+        port: 4445
+        protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: mx3d-ohmgraphite
+  labels:
+    app.kubernetes.io/name: mx3d-ohmgraphite
+    app.kubernetes.io/part-of: mx3d
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mx3d-ohmgraphite
+  endpoints:
+    - port: metrics
+      interval: 30s
+      scrapeTimeout: 10s
+      relabelings:
+        # The target address is a bare IP; name the real source.
+        # action: replace is the CRD default - set explicitly so the
+        # rendered manifest matches the live object and ArgoCD stays Synced.
+        - action: replace
+          targetLabel: instance
+          replacement: mx3d.igou.systems
