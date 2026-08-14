@@ -166,6 +166,63 @@ spec:
           readOnly: true
         - name: tmp
           mountPath: /tmp
+    # OAuth refresh tokens are single-use: when Hermes refreshes its own
+    # openai-codex tokens (model calls), the Codex CLI's ~/.codex/auth.json
+    # copy of the same lineage goes stale and codex-in-sessions dies with
+    # "refresh token was already used". Hermes only ever READS the CLI file
+    # (adopt-on-stale, hermes_cli/auth.py), so this sidecar closes the loop:
+    # it copies Hermes-store tokens into the shared CLI file whenever the
+    # store's last_refresh is strictly newer. Latest-wins in both directions.
+    - name: codex-auth-sync
+      image: quay.apps.ocp.igou.systems/igou-io/hermes-agent@sha256:829502ce9f355851d340aa6ec47aef7b67a623484cb13d84d666db074c2e21ad
+      command:
+        - python3
+        - -u
+        - -c
+        - |
+          import json, os, time
+          SRC = '/opt/data/auth.json'
+          DST = '/codex/auth.json'
+          while True:
+              try:
+                  st = json.load(open(SRC))['providers']['openai-codex']
+                  cli = json.load(open(DST))
+                  if st.get('last_refresh', '') > cli.get('last_refresh', ''):
+                      cli['tokens']['access_token'] = st['tokens']['access_token']
+                      cli['tokens']['refresh_token'] = st['tokens']['refresh_token']
+                      cli['last_refresh'] = st['last_refresh']
+                      tmp = DST + '.tmp'
+                      json.dump(cli, open(tmp, 'w'), indent=2)
+                      os.chmod(tmp, 0o600)
+                      os.replace(tmp, DST)
+                      print('synced codex tokens', st['last_refresh'], flush=True)
+              except Exception as exc:
+                  print('sync skipped:', exc, flush=True)
+              time.sleep(60)
+      env: []
+      resources:
+        requests:
+          cpu: 5m
+          memory: 32Mi
+        limits:
+          cpu: 50m
+          memory: 64Mi
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+      volumeMounts:
+        - name: data
+          mountPath: /opt/data
+          readOnly: true
+        - name: hermes-workspace
+          subPath: home/.codex
+          mountPath: /codex
   storage:
     # ~/.hermes state: sessions, memory, skills, cron store, auth.json,
     # SOUL.md. Sized like the VM's hermes-state DataVolume.
@@ -188,6 +245,13 @@ spec:
     - name: hermes-workspace
       subPath: output
       mountPath: /opt/data/cache/documents
+    # ONE canonical Codex CLI auth file for agent + sessions (the VM's
+    # bind-mount model). Hermes adopts from it when its own store's
+    # refresh_token gets rotated away; the codex-auth-sync sidecar covers
+    # the reverse direction.
+    - name: hermes-workspace
+      subPath: home/.codex
+      mountPath: /opt/data/.codex
   config:
     raw:
       _config_version: 33
