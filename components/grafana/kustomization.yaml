@@ -34,6 +34,11 @@ resources:
   - grafana-dashboard-storage-client-io.yaml
   - grafana-dashboard-truenas.yaml
   - grafana-dashboard-truenas-zfs.yaml
+  - grafana-dashboard-11055.yaml
+  - grafana-dashboard-13659.yaml
+  - grafana-dashboard-forgejo.yaml
+  - grafana-dashboard-keycloak.yaml
+  - grafana-dashboard-network-metallb.yaml
   - grafana-dashboard-adb-exporter.yaml
   - grafana-dashboard-olm-updates.yaml
   - grafana-dashboard-15765.yaml
@@ -132,6 +137,18 @@ configMapGenerator:
     namespace: grafana
     files:
       - dashboards/truenas.json
+  - name: grafana-dashboard-forgejo-json
+    namespace: grafana
+    files:
+      - dashboards/forgejo.json
+  - name: grafana-dashboard-keycloak-json
+    namespace: grafana
+    files:
+      - dashboards/keycloak.json
+  - name: grafana-dashboard-network-metallb-json
+    namespace: grafana
+    files:
+      - dashboards/network/metallb.json
   - name: grafana-dashboard-truenas-zfs-json
     namespace: grafana
     files:

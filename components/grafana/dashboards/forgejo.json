@@ -1,0 +1,177 @@
+{
+ "uid": "forgejo-app",
+ "title": "Forgejo",
+ "tags": [
+  "forgejo",
+  "apps"
+ ],
+ "timezone": "browser",
+ "schemaVersion": 39,
+ "editable": true,
+ "refresh": "1m",
+ "time": {
+  "from": "now-6h",
+  "to": "now"
+ },
+ "templating": {
+  "list": [
+   {
+    "current": {
+     "selected": true,
+     "text": "thanos-querier",
+     "value": "thanos-querier"
+    },
+    "hide": 0,
+    "includeAll": false,
+    "multi": false,
+    "name": "datasource",
+    "options": [],
+    "query": "prometheus",
+    "refresh": 1,
+    "regex": "/thanos-querier/",
+    "skipUrlSync": false,
+    "type": "datasource"
+   }
+  ]
+ },
+ "annotations": {
+  "list": []
+ },
+ "links": [],
+ "panels": [
+  {
+   "type": "stat",
+   "title": "Users",
+   "datasource": "$datasource",
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 0,
+    "y": 0
+   },
+   "targets": [
+    {
+     "expr": "gitea_users{job=\"forgejo-http\"}",
+     "refId": "A",
+     "datasource": "$datasource"
+    }
+   ]
+  },
+  {
+   "type": "stat",
+   "title": "Repositories",
+   "datasource": "$datasource",
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 4,
+    "y": 0
+   },
+   "targets": [
+    {
+     "expr": "gitea_repositories{job=\"forgejo-http\"}",
+     "refId": "A",
+     "datasource": "$datasource"
+    }
+   ]
+  },
+  {
+   "type": "stat",
+   "title": "Issues",
+   "datasource": "$datasource",
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 8,
+    "y": 0
+   },
+   "targets": [
+    {
+     "expr": "gitea_issues{job=\"forgejo-http\"}",
+     "refId": "A",
+     "datasource": "$datasource"
+    }
+   ]
+  },
+  {
+   "type": "stat",
+   "title": "Organizations",
+   "datasource": "$datasource",
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 12,
+    "y": 0
+   },
+   "targets": [
+    {
+     "expr": "gitea_organizations{job=\"forgejo-http\"}",
+     "refId": "A",
+     "datasource": "$datasource"
+    }
+   ]
+  },
+  {
+   "type": "stat",
+   "title": "Stars",
+   "datasource": "$datasource",
+   "gridPos": {
+    "h": 4,
+    "w": 4,
+    "x": 16,
+    "y": 0
+   },
+   "targets": [
+    {
+     "expr": "gitea_stars{job=\"forgejo-http\"}",
+     "refId": "A",
+     "datasource": "$datasource"
+    }
+   ]
+  },
+  {
+   "type": "timeseries",
+   "title": "Resident memory",
+   "datasource": "$datasource",
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 0,
+    "y": 4
+   },
+   "targets": [
+    {
+     "expr": "process_resident_memory_bytes{job=\"forgejo-http\"}",
+     "refId": "A",
+     "datasource": "$datasource",
+     "legendFormat": "forgejo"
+    }
+   ],
+   "fieldConfig": {
+    "defaults": {
+     "unit": "bytes"
+    },
+    "overrides": []
+   }
+  },
+  {
+   "type": "timeseries",
+   "title": "Goroutines",
+   "datasource": "$datasource",
+   "gridPos": {
+    "h": 8,
+    "w": 12,
+    "x": 12,
+    "y": 4
+   },
+   "targets": [
+    {
+     "expr": "go_goroutines{job=\"forgejo-http\"}",
+     "refId": "A",
+     "datasource": "$datasource",
+     "legendFormat": "forgejo"
+    }
+   ]
+  }
+ ]
+}

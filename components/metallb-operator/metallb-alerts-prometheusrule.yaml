@@ -1,0 +1,43 @@
+---
+# metallb-system carries openshift.io/cluster-monitoring: "true", so the
+# PLATFORM prometheus-operator loads this rule (and already scrapes the
+# controller/speaker ServiceMonitors) - no UWM namespace enforcement here.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: metallb-alerts
+  namespace: metallb-system
+spec:
+  groups:
+    - name: metallb.rules
+      rules:
+        - alert: MetalLBBGPSessionDown
+          expr: metallb_bgp_session_up == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: BGP session to {{ $labels.peer }} down
+            description: |
+              Speaker {{ $labels.pod }} lost its BGP session to
+              {{ $labels.peer }} - every VIP announced from that node is
+              unreachable from the LAN.
+        - alert: MetalLBBFDSessionDown
+          expr: metallb_bfd_session_up == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: BFD session to {{ $labels.peer }} down
+            description: |
+              BFD on speaker {{ $labels.pod }} reports the session to
+              {{ $labels.peer }} down - fast-failover protection is gone.
+        - alert: MetalLBSpeakerDown
+          expr: up{job="speaker-monitor-service"} == 0
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: MetalLB speaker scrape failing on {{ $labels.instance }}
+            description: |
+              The speaker on this node is not answering its metrics scrape.

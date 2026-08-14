@@ -1,0 +1,33 @@
+---
+# Per-namespace copy (UWM enforces the namespace label on user rules); the
+# CNPG cluster metrics for this namespace's PG are scraped here.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cnpg-alerts
+  namespace: quay-enterprise
+spec:
+  groups:
+    - name: cnpg.rules
+      rules:
+        - alert: CNPGInstanceDown
+          expr: cnpg_collector_up == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: CNPG PostgreSQL instance down (quay-enterprise)
+            description: |
+              CNPG collector on {{ $labels.pod }} reports the PostgreSQL
+              instance down.
+        - alert: CNPGWALArchiveStuck
+          expr: cnpg_collector_pg_wal_archive_status{value="ready"} > 10
+          for: 20m
+          labels:
+            severity: warning
+          annotations:
+            summary: CNPG WAL archiving falling behind (quay-enterprise)
+            description: |
+              {{ $value }} WAL segments are waiting to archive on
+              {{ $labels.pod }} - the barman object store path is likely
+              failing, which silently breaks PITR.

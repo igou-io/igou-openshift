@@ -1,0 +1,25 @@
+---
+# Dead-man alert for the federation scrape: if this one job dies, ALL rk8s
+# visibility (10 federated jobs incl. its ALERTS series) silently disappears
+# from thanos, so treat it as critical.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: rk8s-federate-alerts
+  namespace: rk8s-federate
+spec:
+  groups:
+    - name: rk8s-federate.rules
+      rules:
+        - alert: RK8sFederationDown
+          expr: up{job="rk8s-federate"} == 0
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: rk8s federation scrape is down
+            description: |
+              UWM can no longer federate rk8s Prometheus - all rk8s metrics
+              AND rk8s alert visibility are gone from thanos. Check the
+              federate.lan.igou.systems gateway, the LE cert, and rk8s
+              kube-prometheus-stack.
