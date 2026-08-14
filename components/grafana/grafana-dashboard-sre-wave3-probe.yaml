@@ -1,0 +1,27 @@
+---
+#  — wave3 dashboard PR e2e probe
+# grafana.com dashboard 1860, unpinned: the operator
+# re-fetches the latest revision every resync, so upstream content can change
+# with no git diff. Add `revision: <n>` under grafanaCom when determinism
+# matters. If the upstream JSON ships no __inputs (it hardcodes a datasource
+# uid), this import CANNOT be remapped and every panel renders "datasource
+# not found" — vendor the JSON instead, see
+# grafana-dashboard-nut-exporter.yaml.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-sre-wave3-probe
+  namespace: grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: '12'
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  folder: sre
+  resyncPeriod: 24h
+  datasources:
+    - inputName: 
+      datasourceName: 
+  grafanaCom:
+    id: 1860
