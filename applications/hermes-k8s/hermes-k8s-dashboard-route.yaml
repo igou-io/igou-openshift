@@ -1,0 +1,49 @@
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: hermes-k8s-dashboard
+  namespace: hermes-k8s
+  labels:
+    app: hermes-k8s
+spec:
+  # Parallel-run hostname. At cutover this becomes
+  # hermes-dashboard.apps.ocp.igou.systems (currently held by the VM app).
+  host: hermes-k8s-dashboard.apps.ocp.igou.systems
+  to:
+    kind: Service
+    # Operator-created Service, named after the HermesInstance.
+    name: hermes-k8s
+    weight: 100
+  port:
+    targetPort: dashboard
+  # Edge termination, same as the VM route: the router terminates TLS and the
+  # dashboard enforces its own scrypt BasicAuth gate (fail-closed: the
+  # dashboard only starts when HERMES_DASHBOARD_BASIC_AUTH_USERNAME is set).
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None
+---
+# The operator's NetworkPolicy only admits ingress from the instance's own
+# namespace; the router lives in openshift-ingress. Without this the Route 502s.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hermes-k8s-router-ingress
+  namespace: hermes-k8s
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: hermes-k8s
+      app.kubernetes.io/name: hermes-agent
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/ingress: ''
+      ports:
+        - protocol: TCP
+          port: 9119
