@@ -1,0 +1,16 @@
+---
+# Lets the homepage SA query thanos-querier (bearer token) for the Fleet
+# Alerts and Servers widgets. cluster-monitoring-view is the documented
+# read-only role for the thanos-querier web port.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: homepage-monitoring
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-monitoring-view
+subjects:
+  - kind: ServiceAccount
+    name: homepage
+    namespace: homepage

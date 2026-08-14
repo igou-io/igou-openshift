@@ -40,3 +40,21 @@ spec:
       ports:
         - port: 443
           protocol: TCP
+    # thanos-querier route for the Fleet Alerts / Servers widgets. The
+    # *.apps.ocp wildcard terminates on router-default, which is HostNetwork
+    # on the master, so the connection goes straight to the node IP :443
+    # (same node IP as the apiserver rule above).
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.10/32
+      ports:
+        - port: 443
+          protocol: TCP
+    # rk8s cluster-wildcard Gateway VIP — alertmanager.rk8s and
+    # prometheus.rk8s for the rk8s alert widgets.
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.11/32
+      ports:
+        - port: 443
+          protocol: TCP

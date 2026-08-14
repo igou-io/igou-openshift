@@ -3,6 +3,10 @@
 # for the openshift Route kind). Apps exposed via Ingress or HTTPRoute are
 # auto-discovered from gethomepage.dev/* annotations instead — do not
 # duplicate them here (currently: ntfy, gitea-mirror, jellyfin).
+#
+# Alerts + Servers widgets query thanos-querier (bearer token from the
+# homepage SA via HOMEPAGE_VAR_THANOS_TOKEN) and the open rk8s Prometheus
+# API. All PromQL was validated against live data before landing here.
 - Platform:
     - OpenShift Console:
         icon: openshift.png
@@ -15,7 +19,7 @@
     - Grafana:
         icon: grafana.png
         href: https://grafana.apps.ocp.igou.systems
-        description: dashboards
+        description: dashboards (ocp + rk8s folders)
     - AAP:
         icon: ansible.png
         href: https://automation.apps.ocp.igou.systems
@@ -36,6 +40,55 @@
         icon: eclipse-che.png
         href: https://devspaces.apps.ocp.igou.systems
         description: cloud ide
+
+- Alerts:
+    - Fleet Alerts:
+        icon: mdi-bell-ring
+        href: https://console-openshift-console.apps.ocp.igou.systems/monitoring/alerts
+        description: firing counts (thanos)
+        widget:
+          type: prometheusmetric
+          url: https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems
+          headers:
+            Authorization: "Bearer {{HOMEPAGE_VAR_THANOS_TOKEN}}"
+          refreshInterval: 60000
+          metrics:
+            - label: ocp critical
+              query: 'count(ALERTS{alertstate="firing",severity="critical",cluster!="rk8s"}) or vector(0)'
+            - label: ocp warning
+              query: 'count(ALERTS{alertstate="firing",severity="warning",cluster!="rk8s"}) or vector(0)'
+            - label: rk8s firing
+              query: 'count(ALERTS{alertstate="firing",severity=~"warning|critical",cluster="rk8s"}) or vector(0)'
+    - OCP Alerts:
+        icon: mdi-alert-circle
+        href: https://console-openshift-console.apps.ocp.igou.systems/monitoring/alerts
+        description: firing on ocp
+        widget:
+          type: customapi
+          url: https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems/api/v1/query?query=count%20by%20(alertname,severity)%20(ALERTS%7Balertstate%3D%22firing%22,severity%3D~%22warning%7Ccritical%22,cluster!%3D%22rk8s%22%7D)
+          headers:
+            Authorization: "Bearer {{HOMEPAGE_VAR_THANOS_TOKEN}}"
+          refreshInterval: 60000
+          display: dynamic-list
+          mappings:
+            items: data.result
+            name: metric.alertname
+            label: metric.severity
+            limit: 5
+    - rk8s Alerts:
+        icon: mdi-alert-circle-outline
+        href: https://alertmanager.rk8s.igou.systems
+        description: firing on rk8s
+        widget:
+          type: customapi
+          url: https://prometheus.rk8s.igou.systems/api/v1/query?query=count%20by%20(alertname,severity)%20(ALERTS%7Balertstate%3D%22firing%22,severity%3D~%22warning%7Ccritical%22%7D)
+          refreshInterval: 60000
+          display: dynamic-list
+          mappings:
+            items: data.result
+            name: metric.alertname
+            label: metric.severity
+            limit: 5
 
 - Applications:
     - Forgejo:
@@ -65,7 +118,387 @@
     - ComfyUI:
         icon: mdi-image-multiple
         href: https://comfyui.apps.ocp.igou.systems
-        description: image generation
+        description: image generation (on-demand)
+
+- Servers:
+    - ocp master (ms01):
+        icon: mdi-server
+        description: ocp control plane
+        widget:
+          type: prometheusmetric
+          url: https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems
+          headers:
+            Authorization: "Bearer {{HOMEPAGE_VAR_THANOS_TOKEN}}"
+          refreshInterval: 60000
+          metrics:
+            - label: cpu
+              query: '100 * (1 - avg(rate(node_cpu_seconds_total{mode="idle",instance="ocp.igou.systems"}[5m])))'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: mem
+              query: '100 * (1 - node_memory_MemAvailable_bytes{instance="ocp.igou.systems"} / node_memory_MemTotal_bytes{instance="ocp.igou.systems"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: disk /
+              query: '100 * max(1 - node_filesystem_avail_bytes{instance="ocp.igou.systems",mountpoint="/"} / node_filesystem_size_bytes{instance="ocp.igou.systems",mountpoint="/"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+    - hpg5:
+        icon: mdi-server
+        description: ocp worker
+        widget:
+          type: prometheusmetric
+          url: https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems
+          headers:
+            Authorization: "Bearer {{HOMEPAGE_VAR_THANOS_TOKEN}}"
+          refreshInterval: 60000
+          metrics:
+            - label: cpu
+              query: '100 * (1 - avg(rate(node_cpu_seconds_total{mode="idle",instance="hpg5.igou.systems"}[5m])))'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: mem
+              query: '100 * (1 - node_memory_MemAvailable_bytes{instance="hpg5.igou.systems"} / node_memory_MemTotal_bytes{instance="hpg5.igou.systems"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: disk /
+              query: '100 * max(1 - node_filesystem_avail_bytes{instance="hpg5.igou.systems",mountpoint="/"} / node_filesystem_size_bytes{instance="hpg5.igou.systems",mountpoint="/"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+    - p330:
+        icon: mdi-server
+        description: ocp worker
+        widget:
+          type: prometheusmetric
+          url: https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems
+          headers:
+            Authorization: "Bearer {{HOMEPAGE_VAR_THANOS_TOKEN}}"
+          refreshInterval: 60000
+          metrics:
+            - label: cpu
+              query: '100 * (1 - avg(rate(node_cpu_seconds_total{mode="idle",instance="p330.igou.systems"}[5m])))'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: mem
+              query: '100 * (1 - node_memory_MemAvailable_bytes{instance="p330.igou.systems"} / node_memory_MemTotal_bytes{instance="p330.igou.systems"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: disk /
+              query: '100 * max(1 - node_filesystem_avail_bytes{instance="p330.igou.systems",mountpoint="/"} / node_filesystem_size_bytes{instance="p330.igou.systems",mountpoint="/"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+    - truenas-w1:
+        icon: mdi-server
+        description: ocp worker (VM on TrueNAS)
+        widget:
+          type: prometheusmetric
+          url: https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems
+          headers:
+            Authorization: "Bearer {{HOMEPAGE_VAR_THANOS_TOKEN}}"
+          refreshInterval: 60000
+          metrics:
+            - label: cpu
+              query: '100 * (1 - avg(rate(node_cpu_seconds_total{mode="idle",instance="truenas-w1.igou.systems"}[5m])))'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: mem
+              query: '100 * (1 - node_memory_MemAvailable_bytes{instance="truenas-w1.igou.systems"} / node_memory_MemTotal_bytes{instance="truenas-w1.igou.systems"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: disk /
+              query: '100 * max(1 - node_filesystem_avail_bytes{instance="truenas-w1.igou.systems",mountpoint="/"} / node_filesystem_size_bytes{instance="truenas-w1.igou.systems",mountpoint="/"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+    - opi5pro-01:
+        icon: mdi-chip
+        description: rk8s node
+        widget:
+          type: prometheusmetric
+          url: https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems
+          headers:
+            Authorization: "Bearer {{HOMEPAGE_VAR_THANOS_TOKEN}}"
+          refreshInterval: 60000
+          metrics:
+            - label: cpu
+              query: '100 * (1 - avg(rate(node_cpu_seconds_total{mode="idle",instance="10.10.9.25:9100"}[5m])))'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: mem
+              query: '100 * (1 - node_memory_MemAvailable_bytes{instance="10.10.9.25:9100"} / node_memory_MemTotal_bytes{instance="10.10.9.25:9100"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: disk /
+              query: '100 * max(1 - node_filesystem_avail_bytes{instance="10.10.9.25:9100",mountpoint="/"} / node_filesystem_size_bytes{instance="10.10.9.25:9100",mountpoint="/"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+    - rock-5a-01:
+        icon: mdi-chip
+        description: rk8s node
+        widget:
+          type: prometheusmetric
+          url: https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems
+          headers:
+            Authorization: "Bearer {{HOMEPAGE_VAR_THANOS_TOKEN}}"
+          refreshInterval: 60000
+          metrics:
+            - label: cpu
+              query: '100 * (1 - avg(rate(node_cpu_seconds_total{mode="idle",instance="10.10.9.27:9100"}[5m])))'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: mem
+              query: '100 * (1 - node_memory_MemAvailable_bytes{instance="10.10.9.27:9100"} / node_memory_MemTotal_bytes{instance="10.10.9.27:9100"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: disk /
+              query: '100 * max(1 - node_filesystem_avail_bytes{instance="10.10.9.27:9100",mountpoint="/"} / node_filesystem_size_bytes{instance="10.10.9.27:9100",mountpoint="/"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+    - orange-pi-5-01:
+        icon: mdi-chip
+        description: rk8s node
+        widget:
+          type: prometheusmetric
+          url: https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems
+          headers:
+            Authorization: "Bearer {{HOMEPAGE_VAR_THANOS_TOKEN}}"
+          refreshInterval: 60000
+          metrics:
+            - label: cpu
+              query: '100 * (1 - avg(rate(node_cpu_seconds_total{mode="idle",instance="10.10.9.28:9100"}[5m])))'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: mem
+              query: '100 * (1 - node_memory_MemAvailable_bytes{instance="10.10.9.28:9100"} / node_memory_MemTotal_bytes{instance="10.10.9.28:9100"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: disk /
+              query: '100 * max(1 - node_filesystem_avail_bytes{instance="10.10.9.28:9100",mountpoint="/"} / node_filesystem_size_bytes{instance="10.10.9.28:9100",mountpoint="/"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+    - orange-pi-5-max-01:
+        icon: mdi-chip
+        description: rk8s node
+        widget:
+          type: prometheusmetric
+          url: https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems
+          headers:
+            Authorization: "Bearer {{HOMEPAGE_VAR_THANOS_TOKEN}}"
+          refreshInterval: 60000
+          metrics:
+            - label: cpu
+              query: '100 * (1 - avg(rate(node_cpu_seconds_total{mode="idle",instance="10.10.9.29:9100"}[5m])))'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: mem
+              query: '100 * (1 - node_memory_MemAvailable_bytes{instance="10.10.9.29:9100"} / node_memory_MemTotal_bytes{instance="10.10.9.29:9100"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: disk /
+              query: '100 * max(1 - node_filesystem_avail_bytes{instance="10.10.9.29:9100",mountpoint="/"} / node_filesystem_size_bytes{instance="10.10.9.29:9100",mountpoint="/"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+    - cm3588-nas-01:
+        icon: mdi-chip
+        description: rk8s control plane
+        widget:
+          type: prometheusmetric
+          url: https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems
+          headers:
+            Authorization: "Bearer {{HOMEPAGE_VAR_THANOS_TOKEN}}"
+          refreshInterval: 60000
+          metrics:
+            - label: cpu
+              query: '100 * (1 - avg(rate(node_cpu_seconds_total{mode="idle",instance="10.10.9.30:9100"}[5m])))'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: mem
+              query: '100 * (1 - node_memory_MemAvailable_bytes{instance="10.10.9.30:9100"} / node_memory_MemTotal_bytes{instance="10.10.9.30:9100"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: disk /
+              query: '100 * max(1 - node_filesystem_avail_bytes{instance="10.10.9.30:9100",mountpoint="/"} / node_filesystem_size_bytes{instance="10.10.9.30:9100",mountpoint="/"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+    - vscode:
+        icon: mdi-server
+        description: devcontainer host
+        widget:
+          type: prometheusmetric
+          url: https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems
+          headers:
+            Authorization: "Bearer {{HOMEPAGE_VAR_THANOS_TOKEN}}"
+          refreshInterval: 60000
+          metrics:
+            - label: cpu
+              query: '100 * (1 - avg(rate(node_cpu_seconds_total{mode="idle",instance="vscode.igou.systems"}[5m])))'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: mem
+              query: '100 * (1 - node_memory_MemAvailable_bytes{instance="vscode.igou.systems"} / node_memory_MemTotal_bytes{instance="vscode.igou.systems"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: disk /
+              query: '100 * max(1 - node_filesystem_avail_bytes{instance="vscode.igou.systems",mountpoint="/"} / node_filesystem_size_bytes{instance="vscode.igou.systems",mountpoint="/"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+    - upsmonitor:
+        icon: mdi-power-plug
+        description: power stack pi
+        widget:
+          type: prometheusmetric
+          url: https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems
+          headers:
+            Authorization: "Bearer {{HOMEPAGE_VAR_THANOS_TOKEN}}"
+          refreshInterval: 60000
+          metrics:
+            - label: cpu
+              query: '100 * (1 - avg(rate(node_cpu_seconds_total{mode="idle",instance="upsmonitor.igou.systems"}[5m])))'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: mem
+              query: '100 * (1 - node_memory_MemAvailable_bytes{instance="upsmonitor.igou.systems"} / node_memory_MemTotal_bytes{instance="upsmonitor.igou.systems"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: ups battery
+              query: 'max(network_ups_tools_battery_charge)'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: ups load
+              query: 'max(network_ups_tools_ups_load)'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+    - truenas (host):
+        icon: truenas.png
+        description: storage host
+        widget:
+          type: prometheusmetric
+          url: https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems
+          headers:
+            Authorization: "Bearer {{HOMEPAGE_VAR_THANOS_TOKEN}}"
+          refreshInterval: 60000
+          metrics:
+            - label: load1
+              query: 'netdata_system_load_load_average{job="truenas-netdata",dimension="load1"}'
+              format:
+                type: number
+                options:
+                  maximumFractionDigits: 1
+            - label: mem
+              query: '100 * (1 - sum(netdata_Available_memory_Bytes_average{job="truenas-netdata"}) / sum(netdata_Total_memory_Bytes_average{job="truenas-netdata"}))'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: pool max
+              query: '100 * max(zfs_pool_allocated_bytes{job="truenas-zfs"} / zfs_pool_size_bytes{job="truenas-zfs"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
 
 - Storage & Infra:
     - TrueNAS:
@@ -83,10 +516,6 @@
         icon: mdi-kubernetes
         href: https://headlamp.rk8s.igou.systems
         description: cluster ui
-    - Grafana (rk8s):
-        icon: grafana.png
-        href: https://grafana.rk8s.igou.systems
-        description: dashboards
     - Prometheus:
         icon: prometheus.png
         href: https://prometheus.rk8s.igou.systems
@@ -95,7 +524,3 @@
         icon: alertmanager.png
         href: https://alertmanager.rk8s.igou.systems
         description: alerts
-    - RHACS Central:
-        icon: mdi-security
-        href: https://central.rk8s.igou.systems
-        description: cluster security
