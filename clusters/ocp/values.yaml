@@ -622,6 +622,19 @@ applications:
     source:
       path: clusters/ocp/ansible-automation-platform
 
+  # AAP 2.7 Ansible automation portal (self-service, RHDH/Backstage-based).
+  # POC deployment — authenticates against the AAP gateway OAuth app
+  # (lab_aap/aap-portal); wave 31 so the gateway (wave 30) is up first.
+  aap-portal:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '31'
+    destination:
+      namespace: aap-portal
+    source:
+      path: components/aap-portal
+
   molecule:
     annotations:
       argocd.argoproj.io/sync-wave: '39'

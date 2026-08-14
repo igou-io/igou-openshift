@@ -1,0 +1,79 @@
+---
+# Hand-modeled allow policy for aap-portal (see default-deny for context).
+# Ports: 7007 Backstage backend (route target + kubelet probes), 5432
+# chart-managed PostgreSQL, 8000 ansible-devtools sidecar, 9464 Backstage
+# metrics (UWM scrape allowance up front — netpol-rollout lesson).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-portal
+  namespace: aap-portal
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # intra-namespace (backstage <-> postgres <-> devtools sidecar)
+    - from:
+        - podSelector: {}
+      ports:
+        - port: 5432
+          protocol: TCP
+        - port: 7007
+          protocol: TCP
+        - port: 8000
+          protocol: TCP
+    # host-network sources (router Route traffic, kubelet probes). Under
+    # OVN-Kubernetes these SNAT to the node's host network; the synthetic
+    # host-network namespace label matches them (ipBlock does not).
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/host-network: ""
+      ports:
+        - port: 7007
+          protocol: TCP
+    # user-workload-monitoring scrape of the Backstage metrics port
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-user-workload-monitoring
+      ports:
+        - port: 9464
+          protocol: TCP
+  egress:
+    # cluster DNS (always required)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+        - port: 5353
+          protocol: UDP
+        - port: 5353
+          protocol: TCP
+    # intra-namespace (backstage -> postgres, backstage -> devtools sidecar)
+    - to:
+        - podSelector: {}
+      ports:
+        - port: 5432
+          protocol: TCP
+        - port: 7007
+          protocol: TCP
+        - port: 8000
+          protocol: TCP
+    # external / off-cluster egress: AAP gateway via the router VIP,
+    # registry.redhat.io (skopeo plug-in pulls), github.com (catalog
+    # templates + content discovery). Cluster pod and service CIDRs are
+    # excluded to block lateral movement, matching the fleet convention.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.128.0.0/14
+              - 172.30.0.0/16

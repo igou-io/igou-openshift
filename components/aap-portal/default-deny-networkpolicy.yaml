@@ -1,0 +1,14 @@
+---
+# Default-deny (ingress + egress) for namespace aap-portal. Allow policies in
+# allow-portal-networkpolicy.yaml are hand-modeled from the chart's ports
+# (not NetObserv-observed — new namespace); tighten from flows later.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: aap-portal
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
