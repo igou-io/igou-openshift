@@ -10,5 +10,4 @@ resources:
   - hermes-egress-networkpolicy.yaml
   - hermes-ssh-service.yaml
   - hermes-dashboard-service.yaml
-  - hermes-dashboard-route.yaml
   - hermes-vm-hardening-validatingadmissionpolicy.yaml
