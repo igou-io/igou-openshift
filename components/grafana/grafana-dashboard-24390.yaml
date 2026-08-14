@@ -1,0 +1,23 @@
+---
+# Windows Exporter Dashboard 2025 (grafana.com 24390 rev4), vendored:
+# patched windows_cs_hostname -> windows_os_hostname (cs collector removed
+# in windows_exporter v0.3x) and de-duplicated the uid it shares with 23942.
+# Re-vendor by refreshing dashboards/windows-24390.json and re-applying.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-24390
+  namespace: grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: '12'
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  resyncPeriod: 24h
+  datasources:
+    - inputName: DS_PROMETHEUS_MSP
+      datasourceName: thanos-querier
+  configMapRef:
+    name: grafana-dashboard-24390-json
+    key: windows-24390.json

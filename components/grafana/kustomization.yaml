@@ -26,6 +26,8 @@ resources:
   - grafana-dashboard-13679.yaml
   - grafana-dashboard-1860.yaml
   - grafana-dashboard-14694.yaml
+  - grafana-dashboard-24390.yaml
+  - grafana-dashboard-23942.yaml
   - grafana-dashboard-kubevirt-control-plane.yaml
   - grafana-dashboard-kubevirt-top-consumers.yaml
   - grafana-dashboard-external-secrets.yaml
@@ -112,6 +114,14 @@ configMapGenerator:
     namespace: grafana
     files:
       - dashboards/argocd.json
+  - name: grafana-dashboard-24390-json
+    namespace: grafana
+    files:
+      - dashboards/windows-24390.json
+  - name: grafana-dashboard-23942-json
+    namespace: grafana
+    files:
+      - dashboards/windows-23942.json
   - name: grafana-dashboard-kubevirt-control-plane-json
     namespace: grafana
     files:

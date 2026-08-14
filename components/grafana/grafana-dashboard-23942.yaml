@@ -1,0 +1,23 @@
+---
+# Windows Exporter Dashboard 2025 v0.31+ (grafana.com 23942 rev1), vendored:
+# patched windows_system_system_up_time -> windows_system_boot_time_timestamp
+# and de-duplicated the uid it shares with 24390.
+# Re-vendor by refreshing dashboards/windows-23942.json and re-applying.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-23942
+  namespace: grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: '12'
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  resyncPeriod: 24h
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: thanos-querier
+  configMapRef:
+    name: grafana-dashboard-23942-json
+    key: windows-23942.json
