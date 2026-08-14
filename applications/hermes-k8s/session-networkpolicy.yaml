@@ -82,3 +82,12 @@ spec:
       ports:
         - protocol: TCP
           port: 8000
+    # ghapp broker (same namespace): runtime GitHub App tokens. The
+    # allow-internet policy excludes RFC1918, so pod-to-pod needs this.
+    - to:
+        - podSelector:
+            matchLabels:
+              app: ghbroker
+      ports:
+        - protocol: TCP
+          port: 8085

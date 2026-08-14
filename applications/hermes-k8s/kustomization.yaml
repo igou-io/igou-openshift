@@ -31,5 +31,9 @@ resources:
   - quay-pull-externalsecret.yaml
   - hermes-env-externalsecret.yaml
   - hermes-workspace-pvc.yaml
+  - ghbroker-externalsecret.yaml
+  - ghbroker-policy-configmap.yaml
+  - ghbroker-deployment.yaml
+  - ghbroker-networkpolicy.yaml
   - hermesinstance.yaml
   - hermes-k8s-dashboard-route.yaml

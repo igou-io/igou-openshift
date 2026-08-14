@@ -29,11 +29,29 @@ needing both `get` and `create`). This directory only documents what is
 | dashboard :9119 + edge Route | operator Service + `hermes-k8s-dashboard` Route (parallel hostname until cutover) |
 | sshd + `hermes-ssh` VIP 10.10.150.1 | none — access is the dashboard, Slack, or `oc exec` |
 
+## ghapp broker
+
+The VM's socket-based ghapp broker runs here as its own Deployment
+(`ghbroker`): the `igou-hermes` App key stays in the broker pod, and the agent
+plus session pods request repo-scoped ~1h tokens over plain HTTP
+(`GHAPP_BROKER_URL`, plugin PR
+[hermes_github_app_plugin#32](https://github.com/david-igou/hermes_github_app_plugin/pull/32)).
+The TCP listener is unauthenticated by design — reachability is the client
+authorization, as socket possession was on the VM — so
+`ghbroker-networkpolicy.yaml` is load-bearing (only the agent and session pods
+reach :8085), and the same deny-not-clamp policy file applies
+(`ghbroker-policy-configmap.yaml`; the broker reads it at startup, roll the
+Deployment after changes). Proven live 2026-08-14 from a Kata session pod:
+mint + GitHub API call with the token, out-of-policy repo and over-asked
+permission both 403.
+
+Until the plugin release after PR #32 reaches the devenv image
+(`GHAPP_VERSION` Renovate pin), the baked `ghapp`/`gh-app` CLIs in sessions do
+not read `GHAPP_BROKER_URL`; raw `curl $GHAPP_BROKER_URL/token` works
+meanwhile.
+
 ## Known gaps (deliberate, tracked for cutover)
 
-* **ghapp broker** (`/run/ghbroker/ghbroker.sock`) has no container port yet —
-  sessions have no GitHub App token source. Needs a sidecar or in-session
-  fallback before the VM retires.
 * **State migration is manual**: rsync `~/.hermes` (minus the regenerable
   dirs), `agent-repos` → PVC `repos/`, `agent-skills` → `/opt/data`, and the
   root-disk identity files (`~/.claude*`, `~/.codex`, `~/.config/opencode`…)

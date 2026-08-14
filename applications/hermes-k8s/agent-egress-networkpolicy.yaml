@@ -74,3 +74,11 @@ spec:
       ports:
         - protocol: TCP
           port: 8000
+    # ghapp broker (same namespace): runtime GitHub App tokens
+    - to:
+        - podSelector:
+            matchLabels:
+              app: ghbroker
+      ports:
+        - protocol: TCP
+          port: 8085

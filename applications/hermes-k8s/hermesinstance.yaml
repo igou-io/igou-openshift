@@ -74,6 +74,11 @@ spec:
       value: http://firecrawl-api.firecrawl.svc.cluster.local:3002
     - name: HERMES_DASHBOARD_FILES_ROOT
       value: /opt/data/dashboard-files
+    # ghapp broker over HTTP (needs hermes_github_app_plugin >= the PR#32
+    # client, which understands GHAPP_BROKER_URL). Replaces the VM's
+    # GHAPP_BROKER_SOCKET bind mount.
+    - name: GHAPP_BROKER_URL
+      value: http://ghbroker.hermes-k8s.svc.cluster.local:8085
     - name: SLACK_ALLOWED_USERS
       value: U4ZFYHTU4
     - name: SLACK_HOME_CHANNEL
@@ -381,6 +386,11 @@ spec:
                     value: /home/igou/.bashrc
                   - name: PYTHONUNBUFFERED
                     value: '1'
+                  # ghapp in the devenv image switches to broker mode on this
+                  # (client support lands with the plugin release after PR#32
+                  # via the image's GHAPP_VERSION Renovate pin).
+                  - name: GHAPP_BROKER_URL
+                    value: http://ghbroker.hermes-k8s.svc.cluster.local:8085
                 volumeMounts:
                   - name: workspace
                     subPath: repos
