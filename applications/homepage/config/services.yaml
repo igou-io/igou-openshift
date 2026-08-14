@@ -1,0 +1,101 @@
+---
+# Static tiles for apps exposed via raw Routes (no annotation-based discovery
+# for the openshift Route kind). Apps exposed via Ingress or HTTPRoute are
+# auto-discovered from gethomepage.dev/* annotations instead — do not
+# duplicate them here (currently: ntfy, gitea-mirror, jellyfin).
+- Platform:
+    - OpenShift Console:
+        icon: openshift.png
+        href: https://console-openshift-console.apps.ocp.igou.systems
+        description: cluster console
+    - ArgoCD:
+        icon: argocd.png
+        href: https://openshift-gitops-server-openshift-gitops.apps.ocp.igou.systems
+        description: gitops
+    - Grafana:
+        icon: grafana.png
+        href: https://grafana.apps.ocp.igou.systems
+        description: dashboards
+    - AAP:
+        icon: ansible.png
+        href: https://automation.apps.ocp.igou.systems
+        description: automation controller
+    - RHDH:
+        icon: backstage.png
+        href: https://rhdh.apps.ocp.igou.systems
+        description: developer hub
+    - Keycloak:
+        icon: keycloak.png
+        href: https://keycloak.apps.ocp.igou.systems
+        description: sso
+    - Quay:
+        icon: quay.png
+        href: https://quay.apps.ocp.igou.systems
+        description: registry
+    - Dev Spaces:
+        icon: eclipse-che.png
+        href: https://devspaces.apps.ocp.igou.systems
+        description: cloud ide
+
+- Applications:
+    - Forgejo:
+        icon: forgejo.png
+        href: https://forgejo.apps.ocp.igou.systems
+        description: git
+    - Gitea:
+        icon: gitea.png
+        href: https://gitea.apps.ocp.igou.systems
+        description: git (legacy)
+    - n8n:
+        icon: n8n.png
+        href: https://n8n.apps.ocp.igou.systems
+        description: workflows
+    - Hermes Dashboard:
+        icon: mdi-robot
+        href: https://hermes-dashboard.apps.ocp.igou.systems
+        description: agent dashboard
+    - Sands of Time:
+        icon: mdi-timer-sand
+        href: https://sands-of-time.apps.ocp.igou.systems
+        description: price tracker
+    - Temporal:
+        icon: temporal.png
+        href: https://temporalio.apps.ocp.igou.systems
+        description: workflow engine
+    - ComfyUI:
+        icon: mdi-image-multiple
+        href: https://comfyui.apps.ocp.igou.systems
+        description: image generation
+
+- Storage & Infra:
+    - TrueNAS:
+        icon: truenas.png
+        href: https://truenas.igou.systems
+        description: storage
+        widget:
+          type: truenas
+          url: https://truenas.igou.systems
+          key: "{{HOMEPAGE_VAR_TRUENAS_KEY}}"
+          enablePools: true
+
+- rk8s:
+    - Headlamp:
+        icon: mdi-kubernetes
+        href: https://headlamp.rk8s.igou.systems
+        description: cluster ui
+    - Grafana (rk8s):
+        icon: grafana.png
+        href: https://grafana.rk8s.igou.systems
+        description: dashboards
+    - Prometheus:
+        icon: prometheus.png
+        href: https://prometheus.rk8s.igou.systems
+        description: metrics
+    - Alertmanager:
+        icon: alertmanager.png
+        href: https://alertmanager.rk8s.igou.systems
+        description: alerts
+    - RHACS Central:
+        icon: mdi-security
+        href: https://central.rk8s.igou.systems
+        description: cluster security

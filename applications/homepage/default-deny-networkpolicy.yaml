@@ -1,0 +1,13 @@
+---
+# Default-deny (ingress + egress) for namespace homepage. Allow policies in
+# homepage-ingress/-egress open exactly the flows the dashboard needs.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: homepage
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress

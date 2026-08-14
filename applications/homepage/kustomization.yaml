@@ -1,27 +1,34 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: ntfy
+namespace: homepage
 resources:
-  - ntfy-namespace.yaml
-  - ntfy-config-pvc.yaml
-  # Uncomment once the probe is populated via /add-probe https://ntfy.apps.ocp.igou.systems
-  # - ntfy-probe.yaml
+  - homepage-namespace.yaml
+  - homepage-clusterrole.yaml
+  - homepage-clusterrolebinding.yaml
+  - homepage-truenas-externalsecret.yaml
+  - default-deny-networkpolicy.yaml
+  - homepage-ingress-networkpolicy.yaml
+  - homepage-egress-networkpolicy.yaml
 configMapGenerator:
-  - name: ntfy-server-config
+  - name: homepage-config
     files:
-      - server.yml
+      - config/settings.yaml
+      - config/widgets.yaml
+      - config/services.yaml
+      - config/bookmarks.yaml
+      - config/kubernetes.yaml
 generatorOptions:
   disableNameSuffixHash: true
 helmCharts:
 - name: app-template
-  namespace: ntfy
+  namespace: homepage
   version: 4.6.2
-  releaseName: ntfy
+  releaseName: homepage
   repo: oci://ghcr.io/bjw-s-labs/helm
   valuesFile: values-dummy.yaml
   valuesInline:
     controllers:
-      ntfy:
+      homepage:
         type: deployment
         replicas: 1
         strategy: RollingUpdate
@@ -31,12 +38,15 @@ helmCharts:
               type: RuntimeDefault
         containers:
           app:
-            args: ["serve"]
             image:
-              repository: docker.io/binwiederhier/ntfy
-              tag: v2.26.3@sha256:081b53dbb20674fcfe05fdb4eb8af9036a2645ef979543d16f7f80803af467b1
+              repository: ghcr.io/gethomepage/homepage
+              tag: v1.13.2@sha256:a0b71c8e757298d02560186bab9fbe3fc2d375c523a62cc1019177b37e48aa28
               pullPolicy: IfNotPresent
-            env: {}
+            env:
+              HOMEPAGE_ALLOWED_HOSTS: home.apps.ocp.igou.systems
+            envFrom:
+              - secretRef:
+                  name: homepage-truenas
             probes:
               liveness:
                 enabled: true
@@ -47,7 +57,12 @@ helmCharts:
               startup:
                 enabled: true
                 type: TCP
-            resources: {}
+            resources:
+              requests:
+                cpu: 20m
+                memory: 256Mi
+              limits:
+                memory: 512Mi
             securityContext:
               allowPrivilegeEscalation: false
               runAsNonRoot: true
@@ -55,39 +70,32 @@ helmCharts:
                 drop:
                   - ALL
     persistence:
-      cache:
-        type: persistentVolumeClaim
-        existingClaim: ntfy-config
-        advancedMounts:
-          ntfy:
-            app:
-              - path: /var/cache/ntfy
       config:
         type: configMap
-        name: ntfy-server-config
+        name: homepage-config
         globalMounts:
-          - path: /etc/ntfy/server.yml
-            subPath: server.yml
+          - path: /app/config
             readOnly: true
+      # homepage writes request logs under config/logs — give it a writable
+      # overlay so the configMap mount can stay read-only
+      logs:
+        type: emptyDir
+        globalMounts:
+          - path: /app/config/logs
     service:
       app:
-        controller: ntfy
+        controller: homepage
         ports:
           http:
             port: 80
-            targetPort: 8080
+            targetPort: 3000
     ingress:
       app:
         className: openshift-default
         annotations:
           route.openshift.io/termination: edge
-          gethomepage.dev/enabled: "true"
-          gethomepage.dev/name: ntfy
-          gethomepage.dev/group: Applications
-          gethomepage.dev/icon: ntfy.png
-          gethomepage.dev/description: push notifications
         hosts:
-          - host: ntfy.apps.ocp.igou.systems
+          - host: home.apps.ocp.igou.systems
             paths:
               - path: /
                 pathType: Prefix
@@ -95,14 +103,5 @@ helmCharts:
                   identifier: app
                   port: http
     serviceAccount:
-      ntfy:
+      homepage:
         enabled: true
-    serviceMonitor:
-      app:
-        serviceName: ntfy-app
-        endpoints:
-          - port: http
-            scheme: http
-            path: /metrics
-            interval: 60s
-            scrapeTimeout: 10s

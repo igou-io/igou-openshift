@@ -94,6 +94,11 @@ helmCharts:
         className: openshift-default
         annotations:
           route.openshift.io/termination: edge
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/name: Gitea Mirror
+          gethomepage.dev/group: Applications
+          gethomepage.dev/icon: gitea.png
+          gethomepage.dev/description: mirror manager
         hosts:
           - host: gitea-mirror.apps.ocp.igou.systems
             paths:
