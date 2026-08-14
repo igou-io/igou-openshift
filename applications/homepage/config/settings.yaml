@@ -9,7 +9,13 @@ layout:
   Platform:
     style: row
     columns: 4
+  Alerts:
+    style: row
+    columns: 3
   Applications:
+    style: row
+    columns: 4
+  Servers:
     style: row
     columns: 4
   Storage & Infra:
