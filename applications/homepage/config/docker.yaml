@@ -1,0 +1,2 @@
+# No docker integration — file must exist or homepage tries to skeleton-copy it
+# into the read-only /app/config mount and crashes the services API (EROFS).

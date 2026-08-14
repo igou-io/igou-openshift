@@ -17,6 +17,9 @@ configMapGenerator:
       - config/services.yaml
       - config/bookmarks.yaml
       - config/kubernetes.yaml
+      - config/docker.yaml
+      - config/custom.css
+      - config/custom.js
 generatorOptions:
   disableNameSuffixHash: true
 helmCharts:
