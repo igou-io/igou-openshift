@@ -1,0 +1,4 @@
+---
+mode: cluster
+# also discover Gateway API HTTPRoutes (e.g. jellyfin on the guest-dmz Gateway)
+gateway: true

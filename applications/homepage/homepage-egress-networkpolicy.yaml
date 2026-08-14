@@ -1,0 +1,42 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: homepage-egress
+  namespace: homepage
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    # cluster DNS (always required)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+        - port: 5353
+          protocol: UDP
+        - port: 5353
+          protocol: TCP
+    # kube-apiserver — Ingress/HTTPRoute discovery watches + metrics.k8s.io for
+    # the kubernetes info widget. OVN-K evaluates egress ACLs post-DNAT, so the
+    # match is the endpoint node IP :6443, NOT the service VIP 172.30.0.1:443
+    # (same proven recipe as llmkube/forgejo/oadp).
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.10/32
+      ports:
+        - port: 6443
+          protocol: TCP
+    # TrueNAS REST API (https://truenas.igou.systems) for the TrueNas widget
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.213/32
+      ports:
+        - port: 443
+          protocol: TCP

@@ -81,6 +81,11 @@ helmCharts:
         className: openshift-default
         annotations:
           route.openshift.io/termination: edge
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/name: ntfy
+          gethomepage.dev/group: Applications
+          gethomepage.dev/icon: ntfy.png
+          gethomepage.dev/description: push notifications
         hosts:
           - host: ntfy.apps.ocp.igou.systems
             paths:
