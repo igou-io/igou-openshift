@@ -18,6 +18,7 @@ configMapGenerator:
       - config/bookmarks.yaml
       - config/kubernetes.yaml
       - config/docker.yaml
+      - config/proxmox.yaml
       - config/custom.css
       - config/custom.js
 generatorOptions:
