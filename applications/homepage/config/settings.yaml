@@ -12,6 +12,9 @@ layout:
   Alerts:
     style: row
     columns: 3
+  Work Queue:
+    style: row
+    columns: 3
   Applications:
     style: row
     columns: 4
@@ -19,6 +22,9 @@ layout:
     style: row
     columns: 4
   Storage & Infra:
+    style: row
+    columns: 4
+  Media & Legacy:
     style: row
     columns: 4
   rk8s:
