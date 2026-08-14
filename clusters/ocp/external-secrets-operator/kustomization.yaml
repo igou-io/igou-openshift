@@ -16,3 +16,4 @@ resources:
   - onepassword-lab-external-api-keys-clustersecretstore.yaml
   - onepassword-lab-aap-clustersecretstore.yaml
   - onepassword-lab-serviceaccounts-clustersecretstore.yaml
+  - onepassword-lab-agents-clustersecretstore.yaml
