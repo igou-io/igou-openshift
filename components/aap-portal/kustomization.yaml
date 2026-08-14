@@ -1,0 +1,40 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - aap-portal-namespace.yaml
+  - default-deny-networkpolicy.yaml
+  - allow-portal-networkpolicy.yaml
+  - secrets-rhaap-portal-externalsecret.yaml
+  - aap-portal-dynamic-plugins-registry-auth-externalsecret.yaml
+
+helmCharts:
+  - name: redhat-rhaap-portal
+    releaseName: aap-portal
+    namespace: aap-portal
+    version: 2.2.6
+    repo: https://charts.openshift.io
+    valuesInline:
+      redhat-developer-hub:
+        global:
+          # Required by chart validation (apps.example.com fails the render);
+          # host pins the Route + all baseUrl values in one place.
+          clusterRouterBase: apps.ocp.igou.systems
+          host: portal.apps.ocp.igou.systems
+          # OCI plug-in delivery (recommended): the init container pulls
+          # ansible-automation-platform/automation-portal:<imageTagInfo> from
+          # registry.redhat.io using the aap-portal-dynamic-plugins-registry-auth
+          # secret. Tag pinned to the chart appVersion.
+          pluginMode: oci
+          imageTagInfo: "2.2.5"
+        upstream:
+          backstage:
+            appConfig:
+              catalog:
+                providers:
+                  rhaap:
+                    # Literal chart key (rendered by the chart via tpl);
+                    # overriding only orgs deep-merges with the chart's sync
+                    # defaults. Job templates sync from the igou org.
+                    '{{- include "catalog.providers.env" . }}':
+                      orgs: igou
