@@ -16,6 +16,11 @@
         icon: argocd.png
         href: https://openshift-gitops-server-openshift-gitops.apps.ocp.igou.systems
         description: gitops
+        widget:
+          type: argocd
+          url: https://openshift-gitops-server-openshift-gitops.apps.ocp.igou.systems
+          key: "{{HOMEPAGE_VAR_ARGOCD_TOKEN}}"
+          refreshInterval: 60000
     - Grafana:
         icon: grafana.png
         href: https://grafana.apps.ocp.igou.systems
@@ -24,6 +29,18 @@
         icon: ansible.png
         href: https://automation.apps.ocp.igou.systems
         description: automation controller
+        widget:
+          type: customapi
+          url: https://automation.apps.ocp.igou.systems/api/controller/v2/jobs/?order_by=-started&page_size=4
+          headers:
+            Authorization: "Bearer {{HOMEPAGE_VAR_AAP_TOKEN}}"
+          refreshInterval: 120000
+          display: dynamic-list
+          mappings:
+            items: results
+            name: name
+            label: status
+            limit: 4
     - RHDH:
         icon: backstage.png
         href: https://rhdh.apps.ocp.igou.systems
@@ -89,6 +106,54 @@
             name: metric.alertname
             label: metric.severity
             limit: 5
+
+- Work Queue:
+    # GitHub search API, unauthenticated - works because igou-openshift and
+    # igou-devenv are PUBLIC repos. igou-inventory is private, so its
+    # alert-issue backlog can't be shown without token plumbing (ghapp
+    # tokens are 1h; homepage reads env at startup only).
+    - PRs igou-openshift:
+        icon: github.png
+        href: https://github.com/igou-io/igou-openshift/pulls
+        description: open pull requests
+        widget:
+          type: customapi
+          url: https://api.github.com/search/issues?q=repo%3Aigou-io%2Figou-openshift+is%3Apr+is%3Aopen&per_page=4
+          headers:
+            Accept: application/vnd.github+json
+          refreshInterval: 300000
+          display: dynamic-list
+          mappings:
+            items: items
+            name: title
+            label: user.login
+            limit: 4
+    - PRs igou-devenv:
+        icon: github.png
+        href: https://github.com/igou-io/igou-devenv/pulls
+        description: open pull requests
+        widget:
+          type: customapi
+          url: https://api.github.com/search/issues?q=repo%3Aigou-io%2Figou-devenv+is%3Apr+is%3Aopen
+          headers:
+            Accept: application/vnd.github+json
+          refreshInterval: 300000
+          mappings:
+            - field: total_count
+              label: open
+    - Renovate:
+        icon: renovate.png
+        href: https://github.com/pulls?q=org%3Aigou-io+is%3Apr+is%3Aopen+author%3Aapp%2Frenovate
+        description: dependency PRs (public repos)
+        widget:
+          type: customapi
+          url: https://api.github.com/search/issues?q=org%3Aigou-io+is%3Apr+is%3Aopen+author%3Aapp%2Frenovate
+          headers:
+            Accept: application/vnd.github+json
+          refreshInterval: 300000
+          mappings:
+            - field: total_count
+              label: open
 
 - Applications:
     - Forgejo:
@@ -490,8 +555,152 @@
                 suffix: "%"
                 options:
                   maximumFractionDigits: 0
+    - igou.io (vps):
+        icon: mdi-cloud
+        href: https://igou.io
+        description: public site vps (tailnet)
+        widget:
+          type: prometheusmetric
+          url: https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems
+          headers:
+            Authorization: "Bearer {{HOMEPAGE_VAR_THANOS_TOKEN}}"
+          refreshInterval: 60000
+          metrics:
+            - label: cpu
+              query: '100 * (1 - avg(rate(node_cpu_seconds_total{mode="idle",job="igou-io-node-exporter-metrics"}[5m])))'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: mem
+              query: '100 * (1 - node_memory_MemAvailable_bytes{job="igou-io-node-exporter-metrics"} / node_memory_MemTotal_bytes{job="igou-io-node-exporter-metrics"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: disk /
+              query: '100 * max(1 - node_filesystem_avail_bytes{job="igou-io-node-exporter-metrics",mountpoint="/"} / node_filesystem_size_bytes{job="igou-io-node-exporter-metrics",mountpoint="/"})'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+    - casval (gpu burst):
+        icon: mdi-expansion-card
+        description: on-demand gpu worker
+        widget:
+          type: prometheusmetric
+          url: https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems
+          headers:
+            Authorization: "Bearer {{HOMEPAGE_VAR_THANOS_TOKEN}}"
+          refreshInterval: 60000
+          metrics:
+            - label: node joined
+              query: 'count(kube_node_info{node=~"casval.*"}) or vector(0)'
+              format:
+                type: number
+                options:
+                  maximumFractionDigits: 0
+            - label: gpu util
+              query: 'max(DCGM_FI_DEV_GPU_UTIL) or vector(0)'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
+            - label: gpu temp
+              query: 'max(DCGM_FI_DEV_GPU_TEMP) or vector(0)'
+              format:
+                type: number
+                suffix: "°C"
+                options:
+                  maximumFractionDigits: 0
+    - KubeVirt VMs:
+        icon: mdi-monitor-multiple
+        href: https://console-openshift-console.apps.ocp.igou.systems/k8s/all-namespaces/kubevirt.io~v1~VirtualMachine
+        description: vm fleet
+        widget:
+          type: prometheusmetric
+          url: https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems
+          headers:
+            Authorization: "Bearer {{HOMEPAGE_VAR_THANOS_TOKEN}}"
+          refreshInterval: 60000
+          metrics:
+            - label: running
+              query: 'sum(kubevirt_vmi_phase_count{phase="running"}) or vector(0)'
+              format:
+                type: number
+                options:
+                  maximumFractionDigits: 0
+            - label: not running
+              query: '(sum(kubevirt_vmi_phase_count) - sum(kubevirt_vmi_phase_count{phase="running"})) or vector(0)'
+              format:
+                type: number
+                options:
+                  maximumFractionDigits: 0
 
 - Storage & Infra:
+    - Backups:
+        icon: mdi-backup-restore
+        href: https://grafana.apps.ocp.igou.systems
+        description: age of last success
+        widget:
+          type: prometheusmetric
+          url: https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems
+          headers:
+            Authorization: "Bearer {{HOMEPAGE_VAR_THANOS_TOKEN}}"
+          refreshInterval: 300000
+          metrics:
+            - label: velero daily-apps
+              query: 'time() - max(velero_backup_last_successful_timestamp{schedule="daily-apps"})'
+              format:
+                type: duration
+            - label: velero daily-platform
+              query: 'time() - max(velero_backup_last_successful_timestamp{schedule="daily-platform"})'
+              format:
+                type: duration
+            - label: velero weekly
+              query: 'time() - max(velero_backup_last_successful_timestamp{schedule=~"weekly.*"})'
+              format:
+                type: duration
+            - label: etcd
+              query: 'time() - max(kube_cronjob_status_last_successful_time{namespace="etcd-backup",cronjob="etcd-backup"})'
+              format:
+                type: duration
+    - Lab Power:
+        icon: mdi-flash
+        href: https://grafana.apps.ocp.igou.systems
+        description: wall draw (ups estimate)
+        widget:
+          type: prometheusmetric
+          url: https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems
+          headers:
+            Authorization: "Bearer {{HOMEPAGE_VAR_THANOS_TOKEN}}"
+          refreshInterval: 60000
+          metrics:
+            - label: total wall
+              query: 'sum(network_ups_tools_ups_load / 100 * on(ups) group_left() network_ups_tools_ups_realpower_nominal)'
+              format:
+                type: number
+                suffix: " W"
+                options:
+                  maximumFractionDigits: 0
+            - label: truenas (ipmi)
+              query: 'max(ipmi_dcmi_power_consumption_watts{job="truenas-ipmi"})'
+              format:
+                type: number
+                suffix: " W"
+                options:
+                  maximumFractionDigits: 0
+            - label: ups battery
+              query: 'min(network_ups_tools_battery_charge)'
+              format:
+                type: number
+                suffix: "%"
+                options:
+                  maximumFractionDigits: 0
     - TrueNAS:
         icon: truenas.png
         href: https://truenas.igou.systems
@@ -501,6 +710,42 @@
           url: https://truenas.igou.systems
           key: "{{HOMEPAGE_VAR_TRUENAS_KEY}}"
           enablePools: true
+
+- Media & Legacy:
+    # biscuit/igounas services ported from the legacy homepage.biscuit tile
+    # set (this page replaces it).
+    - RomM:
+        icon: romm.png
+        href: https://romm.biscuit.igou.systems
+        description: rom library
+    - qBittorrent:
+        icon: qbittorrent.png
+        href: https://torrent.biscuit.igou.systems
+        description: torrents (vpn)
+    - Prowlarr:
+        icon: prowlarr.png
+        href: https://prowlarr.biscuit.igou.systems
+        description: indexers
+    - Radarr:
+        icon: radarr.png
+        href: https://radarr.biscuit.igou.systems
+        description: movies
+    - Sonarr:
+        icon: sonarr.png
+        href: https://sonarr.biscuit.igou.systems
+        description: tv
+    - UniFi:
+        icon: unifi.png
+        href: https://unifi.igounas.igou.systems
+        description: network controller
+    - igounas:
+        icon: truenas.png
+        href: https://igounas.igou.systems
+        description: legacy nas
+    - netboot.xyz:
+        icon: mdi-ethernet
+        href: https://netbootxyz.infra.igou.systems
+        description: pxe menu
 
 - rk8s:
     - Headlamp:

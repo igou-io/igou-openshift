@@ -8,6 +8,8 @@ resources:
   - homepage-monitoring-clusterrolebinding.yaml
   - homepage-thanos-token-secret.yaml
   - homepage-truenas-externalsecret.yaml
+  - homepage-argocd-externalsecret.yaml
+  - homepage-aap-externalsecret.yaml
   - default-deny-networkpolicy.yaml
   - homepage-ingress-networkpolicy.yaml
   - homepage-egress-networkpolicy.yaml
@@ -58,6 +60,10 @@ helmCharts:
             envFrom:
               - secretRef:
                   name: homepage-truenas
+              - secretRef:
+                  name: homepage-argocd
+              - secretRef:
+                  name: homepage-aap
             probes:
               liveness:
                 enabled: true
