@@ -1,0 +1,5 @@
+# No proxmox integration — file must exist. Unlike docker.yaml (which only
+# broke /api/services), the lazy skeleton-copy of this file exits the process
+# (EROFS -> exit 1) and crash-loops the pod. The full skeleton set in
+# /app/src/skeleton/ must be shipped in the configMap; this was the last
+# missing member.
