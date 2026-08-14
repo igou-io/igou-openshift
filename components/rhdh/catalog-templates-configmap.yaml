@@ -1174,3 +1174,145 @@ data:
               + parameters.name + '/raw/branch/main/devfile.yaml' }}
           - title: Catalog entity
             entityRef: component:default/${{ parameters.name }}
+  gitops-component-template.yaml: |
+    apiVersion: scaffolder.backstage.io/v1beta3
+    kind: Template
+    metadata:
+      name: gitops-component
+      title: GitOps Component (PR to igou-openshift)
+      description: >-
+        Open a PR adding a components/<name>/ skeleton to igou-openshift:
+        namespace (wave 8), default-deny + allow-observed NetworkPolicies
+        (wave 9), and an operator (OperatorGroup + pinned-channel
+        Subscription) or workload (restricted-v2 Deployment + Service)
+        variant. The values.yaml app entry is a manual follow-up listed in
+        the PR body.
+      tags:
+        - gitops
+        - argocd
+        - pull-request
+    spec:
+      owner: group:default/admins
+      type: gitops-component
+      parameters:
+        - title: Component details
+          required:
+            - name
+            - description
+            - type
+          properties:
+            name:
+              title: Component name
+              type: string
+              description: kebab-case; becomes components/<name> and the namespace
+              pattern: '^[a-z][a-z0-9-]{1,38}$'
+            description:
+              title: Description
+              type: string
+              description: One line on what this component provides
+            type:
+              title: Component type
+              type: string
+              default: workload
+              enum:
+                - workload
+                - operator
+              enumNames:
+                - Workload (Deployment + Service)
+                - Operator (OperatorGroup + Subscription)
+            channel:
+              title: Operator channel
+              type: string
+              default: stable
+              description: >-
+                Operator type only — pin the minor channel (e.g.
+                stable-v26.6); version jumps stay deliberate git changes
+      steps:
+        - id: fetch
+          name: Render component skeleton
+          action: fetch:template
+          input:
+            url: https://forgejo.apps.ocp.igou.systems/platform/gitops-component-template/src/branch/main/skeletons/${{ parameters.type }}
+            targetPath: components/${{ parameters.name }}
+            values:
+              name: ${{ parameters.name }}
+              description: ${{ parameters.description }}
+              channel: ${{ parameters.channel }}
+        - id: publish-pr
+          name: Open pull request
+          action: publish:github:pull-request
+          input:
+            repoUrl: github.com?owner=igou-io&repo=igou-openshift
+            branchName: goldenpath/component-${{ parameters.name }}
+            title: 'feat(${{ parameters.name }}): scaffold ${{ parameters.type }} component'
+            description: >-
+              Scaffolded by the gitops-component golden path
+              (${{ parameters.description }}).
+              Manual follow-ups before merge: add the app entry to
+              clusters/ocp/values.yaml (pick the sync-wave), review the
+              starter allow-observed policy against NetObserv, and for
+              operators verify the channel + install mode against the CSV.
+            targetBranchName: main
+      output:
+        links:
+          - title: Pull request
+            url: ${{ steps['publish-pr'].output.remoteUrl }}
+  container-image-template.yaml: |
+    apiVersion: scaffolder.backstage.io/v1beta3
+    kind: Template
+    metadata:
+      name: container-image
+      title: Container Image (PR to igou-containers)
+      description: >-
+        Open a PR adding an apps/<name>/ starter (Containerfile + README on
+        the UBI fleet conventions) to igou-containers. CI auto-detects the
+        new directory; merge publishes ghcr.io/igou-io/<name>.
+      tags:
+        - containers
+        - ghcr
+        - pull-request
+    spec:
+      owner: group:default/admins
+      type: container-image
+      parameters:
+        - title: Image details
+          required:
+            - name
+            - description
+          properties:
+            name:
+              title: Image name
+              type: string
+              description: kebab-case; becomes apps/<name> and ghcr.io/igou-io/<name>
+              pattern: '^[a-z][a-z0-9-]{1,49}$'
+            description:
+              title: Description
+              type: string
+              description: One line on what this image packages
+      steps:
+        - id: fetch
+          name: Render image skeleton
+          action: fetch:template
+          input:
+            url: https://forgejo.apps.ocp.igou.systems/platform/container-image-template/src/branch/main/skeleton
+            targetPath: apps/${{ parameters.name }}
+            values:
+              name: ${{ parameters.name }}
+              description: ${{ parameters.description }}
+        - id: publish-pr
+          name: Open pull request
+          action: publish:github:pull-request
+          input:
+            repoUrl: github.com?owner=igou-io&repo=igou-containers
+            branchName: goldenpath/app-${{ parameters.name }}
+            title: 'feat(${{ parameters.name }}): scaffold fleet image'
+            description: >-
+              Scaffolded by the container-image golden path
+              (${{ parameters.description }}). Manual follow-ups: flesh out
+              the Containerfile build stages, add a PLATFORMS file if not
+              all-arch, and document the image in AGENTS.md "Current Apps".
+            targetBranchName: main
+      output:
+        links:
+          - title: Pull request
+            url: ${{ steps['publish-pr'].output.remoteUrl }}
