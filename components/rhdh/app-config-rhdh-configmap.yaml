@@ -122,6 +122,16 @@ data:
           rules:
             - allow:
                 - Template
+        - type: file
+          target: /opt/app-root/src/gitops-component-template.yaml
+          rules:
+            - allow:
+                - Template
+        - type: file
+          target: /opt/app-root/src/container-image-template.yaml
+          rules:
+            - allow:
+                - Template
       providers:
         # Provisions realm users/groups into the software catalog via the rhdh
         # client's service account (realm-management view/query roles).
