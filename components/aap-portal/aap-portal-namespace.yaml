@@ -3,4 +3,4 @@ kind: Namespace
 metadata:
   name: aap-portal
   annotations:
-    argocd.argoproj.io/sync-wave: '0'
+    argocd.argoproj.io/sync-wave: '-2'
