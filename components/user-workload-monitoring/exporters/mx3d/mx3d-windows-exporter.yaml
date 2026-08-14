@@ -1,0 +1,60 @@
+---
+# windows_exporter on the mx3d Windows desktop (VLAN10 admin), scraped
+# DIRECTLY over the LAN - no in-cluster proxy. Selectorless Service + manual
+# Endpoints point UWM Prometheus at the host's static MAC-pinned address
+# (rb5009 lease). Classic Endpoints (not EndpointSlice): the mirroring
+# controller derives the slice automatically, so discovery works for both
+# endpoint roles. Same pattern as the vscode node-exporter.
+apiVersion: v1
+kind: Service
+metadata:
+  name: mx3d-windows-exporter
+  labels:
+    app.kubernetes.io/name: mx3d-windows-exporter
+    app.kubernetes.io/part-of: mx3d
+spec:
+  clusterIP: None
+  ports:
+    - name: metrics
+      port: 9182
+      targetPort: 9182
+      protocol: TCP
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  # Must match the Service name for endpoint discovery.
+  name: mx3d-windows-exporter
+  labels:
+    app.kubernetes.io/name: mx3d-windows-exporter
+    app.kubernetes.io/part-of: mx3d
+subsets:
+  - addresses:
+      - ip: 10.10.10.23
+    ports:
+      - name: metrics
+        port: 9182
+        protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: mx3d-windows-exporter
+  labels:
+    app.kubernetes.io/name: mx3d-windows-exporter
+    app.kubernetes.io/part-of: mx3d
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mx3d-windows-exporter
+  endpoints:
+    - port: metrics
+      interval: 30s
+      scrapeTimeout: 10s
+      relabelings:
+        # The target address is a bare IP; name the real source.
+        # action: replace is the CRD default - set explicitly so the
+        # rendered manifest matches the live object and ArgoCD stays Synced.
+        - action: replace
+          targetLabel: instance
+          replacement: mx3d.igou.systems
