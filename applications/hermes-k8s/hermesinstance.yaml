@@ -374,7 +374,9 @@ spec:
                 type: RuntimeDefault
             containers:
               - name: workspace
-                image: ghcr.io/igou-io/igou-devenv@sha256:d069bca847a4dfb26906dbe0ec8232811526c21d3b470bc0bbecd7ec01245d02
+                # :latest is digest-pinned (Renovate moves it); carries the
+                # coding-agent CLIs and ghapp >= 0.3.0 (GHAPP_BROKER_URL client).
+                image: ghcr.io/igou-io/igou-devenv:latest@sha256:58890e1ba7c2845cce4a2490cec386129bdf60e898ee6c457482c4ba2521b3b3
                 command:
                   - sleep
                   - infinity
@@ -386,11 +388,19 @@ spec:
                     value: /home/igou/.bashrc
                   - name: PYTHONUNBUFFERED
                     value: '1'
-                  # ghapp in the devenv image switches to broker mode on this
-                  # (client support lands with the plugin release after PR#32
-                  # via the image's GHAPP_VERSION Renovate pin).
+                  # ghapp in the devenv image (>= 0.3.0) switches to broker
+                  # mode on this; git pushes mint via the system-gitconfig
+                  # credential helper automatically.
                   - name: GHAPP_BROKER_URL
                     value: http://ghbroker.hermes-k8s.svc.cluster.local:8085
+                  # opencode's hosted-model key, same forward the VM's
+                  # docker_forward_env did. Same accepted tradeoff as the
+                  # gcp-sa mount: session-visible by design.
+                  - name: OPENCODE_GO_API_KEY
+                    valueFrom:
+                      secretKeyRef:
+                        name: hermes-env
+                        key: OPENCODE_GO_API_KEY
                 volumeMounts:
                   - name: workspace
                     subPath: repos
@@ -398,6 +408,39 @@ spec:
                   - name: workspace
                     subPath: output
                     mountPath: /output
+                  # Coding-agent identities (the VM's docker_volumes bind-mount
+                  # set), living on the PVC's home/ subtree so OAuth token
+                  # refreshes persist across sessions. Enables dispatching
+                  # claude / codex / opencode / cursor-agent from sessions.
+                  - name: workspace
+                    subPath: home/.claude
+                    mountPath: /home/igou/.claude
+                  - name: workspace
+                    subPath: home/.claude.json
+                    mountPath: /home/igou/.claude.json
+                  - name: workspace
+                    subPath: home/.codex
+                    mountPath: /home/igou/.codex
+                  - name: workspace
+                    subPath: home/.config/opencode
+                    mountPath: /home/igou/.config/opencode
+                  - name: workspace
+                    subPath: home/.local/share/opencode
+                    mountPath: /home/igou/.local/share/opencode
+                  - name: workspace
+                    subPath: home/.config/cursor
+                    mountPath: /home/igou/.config/cursor
+                    readOnly: true
+                  - name: workspace
+                    subPath: home/.cursor
+                    mountPath: /home/igou/.cursor
+                  - name: workspace
+                    subPath: home/.gitconfig
+                    mountPath: /home/igou/.gitconfig
+                    readOnly: true
+                  - name: workspace
+                    subPath: home/.agents/skills
+                    mountPath: /home/igou/.agents/skills
                   - name: gcp-sa
                     mountPath: /home/igou/.config/gcp-sa
                     readOnly: true
