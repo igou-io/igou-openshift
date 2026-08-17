@@ -24,15 +24,11 @@ spec:
       - windows-images
       - comfyui
       - openshift-virtualization-os-images
-    # Skip pod objects so KubeVirt's virt-freezer hook annotations never
-    # run: Windows VSS auto-thaws after its ~10s writer-hold limit, so
-    # codex-desktop's post-backup thaw always fails ("couldn't hold
-    # writes") and marks the backup PartiallyFailed. KubeVirt has no
-    # per-VM opt-out (kubevirt/kubevirt#14056); crash-consistent disks
-    # are fine for this pipeline-rebuilt desktop. Pods are never
-    # restored from backup anyway. hermes's working freeze lives in
-    # daily-apps and is unaffected.
-    excludedResources:
-      - pods
+    # NOTE: do NOT excludedResources: [pods] here — the kubevirt velero
+    # plugin refuses to back up a running VM whose launcher pod is
+    # outside the backup ("VM cannot be safely backed up"). The Windows
+    # VSS thaw failure is instead downgraded per-VM with the
+    # post.hook.backup.velero.io/on-error=Continue template annotation
+    # (see igou-ansible deploy_windows_desktop.yml).
     snapshotMoveData: true
     ttl: 2160h0m0s
