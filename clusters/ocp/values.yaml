@@ -651,6 +651,13 @@ applications:
       argocd.argoproj.io/sync-wave: '39'
     source:
       path: applications/ansible-collection-bench
+    # Same drift as pac-tenants: the image-registry-pull-secrets controller
+    # injects <sa>-dockercfg-* into the SAs; defer those fields to it.
+    ignoreDifferences:
+      - group: ""
+        kind: ServiceAccount
+        managedFieldsManagers:
+          - openshift.io/image-registry-pull-secrets_service-account-controller
 
   # The collection-bench Tekton Pipeline, synced from the bench repo on
   # Forgejo so pipeline changes ship with the benchmark content.
@@ -661,6 +668,10 @@ applications:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
       argocd.argoproj.io/sync-wave: '40'
+    # Tekton admission defaults Pipeline/EventListener spec fields; SSA
+    # keeps ArgoCD owning only the fields present in git.
+    syncOptions:
+      - ServerSideApply=true
     source:
       repoURL: https://forgejo.apps.ocp.igou.systems/bench/ansible-collection-bench.git
       targetRevision: main
