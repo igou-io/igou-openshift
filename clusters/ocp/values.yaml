@@ -669,9 +669,26 @@ applications:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
       argocd.argoproj.io/sync-wave: '40'
     # Tekton admission defaults Pipeline/EventListener spec fields; SSA
-    # keeps ArgoCD owning only the fields present in git.
+    # keeps ArgoCD owning only the fields present in git, and the diff
+    # ignores the serialization artifacts admission adds (empty
+    # taskSpec.metadata/spec/computeResources, EL selector defaults).
     syncOptions:
       - ServerSideApply=true
+    ignoreDifferences:
+      - group: tekton.dev
+        kind: Pipeline
+        jqPathExpressions:
+          - .spec.tasks[].taskSpec.metadata
+          - .spec.tasks[].taskSpec.spec
+          - .spec.tasks[].taskSpec.steps[].computeResources
+          - .spec.finally[].taskSpec.metadata
+          - .spec.finally[].taskSpec.spec
+          - .spec.finally[].taskSpec.steps[].computeResources
+      - group: triggers.tekton.dev
+        kind: EventListener
+        jqPathExpressions:
+          - .spec.namespaceSelector
+          - .spec.resources
     source:
       repoURL: https://forgejo.apps.ocp.igou.systems/bench/ansible-collection-bench.git
       targetRevision: main
