@@ -1,0 +1,78 @@
+---
+apiVersion: inference.llmkube.dev/v1alpha1
+kind: InferenceService
+metadata:
+  name: qwen38-27b
+  namespace: llmkube-system
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,ServerSideApply=true
+    # Apply after the Model CR (which is itself applied after the chart).
+    argocd.argoproj.io/sync-wave: '6'
+spec:
+  modelRef: qwen38-27b
+  runtime: llamacpp
+  # Qwen3.8 hybrid arch + MTP speculative decoding need a 2026-08 llama.cpp
+  # (MTP shipped in ggml-org/llama.cpp#22673); this is server-cuda13 b10454.
+  image: ghcr.io/ggml-org/llama.cpp:server-cuda13@sha256:177f04c9a78d338adacc2f5049e02896bfbec14868301a8e134c5f0363ee6eb7
+  # At rest this model is OFF (replicas: 0) so the casval burst baremetal node
+  # stays scaled to zero — same contract as qwen3-35b-a3b: scale to 1 (live
+  # patch) to bring it up; ArgoCD ignores /spec/replicas.
+  replicas: 0
+  # Tuning targets: DENSE 27B UD-Q5_K_XL (~18.9 GiB) on 2x RTX 4060 Ti 16 GiB.
+  # KV is small (hybrid: 16/64 attention layers, 64 KiB/token f16 → 8 GiB at
+  # 128k) so it stays f16 and GPU-resident. Validated live 2026-08-17 at 128k:
+  # 14.0+15.5/16.4 GiB used incl. MTP draft ctx, 100k-token prompt prefills at
+  # 717 tok/s and still decodes 21.7 tok/s (hybrid KV = flat decode vs depth).
+  # Decode is bandwidth-bound on a dense model (288 GB/s per card, layer-split
+  # runs cards sequentially) — MTP is the big lever, see extraArgs.
+  flashAttention: true
+  jinja: true                # Qwen3.8 chat template is jinja-only (thinking tags)
+  podSecurityContext:        # no fsGroup pin — SCC injects from the ns range
+    seccompProfile:
+      type: RuntimeDefault
+  cacheTypeK: f16
+  cacheTypeV: f16
+  batchSize: 2048
+  uBatchSize: 512
+  parallelSlots: 1           # MTP gain requires parallel 1; >1 also splits ctx
+  extraArgs:
+    - "--alias"
+    - "qwen3.8-27b"
+    - "--reasoning-format"
+    - "deepseek"             # parses <think> into OpenAI `reasoning_content`
+    # MTP head ships inside the unsloth GGUF; draft-mtp self-speculation.
+    # Measured on casval: 1.8-2.1x decode (13 -> 23-28 tok/s, 59-77% draft
+    # acceptance); prefill cost ~10% (still >1000 tok/s). Requires parallel 1.
+    - "--spec-type"
+    - "draft-mtp"
+    - "--spec-draft-n-max"
+    - "2"
+    # Qwen-recommended thinking-mode sampling (model thinks by default).
+    - "--temp"
+    - "1.0"
+    - "--top-p"
+    - "0.95"
+    - "--top-k"
+    - "20"
+    - "--min-p"
+    - "0.0"
+    - "--presence-penalty"
+    - "0.0"
+  resources:
+    gpu: 2
+    cpu: "8"
+    memory: "32Gi"
+    gpuMemory: "16Gi"
+  contextSize: 131072
+  endpoint:
+    port: 8080
+    type: ClusterIP
+  priority: normal
+  # Schedule exclusively on the casval burst baremetal node
+  nodeSelector:
+    node-role.kubernetes.io/burst: ""
+  tolerations:
+    - key: workload
+      operator: Equal
+      value: burst
+      effect: NoSchedule
