@@ -1,0 +1,45 @@
+---
+# Interactive login pod for seeding harness account credentials
+# (hermes auth-login pattern). Normally scaled to zero:
+#   oc scale deploy/auth-login -n ansible-collection-bench --replicas=1
+#   oc rsh -n ansible-collection-bench deploy/auth-login
+#   # claude → /login | codex login | cursor-agent login | opencode auth login
+#   oc scale deploy/auth-login -n ansible-collection-bench --replicas=0
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-login
+  namespace: ansible-collection-bench
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: auth-login
+  template:
+    metadata:
+      labels:
+        app: auth-login
+    spec:
+      serviceAccountName: bench-pipeline
+      containers:
+        - name: auth-login
+          image: quay.apps.ocp.igou.systems/igou-io/collection-bench-runner:v1
+          command:
+            - sleep
+            - infinity
+          env:
+            - name: HOME
+              value: /identities/opencode
+          volumeMounts:
+            - name: identities
+              mountPath: /identities
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+      volumes:
+        - name: identities
+          persistentVolumeClaim:
+            claimName: bench-identities

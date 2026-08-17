@@ -1,0 +1,15 @@
+---
+# Seeded harness account credentials (claude/, codex/, cursor/,
+# opencode/) for account-mode auth. The only stateful object in the
+# bench. Key-mode trials (ExternalSecrets) don't touch it.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bench-identities
+  namespace: ansible-collection-bench
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

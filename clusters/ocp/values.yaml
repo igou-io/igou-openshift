@@ -641,6 +641,34 @@ applications:
     source:
       path: components/molecule
 
+  # AI coding benchmark: standing infra (namespace, SAs, RBAC, secrets,
+  # identity PVC). The benchmark content and Tekton pipeline live in the
+  # Forgejo bench repo (see collection-bench-pipeline below).
+  ansible-collection-bench:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '39'
+    source:
+      path: applications/ansible-collection-bench
+
+  # The collection-bench Tekton Pipeline, synced from the bench repo on
+  # Forgejo so pipeline changes ship with the benchmark content.
+  collection-bench-pipeline:
+    project: cluster-apps
+    destination:
+      namespace: ansible-collection-bench
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '40'
+    source:
+      repoURL: https://forgejo.apps.ocp.igou.systems/bench/ansible-collection-bench.git
+      targetRevision: main
+      path: harness
+      extraSourceFields: |
+        directory:
+          include: 'pipeline.yaml'
+
   service-accounts:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
