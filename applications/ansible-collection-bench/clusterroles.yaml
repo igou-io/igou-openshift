@@ -62,6 +62,15 @@ rules:
       - patch
       - delete
   - apiGroups:
+      - apps
+    resources:
+      - daemonsets
+    verbs:
+      - create
+      - get
+      - patch
+      - delete
+  - apiGroups:
       - networking.k8s.io
     resources:
       - networkpolicies
