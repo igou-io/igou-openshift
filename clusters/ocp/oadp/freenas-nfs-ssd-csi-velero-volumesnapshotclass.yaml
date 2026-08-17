@@ -1,0 +1,17 @@
+---
+# Velero's snapshot class for the nfs-ssd driver — same contract as the
+# nvmeof ones: the single class per CSI driver carrying the
+# velero.io/csi-volumesnapshot-class label, local attached snapshot, the
+# data mover kopia-moves it to S3 and deletes it. Without this class any
+# backed-up PVC on freenas-nfs-ssd-csi errors with "failed to get
+# VolumeSnapshotClass for StorageClass".
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshotClass
+metadata:
+  name: freenas-nfs-ssd-csi-velero
+  labels:
+    velero.io/csi-volumesnapshot-class: "true"
+driver: org.democratic-csi.nfs-ssd
+deletionPolicy: Delete
+parameters:
+  detachedSnapshots: "false"

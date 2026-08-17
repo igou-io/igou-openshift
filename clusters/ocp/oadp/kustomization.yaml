@@ -10,6 +10,8 @@ resources:
   - freenas-nvmeof-ssd-csi-velero-volumesnapshotclass.yaml
   - freenas-nvmeof-fast-csi-velero-volumesnapshotclass.yaml
   - freenas-nvmeof-cold-csi-velero-volumesnapshotclass.yaml
+  - freenas-nfs-ssd-csi-velero-volumesnapshotclass.yaml
+  - freenas-nfs-cold-csi-velero-volumesnapshotclass.yaml
   - oadp-dataprotectionapplication.yaml
   - daily-apps-schedule.yaml
   - daily-platform-schedule.yaml

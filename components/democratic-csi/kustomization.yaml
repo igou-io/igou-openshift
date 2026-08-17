@@ -438,6 +438,27 @@ helmCharts:
         node-stage-secret:
         node-publish-secret:
         controller-expand-secret:
+    # Staging-only class for Velero's data-mover backupPVCs — same
+    # rationale as freenas-nvmeof-ssd-csi-velero: zfs clone from
+    # snapshot instead of the main class's detached full copy, so
+    # prepare never blows the node-agent's 30m timeout.
+    - name: freenas-nfs-ssd-csi-velero
+      defaultClass: false
+      reclaimPolicy: Delete
+      volumeBindingMode: Immediate
+      allowVolumeExpansion: true
+      parameters:
+        fsType: nfs
+        detachedVolumesFromSnapshots: false
+      mountOptions:
+        - noatime
+        - nfsvers=4
+      secrets:
+        provisioner-secret:
+        controller-publish-secret:
+        node-stage-secret:
+        node-publish-secret:
+        controller-expand-secret:
     volumeSnapshotClasses:
       - name: freenas-nfs-ssd-csi
         deletionPolicy: Delete

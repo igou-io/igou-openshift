@@ -33,6 +33,8 @@ spec:
       backupPVC:
         freenas-nvmeof-ssd-csi:
           storageClass: freenas-nvmeof-ssd-csi-velero
+        freenas-nfs-ssd-csi:
+          storageClass: freenas-nfs-ssd-csi-velero
       podConfig:
         tolerations:
           - effect: NoSchedule
