@@ -1,0 +1,97 @@
+---
+# The kubevirt molecule provisioner's documented verb set
+# (david_igou.molecule_provisioners roles/kubevirt README, minimal
+# container_disk mode; cluster-scoped nodes lookup avoided by pinning
+# mp.kubevirt.connection_ip). Bound per ephemeral namespace only.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: bench-vm-provisioner
+rules:
+  - apiGroups:
+      - kubevirt.io
+    resources:
+      - virtualmachines
+    verbs:
+      - create
+      - get
+      - list
+      - delete
+  - apiGroups:
+      - kubevirt.io
+    resources:
+      - virtualmachineinstances
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - ""
+    resources:
+      - services
+    verbs:
+      - create
+      - get
+      - list
+      - delete
+---
+# Pipeline lifecycle powers: create/delete ephemeral bench-vms-*
+# namespaces and their guardrail objects. `bind` is restricted to
+# exactly bench-vm-provisioner so the pipeline can grant bench-agent
+# VM rights without holding them itself.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: bench-pipeline
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+    verbs:
+      - create
+      - get
+      - list
+      - delete
+  - apiGroups:
+      - ""
+    resources:
+      - resourcequotas
+    verbs:
+      - create
+      - get
+      - patch
+      - delete
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - networkpolicies
+    verbs:
+      - create
+      - get
+      - patch
+      - delete
+  - apiGroups:
+      - k8s.ovn.org
+    resources:
+      - egressfirewalls
+    verbs:
+      - create
+      - get
+      - patch
+      - delete
+  - apiGroups:
+      - rbac.authorization.k8s.io
+    resources:
+      - rolebindings
+    verbs:
+      - create
+      - get
+      - delete
+  - apiGroups:
+      - rbac.authorization.k8s.io
+    resources:
+      - clusterroles
+    resourceNames:
+      - bench-vm-provisioner
+    verbs:
+      - bind
