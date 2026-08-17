@@ -1709,3 +1709,86 @@ data:
         links:
           - title: Pull request
             url: ${{ steps['publish-pr'].output.remoteUrl }}
+  benchmark-run-template.yaml: |
+    apiVersion: scaffolder.backstage.io/v1beta3
+    kind: Template
+    metadata:
+      name: benchmark-run
+      title: Benchmark Run
+      description: >-
+        Launch an ansible-collection-bench trial: an AI coding agent gets a
+        10-role collection spec and KubeVirt-backed molecule tests; the run
+        is graded and committed to the results ledger with a per-run repo.
+      tags:
+        - benchmark
+        - ai
+    spec:
+      owner: group:default/admins
+      type: benchmark-run
+      parameters:
+        - title: Trial parameters
+          required:
+            - harness
+            - model
+          properties:
+            harness:
+              title: Harness
+              type: string
+              default: opencode
+              enum:
+                - opencode
+                - claude-code
+                - codex
+                - cursor-cli
+            model:
+              title: Model
+              type: string
+              default: opencode-go/kimi-k2.7-code
+              description: >-
+                Provider-prefixed model, e.g. opencode-go/deepseek-v4-flash
+            agent_timeout:
+              title: Agent budget (seconds)
+              type: string
+              default: "5400"
+              enum:
+                - "900"
+                - "1800"
+                - "3600"
+                - "5400"
+            network:
+              title: Network profile
+              type: string
+              default: sealed
+            skills:
+              title: Skills bundle
+              type: string
+              default: none
+            burst:
+              title: Burst to casval
+              type: string
+              default: "false"
+              enum:
+                - "false"
+                - "true"
+      steps:
+        - id: launch
+          name: Launch PipelineRun via EventListener
+          action: http:backstage:request
+          input:
+            method: POST
+            path: /proxy/bench-trigger
+            headers:
+              content-type: application/json
+            body:
+              harness: ${{ parameters.harness }}
+              model: ${{ parameters.model }}
+              agent_timeout: ${{ parameters.agent_timeout }}
+              network: ${{ parameters.network }}
+              skills: ${{ parameters.skills }}
+              burst: ${{ parameters.burst }}
+      output:
+        links:
+          - title: PipelineRuns (watch the trial)
+            url: https://console-openshift-console.apps.ocp.igou.systems/pipelines/ns/ansible-collection-bench/pipeline-runs
+          - title: Results ledger
+            url: https://forgejo.apps.ocp.igou.systems/bench/ansible-collection-bench/src/branch/main/results/INDEX.md

@@ -667,7 +667,7 @@ applications:
       path: harness
       extraSourceFields: |
         directory:
-          include: 'pipeline.yaml'
+          include: '{pipeline.yaml,triggers.yaml}'
 
   service-accounts:
     annotations:

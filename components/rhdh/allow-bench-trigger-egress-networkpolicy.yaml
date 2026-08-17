@@ -1,0 +1,23 @@
+---
+# The /bench-trigger backend proxy (benchmark-run scaffolder template)
+# POSTs to the collection-bench EventListener. EL pod listens on 8000;
+# its Service fronts it as 8080.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-bench-trigger-egress
+  namespace: rhdh
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ansible-collection-bench
+      ports:
+        - protocol: TCP
+          port: 8000
+        - protocol: TCP
+          port: 8080

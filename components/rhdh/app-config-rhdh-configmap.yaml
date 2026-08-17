@@ -82,6 +82,12 @@ data:
             - DELETE
           headers:
             Authorization: token ${FORGEJO_TOKEN}
+        # Benchmark launcher: POSTs land on the collection-bench Tekton
+        # EventListener, which renders a PipelineRun (one trial).
+        '/bench-trigger':
+          target: http://el-collection-bench.ansible-collection-bench.svc:8080
+          allowedMethods:
+            - POST
     catalog:
       locations:
         # Scaffolder templates shipped via the catalog-templates ConfigMap
@@ -89,6 +95,11 @@ data:
         # rules (and keycloakOrg User/Group ingestion) stay untouched.
         - type: file
           target: /opt/app-root/src/ansible-collection-template.yaml
+          rules:
+            - allow:
+                - Template
+        - type: file
+          target: /opt/app-root/src/benchmark-run-template.yaml
           rules:
             - allow:
                 - Template
