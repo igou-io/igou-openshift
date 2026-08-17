@@ -20,4 +20,5 @@ resources:
   - dynamic-plugins-rhdh-configmap.yaml
   - rbac-policies-configmap.yaml
   - catalog-templates-configmap.yaml
+  - allow-bench-trigger-egress-networkpolicy.yaml
   - rhdh-developer-hub-backstage.yaml
