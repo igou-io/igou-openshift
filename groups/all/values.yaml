@@ -24,6 +24,9 @@ projects:
     namespace: openshift-gitops
     sourceRepos:
     - "{{ .Values.default.app.source.repoURL }}"
+    # Benchmark content + Tekton pipeline synced from the lab Forgejo
+    # (Application collection-bench-pipeline in clusters/ocp/values.yaml).
+    - https://forgejo.apps.ocp.igou.systems/bench/ansible-collection-bench.git
     destinations: |
       - namespace: '*'
         server: https://kubernetes.default.svc
