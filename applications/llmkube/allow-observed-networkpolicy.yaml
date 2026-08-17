@@ -35,6 +35,20 @@ spec:
       ports:
         - port: 9443
           protocol: TCP
+    # OpenShift Routes for the OpenAI endpoints (e.g. opencode/IDE clients on
+    # the LAN). The router-default pod is host-network (belt-and-suspenders:
+    # allow both the openshift-ingress namespace and the synthetic
+    # host-network label, mirroring the jellyfin pattern).
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-ingress
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/host-network: ""
+      ports:
+        - port: 8080
+          protocol: TCP
   egress:
     # cluster DNS (always required)
     - to:
