@@ -23,6 +23,16 @@ spec:
     nodeAgent:
       enable: true
       uploaderType: kopia
+      # Stage data-mover backupPVCs on the -velero class, whose
+      # volume-from-snapshot is a zfs clone. The source class's detached
+      # copy (full zvol send/receive per volume, serialized on TrueNAS)
+      # is what blew the 30m prepare timeout on large/concurrent volumes
+      # ("timeout on preparing data upload" → PartiallyFailed).
+      # readOnly is deliberately unset: it would demand ReadOnlyMany,
+      # which the nvmeof driver does not provide.
+      backupPVC:
+        freenas-nvmeof-ssd-csi:
+          storageClass: freenas-nvmeof-ssd-csi-velero
       podConfig:
         tolerations:
           - effect: NoSchedule
