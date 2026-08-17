@@ -293,6 +293,14 @@ spec:
           base_url: http://gemma-4-e2b.llmkube-system.svc.cluster.local:8080/v1
           model: gemma-4-e2b
           name: gemma-4-e2b
+        # Qwen3.8-27B on casval (burst, 2x 4060 Ti): 23-28 tok/s w/ MTP,
+        # 128k ctx, tool-calling verified — the strongest in-cluster model.
+        # Scale-from-zero: first request after idle needs casval provisioned
+        # (isvc qwen38-27b replicas 1, ~15 min cold).
+        - api_key: sk-no-key
+          base_url: http://qwen38-27b.llmkube-system.svc.cluster.local:8080/v1
+          model: qwen3.8-27b
+          name: qwen38-27b
       dashboard:
         show_token_analytics: true
       display:
