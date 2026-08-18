@@ -190,17 +190,6 @@ applications:
       namespace: openshift-cluster-api
     source:
       path: clusters/ocp/cluster-api
-
-  # Nightly etcd snapshot to rustfs-cold (DR gap #1). Wave 11: only needs
-  # ESO (wave 0); grouped with the other cluster-operations cronjobs.
-  etcd-backup:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '11'
-    destination:
-      namespace: etcd-backup
-    source:
-      path: clusters/ocp/etcd-backup
     # Metal3/CAPM3 patches BMH spec fields when it claims the host (online,
     # consumerRef, image, userData, customDeploy, preprovisioning*). Leave
     # those to the controllers so ArgoCD doesn't fight them back to the
@@ -219,10 +208,25 @@ applications:
       # The cluster-autoscaler owns replicas for autoscaler-managed
       # MachineSets — leave it to the autoscaler so ArgoCD doesn't revert
       # scale-ups to 0 and trigger a delete/recreate loop.
+      # (PR #598 accidentally re-parented this whole block under etcd-backup
+      # by inserting that entry mid-app; that broke every casval burst
+      # scale-up from 2026-07 onward — self-heal deleted Machines
+      # mid-provision. Keep this block directly under cluster-api.)
       - group: cluster.x-k8s.io
         kind: MachineSet
         jsonPointers:
           - /spec/replicas
+
+  # Nightly etcd snapshot to rustfs-cold (DR gap #1). Wave 11: only needs
+  # ESO (wave 0); grouped with the other cluster-operations cronjobs.
+  etcd-backup:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '11'
+    destination:
+      namespace: etcd-backup
+    source:
+      path: clusters/ocp/etcd-backup
 
   # OADP/Velero: scheduled app-consistent backups (namespace objects + PV
   # data via CSI snapshot -> kopia data mover) to rustfs-cold. DR P1 from
