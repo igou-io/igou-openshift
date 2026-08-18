@@ -469,18 +469,18 @@ spec:
                   # docker_forward_env did. Same accepted tradeoff as the
                   # gcp-sa mount: session-visible by design.
                   - name: FORGEJO_URL
-              value: http://forgejo-http.forgejo.svc.cluster.local:3000
-            - name: FORGEJO_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  key: FORGEJO_USERNAME
-                  name: hermes-env
-            - name: FORGEJO_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  key: FORGEJO_TOKEN
-                  name: hermes-env
-            - name: OPENCODE_GO_API_KEY
+                    value: http://forgejo-http.forgejo.svc.cluster.local:3000
+                  - name: FORGEJO_USERNAME
+                    valueFrom:
+                      secretKeyRef:
+                        key: FORGEJO_USERNAME
+                        name: hermes-env
+                  - name: FORGEJO_TOKEN
+                    valueFrom:
+                      secretKeyRef:
+                        key: FORGEJO_TOKEN
+                        name: hermes-env
+                  - name: OPENCODE_GO_API_KEY
                     valueFrom:
                       secretKeyRef:
                         name: hermes-env
