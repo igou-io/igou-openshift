@@ -653,11 +653,18 @@ applications:
       path: applications/ansible-collection-bench
     # Same drift as pac-tenants: the image-registry-pull-secrets controller
     # injects <sa>-dockercfg-* into the SAs; defer those fields to it.
+    # auth-login replicas are operated manually (oc scale up for login
+    # sessions, back to 0 after) — selfHeal must not fight that.
     ignoreDifferences:
       - group: ""
         kind: ServiceAccount
         managedFieldsManagers:
           - openshift.io/image-registry-pull-secrets_service-account-controller
+      - group: apps
+        kind: Deployment
+        name: auth-login
+        jsonPointers:
+          - /spec/replicas
 
   # The collection-bench Tekton Pipeline, synced from the bench repo on
   # Forgejo so pipeline changes ship with the benchmark content.
