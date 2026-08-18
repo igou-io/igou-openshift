@@ -1838,16 +1838,16 @@ data:
                     model:
                       title: Model
                       type: string
-                      default: opus
+                      default: sonnet
                       ui:help: >-
                         Aliases resolve to the newest model of that tier;
                         thinking is automatic
                       enum:
-                        - opus
                         - sonnet
+                        - opus
                         - haiku
-                        - claude-opus-5
                         - claude-sonnet-5
+                        - claude-opus-5
                         - claude-haiku-4-5
                 - required:
                     - model
@@ -1858,13 +1858,13 @@ data:
                     model:
                       title: Model
                       type: string
-                      default: gpt-5.6-terra@xhigh
+                      default: gpt-5.6-terra@high
                       ui:help: >-
                         ChatGPT-account models are terra and sol only;
                         @suffix maps to model_reasoning_effort
                       enum:
-                        - gpt-5.6-terra@xhigh
                         - gpt-5.6-terra@high
+                        - gpt-5.6-terra@xhigh
                         - gpt-5.6-terra@medium
                         - gpt-5.6-sol@xhigh
                         - gpt-5.6-sol@high
