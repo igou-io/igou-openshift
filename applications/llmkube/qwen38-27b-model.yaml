@@ -1,0 +1,31 @@
+---
+apiVersion: inference.llmkube.dev/v1alpha1
+kind: Model
+metadata:
+  name: qwen38-27b
+  namespace: llmkube-system
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,ServerSideApply=true
+    # Apply after the Helm-rendered chart (CRDs + controller) is in place.
+    argocd.argoproj.io/sync-wave: '5'
+spec:
+  # Qwen3.8-27B (2026-08-14): 27.8B DENSE hybrid — 16x(3x GatedDeltaNet + 1x
+  # GatedAttention) x 64 layers, so only 16/64 layers hold a KV cache (4 KV
+  # heads x 256 head dim = 64 KiB/token f16). unsloth UD-Q5_K_XL (~18.9 GiB)
+  # splits ~9.5 GiB/GPU across the 2x 16 GiB cards, leaving room for KV + the
+  # baked-in MTP head + compute buffers. UD-Q6_K_XL (25.9 GB) would crowd out
+  # KV/MTP; Q4 gives up quality the 32 GiB budget doesn't require.
+  source: https://huggingface.co/unsloth/Qwen3.8-27B-GGUF/resolve/main/Qwen3.8-27B-UD-Q5_K_XL.gguf
+  format: gguf
+  quantization: Q5_K_XL
+  hardware:
+    accelerator: cuda
+    gpu:
+      enabled: true
+      count: 2
+      layers: -1
+      memory: "16Gi"
+      vendor: nvidia
+  resources:
+    cpu: "8"
+    memory: "32Gi"

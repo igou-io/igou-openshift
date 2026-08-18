@@ -17,10 +17,6 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: hermes
-        # containerized hermes (applications/hermes-k8s), parallel-run + post-cutover
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: hermes-k8s
       ports:
         - port: 8080
           protocol: TCP
@@ -38,6 +34,20 @@ spec:
               policy-group.network.openshift.io/host-network: ""
       ports:
         - port: 9443
+          protocol: TCP
+    # OpenShift Routes for the OpenAI endpoints (e.g. opencode/IDE clients on
+    # the LAN). The router-default pod is host-network (belt-and-suspenders:
+    # allow both the openshift-ingress namespace and the synthetic
+    # host-network label, mirroring the jellyfin pattern).
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-ingress
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/host-network: ""
+      ports:
+        - port: 8080
           protocol: TCP
   egress:
     # cluster DNS (always required)
@@ -69,4 +79,21 @@ spec:
             cidr: 10.10.9.10/32
       ports:
         - port: 6443
+          protocol: TCP
+    # Model downloads: the llmkube model-downloader init container pulls GGUF
+    # weights from Hugging Face (huggingface.co + Xet/CDN hosts, dynamic IPs)
+    # over HTTPS. No download ran during the NetObserv capture window (all
+    # model weights were already in the RWX cache), so the generator omitted
+    # this flow; under default-deny every NEW Model CR crashloops on
+    # "Failed to connect to huggingface.co port 443" (hit live 2026-08-17
+    # deploying qwen38-27b). Internet-only: RFC1918 excluded.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - port: 443
           protocol: TCP
