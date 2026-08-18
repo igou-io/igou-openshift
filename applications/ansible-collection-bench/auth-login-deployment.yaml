@@ -23,13 +23,13 @@ spec:
       serviceAccountName: bench-pipeline
       containers:
         - name: auth-login
-          image: quay.apps.ocp.igou.systems/igou-io/collection-bench-runner:v1
+          image: quay.apps.ocp.igou.systems/igou-io/collection-bench-runner@sha256:36916ccec98d8727ebb7fbc9a75ead6ca3b1d3c9fb55790b2a74007616039b60
           command:
             - sleep
             - infinity
           env:
             - name: HOME
-              value: /identities/opencode
+              value: /identities/seed
           volumeMounts:
             - name: identities
               mountPath: /identities
