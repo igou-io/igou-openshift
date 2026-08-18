@@ -47,6 +47,12 @@ spec:
     - "draft-mtp"
     - "--spec-draft-n-max"
     - "2"
+    # Cap thinking depth: xhigh (model default) burns 5-20 min of reasoning
+    # per agentic tool call at ~23 tok/s. "low" keeps the thinking format
+    # (tool-calling contract unchanged) at a fraction of the wall-clock —
+    # right trade for dispatched coding agents on this hardware.
+    - "--chat-template-kwargs"
+    - "{\"reasoning_effort\":\"low\"}"
     # Qwen-recommended thinking-mode sampling (model thinks by default).
     - "--temp"
     - "1.0"
