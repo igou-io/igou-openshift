@@ -1866,9 +1866,15 @@ data:
                         - gpt-5.6-terra@high
                         - gpt-5.6-terra@xhigh
                         - gpt-5.6-terra@medium
-                        - gpt-5.6-sol@xhigh
+                        - gpt-5.6-terra@low
+                        - gpt-5.6-luna@high
+                        - gpt-5.6-luna@xhigh
+                        - gpt-5.6-luna@medium
+                        - gpt-5.6-luna@low
                         - gpt-5.6-sol@high
+                        - gpt-5.6-sol@xhigh
                         - gpt-5.6-sol@medium
+                        - gpt-5.6-sol@low
                 - required:
                     - model
                   properties:
