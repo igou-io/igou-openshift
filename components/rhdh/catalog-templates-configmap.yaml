@@ -1743,14 +1743,6 @@ data:
                 - claude-code
                 - codex
                 - cursor-cli
-            model_override:
-              title: Custom model (overrides dropdown)
-              type: string
-              default: ""
-              description: >-
-                Escape hatch for a model that is not in the dropdown yet —
-                sent verbatim when non-empty, otherwise the dropdown value
-                is used.
             agent_timeout:
               title: Agent budget (seconds)
               type: string
@@ -1792,6 +1784,16 @@ data:
               enum:
                 - "false"
                 - "true"
+            verbosity:
+              title: Transcript verbosity
+              type: string
+              default: high
+              description: >-
+                high = full stream/JSON agent transcript + harness session
+                artifacts in results
+              enum:
+                - high
+                - low
           # Dynamic model menu: RJSF resolves `dependencies.harness.oneOf` by
           # matching the branch whose single-value `harness` enum equals the
           # picked harness, then merges that branch's `model` enum into the
@@ -1810,18 +1812,23 @@ data:
                       type: string
                       default: opencode-go/kimi-k2.7-code
                       ui:help: >-
-                        opencode models accept an @high|@medium|@low
-                        reasoning-effort suffix (e.g.
-                        opencode-go/gpt-5.6-luna@high) — use Custom model to
-                        send a suffix that is not listed here.
+                        @high/@medium/@low suffix sets reasoning effort on
+                        any opencode model
                       enum:
                         - opencode-go/kimi-k2.7-code
+                        - opencode-go/kimi-k3
+                        - opencode-go/kimi-k2.6
                         - opencode-go/gpt-5.6-luna@high
                         - opencode-go/gpt-5.6-luna
                         - opencode-go/glm-5.2
+                        - opencode-go/glm-5.1
+                        - opencode-go/grok-4.5
                         - opencode-go/qwen3.8-max
-                        - opencode/deepseek-v4-flash-free
+                        - opencode-go/qwen3.7-max
+                        - opencode-go/qwen3.7-plus
                         - opencode-go/minimax-m3
+                        - opencode-go/minimax-m2.7
+                        - opencode/deepseek-v4-flash-free
                 - required:
                     - model
                   properties:
@@ -1833,12 +1840,15 @@ data:
                       type: string
                       default: sonnet
                       ui:help: >-
-                        The @high|@medium|@low reasoning-effort suffix is an
-                        opencode feature — claude-code takes the bare alias.
+                        Aliases resolve to the newest model of that tier;
+                        thinking is automatic
                       enum:
-                        - opus
                         - sonnet
+                        - opus
                         - haiku
+                        - claude-sonnet-5
+                        - claude-opus-5
+                        - claude-haiku-4-5
                 - required:
                     - model
                   properties:
@@ -1848,15 +1858,17 @@ data:
                     model:
                       title: Model
                       type: string
-                      default: gpt-5.6-terra
+                      default: gpt-5.6-terra@high
                       ui:help: >-
-                        The @high|@medium|@low reasoning-effort suffix is an
-                        opencode feature — codex takes the bare model id.
+                        ChatGPT-account models are terra and sol only;
+                        @suffix maps to model_reasoning_effort
                       enum:
-                        - gpt-5.6-terra-max
-                        - gpt-5.6-terra
-                        - gpt-5.1-codex-max
-                        - gpt-5.1-codex
+                        - gpt-5.6-terra@high
+                        - gpt-5.6-terra@xhigh
+                        - gpt-5.6-terra@medium
+                        - gpt-5.6-sol@xhigh
+                        - gpt-5.6-sol@high
+                        - gpt-5.6-sol@medium
                 - required:
                     - model
                   properties:
@@ -1866,13 +1878,30 @@ data:
                     model:
                       title: Model
                       type: string
-                      default: composer
+                      default: composer-2.5
                       ui:help: >-
-                        The @high|@medium|@low reasoning-effort suffix is an
-                        opencode feature — cursor-cli takes the bare model id.
+                        Effort and speed are baked into cursor's model names;
+                        -fast variants trade quality for latency
                       enum:
-                        - composer
+                        - composer-2.5
+                        - composer-2.5-fast
                         - auto
+                        - cursor-grok-4.6-xhigh
+                        - cursor-grok-4.6-high
+                        - cursor-grok-4.6-medium
+                        - cursor-grok-4.6-low
+                        - cursor-grok-4.5-high
+                        - gpt-5.3-codex-xhigh
+                        - gpt-5.3-codex-high
+                        - gpt-5.3-codex
+                        - gpt-5.6-sol-xhigh
+                        - gpt-5.6-sol-high
+                        - gpt-5.6-luna-high
+                        - claude-opus-5-thinking-high
+                        - claude-sonnet-5-thinking-xhigh
+                        - claude-sonnet-5-thinking-high
+                        - claude-fable-5-thinking-xhigh
+                        - gemini-3.7-flash-high
       steps:
         - id: launch
           name: Launch PipelineRun via EventListener
@@ -1883,15 +1912,16 @@ data:
             headers:
               content-type: application/json
             # Every field is sent on every run: the TriggerBinding requires all
-            # six, and an omitted/empty value would override the server-side
+            # seven, and an omitted/empty value would override the server-side
             # default with an empty string.
             body:
               harness: ${{ parameters.harness }}
-              model: ${{ parameters.model_override if parameters.model_override else parameters.model }}
+              model: ${{ parameters.model }}
               agent_timeout: ${{ parameters.agent_timeout }}
               network: ${{ parameters.network }}
               skills: ${{ parameters.skills }}
               burst: ${{ parameters.burst }}
+              verbosity: ${{ parameters.verbosity }}
       output:
         links:
           - title: PipelineRuns (watch the trial)
