@@ -1719,6 +1719,7 @@ data:
         Launch an ansible-collection-bench trial: an AI coding agent gets a
         10-role collection spec and KubeVirt-backed molecule tests; the run
         is graded and committed to the results ledger with a per-run repo.
+        Pick a harness and its model menu appears.
       tags:
         - benchmark
         - ai
@@ -1729,27 +1730,32 @@ data:
         - title: Trial parameters
           required:
             - harness
-            - model
           properties:
             harness:
               title: Harness
               type: string
               default: opencode
+              description: >-
+                Agent CLI under test — the Model dropdown below is filtered to
+                the models this harness can address.
               enum:
                 - opencode
                 - claude-code
                 - codex
                 - cursor-cli
-            model:
-              title: Model
+            model_override:
+              title: Custom model (overrides dropdown)
               type: string
-              default: opencode-go/kimi-k2.7-code
+              default: ""
               description: >-
-                Provider-prefixed model, e.g. opencode-go/deepseek-v4-flash
+                Escape hatch for a model that is not in the dropdown yet —
+                sent verbatim when non-empty, otherwise the dropdown value
+                is used.
             agent_timeout:
               title: Agent budget (seconds)
               type: string
               default: "5400"
+              description: Wall-clock budget for the agent phase of the trial
               enum:
                 - "900"
                 - "1800"
@@ -1759,17 +1765,114 @@ data:
               title: Network profile
               type: string
               default: sealed
+              description: >-
+                Egress policy for the agent pod — profiles are directories
+                under network/ in the bench repo.
+              enum:
+                - sealed
+                - open
+                - docs
             skills:
               title: Skills bundle
               type: string
               default: none
+              description: >-
+                Bundles are directories under skills/ in the bench repo — add
+                a directory there, then add its name to this enum (one-line
+                change in this template).
+              enum:
+                - none
+                - lab-ansible
+                - ai-forge
             burst:
               title: Burst to casval
               type: string
               default: "false"
+              description: Requires the casval burst node
               enum:
                 - "false"
                 - "true"
+          # Dynamic model menu: RJSF resolves `dependencies.harness.oneOf` by
+          # matching the branch whose single-value `harness` enum equals the
+          # picked harness, then merges that branch's `model` enum into the
+          # form. New model? Add it to the matching branch's enum.
+          dependencies:
+            harness:
+              oneOf:
+                - required:
+                    - model
+                  properties:
+                    harness:
+                      enum:
+                        - opencode
+                    model:
+                      title: Model
+                      type: string
+                      default: opencode-go/kimi-k2.7-code
+                      ui:help: >-
+                        opencode models accept an @high|@medium|@low
+                        reasoning-effort suffix (e.g.
+                        opencode-go/gpt-5.6-luna@high) — use Custom model to
+                        send a suffix that is not listed here.
+                      enum:
+                        - opencode-go/kimi-k2.7-code
+                        - opencode-go/gpt-5.6-luna@high
+                        - opencode-go/gpt-5.6-luna
+                        - opencode-go/glm-5.2
+                        - opencode-go/qwen3.8-max
+                        - opencode/deepseek-v4-flash-free
+                        - opencode-go/minimax-m3
+                - required:
+                    - model
+                  properties:
+                    harness:
+                      enum:
+                        - claude-code
+                    model:
+                      title: Model
+                      type: string
+                      default: sonnet
+                      ui:help: >-
+                        The @high|@medium|@low reasoning-effort suffix is an
+                        opencode feature — claude-code takes the bare alias.
+                      enum:
+                        - opus
+                        - sonnet
+                        - haiku
+                - required:
+                    - model
+                  properties:
+                    harness:
+                      enum:
+                        - codex
+                    model:
+                      title: Model
+                      type: string
+                      default: gpt-5.6-terra
+                      ui:help: >-
+                        The @high|@medium|@low reasoning-effort suffix is an
+                        opencode feature — codex takes the bare model id.
+                      enum:
+                        - gpt-5.6-terra-max
+                        - gpt-5.6-terra
+                        - gpt-5.1-codex-max
+                        - gpt-5.1-codex
+                - required:
+                    - model
+                  properties:
+                    harness:
+                      enum:
+                        - cursor-cli
+                    model:
+                      title: Model
+                      type: string
+                      default: composer
+                      ui:help: >-
+                        The @high|@medium|@low reasoning-effort suffix is an
+                        opencode feature — cursor-cli takes the bare model id.
+                      enum:
+                        - composer
+                        - auto
       steps:
         - id: launch
           name: Launch PipelineRun via EventListener
@@ -1779,9 +1882,12 @@ data:
             path: /proxy/bench-trigger
             headers:
               content-type: application/json
+            # Every field is sent on every run: the TriggerBinding requires all
+            # six, and an omitted/empty value would override the server-side
+            # default with an empty string.
             body:
               harness: ${{ parameters.harness }}
-              model: ${{ parameters.model }}
+              model: ${{ parameters.model_override if parameters.model_override else parameters.model }}
               agent_timeout: ${{ parameters.agent_timeout }}
               network: ${{ parameters.network }}
               skills: ${{ parameters.skills }}
