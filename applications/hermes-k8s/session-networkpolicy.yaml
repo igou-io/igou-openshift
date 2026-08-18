@@ -75,6 +75,24 @@ spec:
       app.kubernetes.io/managed-by: hermes-agent
   policyTypes: ["Egress"]
   egress:
+    # In-cluster Forgejo (http/git-over-http): dispatched agents push their
+    # work to the sandbox org via forgejo-http.forgejo.svc:3000.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: forgejo
+      ports:
+        - protocol: TCP
+          port: 3000
+    # In-cluster LLM endpoints (llmkube OpenAI-compatible servers): lets a
+    # session run opencode against qwen38-27b et al with no cloud key.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: llmkube-system
+      ports:
+        - protocol: TCP
+          port: 8080
     - to:
         - namespaceSelector:
             matchLabels:

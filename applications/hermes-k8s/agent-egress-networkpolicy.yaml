@@ -22,6 +22,14 @@ spec:
   policyTypes:
     - Egress
   egress:
+    # In-cluster Forgejo: hermes itself can create repos / push to sandbox.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: forgejo
+      ports:
+        - protocol: TCP
+          port: 3000
     # Cluster DNS: OpenShift CoreDNS listens on 5353 behind the :53 service.
     - to:
         - namespaceSelector:

@@ -293,6 +293,14 @@ spec:
           base_url: http://gemma-4-e2b.llmkube-system.svc.cluster.local:8080/v1
           model: gemma-4-e2b
           name: gemma-4-e2b
+        # Qwen3.8-27B on casval (burst, 2x 4060 Ti): 23-28 tok/s w/ MTP,
+        # 128k ctx, tool-calling verified — the strongest in-cluster model.
+        # Scale-from-zero: first request after idle needs casval provisioned
+        # (isvc qwen38-27b replicas 1, ~15 min cold).
+        - api_key: sk-no-key
+          base_url: http://qwen38-27b.llmkube-system.svc.cluster.local:8080/v1
+          model: qwen3.8-27b
+          name: qwen38-27b
       dashboard:
         show_token_analytics: true
       display:
@@ -460,7 +468,19 @@ spec:
                   # opencode's hosted-model key, same forward the VM's
                   # docker_forward_env did. Same accepted tradeoff as the
                   # gcp-sa mount: session-visible by design.
-                  - name: OPENCODE_GO_API_KEY
+                  - name: FORGEJO_URL
+              value: http://forgejo-http.forgejo.svc.cluster.local:3000
+            - name: FORGEJO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: FORGEJO_USERNAME
+                  name: hermes-env
+            - name: FORGEJO_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: FORGEJO_TOKEN
+                  name: hermes-env
+            - name: OPENCODE_GO_API_KEY
                     valueFrom:
                       secretKeyRef:
                         name: hermes-env

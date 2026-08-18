@@ -12,6 +12,15 @@ spec:
     - Ingress
     - Egress
   ingress:
+    # hermes agents (main pod + kata session pods) pushing repos over
+    # git-http to the sandbox org (hermes-agent user, token in lab_agents 1P).
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-k8s
+      ports:
+        - port: 3000
+          protocol: TCP
     # intra-namespace (pod-to-pod within this namespace)
     - from:
         - podSelector: {}
