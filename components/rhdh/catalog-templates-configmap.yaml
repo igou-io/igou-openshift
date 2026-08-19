@@ -1812,8 +1812,9 @@ data:
                       type: string
                       default: opencode-go/kimi-k2.7-code
                       ui:help: >-
-                        @high/@medium/@low suffix sets reasoning effort on
-                        any opencode model
+                        @high/@medium/@low suffix sets reasoning effort.
+                        llmkube/* = locally served cluster models (no API cost;
+                        qwen38-27b needs casval up)
                       enum:
                         - opencode-go/kimi-k2.7-code
                         - opencode-go/kimi-k3
@@ -1829,6 +1830,9 @@ data:
                         - opencode-go/minimax-m3
                         - opencode-go/minimax-m2.7
                         - opencode/deepseek-v4-flash-free
+                        - llmkube/qwen38-27b
+                        - llmkube/qwen35-2b
+                        - llmkube/gemma-4-e2b
                 - required:
                     - model
                   properties:
