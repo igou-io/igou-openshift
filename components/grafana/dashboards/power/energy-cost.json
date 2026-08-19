@@ -1,0 +1,580 @@
+{
+  "uid": "energy-cost",
+  "title": "OpenShift Energy Cost",
+  "description": "Dollar cost of running the ocp cluster, per node / component / GPU, over the dashboard time range. Rates: Dominion Energy VA Schedule 1 (zip 23236), marginal >800 kWh tier including all per-kWh riders, filings effective 2026-07-01 - summer (Jun-Sep) 14.834 c/kWh = distribution 2.3596 + generation 4.6243 + transmission 0.970 + riders 6.8805 (Fuel A 3.7648, T1 1.1789, DIST 0.7685, GEN 0.5729, SNA 0.3475, C4A 0.1336, E 0.0625, SMR 0.0287, C1A 0.0231, RGGI 0); winter (Oct-May) 12.907 c/kWh with generation 2.6965. Season picked automatically per sample via month(). Node watts are MODELED (idle + (max-idle) x CPU busy; tune w_* variables); GPU watts/energy are MEASURED via DCGM. TrueNAS chassis and network gear are out of scope (see Lab Power / Power Consumption).",
+  "editable": true,
+  "graphTooltip": 1,
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "power",
+    "cost",
+    "openshift"
+  ],
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "rate_summer",
+        "type": "textbox",
+        "label": "Summer $/kWh (Jun-Sep)",
+        "query": "0.14834",
+        "current": {
+          "text": "0.14834",
+          "value": "0.14834"
+        }
+      },
+      {
+        "name": "rate_winter",
+        "type": "textbox",
+        "label": "Winter $/kWh (Oct-May)",
+        "query": "0.12907",
+        "current": {
+          "text": "0.12907",
+          "value": "0.12907"
+        }
+      },
+      {
+        "name": "w_ocp_idle",
+        "type": "constant",
+        "hide": 2,
+        "query": "25",
+        "label": "ocp idle W (Minisforum MS-01)",
+        "current": {
+          "text": "25",
+          "value": "25"
+        }
+      },
+      {
+        "name": "w_ocp_max",
+        "type": "constant",
+        "hide": 2,
+        "query": "120",
+        "label": "ocp max W (Minisforum MS-01)",
+        "current": {
+          "text": "120",
+          "value": "120"
+        }
+      },
+      {
+        "name": "w_hpg5_idle",
+        "type": "constant",
+        "hide": 2,
+        "query": "10",
+        "label": "hpg5 idle W (HP EliteDesk 800 G5 Mini)",
+        "current": {
+          "text": "10",
+          "value": "10"
+        }
+      },
+      {
+        "name": "w_hpg5_max",
+        "type": "constant",
+        "hide": 2,
+        "query": "90",
+        "label": "hpg5 max W (HP EliteDesk 800 G5 Mini)",
+        "current": {
+          "text": "90",
+          "value": "90"
+        }
+      },
+      {
+        "name": "w_p330_idle",
+        "type": "constant",
+        "hide": 2,
+        "query": "10",
+        "label": "p330 idle W (Lenovo ThinkStation P330 Tiny)",
+        "current": {
+          "text": "10",
+          "value": "10"
+        }
+      },
+      {
+        "name": "w_p330_max",
+        "type": "constant",
+        "hide": 2,
+        "query": "80",
+        "label": "p330 max W (Lenovo ThinkStation P330 Tiny)",
+        "current": {
+          "text": "80",
+          "value": "80"
+        }
+      },
+      {
+        "name": "w_casval_idle",
+        "type": "constant",
+        "hide": 2,
+        "query": "150",
+        "label": "casval idle W (Supermicro H12DSi-N6 dual EPYC, GPUs metered separately)",
+        "current": {
+          "text": "150",
+          "value": "150"
+        }
+      },
+      {
+        "name": "w_casval_max",
+        "type": "constant",
+        "hide": 2,
+        "query": "600",
+        "label": "casval max W (Supermicro H12DSi-N6 dual EPYC, GPUs metered separately)",
+        "current": {
+          "text": "600",
+          "value": "600"
+        }
+      },
+      {
+        "name": "w_tnw1_idle",
+        "type": "constant",
+        "hide": 2,
+        "query": "5",
+        "label": "tnw1 idle W (KubeVirt-style VM on TrueNAS; marginal draw only, chassis metered on Lab Power)",
+        "current": {
+          "text": "5",
+          "value": "5"
+        }
+      },
+      {
+        "name": "w_tnw1_max",
+        "type": "constant",
+        "hide": 2,
+        "query": "40",
+        "label": "tnw1 max W (KubeVirt-style VM on TrueNAS; marginal draw only, chassis metered on Lab Power)",
+        "current": {
+          "text": "40",
+          "value": "40"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Cluster draw now",
+      "description": "Modeled wall watts of all 5 OCP nodes (per-node linear idle-to-max CPU model, constants in dashboard variables) plus measured GPU watts (DCGM). casval reads 0 when scaled down.",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "area",
+        "colorMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(((1 - avg(rate(node_cpu_seconds_total{instance=\"ocp.igou.systems\",mode=\"idle\"}[5m]))) * ($w_ocp_max - $w_ocp_idle) + $w_ocp_idle) or vector(0)) + (((1 - avg(rate(node_cpu_seconds_total{instance=\"hpg5.igou.systems\",mode=\"idle\"}[5m]))) * ($w_hpg5_max - $w_hpg5_idle) + $w_hpg5_idle) or vector(0)) + (((1 - avg(rate(node_cpu_seconds_total{instance=\"p330.igou.systems\",mode=\"idle\"}[5m]))) * ($w_p330_max - $w_p330_idle) + $w_p330_idle) or vector(0)) + (((1 - avg(rate(node_cpu_seconds_total{instance=\"casval.igou.systems\",mode=\"idle\"}[5m]))) * ($w_casval_max - $w_casval_idle) + $w_casval_idle) or vector(0)) + (((1 - avg(rate(node_cpu_seconds_total{instance=\"truenas-w1.igou.systems\",mode=\"idle\"}[5m]))) * ($w_tnw1_max - $w_tnw1_idle) + $w_tnw1_idle) or vector(0)) + (sum(DCGM_FI_DEV_POWER_USAGE) or vector(0))"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Energy - selected range",
+      "description": "Cluster kWh over the dashboard time range (average modeled watts x hours).",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kwatth",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "none",
+        "colorMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "avg_over_time(((((1 - avg(rate(node_cpu_seconds_total{instance=\"ocp.igou.systems\",mode=\"idle\"}[5m]))) * ($w_ocp_max - $w_ocp_idle) + $w_ocp_idle) or vector(0)) + (((1 - avg(rate(node_cpu_seconds_total{instance=\"hpg5.igou.systems\",mode=\"idle\"}[5m]))) * ($w_hpg5_max - $w_hpg5_idle) + $w_hpg5_idle) or vector(0)) + (((1 - avg(rate(node_cpu_seconds_total{instance=\"p330.igou.systems\",mode=\"idle\"}[5m]))) * ($w_p330_max - $w_p330_idle) + $w_p330_idle) or vector(0)) + (((1 - avg(rate(node_cpu_seconds_total{instance=\"casval.igou.systems\",mode=\"idle\"}[5m]))) * ($w_casval_max - $w_casval_idle) + $w_casval_idle) or vector(0)) + (((1 - avg(rate(node_cpu_seconds_total{instance=\"truenas-w1.igou.systems\",mode=\"idle\"}[5m]))) * ($w_tnw1_max - $w_tnw1_idle) + $w_tnw1_idle) or vector(0)) + (sum(DCGM_FI_DEV_POWER_USAGE) or vector(0)))[$__range:5m]) * $__range_s / 3600 / 1000",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Cost - selected range",
+      "description": "Energy over the dashboard range priced at the Dominion VA Schedule 1 marginal rate (>800 kWh tier, all riders). Seasonal rate picked by month(): Jun-Sep = $rate_summer, Oct-May = $rate_winter.",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "none",
+        "colorMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(avg_over_time(((((1 - avg(rate(node_cpu_seconds_total{instance=\"ocp.igou.systems\",mode=\"idle\"}[5m]))) * ($w_ocp_max - $w_ocp_idle) + $w_ocp_idle) or vector(0)) + (((1 - avg(rate(node_cpu_seconds_total{instance=\"hpg5.igou.systems\",mode=\"idle\"}[5m]))) * ($w_hpg5_max - $w_hpg5_idle) + $w_hpg5_idle) or vector(0)) + (((1 - avg(rate(node_cpu_seconds_total{instance=\"p330.igou.systems\",mode=\"idle\"}[5m]))) * ($w_p330_max - $w_p330_idle) + $w_p330_idle) or vector(0)) + (((1 - avg(rate(node_cpu_seconds_total{instance=\"casval.igou.systems\",mode=\"idle\"}[5m]))) * ($w_casval_max - $w_casval_idle) + $w_casval_idle) or vector(0)) + (((1 - avg(rate(node_cpu_seconds_total{instance=\"truenas-w1.igou.systems\",mode=\"idle\"}[5m]))) * ($w_tnw1_max - $w_tnw1_idle) + $w_tnw1_idle) or vector(0)) + (sum(DCGM_FI_DEV_POWER_USAGE) or vector(0)))[$__range:5m]) * $__range_s / 3600 / 1000) * ($rate_winter + ($rate_summer - $rate_winter) * ((scalar(month()) >= bool 6) * (scalar(month()) <= bool 9)))",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Projected monthly cost",
+      "description": "Average draw over the selected range extrapolated to 30.44 days (730.5 h) at the seasonal Dominion rate.",
+      "gridPos": {
+        "h": 5,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "graphMode": "none",
+        "colorMode": "value",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "avg_over_time(((((1 - avg(rate(node_cpu_seconds_total{instance=\"ocp.igou.systems\",mode=\"idle\"}[5m]))) * ($w_ocp_max - $w_ocp_idle) + $w_ocp_idle) or vector(0)) + (((1 - avg(rate(node_cpu_seconds_total{instance=\"hpg5.igou.systems\",mode=\"idle\"}[5m]))) * ($w_hpg5_max - $w_hpg5_idle) + $w_hpg5_idle) or vector(0)) + (((1 - avg(rate(node_cpu_seconds_total{instance=\"p330.igou.systems\",mode=\"idle\"}[5m]))) * ($w_p330_max - $w_p330_idle) + $w_p330_idle) or vector(0)) + (((1 - avg(rate(node_cpu_seconds_total{instance=\"casval.igou.systems\",mode=\"idle\"}[5m]))) * ($w_casval_max - $w_casval_idle) + $w_casval_idle) or vector(0)) + (((1 - avg(rate(node_cpu_seconds_total{instance=\"truenas-w1.igou.systems\",mode=\"idle\"}[5m]))) * ($w_tnw1_max - $w_tnw1_idle) + $w_tnw1_idle) or vector(0)) + (sum(DCGM_FI_DEV_POWER_USAGE) or vector(0)))[$__range:5m]) * 730.5 / 1000 * ($rate_winter + ($rate_summer - $rate_winter) * ((scalar(month()) >= bool 6) * (scalar(month()) <= bool 9)))",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Power by node - modeled + GPUs measured",
+      "description": "Per-node linear model: idle watts + (max-idle) x CPU busy fraction. Tune the w_* dashboard variables to calibrate. GPUs are actual DCGM watts, additive to casval's CPU line. Gaps = node powered off.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 5
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "watt",
+          "decimals": 1,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 25,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "showPoints": "never"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(1 - avg(rate(node_cpu_seconds_total{instance=\"ocp.igou.systems\",mode=\"idle\"}[5m]))) * ($w_ocp_max - $w_ocp_idle) + $w_ocp_idle",
+          "legendFormat": "ocp (MS-01) (modeled)"
+        },
+        {
+          "refId": "B",
+          "expr": "(1 - avg(rate(node_cpu_seconds_total{instance=\"hpg5.igou.systems\",mode=\"idle\"}[5m]))) * ($w_hpg5_max - $w_hpg5_idle) + $w_hpg5_idle",
+          "legendFormat": "hpg5 (EliteDesk G5) (modeled)"
+        },
+        {
+          "refId": "C",
+          "expr": "(1 - avg(rate(node_cpu_seconds_total{instance=\"p330.igou.systems\",mode=\"idle\"}[5m]))) * ($w_p330_max - $w_p330_idle) + $w_p330_idle",
+          "legendFormat": "p330 (P330 Tiny) (modeled)"
+        },
+        {
+          "refId": "D",
+          "expr": "(1 - avg(rate(node_cpu_seconds_total{instance=\"casval.igou.systems\",mode=\"idle\"}[5m]))) * ($w_casval_max - $w_casval_idle) + $w_casval_idle",
+          "legendFormat": "casval (H12DSi CPUs) (modeled)"
+        },
+        {
+          "refId": "E",
+          "expr": "(1 - avg(rate(node_cpu_seconds_total{instance=\"truenas-w1.igou.systems\",mode=\"idle\"}[5m]))) * ($w_tnw1_max - $w_tnw1_idle) + $w_tnw1_idle",
+          "legendFormat": "truenas-w1 (VM) (modeled)"
+        },
+        {
+          "refId": "F",
+          "expr": "sum(DCGM_FI_DEV_POWER_USAGE)",
+          "legendFormat": "casval GPUs (measured)"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "bargauge",
+      "title": "Cost by node - selected range",
+      "description": "Dollar cost of each node over the dashboard time range. Node CPU side is modeled; the GPU bar is measured energy (DCGM mJ counter).",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 5
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "valueMode": "color"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "avg_over_time((((1 - avg(rate(node_cpu_seconds_total{instance=\"ocp.igou.systems\",mode=\"idle\"}[5m]))) * ($w_ocp_max - $w_ocp_idle) + $w_ocp_idle) or vector(0))[$__range:5m]) * $__range_s / 3600 / 1000 * ($rate_winter + ($rate_summer - $rate_winter) * ((scalar(month()) >= bool 6) * (scalar(month()) <= bool 9)))",
+          "legendFormat": "ocp (MS-01)",
+          "instant": true
+        },
+        {
+          "refId": "B",
+          "expr": "avg_over_time((((1 - avg(rate(node_cpu_seconds_total{instance=\"hpg5.igou.systems\",mode=\"idle\"}[5m]))) * ($w_hpg5_max - $w_hpg5_idle) + $w_hpg5_idle) or vector(0))[$__range:5m]) * $__range_s / 3600 / 1000 * ($rate_winter + ($rate_summer - $rate_winter) * ((scalar(month()) >= bool 6) * (scalar(month()) <= bool 9)))",
+          "legendFormat": "hpg5 (EliteDesk G5)",
+          "instant": true
+        },
+        {
+          "refId": "C",
+          "expr": "avg_over_time((((1 - avg(rate(node_cpu_seconds_total{instance=\"p330.igou.systems\",mode=\"idle\"}[5m]))) * ($w_p330_max - $w_p330_idle) + $w_p330_idle) or vector(0))[$__range:5m]) * $__range_s / 3600 / 1000 * ($rate_winter + ($rate_summer - $rate_winter) * ((scalar(month()) >= bool 6) * (scalar(month()) <= bool 9)))",
+          "legendFormat": "p330 (P330 Tiny)",
+          "instant": true
+        },
+        {
+          "refId": "D",
+          "expr": "avg_over_time((((1 - avg(rate(node_cpu_seconds_total{instance=\"casval.igou.systems\",mode=\"idle\"}[5m]))) * ($w_casval_max - $w_casval_idle) + $w_casval_idle) or vector(0))[$__range:5m]) * $__range_s / 3600 / 1000 * ($rate_winter + ($rate_summer - $rate_winter) * ((scalar(month()) >= bool 6) * (scalar(month()) <= bool 9)))",
+          "legendFormat": "casval (H12DSi CPUs)",
+          "instant": true
+        },
+        {
+          "refId": "E",
+          "expr": "avg_over_time((((1 - avg(rate(node_cpu_seconds_total{instance=\"truenas-w1.igou.systems\",mode=\"idle\"}[5m]))) * ($w_tnw1_max - $w_tnw1_idle) + $w_tnw1_idle) or vector(0))[$__range:5m]) * $__range_s / 3600 / 1000 * ($rate_winter + ($rate_summer - $rate_winter) * ((scalar(month()) >= bool 6) * (scalar(month()) <= bool 9)))",
+          "legendFormat": "truenas-w1 (VM)",
+          "instant": true
+        },
+        {
+          "refId": "F",
+          "expr": "(sum(increase(DCGM_FI_DEV_TOTAL_ENERGY_CONSUMPTION[$__range])) or vector(0)) / 3600000000 * ($rate_winter + ($rate_summer - $rate_winter) * ((scalar(month()) >= bool 6) * (scalar(month()) <= bool 9)))",
+          "legendFormat": "casval GPUs (measured)",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "bargauge",
+      "title": "GPU cost by card & workload - selected range (measured)",
+      "description": "Measured GPU energy (DCGM_FI_DEV_TOTAL_ENERGY_CONSUMPTION) split per GPU and per consuming namespace, priced at the seasonal Dominion rate. kWh = $ / rate.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "valueMode": "color"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (gpu, exported_namespace) (increase(DCGM_FI_DEV_TOTAL_ENERGY_CONSUMPTION[$__range])) / 3600000000 * ($rate_winter + ($rate_summer - $rate_winter) * ((scalar(month()) >= bool 6) * (scalar(month()) <= bool 9)))",
+          "legendFormat": "GPU {{gpu}} - {{exported_namespace}}",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "bargauge",
+      "title": "Cost by component (top 10 namespaces) - selected range",
+      "description": "Modeled node energy (GPU excluded - see GPU panel) allocated to namespaces by their share of cluster CPU-seconds over the range. Includes each namespace's share of idle overhead.",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        },
+        "valueMode": "color"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "topk(10, sum by (namespace) (rate(container_cpu_usage_seconds_total{container!=\"\",container!=\"POD\"}[$__range])) / scalar(sum(rate(node_cpu_seconds_total{mode!=\"idle\",instance=~\"(casval|hpg5|ocp|p330|truenas-w1).igou.systems\"}[$__range]))) * scalar(avg_over_time(((((1 - avg(rate(node_cpu_seconds_total{instance=\"ocp.igou.systems\",mode=\"idle\"}[5m]))) * ($w_ocp_max - $w_ocp_idle) + $w_ocp_idle) or vector(0)) + (((1 - avg(rate(node_cpu_seconds_total{instance=\"hpg5.igou.systems\",mode=\"idle\"}[5m]))) * ($w_hpg5_max - $w_hpg5_idle) + $w_hpg5_idle) or vector(0)) + (((1 - avg(rate(node_cpu_seconds_total{instance=\"p330.igou.systems\",mode=\"idle\"}[5m]))) * ($w_p330_max - $w_p330_idle) + $w_p330_idle) or vector(0)) + (((1 - avg(rate(node_cpu_seconds_total{instance=\"casval.igou.systems\",mode=\"idle\"}[5m]))) * ($w_casval_max - $w_casval_idle) + $w_casval_idle) or vector(0)) + (((1 - avg(rate(node_cpu_seconds_total{instance=\"truenas-w1.igou.systems\",mode=\"idle\"}[5m]))) * ($w_tnw1_max - $w_tnw1_idle) + $w_tnw1_idle) or vector(0)))[$__range:5m])) * $__range_s / 3600 / 1000 * ($rate_winter + ($rate_summer - $rate_winter) * ((scalar(month()) >= bool 6) * (scalar(month()) <= bool 9))))",
+          "legendFormat": "{{namespace}}",
+          "instant": true
+        }
+      ]
+    }
+  ]
+}
