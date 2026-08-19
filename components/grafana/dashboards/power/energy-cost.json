@@ -484,9 +484,9 @@
     },
     {
       "id": 7,
-      "type": "bargauge",
+      "type": "table",
       "title": "GPU cost by card & workload - selected range (measured)",
-      "description": "Measured GPU energy (DCGM_FI_DEV_TOTAL_ENERGY_CONSUMPTION) split per GPU and per consuming namespace, priced at the seasonal Dominion rate. kWh = $ / rate.",
+      "description": "Measured GPU energy (DCGM_FI_DEV_TOTAL_ENERGY_CONSUMPTION) per GPU and consuming namespace over the dashboard range. USD integrates the seasonal Dominion rate per 5m sample, so ranges crossing the Jun/Oct season boundaries are priced correctly; kWh and avg W come from the raw counter. Footer row = totals.",
       "gridPos": {
         "h": 9,
         "w": 12,
@@ -495,8 +495,10 @@
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "currencyUSD",
-          "decimals": 2,
+          "custom": {
+            "align": "auto",
+            "filterable": false
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -507,25 +509,116 @@
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "kWh"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "kwatth"
+              },
+              {
+                "id": "decimals",
+                "value": 3
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "USD"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "avg W"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "watt"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          }
+        ]
       },
       "options": {
-        "orientation": "horizontal",
-        "displayMode": "gradient",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
+        "footer": {
+          "show": true,
+          "reducer": [
+            "sum"
           ],
-          "values": false
+          "fields": [
+            "kWh",
+            "USD",
+            "avg W"
+          ]
         },
-        "valueMode": "color"
+        "sortBy": [
+          {
+            "displayName": "USD",
+            "desc": true
+          }
+        ]
       },
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "gpu": "GPU",
+              "modelName": "model",
+              "exported_namespace": "workload ns",
+              "Value #A": "kWh",
+              "Value #B": "USD",
+              "Value #C": "avg W"
+            }
+          }
+        }
+      ],
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (gpu, exported_namespace) (increase(DCGM_FI_DEV_TOTAL_ENERGY_CONSUMPTION[$__range])) / 3600000000 * ($rate_winter + ($rate_summer - $rate_winter) * ((scalar(month()) >= bool 6) * (scalar(month()) <= bool 9)))",
-          "legendFormat": "GPU {{gpu}} - {{exported_namespace}}",
-          "instant": true
+          "instant": true,
+          "format": "table",
+          "expr": "sum by (gpu, modelName, exported_namespace) (increase(DCGM_FI_DEV_TOTAL_ENERGY_CONSUMPTION[$__range])) / 3600000000"
+        },
+        {
+          "refId": "B",
+          "instant": true,
+          "format": "table",
+          "expr": "sum_over_time((sum by (gpu, modelName, exported_namespace) (rate(DCGM_FI_DEV_TOTAL_ENERGY_CONSUMPTION[5m])) / 1000 * ($rate_winter + ($rate_summer - $rate_winter) * ((scalar(month()) >= bool 6) * (scalar(month()) <= bool 9))))[$__range:5m]) * 300 / 3600 / 1000"
+        },
+        {
+          "refId": "C",
+          "instant": true,
+          "format": "table",
+          "expr": "sum by (gpu, modelName, exported_namespace) (increase(DCGM_FI_DEV_TOTAL_ENERGY_CONSUMPTION[$__range])) / 1000 / $__range_s"
         }
       ]
     },
