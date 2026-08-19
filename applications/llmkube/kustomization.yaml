@@ -4,6 +4,7 @@ namespace: llmkube-system
 resources:
   - default-deny-networkpolicy.yaml
   - allow-observed-networkpolicy.yaml
+  - allow-bench-llm-networkpolicy.yaml
   - llmkube-system-namespace.yaml
   - qwen3-35b-a3b-model.yaml
   - qwen3-35b-a3b-inferenceservice.yaml
