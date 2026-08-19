@@ -1,0 +1,28 @@
+---
+# OpenShift cluster energy cost (2026-08-19, user request: 8-panel board for
+# what the cluster costs to run, per node / component / GPU, over the selected
+# time range). Rates = Dominion Energy VA Schedule 1 (zip 23236) marginal
+# >800 kWh tier incl. all per-kWh riders, filings effective 2026-07-01;
+# summer/winter picked automatically per sample via month(). Node watts are
+# MODELED (idle + (max-idle) x CPU-busy, constants in dashboard variables);
+# GPU watts/energy are MEASURED (DCGM). JSON in
+# dashboards/power/energy-cost.json.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-power-energy-cost
+  namespace: grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: '12'
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  folder: power
+  resyncPeriod: 24h
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: thanos-querier
+  configMapRef:
+    name: grafana-dashboard-power-energy-cost-json
+    key: energy-cost.json

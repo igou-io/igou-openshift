@@ -1,0 +1,23 @@
+---
+# "Better NVIDIA DCGM Dashboard" (grafana.com 22515) — improved layout over
+# the stock 12239 board: adds total energy draw and memory-used-% panels.
+# Note: the Tensor Core Utilization panel needs DCGM_FI_PROF_PIPE_TENSOR_ACTIVE,
+# a DCP profiling metric unsupported on GeForce cards (casval's RTX 4060 Ti),
+# so it stays empty — same as 12239's tensor panel.
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-22515
+  namespace: grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: '12'
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  resyncPeriod: 24h
+  datasources:
+    - inputName: DS_PROMETHEUS
+      datasourceName: thanos-querier
+  grafanaCom:
+    id: 22515
