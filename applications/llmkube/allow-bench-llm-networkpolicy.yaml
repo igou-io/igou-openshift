@@ -1,0 +1,21 @@
+---
+# The ansible-collection-bench agent pods drive locally served models
+# through the per-model ClusterIP services (OpenAI-compatible :8080).
+# Same shape as allow-hermes-k8s-llm-interim.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-bench-llm
+  namespace: llmkube-system
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ansible-collection-bench
+      ports:
+        - port: 8080
+          protocol: TCP
