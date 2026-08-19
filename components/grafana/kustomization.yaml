@@ -21,6 +21,7 @@ resources:
   - grafana-loki-network-datasource.yaml
   - grafana-dashboard-20340.yaml
   - grafana-dashboard-12239.yaml
+  - grafana-dashboard-22515.yaml
   - grafana-dashboard-14584.yaml
   - grafana-dashboard-20417.yaml
   - grafana-dashboard-13679.yaml
@@ -91,6 +92,7 @@ resources:
   - grafana-dashboard-sre-use-storage.yaml
   - grafana-dashboard-power-lab-power.yaml
   - grafana-dashboard-power-consumption.yaml
+  - grafana-dashboard-power-energy-cost.yaml
   # Fleet hardware thermals (hardware folder)
   - grafana-dashboard-hardware-lab-thermal.yaml
   - grafana-dashboard-mx3d-thermals.yaml
@@ -341,6 +343,10 @@ configMapGenerator:
     namespace: grafana
     files:
       - dashboards/power/power-consumption.json
+  - name: grafana-dashboard-power-energy-cost-json
+    namespace: grafana
+    files:
+      - dashboards/power/energy-cost.json
   - name: grafana-dashboard-hardware-lab-thermal-json
     namespace: grafana
     files:
