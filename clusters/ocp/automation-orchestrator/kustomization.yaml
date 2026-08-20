@@ -7,6 +7,7 @@ resources:
   - temporal-pg-credentials-externalsecret.yaml
   - automation-orchestrator-admin-password-externalsecret.yaml
   - cnpg-s3-credentials-externalsecret.yaml
+  - orchestrator-files-s3-credentials-externalsecret.yaml
   - orchestrator-pg-backup-objectstore.yaml
   - orchestrator-pg-cluster.yaml
   - temporal-database.yaml

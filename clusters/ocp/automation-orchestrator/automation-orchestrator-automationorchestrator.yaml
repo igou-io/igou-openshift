@@ -30,6 +30,17 @@ spec:
   ingress:
     type: Route
     host: orchestrator.apps.ocp.igou.systems
+  # File uploads land in the orchestrator-files bucket on rustfs-cold
+  # (declared in igou-inventory host_vars/rustfs-cold.yml). Without this
+  # section the operator omits file storage and uploads return HTTP 503.
+  fileStorage:
+    endpointURL: https://truenas.igou.systems:20292
+    bucketName: orchestrator-files
+    region: us-east-1 # operator default; RustFS ignores region but the field is signed
+    verifySSL: true # endpoint presents a CA-trusted certificate
+    usePathStyle: true
+    credentialSecretRef:
+      name: orchestrator-files-s3-credentials
   secrets:
     initialAdminPasswordSecretRef:
       name: automation-orchestrator-admin-password
