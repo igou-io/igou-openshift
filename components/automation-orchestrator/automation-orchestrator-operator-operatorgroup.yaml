@@ -1,0 +1,11 @@
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: automation-orchestrator-operator
+  namespace: automation-orchestrator
+  annotations:
+    argocd.argoproj.io/sync-wave: '1'
+spec: {}
+# No targetNamespaces => AllNamespaces install mode. The automation
+# orchestrator operator only supports cluster-scoped installation (the CSV
+# rejects OwnNamespace/SingleNamespace/MultiNamespace).

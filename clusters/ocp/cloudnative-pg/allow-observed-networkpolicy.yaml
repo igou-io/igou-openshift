@@ -55,6 +55,7 @@ spec:
               - key: kubernetes.io/metadata.name
                 operator: In
                 values:
+                  - automation-orchestrator
                   - forgejo
                   - quay-enterprise
                   - rhdh
@@ -93,6 +94,7 @@ spec:
               - key: kubernetes.io/metadata.name
                 operator: In
                 values:
+                  - automation-orchestrator
                   - forgejo
                   - quay-enterprise
                   - rhdh

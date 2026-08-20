@@ -1,0 +1,69 @@
+---
+# PostgreSQL for automation orchestrator. Mirrors the resource set aapctl's
+# CloudNativePG path provisions: one cluster, the backend database via initdb,
+# a `temporal` role, and Database CRs for temporal/temporal_visibility (the
+# operator expects temporal_visibility to exist with the temporal credentials).
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: orchestrator-pg
+  namespace: automation-orchestrator
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: '3'
+spec:
+  instances: 1
+  # Single-instance Postgres on SNO has no HA value to preserve and CNPG's
+  # auto-PDB fires PodDisruptionBudgetAtLimit. Disable it. Re-enable only
+  # if you raise instances to >= 2.
+  enablePDB: false
+  imagePullPolicy: IfNotPresent
+  # Pin to the always-present control-plane host so a rolling restart never
+  # migrates the RWO NVMe-oF PVC to an (ephemeral CAPI) worker node and trips the
+  # democratic-csi Multi-Attach bug. See docs/runbooks/nvmeof-stuck-multiattach.md.
+  affinity:
+    nodeSelector:
+      node-role.kubernetes.io/control-plane: ""
+    podAntiAffinityType: preferred # CNPG default; declared to avoid ArgoCD drift
+  bootstrap:
+    initdb:
+      database: orchestrator
+      owner: orchestrator
+      secret:
+        name: orchestrator-pg-credentials
+  managed:
+    roles:
+      - name: temporal
+        login: true
+        ensure: present
+        # CNPG's defaulting webhook sets these on the managed role —
+        # spelling them out keeps Argo from reporting drift on every refresh.
+        inherit: true
+        connectionLimit: -1
+        passwordSecret:
+          name: temporal-pg-credentials
+        comment: Owner role for the temporal and temporal_visibility databases
+  storage:
+    size: 10Gi
+    storageClass: freenas-nvmeof-ssd-csi
+  monitoring:
+    enablePodMonitor: true
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+  postgresql:
+    parameters:
+      # Sized per the install guide's max_connections table: each backend /
+      # worker replica opens poolSize+maxOverflow (30) connections and the
+      # background worker autoscales 1-5 replicas; 200 matches the aapctl
+      # CloudNativePG default and covers the single-replica sizing below.
+      max_connections: "200"
+  # Barman Cloud Plugin: continuous WAL archiving + backups to the
+  # orchestrator-pg-backup ObjectStore. serverName defaults to the cluster name.
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      enabled: true # operator-defaulted; declared so ArgoCD (SSA) stays Synced
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: orchestrator-pg-backup

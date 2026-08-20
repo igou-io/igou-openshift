@@ -626,6 +626,20 @@ applications:
     source:
       path: clusters/ocp/ansible-automation-platform
 
+  # Automation orchestrator 2026.8 (AAP family, stable OLM channel) with its
+  # CNPG PostgreSQL cluster. After AAP (30): the standalone install works
+  # without AAP, but the intended day-2 integration authenticates against the
+  # gateway and dispatches jobs to controller.
+  automation-orchestrator:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '31'
+    destination:
+      namespace: automation-orchestrator
+    source:
+      path: clusters/ocp/automation-orchestrator
+
   # AAP 2.7 Ansible automation portal (self-service, RHDH/Backstage-based).
   # POC deployment — authenticates against the AAP gateway OAuth app
   # (lab_aap/aap-portal); wave 31 so the gateway (wave 30) is up first.
