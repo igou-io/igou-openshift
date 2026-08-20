@@ -1,0 +1,47 @@
+---
+# Automation orchestrator 2026.8 (standalone deployment model, bring-your-own
+# PostgreSQL via the orchestrator-pg CNPG cluster in this directory). AAP
+# integration (OIDC via the gateway + job dispatch to controller) is a day-2
+# configuration done in the application, not in this CR.
+apiVersion: aap.ansible.com/v1alpha1
+kind: AutomationOrchestrator
+metadata:
+  name: automation-orchestrator
+  namespace: automation-orchestrator
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  postgres:
+    host: orchestrator-pg-rw
+    port: 5432
+    # verify-ca (not verify-full): the CNPG-issued server cert is trusted via
+    # the cluster CA below; matches the aapctl CloudNativePG template.
+    sslMode: verify-ca
+    caCertSecretRef:
+      name: orchestrator-pg-ca # CNPG-generated cluster CA (key ca.crt)
+    backendDatabase:
+      secretRef:
+        name: orchestrator-pg-credentials
+    temporalDatabase:
+      # Also used for the temporal_visibility database.
+      secretRef:
+        name: temporal-pg-credentials
+  ingress:
+    type: Route
+    host: orchestrator.apps.ocp.igou.systems
+  secrets:
+    initialAdminPasswordSecretRef:
+      name: automation-orchestrator-admin-password
+  # Single-replica sizing for the one always-on control-plane node; the
+  # operator defaults are 2 backend / 2 UI / 2 worker. The background worker
+  # keeps its default HPA (1-5 replicas on CPU) and Redis is fixed at 1.
+  backend:
+    replicas: 1
+  ui:
+    replicas: 1
+  worker:
+    replicas: 1
+  temporal:
+    server:
+      replicas: 1

@@ -1,0 +1,26 @@
+---
+# Barman Cloud Plugin object store for orchestrator-pg backups + WAL archiving.
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: orchestrator-pg-backup
+  namespace: automation-orchestrator
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: '2'
+spec:
+  retentionPolicy: "30d"
+  configuration:
+    destinationPath: s3://cnpg-backups/orchestrator-pg
+    endpointURL: https://truenas.igou.systems:20292
+    s3Credentials:
+      accessKeyId:
+        name: cnpg-s3-credentials
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: cnpg-s3-credentials
+        key: ACCESS_SECRET_KEY
+    wal:
+      compression: gzip
+    data:
+      compression: gzip

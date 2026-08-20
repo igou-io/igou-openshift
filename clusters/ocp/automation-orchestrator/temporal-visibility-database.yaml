@@ -1,0 +1,18 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: temporal-visibility
+  namespace: automation-orchestrator
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: '3'
+spec:
+  cluster:
+    name: orchestrator-pg
+  # The automation orchestrator operator expects temporal_visibility to be
+  # reachable with the same credentials as the temporal database. Pre-creating
+  # it here (as aapctl does) avoids granting the temporal role CREATEDB.
+  name: temporal_visibility
+  owner: temporal
+  databaseReclaimPolicy: retain

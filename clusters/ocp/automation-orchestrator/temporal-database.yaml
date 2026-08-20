@@ -1,0 +1,17 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: temporal
+  namespace: automation-orchestrator
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+    argocd.argoproj.io/sync-wave: '3'
+spec:
+  cluster:
+    name: orchestrator-pg
+  # Temporal workflow engine's default store, owned by the managed `temporal`
+  # role whose password comes from temporal-pg-credentials.
+  name: temporal
+  owner: temporal
+  databaseReclaimPolicy: retain

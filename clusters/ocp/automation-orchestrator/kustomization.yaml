@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../../components/automation-orchestrator
+  - orchestrator-pg-credentials-externalsecret.yaml
+  - temporal-pg-credentials-externalsecret.yaml
+  - automation-orchestrator-admin-password-externalsecret.yaml
+  - cnpg-s3-credentials-externalsecret.yaml
+  - orchestrator-pg-backup-objectstore.yaml
+  - orchestrator-pg-cluster.yaml
+  - temporal-database.yaml
+  - temporal-visibility-database.yaml
+  - orchestrator-pg-daily-scheduledbackup.yaml
+  - automation-orchestrator-automationorchestrator.yaml
