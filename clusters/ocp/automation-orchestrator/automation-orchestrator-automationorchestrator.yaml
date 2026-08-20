@@ -44,6 +44,18 @@ spec:
   secrets:
     initialAdminPasswordSecretRef:
       name: automation-orchestrator-admin-password
+  # Outbound SSRF allowlist. The backend rejects any URL resolving to a
+  # private IP (identity provider, integration health checks, and workflow
+  # HTTP steps all ride the same guard), and every lab endpoint resolves
+  # privately - so day-2 AAP SSO/dispatch and the llmkube LLM integrations
+  # depend on these entries. Explicit hosts only (no wildcard support).
+  workflowHttpRequestAllowedHosts:
+    - automation.apps.ocp.igou.systems # AAP gateway: OIDC + job dispatch
+    - gemma-4-e2b-llmkube-system.apps.ocp.igou.systems
+    - qwen3-35b-a3b-llmkube-system.apps.ocp.igou.systems
+    - qwen35-2b-llmkube-system.apps.ocp.igou.systems
+    - qwen38-27b-llmkube-system.apps.ocp.igou.systems
+    - truenas.igou.systems # rustfs S3 + REST steps (backup verification)
   # Single-replica sizing for the one always-on control-plane node; the
   # operator defaults are 2 backend / 2 UI / 2 worker. The background worker
   # keeps its default HPA (1-5 replicas on CPU) and Redis is fixed at 1.
