@@ -368,6 +368,26 @@ applications:
     source:
       path: components/ee-rebuild
 
+    # Tekton's admission webhook defaults fields the manifests omit
+    # (params[].type, taskRef metadata/spec stubs, steps[].computeResources),
+    # which reads as permanent OutOfSync under auto-sync. Ignore exactly those.
+    ignoreDifferences:
+      - group: tekton.dev
+        kind: Pipeline
+        jqPathExpressions:
+          - '.spec.params[]?.type'
+          - '.spec.tasks[]?.params[]?.type'
+          - '.spec.tasks[]?.taskRef.metadata'
+          - '.spec.tasks[]?.taskRef.spec'
+          - '.spec.tasks[]?.taskSpec.metadata'
+          - '.spec.tasks[]?.taskSpec.spec'
+          - '.spec.tasks[]?.taskSpec.steps[]?.computeResources'
+      - group: tekton.dev
+        kind: Task
+        jqPathExpressions:
+          - '.spec.steps[]?.computeResources'
+          - '.spec.params[]?.type'
+
   intel-device-plugins-operator:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
