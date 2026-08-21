@@ -1,0 +1,21 @@
+---
+# Narrowest set that lets the CronJob create a run and lets a human prune
+# by hand with the same identity. Deliberately no access to Pipelines,
+# Tasks, Secrets or anything outside tekton.dev/pipelineruns.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ee-rebuild
+  annotations:
+    argocd.argoproj.io/sync-wave: '0'
+rules:
+  - apiGroups:
+      - tekton.dev
+    resources:
+      - pipelineruns
+    verbs:
+      - create
+      - get
+      - list
+      - watch
+      - delete

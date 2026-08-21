@@ -356,6 +356,18 @@ applications:
         managedFieldsManagers:
           - openshift.io/image-registry-pull-secrets_service-account-controller
 
+  # Weekly Tekton rebuild of the igou-aap-ee-rhel9 execution environment.
+  # Wave 21 so the ci-igou-ansible namespace (pac-tenants, wave 20) exists
+  # first; this app never creates it.
+  ee-rebuild:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '21'
+    destination:
+      namespace: ci-igou-ansible
+    source:
+      path: components/ee-rebuild
+
   intel-device-plugins-operator:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous

@@ -1,0 +1,49 @@
+---
+# yaml-language-server: $schema=https://www.schemastore.org/api/json/catalog.json
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: ansible-builder
+spec:
+  description: >-
+    Creates a build context (Containerfile + dependencies) from an
+    execution-environment.yml spec.
+  workspaces:
+    - name: source
+      description: Source workspace containing the cloned repo.
+  params:
+    - name: FILENAME
+      description: Execution environment file definition.
+      type: string
+      default: "execution-environment.yml"
+    - name: BUILD_CONTEXT
+      description: Execution environment build context.
+      type: string
+      default: "context"
+    - name: OUTPUT_FILENAME
+      description: Name of file to write image definition to (Dockerfile or Containerfile).
+      type: string
+      default: "Containerfile"
+    - name: VERBOSITY
+      description: ansible-builder output verbosity.
+      type: string
+      default: "2"
+    - name: BUILDER_IMAGE
+      description: The location of the ansible-builder image.
+      type: string
+      default: "ghcr.io/ansible/community-ansible-dev-tools:v25.9.0"
+  steps:
+    - name: ansible-builder-create
+      workingDir: $(workspaces.source.path)
+      image: $(params.BUILDER_IMAGE)
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      script: |
+        #!/bin/sh
+        set -eux
+        ansible-builder create \
+          -f "$(params.FILENAME)" \
+          -c "$(params.BUILD_CONTEXT)" \
+          --output-filename "$(params.OUTPUT_FILENAME)" \
+          -v "$(params.VERBOSITY)"
