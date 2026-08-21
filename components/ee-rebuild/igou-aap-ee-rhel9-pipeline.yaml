@@ -1,0 +1,217 @@
+---
+# Scheduled rebuild pipeline for the igou-aap-ee-rhel9 execution environment.
+#
+# This is a standalone, in-cluster twin of igou-ansible's
+# .tekton/igou-aap-ee-rhel9-push.yml. That PipelineRun is a
+# Pipelines-as-Code definition and has never fired: it is gated on a
+# Forgejo push webhook for two paths that have not changed since the
+# tenant was onboarded. PaC also does two things a plain PipelineRun
+# cannot -- it resolves `pipelinesascode.tekton.dev/task` remote task
+# references out of the repo, and it interpolates `{{ ... }}` Repository
+# params (including secret_ref params) into the run at trigger time.
+#
+# Neither is available to a PipelineRun created by a CronJob, so this
+# copy: (a) references the in-cluster `ansible-builder` Task shipped
+# alongside it, (b) carries the non-secret galaxy server settings as
+# literal Pipeline params, and (c) reads the Automation Hub token
+# straight from the `rh-automationhub-credentials` Secret in a prep task
+# that emits the two ANSIBLE_GALAXY_SERVER_*_TOKEN BUILD_ARGS entries as
+# task results. Keep this file in sync with the PaC definition.
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: igou-aap-ee-rhel9
+  annotations:
+    argocd.argoproj.io/sync-wave: '0'
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  description: >-
+    Clone igou-ansible, render the igou-aap-ee-rhel9 execution-environment
+    build context with ansible-builder, build and push the image with
+    buildah, then run an advisory RHACS policy check.
+  workspaces:
+    - name: shared-workspace
+  params:
+    # Literal source coordinates. The PaC run gets these from the webhook
+    # payload ({{ repo_url }} / {{ revision }}); a scheduled run has no
+    # payload, so the upstream GitHub remote and main are hardcoded.
+    - name: REPO_URL
+      type: string
+      default: "https://github.com/igou-io/igou-ansible.git"
+    - name: REVISION
+      type: string
+      default: "main"
+    - name: IMAGE
+      type: string
+      default: "quay.apps.ocp.igou.systems/igou-io/igou-aap-ee-rhel9:latest"
+    # Non-secret galaxy server settings, copied verbatim from the tenant's
+    # Repository params in clusters/ocp/pac-tenants/values.yaml. Server
+    # names use underscores because shell env vars can't have hyphens.
+    - name: ANSIBLE_GALAXY_SERVER_LIST
+      type: string
+      default: "rh_certified,validated,community"
+    - name: ANSIBLE_GALAXY_SERVER_RH_CERTIFIED_URL
+      type: string
+      default: "https://console.redhat.com/api/automation-hub/content/published/"
+    - name: ANSIBLE_GALAXY_SERVER_RH_CERTIFIED_AUTH_URL
+      type: string
+      default: "https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token"
+    - name: ANSIBLE_GALAXY_SERVER_VALIDATED_URL
+      type: string
+      default: "https://console.redhat.com/api/automation-hub/content/validated/"
+    - name: ANSIBLE_GALAXY_SERVER_VALIDATED_AUTH_URL
+      type: string
+      default: "https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token"
+    - name: ANSIBLE_GALAXY_SERVER_COMMUNITY_URL
+      type: string
+      default: "https://galaxy.ansible.com/api/"
+  tasks:
+    - name: fetch-source
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: git-clone
+          - name: namespace
+            value: openshift-pipelines
+      params:
+        - name: URL
+          value: "$(params.REPO_URL)"
+        - name: REVISION
+          value: "$(params.REVISION)"
+        - name: VERBOSE
+          value: "true"
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+
+    - name: ansible-builder
+      runAfter:
+        - fetch-source
+      # In-cluster Task (ansible-builder-task.yaml in this component), not
+      # a PaC remote task reference.
+      taskRef:
+        name: ansible-builder
+        kind: Task
+      params:
+        - name: FILENAME
+          value: "execution-environments/igou-aap-ee-rhel9/execution-environment.yml"
+        - name: BUILD_CONTEXT
+          value: "execution-environments/igou-aap-ee-rhel9/context"
+        - name: OUTPUT_FILENAME
+          value: "Containerfile"
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+
+    # Turns the Automation Hub offline token into the two BUILD_ARGS
+    # entries buildah needs, without the value ever passing through a
+    # Pipeline param, the CronJob manifest, or a log line. Both galaxy
+    # servers authenticate with the same token, hence one secret and two
+    # results. The results do land in this TaskRun's status, which is
+    # namespace-scoped to ci-igou-ansible -- the same blast radius as the
+    # Secret itself.
+    - name: galaxy-auth
+      taskSpec:
+        results:
+          - name: rh-certified-token-arg
+            description: ANSIBLE_GALAXY_SERVER_RH_CERTIFIED_TOKEN=<token> BUILD_ARGS entry.
+          - name: validated-token-arg
+            description: ANSIBLE_GALAXY_SERVER_VALIDATED_TOKEN=<token> BUILD_ARGS entry.
+        steps:
+          - name: emit-build-args
+            # renovate: datasource=docker depName=registry.redhat.io/openshift4/ose-cli
+            image: registry.redhat.io/openshift4/ose-cli:latest@sha256:69762925e16053d77685ff3a08b3b45dd2bfa5d68277851bc6969b368bbd0cb9
+            # The cluster TektonConfig injects runAsNonRoot=true into every
+            # taskrun pod template; this image has no USER, so pin one.
+            securityContext:
+              runAsNonRoot: true
+              runAsUser: 1000
+            env:
+              - name: AH_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: rh-automationhub-credentials
+                    key: token
+            script: |
+              #!/bin/sh
+              set -eu
+              # printf, not echo: no trailing newline in the result value,
+              # and the token is never written to stdout.
+              printf 'ANSIBLE_GALAXY_SERVER_RH_CERTIFIED_TOKEN=%s' "${AH_TOKEN}" \
+                > "$(results.rh-certified-token-arg.path)"
+              printf 'ANSIBLE_GALAXY_SERVER_VALIDATED_TOKEN=%s' "${AH_TOKEN}" \
+                > "$(results.validated-token-arg.path)"
+              echo "emitted 2 galaxy token build args (values not logged)"
+
+    - name: build-image
+      runAfter:
+        - ansible-builder
+        - galaxy-auth
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: buildah
+          - name: namespace
+            value: openshift-pipelines
+      params:
+        - name: IMAGE
+          value: "$(params.IMAGE)"
+        - name: DOCKERFILE
+          value: "Containerfile"
+        - name: CONTEXT
+          value: "execution-environments/igou-aap-ee-rhel9/context"
+        - name: VERBOSE
+          value: "true"
+        - name: BUILD_ARGS
+          value:
+            - "ANSIBLE_GALAXY_SERVER_LIST=$(params.ANSIBLE_GALAXY_SERVER_LIST)"
+            - "ANSIBLE_GALAXY_SERVER_RH_CERTIFIED_URL=$(params.ANSIBLE_GALAXY_SERVER_RH_CERTIFIED_URL)"
+            - "ANSIBLE_GALAXY_SERVER_RH_CERTIFIED_AUTH_URL=$(params.ANSIBLE_GALAXY_SERVER_RH_CERTIFIED_AUTH_URL)"
+            - "$(tasks.galaxy-auth.results.rh-certified-token-arg)"
+            - "ANSIBLE_GALAXY_SERVER_VALIDATED_URL=$(params.ANSIBLE_GALAXY_SERVER_VALIDATED_URL)"
+            - "ANSIBLE_GALAXY_SERVER_VALIDATED_AUTH_URL=$(params.ANSIBLE_GALAXY_SERVER_VALIDATED_AUTH_URL)"
+            - "$(tasks.galaxy-auth.results.validated-token-arg)"
+            - "ANSIBLE_GALAXY_SERVER_COMMUNITY_URL=$(params.ANSIBLE_GALAXY_SERVER_COMMUNITY_URL)"
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+
+    # Advisory RHACS policy check (igou-openshift#549). Evaluates
+    # BUILD+DEPLOY lifecycle policies against the pushed image via
+    # Central's route (egress + rhacs-ci-token secret provisioned by the
+    # pac-tenant chart). Non-blocking: the step always exits 0 and
+    # violations land in the run log. Central's route serves the
+    # RHACS-internal cert, hence --insecure-skip-tls-verify.
+    - name: rhacs-image-check
+      runAfter:
+        - build-image
+      params:
+        - name: IMAGE
+          value: "$(params.IMAGE)"
+      taskSpec:
+        params:
+          - name: IMAGE
+            type: string
+        steps:
+          - name: roxctl
+            image: registry.redhat.io/advanced-cluster-security/rhacs-roxctl-rhel8:4.11.1
+            env:
+              - name: ROX_API_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: rhacs-ci-token
+                    key: rox_api_token
+            script: |
+              #!/bin/sh
+              roxctl image check \
+                --insecure-skip-tls-verify \
+                -e central-stackrox.apps.ocp.igou.systems:443 \
+                --image "$(params.IMAGE)" \
+                || echo "ADVISORY: RHACS policy violations found (non-blocking during soak, igou-openshift#549)"
+              exit 0
