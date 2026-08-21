@@ -1,0 +1,39 @@
+---
+# The pac-tenant chart's `allow-external-egress` policy opens 80/443 to
+# 0.0.0.0/0 but excepts 10.0.0.0/8 and 172.30.0.0/16, and `default-deny-all`
+# covers the rest -- so nothing in ci-igou-ansible can currently reach the
+# kube-apiserver. The build tasks never needed to; this CronJob does
+# (`oc create -f -`), so it gets its own rule.
+#
+# Scoped to the CronJob pod by label, not podSelector: {} -- the build
+# pods keep their existing, apiserver-free egress. Both apiserver forms
+# are allowed: OVN-K evaluates egress against the post-DNAT destination,
+# which for kubernetes.default.svc is the master's node IP on 6443, but
+# the 172.30.0.1:443 ClusterIP form is kept for any path that skips the
+# rewrite. Same shape as clusters/ocp/etcd-backup and the
+# ansible-automation-platform policies.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ee-rebuild-apiserver-egress
+  annotations:
+    argocd.argoproj.io/sync-wave: '0'
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: ee-rebuild
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.10/32
+      ports:
+        - protocol: TCP
+          port: 6443
+    - to:
+        - ipBlock:
+            cidr: 172.30.0.1/32
+      ports:
+        - protocol: TCP
+          port: 443

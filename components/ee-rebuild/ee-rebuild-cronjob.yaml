@@ -1,0 +1,124 @@
+---
+# Weekly rebuild of the igou-aap-ee-rhel9 execution environment.
+#
+# The image is otherwise frozen: its only build trigger is the
+# Pipelines-as-Code PipelineRun in igou-ansible's .tekton/, gated on a
+# Forgejo push touching two EE paths, and it has never fired (zero
+# PipelineRuns have ever existed in this namespace). A weekly rebuild
+# picks up base-image CVE fixes and, once the collections are pinned,
+# proves the pinned set still resolves.
+#
+# CronJob -> PipelineRun rather than a Tekton trigger: no webhook, no
+# Forgejo dependency, and nothing to interpolate at trigger time.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ee-rebuild
+  annotations:
+    argocd.argoproj.io/sync-wave: '1'
+spec:
+  # k8s evaluates cron in UTC unless timeZone is set.
+  schedule: "0 3 * * 0"
+  timeZone: America/New_York
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: ee-rebuild
+        spec:
+          serviceAccountName: ee-rebuild
+          restartPolicy: Never
+          containers:
+            - name: create-pipelinerun
+              # renovate: datasource=docker depName=registry.redhat.io/openshift4/ose-cli
+              image: registry.redhat.io/openshift4/ose-cli:latest@sha256:69762925e16053d77685ff3a08b3b45dd2bfa5d68277851bc6969b368bbd0cb9
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+              env:
+                - name: HOME
+                  value: /tmp
+              volumeMounts:
+                - name: tmp
+                  mountPath: /tmp
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  cpu: 200m
+                  memory: 256Mi
+              command: ["/bin/bash", "-euo", "pipefail", "-c"]
+              args:
+                # This pod only submits the run; it does not wait for it.
+                # Build failures surface as a failed PipelineRun, not a
+                # failed Job.
+                - |
+                  oc create -f - <<'EOF'
+                  apiVersion: tekton.dev/v1
+                  kind: PipelineRun
+                  metadata:
+                    generateName: igou-aap-ee-rhel9-weekly-
+                    labels:
+                      app.kubernetes.io/name: ee-rebuild
+                  spec:
+                    pipelineRef:
+                      name: igou-aap-ee-rhel9
+                    taskRunTemplate:
+                      # Operator-owned SA; the pac-tenant chart already
+                      # attached the Quay push secret to it.
+                      serviceAccountName: pipeline
+                    timeouts:
+                      pipeline: "2h"
+                    taskRunSpecs:
+                      # buildah needs to run as root inside the container.
+                      # The cluster TektonConfig injects
+                      # default-pod-template.securityContext.runAsNonRoot=true
+                      # into every taskrun, which kubelet rejects for this
+                      # image. pipelines-scc is RunAsAny, so dropping
+                      # runAsNonRoot for this task only is safe.
+                      #
+                      # computeResources is explicit because the namespace
+                      # LimitRange defaults containers to 500m/1Gi, and an
+                      # EE build OOMs there. 4 CPU / 8Gi is the LimitRange
+                      # ceiling for this namespace.
+                      - pipelineTaskName: build-image
+                        podTemplate:
+                          securityContext:
+                            runAsNonRoot: false
+                        computeResources:
+                          requests:
+                            cpu: "1"
+                            memory: 2Gi
+                          limits:
+                            cpu: "4"
+                            memory: 8Gi
+                      - pipelineTaskName: ansible-builder
+                        computeResources:
+                          requests:
+                            cpu: 500m
+                            memory: 1Gi
+                          limits:
+                            cpu: "1"
+                            memory: 2Gi
+                    workspaces:
+                      - name: shared-workspace
+                        volumeClaimTemplate:
+                          spec:
+                            accessModes:
+                              - ReadWriteOnce
+                            resources:
+                              requests:
+                                storage: 1Gi
+                  EOF
+          volumes:
+            - name: tmp
+              emptyDir: {}
