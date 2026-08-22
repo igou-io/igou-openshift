@@ -1,0 +1,49 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: apme-grader
+  namespace: apme-grader
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: apme
+      app.kubernetes.io/name: apme
+      app.kubernetes.io/component: engine
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Tekton grade step in ansible-collection-bench: engine gRPC + gateway REST.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ansible-collection-bench
+      ports:
+        - protocol: TCP
+          port: 50051
+        - protocol: TCP
+          port: 8080
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - protocol: UDP
+          port: 5353
+        - protocol: TCP
+          port: 5353
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # galaxy-proxy / dep-audit / collection-health reach galaxy.ansible.com and
+    # upstream package indexes; cluster-internal ranges stay denied.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16

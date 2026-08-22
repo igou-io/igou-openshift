@@ -488,6 +488,20 @@ applications:
     source:
       path: applications/searxng
 
+  # TEMPORARY — APME grading service for ansible-collection-bench evaluation
+  apme-grader:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    # The upstream apme chart does not template metadata.namespace and
+    # kustomize's namespace transformer skips helm-inflated resources, so the
+    # ArgoCD destination has to place them.
+    destination:
+      namespace: apme-grader
+    source:
+      path: applications/apme-grader
+
   jellyfin:
     project: cluster-apps
     annotations:
