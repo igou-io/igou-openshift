@@ -1,0 +1,23 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: apme-grader
+resources:
+  - apme-grader-namespace.yaml
+  - apme-grader-networkpolicy.yaml
+helmCharts:
+  - name: apme
+    namespace: apme-grader
+    version: 0.1.4
+    releaseName: apme
+    repo: https://ansible.github.io/apme
+    valuesInline:
+      image:
+        # Pinned to chart 0.1.4 appVersion so a chart republish cannot drift
+        # the rule set out from under benchmark grading runs.
+        tag: "2026.8.6"
+      # Backend-only: consumers are in-cluster Tekton tasks, not browsers.
+      ui:
+        enabled: false
+      route:
+        enabled: false
