@@ -1,7 +1,11 @@
 {{- range $tenant := .Values.tenants }}
 {{- $ns := include "pac-tenant.namespace" (dict "root" $ "tenant" $tenant) }}
 {{- range $is := ($tenant.imageStreams | default list) }}
-{{- $tag := default "latest" (regexFind ":[^:]+$" $is.from | trimPrefix ":") }}
+{{- /* Local ImageStream tag name. Defaults to the tag in `from`, but can be
+       overridden with `tag:` when the in-cluster tag must stay stable while the
+       upstream ref moves (e.g. a base image whose consumers reference it
+       untagged). */}}
+{{- $tag := $is.tag | default (default "latest" (regexFind ":[^:]+$" $is.from | trimPrefix ":")) }}
 ---
 apiVersion: image.openshift.io/v1
 kind: ImageStream
