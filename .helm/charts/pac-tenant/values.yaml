@@ -95,7 +95,11 @@ defaults:
 #       default for it. Tenants that don't push images get no extra egress.
 #     imageStreams:                                    # optional, OpenShift ImageStream(s) for this tenant.
 #       - name: <imagestream-name>                     # e.g. ee-minimal-rhel9
-#         from: <upstream-image:tag>                   # e.g. registry.redhat.io/.../ee-minimal-rhel9:latest
+#         from: <upstream-image:tag>                   # e.g. registry.redhat.io/.../ee-minimal-rhel9:2.16
+#         # tag: <local-tag>                           # optional, default = the tag parsed off `from` —
+#                                                      # overrides the in-cluster tag name so consumers
+#                                                      # that reference the ImageStream untagged keep
+#                                                      # working when the upstream tag changes.
 #         # scheduled: true                            # optional, default true — re-import on schedule
 #         # referencePolicy: Source                    # optional, default Source — keeps signed chain
 #     params:                                          # optional, passed through to Repository.spec.params.

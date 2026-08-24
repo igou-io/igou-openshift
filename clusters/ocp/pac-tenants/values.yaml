@@ -22,7 +22,17 @@ tenants:
         name: onepassword-lab-forgejo
     imageStreams:
       - name: ee-minimal-rhel9
-        from: registry.redhat.io/ansible-automation-platform-27/ee-minimal-rhel9:latest
+        # Red Hat retired the `latest` tag on this repo -- it ships multiple
+        # ansible-core content streams, so the tag must be explicit
+        # (access.redhat.com/articles/4301321). `2.16` is the GA stream for
+        # AAP 2.7; `2.20` exists but is labelled tech-preview. Both are
+        # floating, so scheduled re-import keeps pulling fresh digests.
+        from: registry.redhat.io/ansible-automation-platform-27/ee-minimal-rhel9:2.16
+        # The in-cluster tag stays `latest`: igou-ansible's
+        # execution-environments/igou-aap-ee-rhel9/execution-environment.yml
+        # sets base_image to this ImageStream without a tag, which buildah
+        # resolves as `:latest`.
+        tag: latest
     secrets:
       serviceAccountSecrets:
         - name: quay-push-config
