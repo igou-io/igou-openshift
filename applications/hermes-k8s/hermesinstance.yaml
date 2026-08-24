@@ -24,8 +24,8 @@ spec:
     # Built from the fork's own 5-stage Dockerfile at c80e5bd17 (the exact
     # tree of the pending upstream PR) and hosted on the cluster's Quay.
     repository: quay.apps.ocp.igou.systems/igou-io/hermes-agent
-    tag: k8s-prod-c80e5bd1
-    digest: sha256:829502ce9f355851d340aa6ec47aef7b67a623484cb13d84d666db074c2e21ad
+    tag: k8s-prod-fae30986
+    digest: sha256:728c7d269a5b93d4ed871bfbef3d9647034f218e74b4ff959e41d860d9bc6c48
     pullPolicy: IfNotPresent
   security:
     # We own the SA: the kubernetes backend needs pod create/get/list/delete
@@ -110,7 +110,7 @@ spec:
   # hermes-dashboard.service used; scrypt BasicAuth comes from hermes-env.
   sidecars:
     - name: dashboard
-      image: quay.apps.ocp.igou.systems/igou-io/hermes-agent@sha256:829502ce9f355851d340aa6ec47aef7b67a623484cb13d84d666db074c2e21ad
+      image: quay.apps.ocp.igou.systems/igou-io/hermes-agent@sha256:728c7d269a5b93d4ed871bfbef3d9647034f218e74b4ff959e41d860d9bc6c48
       imagePullPolicy: IfNotPresent
       args:
         - dashboard
@@ -174,7 +174,7 @@ spec:
     # it copies Hermes-store tokens into the shared CLI file whenever the
     # store's last_refresh is strictly newer. Latest-wins in both directions.
     - name: codex-auth-sync
-      image: quay.apps.ocp.igou.systems/igou-io/hermes-agent@sha256:829502ce9f355851d340aa6ec47aef7b67a623484cb13d84d666db074c2e21ad
+      image: quay.apps.ocp.igou.systems/igou-io/hermes-agent@sha256:728c7d269a5b93d4ed871bfbef3d9647034f218e74b4ff959e41d860d9bc6c48
       command:
         - python3
         - -u
