@@ -1,8 +1,8 @@
 ---
 # Production Hermes on the kubernetes terminal backend (fork build c80e5bd17,
-# david-igou/hermes-agent feat/kubernetes-terminal-backend). Replaces the
-# hermes VM in `applications/hermes-agent` at cutover; until then this runs in
-# parallel in its own namespace.
+# david-igou/hermes-agent feat/kubernetes-terminal-backend). Replaced the
+# hermes VM (applications/hermes-agent, retired 2026-08-24) at the
+# 2026-08-14 cutover.
 #
 # config.raw is the VM's live ~/.hermes/config.yaml reduced to its delta
 # against the shipped defaults (computed with the same image), with:
