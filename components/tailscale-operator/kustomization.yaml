@@ -5,6 +5,7 @@ resources:
   - tailscale-proxies-privileged-clusterrolebinding.yaml
   - operator-oauth-externalsecret.yml
   - igou-io-node-exporter-egress.yml
+  - t3-vscode-egress.yml
 helmCharts:
 - name: tailscale-operator
   includeCRDs: true
