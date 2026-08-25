@@ -14,10 +14,8 @@ spec:
     - Egress
   ingress:
     - from:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: hermes
-        # containerized hermes (applications/hermes-k8s), parallel-run + post-cutover
+        # containerized hermes (applications/hermes-k8s); the hermes VM
+        # namespace was retired 2026-08-24
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: hermes-k8s

@@ -430,17 +430,9 @@ applications:
     source:
       path: clusters/ocp/cloudnative-pg
 
-  hermes-agent:
-    project: cluster-apps
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '20'
-    source:
-      path: applications/hermes-agent
-
   # Container/operator-based hermes (kubernetes terminal backend, Kata
-  # sessions). Runs in parallel with the hermes VM until cutover, when
-  # applications/hermes-agent (the VM) is retired.
+  # sessions). Production since the 2026-08-14 cutover; the hermes VM
+  # (applications/hermes-agent) was retired 2026-08-24.
   hermes-k8s:
     project: cluster-apps
     annotations:
