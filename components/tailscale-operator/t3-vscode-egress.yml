@@ -55,6 +55,13 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
   name: t3-vscode
+  annotations:
+    # Homepage auto-discovery (see igou-docs "Homepage Lab Landing Page").
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: T3 Code
+    gethomepage.dev/group: Applications
+    gethomepage.dev/icon: mdi-robot
+    gethomepage.dev/description: coding-agent GUI
 spec:
   # group/kind/weight below are API-server defaults, stated explicitly so
   # ArgoCD's server-side-apply diff doesn't report the route as forever
