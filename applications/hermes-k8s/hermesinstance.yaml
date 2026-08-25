@@ -166,6 +166,13 @@ spec:
           readOnly: true
         - name: tmp
           mountPath: /tmp
+        # skills.external_dirs entries under /opt/data/agent-repos live on the
+        # workspace PVC; without this mount the dashboard's skill scan silently
+        # drops them (e.g. storescrape) while the agent container sees them.
+        - name: hermes-workspace
+          subPath: repos
+          mountPath: /opt/data/agent-repos
+          readOnly: true
     # OAuth refresh tokens are single-use: when Hermes refreshes its own
     # openai-codex tokens (model calls), the Codex CLI's ~/.codex/auth.json
     # copy of the same lineage goes stale and codex-in-sessions dies with
