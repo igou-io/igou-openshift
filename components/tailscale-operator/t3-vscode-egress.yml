@@ -1,0 +1,82 @@
+---
+# Cluster egress to T3 Code (t3 serve, port 3773) in the devcontainer on the
+# vscode host. The operator replaces this ExternalName Service with a proxy
+# pod that joins the tailnet tagged tag:openshift — the tag the ACL grant
+# (tag:openshift -> vscode tcp/3773) matches. Traffic rides WireGuard to the
+# host, so the backend hop is encrypted even though t3 itself is plain HTTP.
+apiVersion: v1
+kind: Service
+metadata:
+  name: t3-vscode
+  annotations:
+    # MagicDNS name of the vscode host; tracks the device if its tailnet IP
+    # changes.
+    tailscale.com/tailnet-fqdn: "vscode.weasel-alioth.ts.net"
+    # Override the proxy's device tags (default would be tag:k8s).
+    tailscale.com/tags: "tag:openshift"
+    # Readable tailnet device name (default is the generated ts-<svc>-<hash>).
+    tailscale.com/hostname: "ocp-egress-t3-vscode"
+spec:
+  type: ExternalName
+  externalName: placeholder  # rewritten by the operator
+  ports:
+    - name: http
+      port: 3773
+      protocol: TCP
+---
+# HTTPRoute backend: neither the router nor the managed Gateway can route to
+# an ExternalName Service, so this selector Service targets the proxy pod
+# directly (stable tailscale.com/* labels survive pod restarts). Traffic to
+# the pod on 3773 is DNAT'd to t3 on the vscode host. The port name must be
+# http-prefixed for the Gateway to admit WebSocket upgrades (t3 is
+# WebSocket-heavy).
+apiVersion: v1
+kind: Service
+metadata:
+  name: t3-vscode-web
+  labels:
+    app.kubernetes.io/name: t3-vscode-web
+spec:
+  selector:
+    tailscale.com/managed: "true"
+    tailscale.com/parent-resource: t3-vscode
+  ports:
+    - name: http
+      port: 3773
+      targetPort: 3773
+      protocol: TCP
+---
+# LAN clients get a valid *.lan.igou.systems cert without joining the
+# tailnet: https://t3-vscode.lan.igou.systems -> trusted-lan Gateway
+# (10.10.150.3) -> proxy pod -> WireGuard -> vscode:3773. rb5009
+# (igou-inventory) holds the per-hostname A record; auth is t3 pairing
+# tokens. Reachable by every VLAN the tier admits (9/10/99).
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: t3-vscode
+spec:
+  # group/kind/weight below are API-server defaults, stated explicitly so
+  # ArgoCD's server-side-apply diff doesn't report the route as forever
+  # OutOfSync (same wart as the Gateway certificateRefs, #369).
+  parentRefs:
+    - name: trusted-lan
+      namespace: openshift-ingress
+      group: gateway.networking.k8s.io
+      kind: Gateway
+  hostnames:
+    - t3-vscode.lan.igou.systems
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: t3-vscode-web
+          port: 3773
+          group: ""
+          kind: Service
+          weight: 1
+      timeouts:
+        # Long-lived WebSocket sessions — never time the request out.
+        request: 0s
