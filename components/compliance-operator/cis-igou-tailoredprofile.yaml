@@ -1,0 +1,42 @@
+---
+# Tailoring of the stock `ocp4-cis` platform profile (igou-inventory#482).
+#
+# Only the two rules that igou-inventory#283 settled as "exempt, do not
+# remediate" are tailored here. The other five FAILs in #283 are still on the
+# remediation plan and are deliberately left asserting — see the rationale
+# table in this component's README.md.
+#
+# Rule/Variable object names carry the ProfileBundle prefix (`ocp4-`), not the
+# scan prefix (`ocp4-cis-`) that ComplianceCheckResult names use.
+apiVersion: compliance.openshift.io/v1alpha1
+kind: TailoredProfile
+metadata:
+  name: cis-igou
+  namespace: openshift-compliance
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  extends: ocp4-cis
+  title: CIS Benchmark for ocp.igou.systems
+  description: >-
+    ocp4-cis with the two accepted-risk exemptions recorded in
+    igou-inventory#283: operator-reconciled SCCs that set allowedCapabilities,
+    and the audit-forwarding check that only matches the literal `audit`
+    inputRef.
+  disableRules:
+    - name: ocp4-audit-log-forwarding-enabled
+      rationale: >-
+        Audit logs are forwarded to Loki. The ClusterLogForwarder uses a named
+        `audit-api` input scoped to kubeAPI+openshiftAPI, which the rule's
+        literal `audit` inputRef match does not recognise. Reverting to the
+        built-in input also pulls in auditd and ovn, which previously OOM-killed
+        the collector. igou-inventory#283 item 6.
+  setValues:
+    - name: ocp4-var-sccs-with-allowed-capabilities-regex
+      rationale: >-
+        The 12 flagged SCCs are created and reconciled by the nvidia-gpu,
+        kubevirt, netobserv, pipelines and quay operators. Edits revert, and
+        narrowing them breaks GPU, virt, NetObserv and Pipelines workloads.
+        Tailoring the variable is the rule's own remediation guidance.
+        igou-inventory#283 item 5.
+      value: ^privileged$|^hostnetwork-v2$|^restricted-v2$|^restricted-v3$|^nonroot-v2$|^insights-runtime-extractor-scc|^nested-container$|^container-build$|^kubevirt-controller$|^netobserv-ebpf-agent$|^nvidia-|^pipelines-scc$

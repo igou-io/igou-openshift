@@ -7,9 +7,13 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 profiles:
-  - name: ocp4-cis
-    kind: Profile
+  # Tailored platform profile — see cis-igou-tailoredprofile.yaml. Binding a
+  # TailoredProfile renames the platform scan from `ocp4-cis` to `cis-igou`,
+  # so ComplianceCheckResult names change prefix and scan history resets.
+  - name: cis-igou
+    kind: TailoredProfile
     apiGroup: compliance.openshift.io/v1alpha1
+  # Node profile stays stock: neither exempted rule is an ocp4-cis-node rule.
   - name: ocp4-cis-node
     kind: Profile
     apiGroup: compliance.openshift.io/v1alpha1
