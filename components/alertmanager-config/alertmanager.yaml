@@ -44,6 +44,15 @@ route:
         - alertname = PodDisruptionBudgetAtLimit
         - namespace =~ "netobserv|openshift-logging"
       receiver: 'null'
+    # Single-node control plane: this alert's own remediation assumes three
+    # control-plane nodes and ~2/3 memory headroom for failover, which does
+    # not apply to a compact homelab cluster where the master is also the
+    # always-on workload node. Firing continuously since 2026-08-20 after the
+    # llmkube/bench workloads landed (40 re-fires on igou-inventory#671);
+    # informational here, not a remediable condition.
+    - matchers:
+        - alertname = HighOverallControlPlaneMemory
+      receiver: 'null'
     - matchers:
         - severity =~ "critical|warning"
       receiver: eda-github-issue
