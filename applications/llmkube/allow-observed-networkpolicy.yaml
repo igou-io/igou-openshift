@@ -17,6 +17,13 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: hermes
+        # hermes-k8s: the operator-based instance + its kata session pods
+        # (opencode dispatch). Was live-only since the hermes-k8s rollout;
+        # the 2026-08-18 merge resync dropped it and severed inference
+        # mid-dispatch — keep it in git.
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-k8s
       ports:
         - port: 8080
           protocol: TCP
