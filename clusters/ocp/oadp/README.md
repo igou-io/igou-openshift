@@ -82,8 +82,9 @@ backups, whole-namespace restore, scratch-namespace drill via
   the same PR that retires them (igou-inventory#758).
 - **hermes fsfreeze (#636)** — historical: the hermes VM's KubeVirt
   `virt-freezer --freeze` pre-hook failed with `EACCES` on
-  `/home/hermes/.hermes`, leaving its disks crash-consistent. The VM was
-  retired 2026-08-25 (#774); the agent now runs in `hermes-k8s` on the
+  `/home/hermes/.hermes` (root cause: `mkfs.xfs` leaves the filesystem
+  root `unlabeled_t`; fixed in igou-ansible#495), leaving its disks
+  crash-consistent until then. The VM was retired 2026-08-25 (#774); the agent now runs in `hermes-k8s` on the
   `hermes-workspace` RWX PVC (`freenas-nfs-ssd-csi`, snapshot class
   `freenas-nfs-ssd-csi-velero`), which needs no guest freeze.
 
