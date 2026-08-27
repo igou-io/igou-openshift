@@ -1,6 +1,6 @@
 ---
 # Tier-1 stateful apps with no other backup path (DR assessment ❌ list):
-# git data, dashboards, agent VM state, app configs. CNPG databases in
+# git data, dashboards, agent workspace state, app configs. CNPG databases in
 # these namespaces are double-covered (Barman WAL to s3://cnpg-backups is
 # authoritative; the PVC snapshot here is a crash-consistent second copy —
 # kopia dedup keeps the cost low). Cron is UTC: 08:00 = 04:00 ET, clear of
@@ -19,7 +19,7 @@ spec:
       - forgejo
       - gitea-mirror
       - grafana
-      - hermes
+      - hermes-k8s
       - sands-of-time
       - gotify
       - searxng

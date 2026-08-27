@@ -23,7 +23,7 @@ see `docs/runbooks/oadp-restore.md`.
   backup is a self-contained kopia repo on the cold spinners
   (`defaultSnapshotMoveData: true` on the DPA).
 - **VM backups**: the `kubevirt` plugin coordinates VirtualMachine /
-  DataVolume / PVC so the hermes VM restores as a unit (guest-agent
+  DataVolume / PVC so a VM restores as a unit (guest-agent
   freeze when available, else crash-consistent).
 - **Relation to existing layers**: etcd-backup covers cluster state; CNPG
   Barman covers databases point-in-time; the `-detached` snapshot classes
@@ -35,7 +35,7 @@ see `docs/runbooks/oadp-restore.md`.
 
 | Schedule | When | Namespaces | TTL |
 |---|---|---|---|
-| `daily-apps` | 08:00 (04:00 ET) | forgejo, gitea-mirror, grafana, hermes, sands-of-time, gotify, searxng, jellyfin | 30d |
+| `daily-apps` | 08:00 (04:00 ET) | forgejo, gitea-mirror, grafana, hermes-k8s, sands-of-time, gotify, searxng, jellyfin | 30d |
 | `daily-platform` | 08:30 | ansible-automation-platform (Fernet key!), stackrox | 30d |
 | `weekly-heavy` | Sat 06:00 | windows-images, comfyui, openshift-virtualization-os-images | 90d |
 
@@ -73,39 +73,20 @@ backups, whole-namespace restore, scratch-namespace drill via
 
 ## Known issues
 
-- **hermes fsfreeze (#636)**: the failing pre-backup hook is KubeVirt's
-  own, not ours — `virt-controller` stamps every virt-launcher pod with
-  `pre.hook.backup.velero.io/command = virt-freezer --freeze` on container
-  `compute`, and the backup log records `hookSource=annotation
-  hookOnError=Fail`. There is no annotation in git to adjust. On hermes it
-  fails with `guest-fsfreeze-freeze ... failed to open
-  /home/hermes/.hermes: Permission denied`, and the call is all-or-nothing
-  — nothing is frozen. Data movement still completes; the VM disks are
-  crash-consistent (the same consistency the retired ZFS snapshot layer
-  had), and hermes state additionally has the weekly
-  application-consistent tarball from igou-ansible
-  `playbooks/hermes/backup.yml`.
-
-  Worse than one noisy alert: a `PartiallyFailed` backup never publishes
-  `velero_backup_last_successful_timestamp`, and that series is absent for
-  `daily-apps` today, so `VeleroDailyBackupStale`'s `absent()` arm fires
-  permanently alongside `VeleroBackupPartiallyFailed`. Fixing the
-  stale-namespace errors will not clear it.
-
-  The fix is guest-side (igou-ansible / igou-inventory), but the mechanism
-  is **not yet pinned down** — do not guess at it. `/home/hermes/.hermes`
-  is `0700 hermes:hermes` (igou-ansible `playbooks/hermes/setup-os.yml`)
-  under a `/home/hermes` that is also `0700` (`hermes_home_mode` in
-  igou-inventory `group_vars/hermes.yml`), yet plain DAC does not explain
-  the `EACCES`: the CentOS Stream 10 `qemu-guest-agent` unit sets no
-  `User=` and no capability bounding, and the targeted policy already
-  allows `virt_qemu_ga_t self:capability { dac_override dac_read_search }`
-  unconditionally. Diagnose in the guest first — `getenforce`,
-  `ausearch -m AVC -c qemu-ga -ts recent`, `ls -ldZ /home/hermes
-  /home/hermes/.hermes`. A mislabeled mount point is a live candidate:
-  the policy grants `virt_qemu_ga_t` directory access on `mountpoint`
-  types (which `user_home_t` carries) and otherwise only behind the
-  off-by-default `virt_qemu_ga_read_nonsecurity_files` boolean.
+- **Stale namespaces fail the whole schedule**: when a namespace listed
+  in a Schedule no longer exists (the `hermes` VM namespace after #774),
+  every run ends `PartiallyFailed`, and a `PartiallyFailed` backup never
+  publishes `velero_backup_last_successful_timestamp` — so
+  `VeleroDailyBackupStale`'s `absent()` arm fires permanently until one
+  run reaches `Completed`. Remove retired namespaces from the Schedule in
+  the same PR that retires them (igou-inventory#758).
+- **hermes fsfreeze (#636)** — historical: the hermes VM's KubeVirt
+  `virt-freezer --freeze` pre-hook failed with `EACCES` on
+  `/home/hermes/.hermes` (root cause: `mkfs.xfs` leaves the filesystem
+  root `unlabeled_t`; fixed in igou-ansible#495), leaving its disks
+  crash-consistent until then. The VM was retired 2026-08-25 (#774); the agent now runs in `hermes-k8s` on the
+  `hermes-workspace` RWX PVC (`freenas-nfs-ssd-csi`, snapshot class
+  `freenas-nfs-ssd-csi-velero`), which needs no guest freeze.
 
 ## Gotchas
 
