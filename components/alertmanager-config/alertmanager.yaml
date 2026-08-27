@@ -53,6 +53,17 @@ route:
     - matchers:
         - alertname = HighOverallControlPlaneMemory
       receiver: 'null'
+    # The Automation Orchestrator operator labels its namespace for
+    # cluster-monitoring and creates a ServiceMonitor for the backend, but
+    # the backend only serves operator-generated internal mTLS that
+    # Prometheus cannot satisfy — the target has been down since install
+    # (2026-08-20, igou-inventory#674) and is not scrapeable from git.
+    # Dropping the namespace label just moves the same dead target to UWM.
+    - matchers:
+        - alertname = TargetDown
+        - namespace = automation-orchestrator
+        - service = automation-orchestrator-backend
+      receiver: 'null'
     - matchers:
         - severity =~ "critical|warning"
       receiver: eda-github-issue
