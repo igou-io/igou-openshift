@@ -381,6 +381,8 @@ applications:
           - '.spec.tasks[]?.taskRef.spec'
           - '.spec.tasks[]?.taskSpec.metadata'
           - '.spec.tasks[]?.taskSpec.spec'
+          - '.spec.tasks[]?.taskSpec.params[]?.type'
+          - '.spec.tasks[]?.taskSpec.results[]?.type'
           - '.spec.tasks[]?.taskSpec.steps[]?.computeResources'
       - group: tekton.dev
         kind: Task
