@@ -4,7 +4,7 @@ kind: Kustomization
 
 # Purpose-scoped Hermes instance `hermes-assistant` (see README). Shares the operator
 # (ns hermes-operator) and the hermes-agent-root SCC — owned by
-# applications/hermes-operator after the hermes-k8s cutover.
+# applications/hermes-operator.
 #
 # Sync waves: ExternalSecrets -5, ghbroker/PVC 0, HermesInstance 10 — a fresh
 # namespace has no Secrets yet (see hermes-sre).
