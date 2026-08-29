@@ -81,8 +81,7 @@ spec:
     # GHAPP_BROKER_SOCKET bind mount.
     - name: GHAPP_BROKER_URL
       value: http://ghbroker.hermes-assistant.svc.cluster.local:8085
-    # Slack: the shared app's tokens land in hermes-env at cutover (exactly one
-    # instance may hold them); channel config stays in place meanwhile.
+    # Slack: this instance holds the shared app's tokens (see hermes-env).
     - name: SLACK_ALLOWED_USERS
       value: U4ZFYHTU4
     - name: SLACK_HOME_CHANNEL
