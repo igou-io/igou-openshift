@@ -544,9 +544,17 @@ spec:
                 persistentVolumeClaim:
                   claimName: hermes-workspace
               - name: agent-envs
-                secret:
-                  secretName: hermes-session-readonly
+                projected:
                   defaultMode: 0440
+                  sources:
+                    - secret:
+                        name: hermes-session-readonly
+                    - secret:
+                        name: hermes-session-readonly-rk8s
+                    - secret:
+                        name: hermes-session-readonly-routeros
+                    - secret:
+                        name: hermes-session-readonly-truenas
               - name: tmp
                 emptyDir: {}
       tool_loop_guardrails:
