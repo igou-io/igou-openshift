@@ -4,8 +4,8 @@ kind: Kustomization
 
 # Purpose-scoped Hermes instance: SRE / read-only inspection. Every session
 # carries the igou-devenv read-only bundle (ADR-0006) and nothing else. Shares
-# the operator (ns hermes-operator) and the hermes-agent-root SCC with
-# applications/hermes-k8s, which owns both; no Slack socket (shared app stays on
+# the operator (ns hermes-operator) and the hermes-agent-root SCC, owned by
+# applications/hermes-operator; no Slack socket (shared app stays on
 # the interactive instance), reports go out via webhook.
 #
 # Sync waves: ExternalSecrets at -5 so the Secrets exist before the ghbroker

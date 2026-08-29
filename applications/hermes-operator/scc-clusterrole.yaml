@@ -14,17 +14,3 @@ rules:
       - hermes-agent-root
     verbs:
       - use
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: system:openshift:scc:hermes-agent-root
-  namespace: hermes-k8s
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:openshift:scc:hermes-agent-root
-subjects:
-  - kind: ServiceAccount
-    name: hermes-agent
-    namespace: hermes-k8s

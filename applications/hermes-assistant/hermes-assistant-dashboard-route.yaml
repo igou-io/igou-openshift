@@ -9,7 +9,7 @@ metadata:
 spec:
   # The production hostname, taken over from the VM app at cutover
   # (2026-08-14); the VM's Route is removed in the same commit.
-  host: hermes-assistant.apps.ocp.igou.systems
+  host: hermes-dashboard.apps.ocp.igou.systems
   to:
     kind: Service
     # Operator-created Service, named after the HermesInstance.

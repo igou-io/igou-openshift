@@ -1,0 +1,24 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Shared Hermes plumbing, owned once: the hermes-operator chart (ns
+# hermes-operator), the hermes-agent-root SCC and the ClusterRole that lets a
+# namespace bind it. The per-purpose instances (hermes-assistant,
+# hermes-developer, hermes-sre) only carry namespaced objects. Split out of
+# applications/hermes-k8s at the 2026-08-29 cutover.
+#
+# No top-level `namespace:` — the SCC is cluster-scoped and kustomize would
+# stamp a namespace onto it. Requires --enable-helm (build and pipe).
+helmCharts:
+  - name: hermes-operator
+    repo: oci://ghcr.io/paperclipinc/charts
+    version: 0.1.20
+    releaseName: hermes-operator
+    namespace: hermes-operator
+    includeCRDs: true
+
+resources:
+  - operator-namespace.yaml
+  - scc.yaml
+  - scc-clusterrole.yaml
