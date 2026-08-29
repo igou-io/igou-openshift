@@ -117,7 +117,7 @@ spec:
         - name: webhook
           port: 8644
           protocol: TCP
-          targetPort: 8644
+          targetPort: 8645
   # The dashboard is not part of the operator's core statefulset — it runs as
   # a sidecar sharing the data PVC and rendered config (`data`/`config`/`tmp`
   # are operator-defined volumes). Same s6-less invocation the VM's
@@ -248,7 +248,48 @@ spec:
   # bind mounts: the agent sees repos at /opt/data/agent-repos and collected
   # documents at /opt/data/cache/documents; sessions see the same data at
   # /workspace and /output (see terminal.kubernetes.spec below).
+  sidecars:
+    - name: am-relay
+      image: ghcr.io/igou-io/igou-devenv:latest@sha256:e024600e310486582904990028c95881a342cf4569ae02e1de48f0ec7ef24ad2
+      command:
+        - python3
+        - /opt/am-relay/relay.py
+      env:
+        - name: WEBHOOK_SECRET
+          value: hermes-sre-alertmanager-loopback-relay
+        - name: RELAY_PORT
+          value: '8645'
+      ports:
+        - name: am-relay
+          containerPort: 8645
+          protocol: TCP
+      readinessProbe:
+        httpGet:
+          path: /healthz
+          port: 8645
+        periodSeconds: 10
+      resources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+      volumeMounts:
+        - name: am-relay
+          mountPath: /opt/am-relay
+          readOnly: true
   extraVolumes:
+    - name: am-relay
+      configMap:
+        name: hermes-sre-am-relay
     - name: hermes-workspace
       persistentVolumeClaim:
         claimName: hermes-workspace
@@ -388,18 +429,20 @@ spec:
           extra:
             host: 127.0.0.1
             port: 8642
-        # Alertmanager -> agent. No HMAC on the Alertmanager side, so the
-        # NetworkPolicy (ingress from openshift-monitoring only) is the auth,
-        # same principle as the ghbroker. The agent investigates in a
-        # read-only session and posts the finding to Slack itself.
+        # Alertmanager -> am-relay sidecar (:8645, signs) -> this webhook
+        # platform on loopback. Hermes refuses INSECURE_NO_AUTH off-loopback
+        # and Alertmanager cannot sign, hence the relay (am-relay-configmap).
+        # The secret guards only 127.0.0.1:8644 inside the pod; the
+        # NetworkPolicy on :8645 (openshift-monitoring only) is the real auth.
+        # The agent investigates in a read-only session and posts to Slack.
         webhook:
           enabled: true
           extra:
-            host: 0.0.0.0
+            host: 127.0.0.1
             port: 8644
             routes:
               alertmanager:
-                secret: INSECURE_NO_AUTH
+                secret: hermes-sre-alertmanager-loopback-relay
                 deliver: log
                 prompt: |
                   Alertmanager delivered {status} alert(s) (receiver hermes-sre).
