@@ -1,0 +1,35 @@
+---
+# Broker minting policy — the same allowlist and ceilings the VM's broker ran
+# (igou-inventory group_vars/hermes.yml `hermes_ghapp_policy`). deny-not-clamp:
+# requests outside policy are denied, not silently reduced. The allowlist is
+# bounded by what the igou-hermes App is actually installed on — adding a repo
+# here also requires adding it to the App's installations on GitHub.
+#
+# The broker reads policy at startup only; roll the Deployment after changes.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ghbroker-policy
+  namespace: hermes-sre
+data:
+  policy.yaml: |
+    policy:
+      allowed_repos:
+        - david-igou/hermes_github_app_plugin
+        - david-igou/ansible-collection-armbian
+        - david-igou/ansible-collection-devhost
+        - david-igou/ansible-collection-linux_baseline
+        - david-igou/ansible-collection-molecule_provisioners
+        - david-igou/ansible-collection-routeros_configuration
+        - david-igou/ansible-collection-rustfs_configuration
+        - igou-io/igou-ansible
+        - igou-io/igou-containers
+        - igou-io/igou-devenv
+        - igou-io/igou-inventory
+        - igou-io/igou-kubernetes
+        - igou-io/igou-openshift
+      max_permissions:
+        contents: read
+        issues: write
+      default_permissions:
+        contents: read

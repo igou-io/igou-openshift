@@ -1,0 +1,23 @@
+---
+# Shared persistent /workspace for session pods — the container equivalent of
+# the VM's /home/hermes/agent-repos bind mount. The storescrape and
+# sands-of-time crons depend on repo checkouts (and a prepared venv) that
+# outlive any single session, so sessions cannot be pure-emptyDir.
+#
+# RWX (NFS) because concurrent session pods land on different kata nodes and
+# all mount it, exactly like concurrent terminal containers shared the bind
+# mount on the VM. The `output/` subPath doubles as the agent-visible document
+# handoff dir (mounted at /output in sessions and over the agent's
+# cache/documents — see the HermesInstance).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hermes-workspace
+  namespace: hermes-sre
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: freenas-nfs-ssd-csi
+  resources:
+    requests:
+      storage: 50Gi
