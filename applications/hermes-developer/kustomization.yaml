@@ -1,0 +1,32 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Purpose-scoped Hermes instance `hermes-developer` (see README). Shares the operator
+# (ns hermes-operator) and the hermes-agent-root SCC — owned by
+# applications/hermes-operator after the hermes-k8s cutover.
+#
+# Sync waves: ExternalSecrets -5, ghbroker/PVC 0, HermesInstance 10 — a fresh
+# namespace has no Secrets yet (see hermes-sre).
+#
+# NOTE: deliberately no top-level `namespace:` transformer. Every resource
+# below already declares its own namespace, and the transformer would stamp
+# one onto the SecurityContextConstraints too — kustomize has no scope
+# information for that CRD-backed kind and treats it as namespaced.
+
+resources:
+  - namespace.yaml
+  - scc-rbac.yaml
+  - rbac.yaml
+  - default-egressfirewall.yaml
+  - session-networkpolicy.yaml
+  - agent-egress-networkpolicy.yaml
+  - quay-pull-externalsecret.yaml
+  - hermes-env-externalsecret.yaml
+  - hermes-workspace-pvc.yaml
+  - ghbroker-externalsecret.yaml
+  - ghbroker-policy-configmap.yaml
+  - ghbroker-deployment.yaml
+  - ghbroker-networkpolicy.yaml
+  - hermesinstance.yaml
+  - hermes-developer-dashboard-route.yaml

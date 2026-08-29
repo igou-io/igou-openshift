@@ -465,6 +465,36 @@ applications:
         managedFieldsManagers:
           - openshift.io/image-registry-pull-secrets_service-account-controller
 
+  hermes-assistant:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/hermes-assistant
+    # Same OpenShift dockercfg-injection drift as pac-tenants above, on the
+    # git-declared `hermes-agent` SA (imagePullSecrets: quay-local-pull).
+    ignoreDifferences:
+      - group: ""
+        kind: ServiceAccount
+        managedFieldsManagers:
+          - openshift.io/image-registry-pull-secrets_service-account-controller
+
+  hermes-developer:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/hermes-developer
+    # Same OpenShift dockercfg-injection drift as pac-tenants above, on the
+    # git-declared `hermes-agent` SA (imagePullSecrets: quay-local-pull).
+    ignoreDifferences:
+      - group: ""
+        kind: ServiceAccount
+        managedFieldsManagers:
+          - openshift.io/image-registry-pull-secrets_service-account-controller
+
   comfyui:
     project: cluster-apps
     annotations:

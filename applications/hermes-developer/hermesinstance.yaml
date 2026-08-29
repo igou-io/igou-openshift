@@ -17,11 +17,9 @@
 apiVersion: hermes.agent/v1
 kind: HermesInstance
 metadata:
-  name: hermes-sre
-  namespace: hermes-sre
+  name: hermes-developer
+  namespace: hermes-developer
   annotations:
-    # After the ExternalSecrets (-5) and ghbroker/PVC (0): the agent pod
-    # envFrom's hermes-env, and the operator webhook must be warm.
     argocd.argoproj.io/sync-wave: '10'
 spec:
   image:
@@ -82,14 +80,12 @@ spec:
     # client, which understands GHAPP_BROKER_URL). Replaces the VM's
     # GHAPP_BROKER_SOCKET bind mount.
     - name: GHAPP_BROKER_URL
-      value: http://ghbroker.hermes-sre.svc.cluster.local:8085
+      value: http://ghbroker.hermes-developer.svc.cluster.local:8085
   envFrom:
     # API_SERVER_KEY, dashboard BasicAuth trio, Slack tokens,
     # OPENCODE_GO_API_KEY — see hermes-env-externalsecret.yaml.
     - secretRef:
         name: hermes-env
-    - secretRef:
-        name: hermes-sre-slack-webhook
   # Agent container requests/limits (hermes-k8s ran unbounded; peaked 1.58Gi).
   resources:
     requests:
@@ -114,10 +110,6 @@ spec:
           port: 9119
           protocol: TCP
           targetPort: 9119
-        - name: webhook
-          port: 8644
-          protocol: TCP
-          targetPort: 8644
   # The dashboard is not part of the operator's core statefulset — it runs as
   # a sidecar sharing the data PVC and rendered config (`data`/`config`/`tmp`
   # are operator-defined volumes). Same s6-less invocation the VM's
@@ -329,7 +321,7 @@ spec:
           - spotify
         slack:
           - spotify
-      max_concurrent_sessions: '2'
+      max_concurrent_sessions: '0'
       memory:
         write_approval: true
       moa:
@@ -388,38 +380,6 @@ spec:
           extra:
             host: 127.0.0.1
             port: 8642
-        # Alertmanager -> agent. No HMAC on the Alertmanager side, so the
-        # NetworkPolicy (ingress from openshift-monitoring only) is the auth,
-        # same principle as the ghbroker. The agent investigates in a
-        # read-only session and posts the finding to Slack itself.
-        webhook:
-          enabled: true
-          extra:
-            host: 0.0.0.0
-            port: 8644
-            routes:
-              alertmanager:
-                secret: INSECURE_NO_AUTH
-                deliver: log
-                prompt: |
-                  Alertmanager delivered {status} alert(s) (receiver hermes-sre).
-                  Group labels: {groupLabels}
-                  Common labels: {commonLabels}
-                  Common annotations: {commonAnnotations}
-                  Alerts: {alerts}
-
-                  You are the read-only SRE instance: every session already has
-                  KUBECONFIG contexts ocp-cluster-reader and rk8s-cluster-reader,
-                  RouterOS (ROUTEROS_*) and TrueNAS (TRUENAS_*) read access, and
-                  Prometheus/Thanos and Loki are reachable with the OCP token.
-                  Investigate the FIRING alerts (skip resolved ones unless they
-                  need a closing note): find the affected component, the likely
-                  cause and the evidence. You cannot change anything; do not try.
-                  Then post a concise Slack message (<= 20 lines: alert, impact,
-                  evidence, suggested fix, links) with:
-                    curl -sS -X POST -H 'Content-Type: application/json' \
-                      -d "$(jq -cn --arg t "$MSG" '{text:$t}')" "$SLACK_WEBHOOK_URL"
-                  If the alert is noise, say so in one line and post that.
       plugins:
         disabled: []
         enabled:
@@ -455,7 +415,7 @@ spec:
         timeout: 300
         lifetime_seconds: 1800
         kubernetes:
-          namespace: hermes-sre
+          namespace: hermes-developer
           # Kata cold starts exceed the 120 s default.
           ready_timeout_seconds: 300
           # `spec` is the whole session PodSpec, posted verbatim. Sessions are
@@ -493,7 +453,7 @@ spec:
               - name: workspace
                 # :latest is digest-pinned (Renovate moves it); carries the
                 # coding-agent CLIs and ghapp >= 0.3.0 (GHAPP_BROKER_URL client).
-                image: ghcr.io/igou-io/igou-devenv:latest@sha256:e024600e310486582904990028c95881a342cf4569ae02e1de48f0ec7ef24ad2
+                image: ghcr.io/igou-io/igou-devenv:latest@sha256:139286ee225e8ca5dae53898620a928f78d53dea395fef57674655e453b38c4d
                 command:
                   - sleep
                   - infinity
@@ -509,22 +469,22 @@ spec:
                   # mode on this; git pushes mint via the system-gitconfig
                   # credential helper automatically.
                   - name: GHAPP_BROKER_URL
-                    value: http://ghbroker.hermes-sre.svc.cluster.local:8085
-                  # Scope: the igou-devenv read-only bundle (envs/read-only.env),
-                  # rendered by the hermes-session-readonly ExternalSecret into
-                  # /etc/agent/envs and activated by ~/.bashrc.d/05-agent-profile.sh
-                  # (BASH_ENV) in every session shell. No 1Password in the pod;
-                  # no Forgejo/GitHub write identity for this instance.
-                  - name: AGENT_PROFILE
-                    value: read-only
-                  - name: AGENT_PROFILE_ENVDIR
-                    value: /etc/agent/envs
-                  - name: SLACK_WEBHOOK_URL
+                    value: http://ghbroker.hermes-developer.svc.cluster.local:8085
+                  # opencode's hosted-model key, same forward the VM's
+                  # docker_forward_env did. Same accepted tradeoff as the
+                  # gcp-sa mount: session-visible by design.
+                  - name: FORGEJO_URL
+                    value: http://forgejo-http.forgejo.svc.cluster.local:3000
+                  - name: FORGEJO_USERNAME
                     valueFrom:
                       secretKeyRef:
-                        name: hermes-sre-slack-webhook
-                        key: SLACK_WEBHOOK_URL
-                  # opencode's hosted-model key: session-visible by design.
+                        key: FORGEJO_USERNAME
+                        name: hermes-env
+                  - name: FORGEJO_TOKEN
+                    valueFrom:
+                      secretKeyRef:
+                        key: FORGEJO_TOKEN
+                        name: hermes-env
                   - name: OPENCODE_GO_API_KEY
                     valueFrom:
                       secretKeyRef:
@@ -570,9 +530,6 @@ spec:
                   - name: workspace
                     subPath: home/.agents/skills
                     mountPath: /home/igou/.agents/skills
-                  - name: agent-envs
-                    mountPath: /etc/agent/envs
-                    readOnly: true
                   - name: tmp
                     mountPath: /tmp
                 resources:
@@ -594,18 +551,6 @@ spec:
               - name: workspace
                 persistentVolumeClaim:
                   claimName: hermes-workspace
-              - name: agent-envs
-                projected:
-                  defaultMode: 0440
-                  sources:
-                    - secret:
-                        name: hermes-session-readonly
-                    - secret:
-                        name: hermes-session-readonly-rk8s
-                    - secret:
-                        name: hermes-session-readonly-routeros
-                    - secret:
-                        name: hermes-session-readonly-truenas
               - name: tmp
                 emptyDir: {}
       tool_loop_guardrails:
