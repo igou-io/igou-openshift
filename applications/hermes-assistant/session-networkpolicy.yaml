@@ -1,0 +1,111 @@
+# Network lockdown for Hermes session pods.
+#
+# RBAC and pod-shape hardening address the filesystem and ServiceAccount-token
+# attack surface; this is the network half. Session pods are selected by
+# `app.kubernetes.io/managed-by: hermes-agent`, which the backend stamps onto
+# every pod it renders.
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hermes-session-default-deny
+  namespace: hermes-assistant
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/managed-by: hermes-agent
+  policyTypes: ["Ingress", "Egress"]
+  ingress: []
+  egress:
+    # Cluster DNS. OpenShift CoreDNS listens on 5353 behind the :53 Service
+    # and OVN-K applies the DNAT before egress ACLs, so BOTH ports are needed
+    # (same finding as the agent egress policy).
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - protocol: UDP
+          port: 5353
+        - protocol: TCP
+          port: 5353
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+---
+# Sessions need the public internet (pip, npm, git, the storescrape targets).
+# Everything RFC1918/link-local stays denied, which on this cluster covers the
+# node, service and pod networks. The EgressFirewall in this directory further
+# narrows off-cluster egress to the allowlisted dnsNames.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hermes-session-allow-internet
+  namespace: hermes-assistant
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/managed-by: hermes-agent
+  policyTypes: ["Egress"]
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 169.254.0.0/16   # link-local
+              - 100.64.0.0/10    # carrier-grade NAT
+
+---
+# In-cluster services the crons rely on: the sands-of-time tracker (ClusterIP
+# :80 → pod :8000; post-DNAT port again). The VM allowed this from its
+# terminal containers via nftables + a tirith plain-HTTP trust entry.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hermes-session-cluster-services
+  namespace: hermes-assistant
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/managed-by: hermes-agent
+  policyTypes: ["Egress"]
+  egress:
+    # In-cluster Forgejo (http/git-over-http): dispatched agents push their
+    # work to the sandbox org via forgejo-http.forgejo.svc:3000.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: forgejo
+      ports:
+        - protocol: TCP
+          port: 3000
+    # In-cluster LLM endpoints (llmkube OpenAI-compatible servers): lets a
+    # session run opencode against qwen38-27b et al with no cloud key.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: llmkube-system
+      ports:
+        - protocol: TCP
+          port: 8080
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: sands-of-time
+      ports:
+        - protocol: TCP
+          port: 8000
+    # ghapp broker (same namespace): runtime GitHub App tokens. The
+    # allow-internet policy excludes RFC1918, so pod-to-pod needs this.
+    - to:
+        - podSelector:
+            matchLabels:
+              app: ghbroker
+      ports:
+        - protocol: TCP
+          port: 8085

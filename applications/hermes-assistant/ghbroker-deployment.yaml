@@ -1,0 +1,112 @@
+---
+# ghapp token broker — the container replacement for the VM's ghbroker system
+# service. Holds the igou-hermes App private key; the agent and its session
+# pods only ever see single-repo, permission-clamped ~1h tokens, requested
+# over plain HTTP (GHAPP_BROKER_URL). The TCP listener is unauthenticated by
+# design — reachability is the client authorization, exactly as socket
+# possession was on the VM — so ghbroker-networkpolicy.yaml is load-bearing:
+# only the agent pod and session pods may reach :8085.
+#
+# Image: built from david-igou/hermes_github_app_plugin feat/http-broker
+# (PR #32) with Containerfile.broker; rebuild from a release tag once merged.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ghbroker
+  namespace: hermes-assistant
+  labels:
+    app: ghbroker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ghbroker
+  template:
+    metadata:
+      labels:
+        app: ghbroker
+    spec:
+      # The broker does not trap SIGTERM (stdlib serve_forever); it is
+      # stateless, so skip the pointless 30 s wait and let it be killed.
+      terminationGracePeriodSeconds: 2
+      # The image lives on the cluster's own Quay (not anonymously pullable).
+      imagePullSecrets:
+        - name: quay-local-pull
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: ghbroker
+          image: quay.apps.ocp.igou.systems/igou-io/ghapp-broker@sha256:76e2316532b461309f86cdff268b537f5ebfcd0127b51a5c5bc7120fde7727b5
+          args:
+            - --listen
+            - 0.0.0.0:8085
+            - --policy
+            - /etc/ghbroker-policy/policy.yaml
+          env:
+            - name: GHAPP_CONFIG
+              value: /etc/ghbroker/config.yaml
+          ports:
+            - name: broker
+              containerPort: 8085
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: broker
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: broker
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: config
+              mountPath: /etc/ghbroker
+              readOnly: true
+            - name: policy
+              mountPath: /etc/ghbroker-policy
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: config
+          secret:
+            secretName: ghbroker-config
+            defaultMode: 0440
+        - name: policy
+          configMap:
+            name: ghbroker-policy
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ghbroker
+  namespace: hermes-assistant
+  labels:
+    app: ghbroker
+spec:
+  type: ClusterIP
+  selector:
+    app: ghbroker
+  ports:
+    - name: broker
+      protocol: TCP
+      port: 8085
+      targetPort: broker

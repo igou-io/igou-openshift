@@ -1,0 +1,57 @@
+# Network scoping for the ghapp broker. The TCP listener is unauthenticated —
+# these policies ARE the client authorization (see ghbroker-deployment.yaml).
+---
+# Only the agent pod and session pods may reach the broker.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ghbroker-ingress
+  namespace: hermes-developer
+spec:
+  podSelector:
+    matchLabels:
+      app: ghbroker
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: hermes-developer
+              app.kubernetes.io/name: hermes-agent
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/managed-by: hermes-agent
+      ports:
+        - protocol: TCP
+          port: 8085
+
+---
+# The broker itself only needs DNS and GitHub (443; the EgressFirewall narrows
+# off-cluster 443 to the allowlisted dnsNames, incl. api.github.com).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ghbroker-egress
+  namespace: hermes-developer
+spec:
+  podSelector:
+    matchLabels:
+      app: ghbroker
+  policyTypes: ["Egress"]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - protocol: UDP
+          port: 5353
+        - protocol: TCP
+          port: 5353
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - ports:
+        - protocol: TCP
+          port: 443

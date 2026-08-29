@@ -88,6 +88,16 @@ spec:
     # OPENCODE_GO_API_KEY — see hermes-env-externalsecret.yaml.
     - secretRef:
         name: hermes-env
+    - secretRef:
+        name: hermes-sre-slack-webhook
+  # Agent container requests/limits (hermes-k8s ran unbounded; peaked 1.58Gi).
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 3Gi
   networking:
     service:
       type: ClusterIP
@@ -104,6 +114,10 @@ spec:
           port: 9119
           protocol: TCP
           targetPort: 9119
+        - name: webhook
+          port: 8644
+          protocol: TCP
+          targetPort: 8644
   # The dashboard is not part of the operator's core statefulset — it runs as
   # a sidecar sharing the data PVC and rendered config (`data`/`config`/`tmp`
   # are operator-defined volumes). Same s6-less invocation the VM's
@@ -374,6 +388,38 @@ spec:
           extra:
             host: 127.0.0.1
             port: 8642
+        # Alertmanager -> agent. No HMAC on the Alertmanager side, so the
+        # NetworkPolicy (ingress from openshift-monitoring only) is the auth,
+        # same principle as the ghbroker. The agent investigates in a
+        # read-only session and posts the finding to Slack itself.
+        webhook:
+          enabled: true
+          extra:
+            host: 0.0.0.0
+            port: 8644
+            routes:
+              alertmanager:
+                secret: INSECURE_NO_AUTH
+                deliver: log
+                prompt: |
+                  Alertmanager delivered {status} alert(s) (receiver hermes-sre).
+                  Group labels: {groupLabels}
+                  Common labels: {commonLabels}
+                  Common annotations: {commonAnnotations}
+                  Alerts: {alerts}
+
+                  You are the read-only SRE instance: every session already has
+                  KUBECONFIG contexts ocp-cluster-reader and rk8s-cluster-reader,
+                  RouterOS (ROUTEROS_*) and TrueNAS (TRUENAS_*) read access, and
+                  Prometheus/Thanos and Loki are reachable with the OCP token.
+                  Investigate the FIRING alerts (skip resolved ones unless they
+                  need a closing note): find the affected component, the likely
+                  cause and the evidence. You cannot change anything; do not try.
+                  Then post a concise Slack message (<= 20 lines: alert, impact,
+                  evidence, suggested fix, links) with:
+                    curl -sS -X POST -H 'Content-Type: application/json' \
+                      -d "$(jq -cn --arg t "$MSG" '{text:$t}')" "$SLACK_WEBHOOK_URL"
+                  If the alert is noise, say so in one line and post that.
       plugins:
         disabled: []
         enabled:
@@ -473,6 +519,11 @@ spec:
                     value: read-only
                   - name: AGENT_PROFILE_ENVDIR
                     value: /etc/agent/envs
+                  - name: SLACK_WEBHOOK_URL
+                    valueFrom:
+                      secretKeyRef:
+                        name: hermes-sre-slack-webhook
+                        key: SLACK_WEBHOOK_URL
                   # opencode's hosted-model key: session-visible by design.
                   - name: OPENCODE_GO_API_KEY
                     valueFrom:

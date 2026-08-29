@@ -57,6 +57,13 @@ route:
         - severity =~ "critical|warning"
       receiver: eda-github-issue
       continue: true
+    # Read-only SRE Hermes instance investigates and posts to Slack itself
+    # (applications/hermes-sre). continue: the Gotify/Slack fan-out below is
+    # unchanged.
+    - matchers:
+        - severity =~ "critical|warning"
+      receiver: hermes-sre
+      continue: true
     - matchers:
         - severity = critical
       receiver: gotify-and-slack-critical
@@ -68,6 +75,11 @@ route:
       receiver: 'null'
 receivers:
   - name: 'null'
+  - name: hermes-sre
+    webhook_configs:
+      - url: http://hermes-sre.hermes-sre.svc:8644/webhooks/alertmanager
+        send_resolved: true
+        max_alerts: 10
   - name: gotify
     webhook_configs:
       - url: http://alertmanager-gotify-bridge.gotify.svc:8080/gotify_webhook
