@@ -13,6 +13,8 @@ resources:
   - onepassword-lab-github-clustersecretstore.yaml
   - onepassword-lab-s3-clustersecretstore.yaml
   - onepassword-lab-routeros-clustersecretstore.yaml
+  - onepassword-lab-rk8s-clustersecretstore.yaml
+  - onepassword-lab-truenas-clustersecretstore.yaml
   - onepassword-lab-external-api-keys-clustersecretstore.yaml
   - onepassword-lab-aap-clustersecretstore.yaml
   - onepassword-lab-serviceaccounts-clustersecretstore.yaml
