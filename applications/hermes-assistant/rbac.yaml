@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: hermes-session-noperms
+  namespace: hermes-assistant
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: hermes-session-exec
+  namespace: hermes-assistant
+rules:
+# Lifecycle of session pods. `get` also resolves the agent's own pod for the
+# ownerReference; `list` enables the startup orphan sweep (label-scoped).
+- apiGroups:
+  - ''
+  resources:
+  - pods
+  verbs:
+  - create
+  - get
+  - list
+  - delete
+# BOTH verbs: the python client opens exec as a websocket-upgrading GET, but
+# the API server also authorizes `create` on the exec subresource.
+- apiGroups:
+  - ''
+  resources:
+  - pods/exec
+  verbs:
+  - get
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: hermes-session-exec
+  namespace: hermes-assistant
+subjects:
+- kind: ServiceAccount
+  name: hermes-agent
+  namespace: hermes-assistant
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: hermes-session-exec

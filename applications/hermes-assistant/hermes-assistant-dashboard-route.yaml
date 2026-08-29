@@ -2,18 +2,18 @@
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: hermes-sre-dashboard
-  namespace: hermes-sre
+  name: hermes-assistant-dashboard
+  namespace: hermes-assistant
   labels:
-    app: hermes-sre
+    app: hermes-assistant
 spec:
   # The production hostname, taken over from the VM app at cutover
   # (2026-08-14); the VM's Route is removed in the same commit.
-  host: hermes-sre.apps.ocp.igou.systems
+  host: hermes-assistant.apps.ocp.igou.systems
   to:
     kind: Service
     # Operator-created Service, named after the HermesInstance.
-    name: hermes-sre
+    name: hermes-assistant
     weight: 100
   port:
     targetPort: dashboard
@@ -30,12 +30,12 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: hermes-sre-router-ingress
-  namespace: hermes-sre
+  name: hermes-assistant-router-ingress
+  namespace: hermes-assistant
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/instance: hermes-sre
+      app.kubernetes.io/instance: hermes-assistant
       app.kubernetes.io/name: hermes-agent
   policyTypes:
     - Ingress
@@ -47,29 +47,3 @@ spec:
       ports:
         - protocol: TCP
           port: 9119
----
-# Alertmanager (openshift-monitoring) -> Hermes webhook platform (:8644).
-# This ingress rule IS the authorization for the INSECURE_NO_AUTH route.
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: hermes-sre-alertmanager-webhook
-  namespace: hermes-sre
-spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/instance: hermes-sre
-      app.kubernetes.io/name: hermes-agent
-  policyTypes:
-    - Ingress
-  ingress:
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: openshift-monitoring
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: alertmanager
-      ports:
-        - protocol: TCP
-          port: 8644
