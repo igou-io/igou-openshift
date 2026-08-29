@@ -1,0 +1,563 @@
+---
+# Production Hermes on the kubernetes terminal backend (fork build c80e5bd17,
+# david-igou/hermes-agent feat/kubernetes-terminal-backend). Replaced the
+# hermes VM (applications/hermes-agent, retired 2026-08-24) at the
+# 2026-08-14 cutover.
+#
+# config.raw is the VM's live ~/.hermes/config.yaml reduced to its delta
+# against the shipped defaults (computed with the same image), with:
+#   * the docker/podman terminal block replaced by the kubernetes backend
+#     (per-session Kata VMs on the kata-oc pool),
+#   * VM filesystem paths rewritten to their /opt/data equivalents,
+#   * the storescrape quick_commands dropped (they exec VM-host wrappers).
+# NOTE the operational flip: on the VM the UI owned config.yaml; here this CR
+# owns it — the rendered config is copied over config.yaml at every pod start,
+# so durable config changes belong in git. Sessions, memory, skills and the
+# cron store still live (and persist) on the data PVC.
+apiVersion: hermes.agent/v1
+kind: HermesInstance
+metadata:
+  name: hermes-sre
+  namespace: hermes-sre
+spec:
+  image:
+    # Built from the fork's own 5-stage Dockerfile at c80e5bd17 (the exact
+    # tree of the pending upstream PR) and hosted on the cluster's Quay.
+    repository: quay.apps.ocp.igou.systems/igou-io/hermes-agent
+    tag: k8s-prod-fae30986
+    digest: sha256:728c7d269a5b93d4ed871bfbef3d9647034f218e74b4ff959e41d860d9bc6c48
+    pullPolicy: IfNotPresent
+  security:
+    # We own the SA: the kubernetes backend needs pod create/get/list/delete
+    # and pods/exec get+create, which the operator's RBACSpec cannot express.
+    rbac:
+      createServiceAccount: false
+      serviceAccountName: hermes-agent
+    # The upstream s6 image refuses an arbitrary UID — its stage2 bootstrap
+    # must start as container-root and remaps the hermes user to HERMES_UID
+    # itself. runAsUser: 0 is explicit so restricted-v2 cannot win admission
+    # and rewrite the UID; the hermes-agent-root SCC admits it.
+    podSecurityContext:
+      runAsNonRoot: false
+      runAsUser: 0
+      # The agent drops to uid 1000 but the projected SA token is root-only;
+      # fsGroup makes kubelet group-own the projected volume.
+      fsGroup: 1000
+      seccompProfile:
+        type: RuntimeDefault
+    containerSecurityContext:
+      # s6-overlay writes to /run and /var/run during boot.
+      readOnlyRootFilesystem: false
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+        add:
+          # s6 stage2: chown /opt/data, then drop privileges to hermes.
+          - CHOWN
+          - DAC_OVERRIDE
+          - FOWNER
+          - SETGID
+          - SETUID
+  # NOTE: no HERMES_UID/HERMES_GID here — the operator injects them itself,
+  # and a duplicate definition makes its server-side apply loop on conflicts.
+  env:
+    # Cron expressions in the agent's cron store are local-time; the VM ran
+    # America/New_York and the schedules (storescrape, sands-of-time) assume it.
+    - name: TZ
+      value: America/New_York
+    - name: GATEWAY_HEALTH_URL
+      value: http://127.0.0.1:8642
+    - name: SEARXNG_URL
+      value: http://searxng.searxng.svc.cluster.local:8080
+    - name: FIRECRAWL_API_URL
+      value: http://firecrawl-api.firecrawl.svc.cluster.local:3002
+    - name: HERMES_DASHBOARD_FILES_ROOT
+      value: /opt/data/dashboard-files
+    # ghapp broker over HTTP (needs hermes_github_app_plugin >= the PR#32
+    # client, which understands GHAPP_BROKER_URL). Replaces the VM's
+    # GHAPP_BROKER_SOCKET bind mount.
+    - name: GHAPP_BROKER_URL
+      value: http://ghbroker.hermes-sre.svc.cluster.local:8085
+  envFrom:
+    # API_SERVER_KEY, dashboard BasicAuth trio, Slack tokens,
+    # OPENCODE_GO_API_KEY — see hermes-env-externalsecret.yaml.
+    - secretRef:
+        name: hermes-env
+  networking:
+    service:
+      type: ClusterIP
+      ports:
+        - name: gateway
+          port: 8443
+          protocol: TCP
+          targetPort: 8443
+        - name: metrics
+          port: 9090
+          protocol: TCP
+          targetPort: 9090
+        - name: dashboard
+          port: 9119
+          protocol: TCP
+          targetPort: 9119
+  # The dashboard is not part of the operator's core statefulset — it runs as
+  # a sidecar sharing the data PVC and rendered config (`data`/`config`/`tmp`
+  # are operator-defined volumes). Same s6-less invocation the VM's
+  # hermes-dashboard.service used; scrypt BasicAuth comes from hermes-env.
+  sidecars:
+    - name: dashboard
+      image: quay.apps.ocp.igou.systems/igou-io/hermes-agent@sha256:728c7d269a5b93d4ed871bfbef3d9647034f218e74b4ff959e41d860d9bc6c48
+      imagePullPolicy: IfNotPresent
+      args:
+        - dashboard
+        - --host
+        - 0.0.0.0
+        - --port
+        - '9119'
+        - --skip-build
+        - --no-open
+      env:
+        - name: HERMES_HOME
+          value: /opt/data
+        - name: HERMES_UID
+          value: '1000'
+        - name: HERMES_GID
+          value: '1000'
+        - name: TZ
+          value: America/New_York
+        - name: HERMES_DASHBOARD_FILES_ROOT
+          value: /opt/data/dashboard-files
+      envFrom:
+        - secretRef:
+            name: hermes-env
+      ports:
+        - name: dashboard
+          containerPort: 9119
+          protocol: TCP
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: '1'
+          memory: 1Gi
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: false
+        capabilities:
+          drop:
+            - ALL
+          add:
+            - CHOWN
+            - DAC_OVERRIDE
+            - FOWNER
+            - SETGID
+            - SETUID
+      volumeMounts:
+        - name: data
+          mountPath: /opt/data
+        - name: config
+          mountPath: /opt/data/config.yaml
+          subPath: config.yaml
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+    # OAuth refresh tokens are single-use: when Hermes refreshes its own
+    # openai-codex tokens (model calls), the Codex CLI's ~/.codex/auth.json
+    # copy of the same lineage goes stale and codex-in-sessions dies with
+    # "refresh token was already used". Hermes only ever READS the CLI file
+    # (adopt-on-stale, hermes_cli/auth.py), so this sidecar closes the loop:
+    # it copies Hermes-store tokens into the shared CLI file whenever the
+    # store's last_refresh is strictly newer. Latest-wins in both directions.
+    - name: codex-auth-sync
+      image: quay.apps.ocp.igou.systems/igou-io/hermes-agent@sha256:728c7d269a5b93d4ed871bfbef3d9647034f218e74b4ff959e41d860d9bc6c48
+      command:
+        - python3
+        - -u
+        - -c
+        - |
+          import json, os, time
+          SRC = '/opt/data/auth.json'
+          DST = '/codex/auth.json'
+          while True:
+              try:
+                  st = json.load(open(SRC))['providers']['openai-codex']
+                  cli = json.load(open(DST))
+                  if st.get('last_refresh', '') > cli.get('last_refresh', ''):
+                      cli['tokens']['access_token'] = st['tokens']['access_token']
+                      cli['tokens']['refresh_token'] = st['tokens']['refresh_token']
+                      cli['last_refresh'] = st['last_refresh']
+                      tmp = DST + '.tmp'
+                      json.dump(cli, open(tmp, 'w'), indent=2)
+                      os.chmod(tmp, 0o600)
+                      os.replace(tmp, DST)
+                      print('synced codex tokens', st['last_refresh'], flush=True)
+              except Exception as exc:
+                  print('sync skipped:', exc, flush=True)
+              time.sleep(60)
+      env: []
+      resources:
+        requests:
+          cpu: 5m
+          memory: 32Mi
+        limits:
+          cpu: 50m
+          memory: 64Mi
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+      volumeMounts:
+        - name: data
+          mountPath: /opt/data
+          readOnly: true
+        - name: hermes-workspace
+          subPath: home/.codex
+          mountPath: /codex
+  storage:
+    # ~/.hermes state: sessions, memory, skills, cron store, auth.json,
+    # SOUL.md. Sized like the VM's hermes-state DataVolume.
+    persistence:
+      enabled: true
+      size: 30Gi
+      storageClassName: freenas-nvmeof-ssd-csi
+  # The shared RWX workspace, visible from BOTH sides exactly like the VM's
+  # bind mounts: the agent sees repos at /opt/data/agent-repos and collected
+  # documents at /opt/data/cache/documents; sessions see the same data at
+  # /workspace and /output (see terminal.kubernetes.spec below).
+  extraVolumes:
+    - name: hermes-workspace
+      persistentVolumeClaim:
+        claimName: hermes-workspace
+  extraVolumeMounts:
+    - name: hermes-workspace
+      subPath: repos
+      mountPath: /opt/data/agent-repos
+    - name: hermes-workspace
+      subPath: output
+      mountPath: /opt/data/cache/documents
+    # ONE canonical Codex CLI auth file for agent + sessions (the VM's
+    # bind-mount model). Hermes adopts from it when its own store's
+    # refresh_token gets rotated away; the codex-auth-sync sidecar covers
+    # the reverse direction.
+    - name: hermes-workspace
+      subPath: home/.codex
+      mountPath: /opt/data/.codex
+  config:
+    raw:
+      _config_version: 33
+      agent:
+        clarify_timeout: 600
+        environment_probe: false
+        max_turns: 150
+        reasoning_effort: medium
+        restart_drain_timeout: 180
+      approvals:
+        mode: manual
+        timeout: 60
+      auxiliary:
+        moa_aggregator:
+          timeout: 600
+        moa_reference:
+          timeout: 600
+      browser:
+        cloud_provider: local
+        use_gateway: false
+      checkpoints:
+        delete_orphans: true
+      command_allowlist:
+        - execute_code
+        - delete in root path
+      compression:
+        hygiene_hard_message_limit: 400
+      context_file_max_chars: 20000
+      custom_providers:
+        - api_key: sk-no-key
+          base_url: http://qwen3-35b-a3b.llmkube-system.svc.cluster.local:8080/v1
+          model: qwen3.6-35b-a3b
+          name: qwen3-35b-a3b
+        - api_key: sk-no-key
+          base_url: http://qwen35-2b.llmkube-system.svc.cluster.local:8080/v1
+          model: qwen3.5-2b
+          name: qwen35-2b
+        - api_key: sk-no-key
+          base_url: http://gemma-4-e2b.llmkube-system.svc.cluster.local:8080/v1
+          model: gemma-4-e2b
+          name: gemma-4-e2b
+        # Qwen3.8-27B on casval (burst, 2x 4060 Ti): 23-28 tok/s w/ MTP,
+        # 128k ctx, tool-calling verified — the strongest in-cluster model.
+        # Scale-from-zero: first request after idle needs casval provisioned
+        # (isvc qwen38-27b replicas 1, ~15 min cold).
+        - api_key: sk-no-key
+          base_url: http://qwen38-27b.llmkube-system.svc.cluster.local:8080/v1
+          model: qwen3.8-27b
+          name: qwen38-27b
+      dashboard:
+        show_token_analytics: true
+      display:
+        show_reasoning: false
+        tool_progress: all
+      image_gen:
+        model: gpt-image-2-medium
+        provider: openai-codex
+        use_gateway: false
+      known_plugin_toolsets:
+        cli:
+          - spotify
+        slack:
+          - spotify
+      max_concurrent_sessions: '2'
+      memory:
+        write_approval: true
+      moa:
+        presets:
+          default:
+            aggregator_temperature: 0.4
+            reference_temperature: 0.6
+      model:
+        base_url: https://chatgpt.com/backend-api/codex
+        default: gpt-5.6-terra
+        provider: openai-codex
+      onboarding:
+        seen:
+          busy_input_prompt: true
+          tool_progress_prompt: true
+      platform_toolsets:
+        cli:
+          - browser
+          - clarify
+          - code_execution
+          - computer_use
+          - cronjob
+          - delegation
+          - file
+          - image_gen
+          - memory
+          - messaging
+          - session_search
+          - skills
+          - terminal
+          - todo
+          - tts
+          - vision
+          - web
+        slack:
+          - browser
+          - clarify
+          - code_execution
+          - computer_use
+          - cronjob
+          - delegation
+          - file
+          - image_gen
+          - memory
+          - messaging
+          - session_search
+          - skills
+          - terminal
+          - todo
+          - tts
+          - vision
+          - web
+      platforms:
+        api_server:
+          enabled: true
+          extra:
+            host: 127.0.0.1
+            port: 8642
+      plugins:
+        disabled: []
+        enabled:
+          - browser/firecrawl
+      quick_commands:
+        oc-context:
+          command: oc config current-context 2>/dev/null || true
+          type: exec
+        oc-whoami:
+          command: oc whoami 2>/dev/null || true
+          type: exec
+      security:
+        allow_lazy_installs: false
+        tirith_fail_open: false
+      session_reset:
+        mode: none
+      skills:
+        disabled:
+          - polymarket
+        external_dirs:
+          - /opt/data/agent-skills/common
+          - /opt/data/agent-skills/homelab
+        guard_agent_created: true
+        write_approval: true
+      slack:
+        require_mention: true
+      telegram:
+        extra:
+          rich_messages: true
+      terminal:
+        backend: kubernetes
+        cwd: /workspace
+        timeout: 300
+        lifetime_seconds: 1800
+        kubernetes:
+          namespace: hermes-sre
+          # Kata cold starts exceed the 120 s default.
+          ready_timeout_seconds: 300
+          # `spec` is the whole session PodSpec, posted verbatim. Sessions are
+          # per-session Kata VMs on the kata-oc pool: hardware isolation where
+          # the VM had rootless-podman containers.
+          spec:
+            runtimeClassName: kata
+            priorityClassName: llmkube-low
+            affinity:
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                    - matchExpressions:
+                        - key: node-role.kubernetes.io/kata-oc
+                          operator: Exists
+            serviceAccountName: hermes-session-noperms
+            automountServiceAccountToken: false
+            enableServiceLinks: false
+            restartPolicy: Never
+            shareProcessNamespace: true
+            terminationGracePeriodSeconds: 1
+            activeDeadlineSeconds: 14400
+            securityContext:
+              # uid/gid 1000 = the devenv image's igou user, same identity the
+              # VM's --userns=keep-id gave terminal containers. Admission
+              # allows the explicit UID because the creating SA holds the
+              # hermes-agent-root SCC (creator ∪ pod-SA union).
+              runAsNonRoot: true
+              runAsUser: 1000
+              runAsGroup: 1000
+              fsGroup: 1000
+              seccompProfile:
+                type: RuntimeDefault
+            containers:
+              - name: workspace
+                # :latest is digest-pinned (Renovate moves it); carries the
+                # coding-agent CLIs and ghapp >= 0.3.0 (GHAPP_BROKER_URL client).
+                image: ghcr.io/igou-io/igou-devenv:latest@sha256:e024600e310486582904990028c95881a342cf4569ae02e1de48f0ec7ef24ad2
+                command:
+                  - sleep
+                  - infinity
+                workingDir: /workspace
+                env:
+                  - name: HOME
+                    value: /home/igou
+                  - name: BASH_ENV
+                    value: /home/igou/.bashrc
+                  - name: PYTHONUNBUFFERED
+                    value: '1'
+                  # ghapp in the devenv image (>= 0.3.0) switches to broker
+                  # mode on this; git pushes mint via the system-gitconfig
+                  # credential helper automatically.
+                  - name: GHAPP_BROKER_URL
+                    value: http://ghbroker.hermes-sre.svc.cluster.local:8085
+                  # Scope: the igou-devenv read-only bundle (envs/read-only.env),
+                  # rendered by the hermes-session-readonly ExternalSecret into
+                  # /etc/agent/envs and activated by ~/.bashrc.d/05-agent-profile.sh
+                  # (BASH_ENV) in every session shell. No 1Password in the pod;
+                  # no Forgejo/GitHub write identity for this instance.
+                  - name: AGENT_PROFILE
+                    value: read-only
+                  - name: AGENT_PROFILE_ENVDIR
+                    value: /etc/agent/envs
+                  # opencode's hosted-model key: session-visible by design.
+                  - name: OPENCODE_GO_API_KEY
+                    valueFrom:
+                      secretKeyRef:
+                        name: hermes-env
+                        key: OPENCODE_GO_API_KEY
+                volumeMounts:
+                  - name: workspace
+                    subPath: repos
+                    mountPath: /workspace
+                  - name: workspace
+                    subPath: output
+                    mountPath: /output
+                  # Coding-agent identities (the VM's docker_volumes bind-mount
+                  # set), living on the PVC's home/ subtree so OAuth token
+                  # refreshes persist across sessions. Enables dispatching
+                  # claude / codex / opencode / cursor-agent from sessions.
+                  - name: workspace
+                    subPath: home/.claude
+                    mountPath: /home/igou/.claude
+                  - name: workspace
+                    subPath: home/.claude.json
+                    mountPath: /home/igou/.claude.json
+                  - name: workspace
+                    subPath: home/.codex
+                    mountPath: /home/igou/.codex
+                  - name: workspace
+                    subPath: home/.config/opencode
+                    mountPath: /home/igou/.config/opencode
+                  - name: workspace
+                    subPath: home/.local/share/opencode
+                    mountPath: /home/igou/.local/share/opencode
+                  - name: workspace
+                    subPath: home/.config/cursor
+                    mountPath: /home/igou/.config/cursor
+                    readOnly: true
+                  - name: workspace
+                    subPath: home/.cursor
+                    mountPath: /home/igou/.cursor
+                  - name: workspace
+                    subPath: home/.gitconfig
+                    mountPath: /home/igou/.gitconfig
+                    readOnly: true
+                  - name: workspace
+                    subPath: home/.agents/skills
+                    mountPath: /home/igou/.agents/skills
+                  - name: agent-envs
+                    mountPath: /etc/agent/envs
+                    readOnly: true
+                  - name: tmp
+                    mountPath: /tmp
+                resources:
+                  requests:
+                    cpu: 500m
+                    memory: 2Gi
+                  # VM terminal containers got 4 CPU / 8 GiB.
+                  limits:
+                    cpu: '4'
+                    memory: 8Gi
+                    ephemeral-storage: 20Gi
+                securityContext:
+                  runAsNonRoot: true
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop:
+                      - ALL
+            volumes:
+              - name: workspace
+                persistentVolumeClaim:
+                  claimName: hermes-workspace
+              - name: agent-envs
+                secret:
+                  secretName: hermes-session-readonly
+                  defaultMode: 0440
+              - name: tmp
+                emptyDir: {}
+      tool_loop_guardrails:
+        hard_stop_enabled: true
+      tools:
+        tool_search:
+          threshold_pct: 10
+      tts:
+        use_gateway: false
+      updates:
+        pre_update_backup: false
+      web:
+        backend: firecrawl
+        extract_backend: firecrawl
+        search_backend: searxng
+        use_gateway: false
+      x_search:
+        model: grok-4.20-reasoning
