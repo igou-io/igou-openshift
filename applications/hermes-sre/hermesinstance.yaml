@@ -237,18 +237,6 @@ spec:
         - name: hermes-workspace
           subPath: home/.codex
           mountPath: /codex
-  storage:
-    # ~/.hermes state: sessions, memory, skills, cron store, auth.json,
-    # SOUL.md. Sized like the VM's hermes-state DataVolume.
-    persistence:
-      enabled: true
-      size: 30Gi
-      storageClassName: freenas-nvmeof-ssd-csi
-  # The shared RWX workspace, visible from BOTH sides exactly like the VM's
-  # bind mounts: the agent sees repos at /opt/data/agent-repos and collected
-  # documents at /opt/data/cache/documents; sessions see the same data at
-  # /workspace and /output (see terminal.kubernetes.spec below).
-  sidecars:
     - name: am-relay
       image: ghcr.io/igou-io/igou-devenv:latest@sha256:e024600e310486582904990028c95881a342cf4569ae02e1de48f0ec7ef24ad2
       command:
@@ -286,6 +274,17 @@ spec:
         - name: am-relay
           mountPath: /opt/am-relay
           readOnly: true
+  storage:
+    # ~/.hermes state: sessions, memory, skills, cron store, auth.json,
+    # SOUL.md. Sized like the VM's hermes-state DataVolume.
+    persistence:
+      enabled: true
+      size: 30Gi
+      storageClassName: freenas-nvmeof-ssd-csi
+  # The shared RWX workspace, visible from BOTH sides exactly like the VM's
+  # bind mounts: the agent sees repos at /opt/data/agent-repos and collected
+  # documents at /opt/data/cache/documents; sessions see the same data at
+  # /workspace and /output (see terminal.kubernetes.spec below).
   extraVolumes:
     - name: am-relay
       configMap:
