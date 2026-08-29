@@ -48,8 +48,9 @@ spec:
         - protocol: TCP
           port: 9119
 ---
-# Alertmanager (openshift-monitoring) -> Hermes webhook platform (:8644).
-# This ingress rule IS the authorization for the INSECURE_NO_AUTH route.
+# Alertmanager (openshift-monitoring) -> am-relay sidecar (:8645), which signs
+# and forwards to the Hermes webhook platform on loopback. This ingress rule
+# IS the authorization for the relay.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -72,4 +73,4 @@ spec:
               app.kubernetes.io/name: alertmanager
       ports:
         - protocol: TCP
-          port: 8644
+          port: 8645

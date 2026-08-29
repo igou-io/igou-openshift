@@ -28,6 +28,7 @@ resources:
   - quay-pull-externalsecret.yaml
   - hermes-env-externalsecret.yaml
   - hermes-session-readonly-externalsecret.yaml
+  - am-relay-configmap.yaml
   - hermes-workspace-pvc.yaml
   - ghbroker-externalsecret.yaml
   - ghbroker-policy-configmap.yaml

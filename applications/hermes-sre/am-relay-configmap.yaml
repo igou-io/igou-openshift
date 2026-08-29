@@ -1,0 +1,52 @@
+---
+# Alertmanager -> Hermes webhook relay. Hermes' generic webhook platform
+# requires an HMAC signature unless it binds to loopback, and Alertmanager
+# cannot sign requests. So the webhook platform binds 127.0.0.1:8644 and this
+# sidecar (same pod) accepts Alertmanager on :8645, signs the body with the
+# route secret (X-Webhook-Signature-V2 = HMAC-SHA256("<ts>.<body>")) and
+# forwards over loopback. The secret only protects a loopback socket, so it
+# can live in git; the NetworkPolicy on :8645 is the real authorization.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hermes-sre-am-relay
+  namespace: hermes-sre
+data:
+  relay.py: |
+    import hashlib, hmac, http.client, json, os, sys, time
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+
+    SECRET = os.environ["WEBHOOK_SECRET"].encode()
+    TARGET = os.environ.get("WEBHOOK_TARGET", "127.0.0.1:8644")
+    ROUTE = os.environ.get("WEBHOOK_ROUTE", "alertmanager")
+
+    class H(BaseHTTPRequestHandler):
+        def log_message(self, fmt, *a):
+            sys.stderr.write("am-relay: " + (fmt % a) + "\n")
+
+        def do_GET(self):
+            if self.path == "/healthz":
+                self.send_response(200); self.end_headers(); self.wfile.write(b"ok"); return
+            self.send_response(404); self.end_headers()
+
+        def do_POST(self):
+            n = int(self.headers.get("Content-Length", "0"))
+            body = self.rfile.read(n)
+            ts = str(int(time.time()))
+            sig = hmac.new(SECRET, f"{ts}.".encode() + body, hashlib.sha256).hexdigest()
+            try:
+                c = http.client.HTTPConnection(TARGET, timeout=30)
+                c.request("POST", f"/webhooks/{ROUTE}", body=body, headers={
+                    "Content-Type": "application/json",
+                    "X-Webhook-Timestamp": ts,
+                    "X-Webhook-Signature-V2": sig,
+                })
+                r = c.getresponse(); out = r.read()
+                self.send_response(r.status); self.send_header("Content-Type", "application/json")
+                self.end_headers(); self.wfile.write(out)
+                sys.stderr.write(f"am-relay: forwarded {n}B -> {r.status}\n")
+            except Exception as e:
+                self.send_response(502); self.end_headers(); self.wfile.write(str(e).encode())
+                sys.stderr.write(f"am-relay: forward failed: {e}\n")
+
+    HTTPServer(("0.0.0.0", int(os.environ.get("RELAY_PORT", "8645"))), H).serve_forever()
