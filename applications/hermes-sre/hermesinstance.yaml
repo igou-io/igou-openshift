@@ -19,6 +19,10 @@ kind: HermesInstance
 metadata:
   name: hermes-sre
   namespace: hermes-sre
+  annotations:
+    # After the ExternalSecrets (-5) and ghbroker/PVC (0): the agent pod
+    # envFrom's hermes-env, and the operator webhook must be warm.
+    argocd.argoproj.io/sync-wave: '10'
 spec:
   image:
     # Built from the fork's own 5-stage Dockerfile at c80e5bd17 (the exact

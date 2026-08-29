@@ -8,6 +8,11 @@ kind: Kustomization
 # applications/hermes-k8s, which owns both; no Slack socket (shared app stays on
 # the interactive instance), reports go out via webhook.
 #
+# Sync waves: ExternalSecrets at -5 so the Secrets exist before the ghbroker
+# Deployment (0) mounts ghbroker-config and the HermesInstance (10) envFrom's
+# hermes-env — a fresh namespace has none of them, unlike hermes-k8s whose
+# secrets predated ArgoCD (first sync deadlocked at wave 0 otherwise).
+#
 # NOTE: deliberately no top-level `namespace:` transformer. Every resource
 # below already declares its own namespace, and the transformer would stamp
 # one onto the SecurityContextConstraints too — kustomize has no scope
