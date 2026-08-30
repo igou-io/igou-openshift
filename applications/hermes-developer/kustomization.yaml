@@ -23,6 +23,7 @@ resources:
   - agent-egress-networkpolicy.yaml
   - quay-pull-externalsecret.yaml
   - hermes-env-externalsecret.yaml
+  - hermes-session-readonly-externalsecret.yaml
   - hermes-workspace-pvc.yaml
   - ghbroker-externalsecret.yaml
   - ghbroker-policy-configmap.yaml

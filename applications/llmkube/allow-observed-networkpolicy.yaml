@@ -23,7 +23,13 @@ spec:
         # mid-dispatch — keep it in git.
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: hermes-k8s
+              kubernetes.io/metadata.name: hermes-assistant
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-developer
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-sre
       ports:
         - port: 8080
           protocol: TCP

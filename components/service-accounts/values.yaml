@@ -10,6 +10,20 @@ defaults:
     nameSuffix: "-token"
 
 clusterRoles:
+  # Read the Hermes operator's CRs (not aggregated into cluster-reader): lets
+  # the read-only agent identity (hermes-sre) inspect the Hermes instances.
+  - name: hermes-read
+    rules:
+      - apiGroups:
+          - hermes.agent
+        resources:
+          - hermesinstances
+          - hermesselfconfigs
+          - hermesclusterdefaults
+        verbs:
+          - get
+          - list
+          - watch
   - name: molecule-kubernetes
     rules:
       - apiGroups:
@@ -278,6 +292,8 @@ serviceAccounts:
         clusterRole: cluster-reader
       - name: cluster-read-only-monitoring-view
         clusterRole: cluster-monitoring-view
+      - name: cluster-read-only-hermes-read
+        clusterRole: hermes-read
     # Alertmanager API (silences, receivers, /api/v2/alerts) — cluster-reader +
     # cluster-monitoring-view cover Thanos/Prometheus but not alertmanagers/api.
     # Read-only agent sessions (hermes-sre, t3 read-only bundle) need it.

@@ -142,6 +142,13 @@ spec:
       ports:
         - protocol: TCP
           port: 6443
+    # rk8s ingress VIP (prometheus.rk8s, headlamp.rk8s)
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.11/32
+      ports:
+        - protocol: TCP
+          port: 443
     # RouterOS api-ssl
     - to:
         - ipBlock:

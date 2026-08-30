@@ -14,11 +14,14 @@ spec:
   ingress:
     # Hermes reads the sands-of-time API (ClusterIP 80 -> pod 8000); no flow observed in the window (idle) but the hermes-egress policy documents this path
     - from:
-        # containerized hermes (applications/hermes-k8s); the hermes VM
+        # the purpose-scoped hermes instances (applications/hermes-*); the hermes VM
         # namespace was retired 2026-08-24
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: hermes-k8s
+              kubernetes.io/metadata.name: hermes-assistant
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-sre
       ports:
         - port: 8000
           protocol: TCP

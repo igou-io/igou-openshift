@@ -109,3 +109,63 @@ spec:
       ports:
         - protocol: TCP
           port: 8085
+---
+# hermes-developer: read-only infrastructure targets reachable from session pods.
+# OVN-K applies the apiserver service DNAT (172.30.0.1:443 -> :6443) before
+# egress ACLs, so the in-cluster API needs the post-DNAT port (see the
+# hermes-k8s README finding #1).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hermes-session-readonly-infra
+  namespace: hermes-developer
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/managed-by: hermes-agent
+  policyTypes:
+    - Egress
+  egress:
+    # OCP API (VIP, post-DNAT) and *.apps routes
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.10/32
+      ports:
+        - protocol: TCP
+          port: 6443
+        - protocol: TCP
+          port: 443
+    # rk8s API
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.30/32
+      ports:
+        - protocol: TCP
+          port: 6443
+    # rk8s ingress VIP (prometheus.rk8s, headlamp.rk8s)
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.11/32
+      ports:
+        - protocol: TCP
+          port: 443
+    # RouterOS api-ssl
+    - to:
+        - ipBlock:
+            cidr: 10.10.99.1/32
+        - ipBlock:
+            cidr: 10.10.99.20/32
+        - ipBlock:
+            cidr: 10.10.99.22/32
+        - ipBlock:
+            cidr: 10.10.99.23/32
+      ports:
+        - protocol: TCP
+          port: 8729
+    # TrueNAS API
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.213/32
+      ports:
+        - protocol: TCP
+          port: 443

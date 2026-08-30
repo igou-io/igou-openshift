@@ -492,6 +492,13 @@ spec:
                       secretKeyRef:
                         key: FORGEJO_TOKEN
                         name: hermes-env
+                  # Read-only cluster/infra view for verifying what a change did
+                  # (ArgoCD app state, pods, alerts) — same bundle as hermes-sre.
+                  # Writes still go through PRs, CI and ArgoCD.
+                  - name: AGENT_PROFILE
+                    value: read-only
+                  - name: AGENT_PROFILE_ENVDIR
+                    value: /etc/agent/envs
                   - name: OPENCODE_GO_API_KEY
                     valueFrom:
                       secretKeyRef:
@@ -537,6 +544,9 @@ spec:
                   - name: workspace
                     subPath: home/.agents/skills
                     mountPath: /home/igou/.agents/skills
+                  - name: agent-envs
+                    mountPath: /etc/agent/envs
+                    readOnly: true
                   - name: tmp
                     mountPath: /tmp
                 resources:
@@ -558,6 +568,18 @@ spec:
               - name: workspace
                 persistentVolumeClaim:
                   claimName: hermes-workspace
+              - name: agent-envs
+                projected:
+                  defaultMode: 0440
+                  sources:
+                    - secret:
+                        name: hermes-session-readonly
+                    - secret:
+                        name: hermes-session-readonly-rk8s
+                    - secret:
+                        name: hermes-session-readonly-routeros
+                    - secret:
+                        name: hermes-session-readonly-truenas
               - name: tmp
                 emptyDir: {}
       tool_loop_guardrails:
