@@ -92,6 +92,30 @@ strict server-side field validation, and a reserved core Hermes rejects
 overrides of. The old enumerated keys are **rejected**, so a config written
 against the earlier revision of this workload will now fail loudly.
 
+## Customizing the session pod
+
+`terminal.kubernetes.pod_template` is a `PodTemplateSpec` merged over Hermes'
+default pod. There is no allow-list: any field the Kubernetes API accepts works,
+including ones added to Kubernetes after this backend was written.
+
+Merging is [RFC 7386](https://www.rfc-editor.org/rfc/rfc7386) (maps recurse,
+`null` removes, lists replace wholesale) with one exception: `spec.containers`
+and `spec.initContainers` merge by `name`, so tuning the workspace container
+does not mean restating its image, command and mounts.
+
+Hermes does no security or schema validation of the pod. SCC, Pod Security
+Admission, ValidatingAdmissionPolicy, NetworkPolicy and RBAC do that
+authoritatively and are the administrator's job, and every request is sent with
+`fieldValidation=Strict` so a typo returns a `400` naming the exact JSON path.
+The one field Hermes owns is `app.kubernetes.io/managed-by`, stamped after the
+merge, because it is how session pods are found and how the NetworkPolicies here
+select them.
+
+See [examples/](./examples) for three worked cases, each verified against this
+cluster: [Kata VM isolation](./examples/01-kata-isolation),
+[container tuning and a sidecar](./examples/02-container-tuning), and
+[extra volumes with scheduling](./examples/03-volumes-and-scheduling).
+
 ## Findings this workload encodes
 
 Each of these cost real debugging; none are cosmetic.
