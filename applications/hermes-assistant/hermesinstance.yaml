@@ -270,7 +270,7 @@ spec:
         clarify_timeout: 600
         environment_probe: false
         max_turns: 150
-        reasoning_effort: max
+        reasoning_effort: xhigh
         restart_drain_timeout: 180
       approvals:
         mode: manual

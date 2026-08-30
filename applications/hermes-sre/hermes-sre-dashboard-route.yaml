@@ -71,6 +71,11 @@ spec:
           podSelector:
             matchLabels:
               app.kubernetes.io/name: alertmanager
+        # Weekly synthetic heartbeat (heartbeat-cronjob.yaml) exercises the
+        # same relay -> webhook -> session -> Slack chain end to end.
+        - podSelector:
+            matchLabels:
+              app: sre-heartbeat
       ports:
         - protocol: TCP
           port: 8645

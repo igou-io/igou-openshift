@@ -75,6 +75,11 @@ route:
         - severity =~ "critical|warning"
       receiver: hermes-sre
       continue: true
+      # Each notification costs a full LLM investigation; batch re-fires and
+      # don't re-deliver an unchanged group more than twice a day. The agent
+      # additionally dedupes against the EDA-filed GitHub issue.
+      group_interval: 30m
+      repeat_interval: 12h
     - matchers:
         - severity = critical
       receiver: gotify-and-slack-critical
@@ -91,6 +96,15 @@ receivers:
       - url: http://hermes-sre.hermes-sre.svc:8644/webhooks/alertmanager
         send_resolved: true
         max_alerts: 10
+        http_config:
+          # The relay now requires this token on every POST (it is exposed on
+          # a Route for the rk8s Alertmanager, so network policy alone no
+          # longer authorizes it) and answers 503 while Hermes is at its
+          # session limit, which makes Alertmanager retry instead of the
+          # gateway dropping the alert.
+          authorization:
+            type: Bearer
+            credentials_file: /etc/alertmanager/secrets/hermes-sre-am-relay/token
   - name: gotify
     webhook_configs:
       - url: http://alertmanager-gotify-bridge.gotify.svc:8080/gotify_webhook
