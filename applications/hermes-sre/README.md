@@ -26,6 +26,22 @@ Shared with `hermes-k8s` (owned there): the operator (ns `hermes-operator`) and 
 session PodSpec shape; diffs are the env/mounts above, `max_concurrent_sessions: 2`,
 agent-container resources, and quick commands (`contexts`, `whoami`).
 
+Context the SRE gets on top of the credentials (all delivered from this
+directory, nothing hand-seeded on the PVC):
+
+- `context-configmap.yaml` — `SOUL.md` (environment brief: where it runs, which
+  CLI to reach for, the estate, report format) mounted over `/opt/data/SOUL.md`,
+  and the same brief as `/workspace/AGENTS.md` for coding CLIs inside sessions.
+- `skill-alert-triage-configmap.yaml` — `openshift-alert-triage` skill mounted
+  into `skills.external_dirs` (`/opt/data/agent-skills/homelab/`).
+- `docs-sync-cronjob.yaml` — read-only mirror of `igou-io/igou-docs` refreshed
+  every 30 min into the workspace PVC (`/workspace/igou-docs` in sessions) using
+  a broker-minted `contents:read` token (`igou-docs` is in the broker policy and
+  must be on the igou-hermes App installation).
+- `max_concurrent_sessions: 4` (alert webhooks are rejected, not queued, at the
+  limit), `session_reset: idle 120 min`, and no firecrawl plugin (lazy installs
+  are disabled, so `web_extract` could never work; search stays on SearXNG).
+
 Follow-ups: own 1Password item for dashboard auth/API key (uses `hermes` today);
 alert ingestion (Alertmanager webhook → api_server) so this instance monitors rather
 than only answers; a ClusterRole for `hermes.agent` CRs if it should inspect Hermes.
