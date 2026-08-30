@@ -6,4 +6,5 @@ resources:
   - compliance-operator-operatorgroup.yaml
   - compliance-operator-subscription.yaml
   - cis-weekly-scansetting.yaml
+  - cis-igou-tailoredprofile.yaml
   - cis-scansettingbinding.yaml
