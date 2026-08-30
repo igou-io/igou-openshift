@@ -10,6 +10,20 @@ defaults:
     nameSuffix: "-token"
 
 clusterRoles:
+  # LokiStack tenant read (OpenShift Logging 6 has no *-view ClusterRoles
+  # here): the gateway authorises `get` on <tenant>.loki.grafana.com/logs.
+  - name: loki-logs-read
+    rules:
+      - apiGroups:
+          - loki.grafana.com
+        resources:
+          - application
+          - infrastructure
+          - audit
+        resourceNames:
+          - logs
+        verbs:
+          - get
   # Read the Hermes operator's CRs (not aggregated into cluster-reader): lets
   # the read-only agent identity (hermes-sre) inspect the Hermes instances.
   - name: hermes-read
@@ -292,6 +306,8 @@ serviceAccounts:
         clusterRole: cluster-reader
       - name: cluster-read-only-monitoring-view
         clusterRole: cluster-monitoring-view
+      - name: cluster-read-only-loki-logs-read
+        clusterRole: loki-logs-read
       - name: cluster-read-only-hermes-read
         clusterRole: hermes-read
     # Alertmanager API (silences, receivers, /api/v2/alerts) — cluster-reader +
