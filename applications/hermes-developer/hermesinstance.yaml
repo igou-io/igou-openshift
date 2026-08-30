@@ -272,7 +272,7 @@ spec:
         clarify_timeout: 600
         environment_probe: false
         max_turns: 150
-        reasoning_effort: medium
+        reasoning_effort: max
         restart_drain_timeout: 180
       approvals:
         mode: manual
@@ -338,7 +338,7 @@ spec:
             reference_temperature: 0.6
       model:
         base_url: https://chatgpt.com/backend-api/codex
-        default: gpt-5.6-terra
+        default: gpt-5.6-luna
         provider: openai-codex
       onboarding:
         seen:
