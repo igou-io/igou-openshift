@@ -245,7 +245,7 @@ spec:
           subPath: home/.codex
           mountPath: /codex
     - name: am-relay
-      image: ghcr.io/igou-io/igou-devenv:latest@sha256:dea24f0108b5735096e7fe39010afb40971be495fd8910b7521de0fa0844fd02
+      image: ghcr.io/igou-io/igou-devenv:latest@sha256:2b1b0506ea6ab3bb6e7bc6dc37a9b0d094282a52575248880521e3d361dd4ccc
       command:
         - python3
         - /opt/am-relay/relay.py
@@ -482,6 +482,8 @@ spec:
 
                   You are the read-only SRE instance: every session already has
                   KUBECONFIG contexts ocp-cluster-reader and rk8s-cluster-reader,
+                  the alert CLI (`ocp-alerts` = firing alerts from the Alertmanager API,
+                  `ocp-alerts --silences`, `ocp-alerts --thanos`, `--json`),
                   the RouterOS CLI (`routeros-ro all system/resource`, `-h` for help),
                   the TrueNAS CLI (`truenas-ro system.info`, `truenas-ro pool.query`,
                   `truenas-ro alert.list` — API-key login, no username), and
@@ -566,7 +568,7 @@ spec:
               - name: workspace
                 # :latest is digest-pinned (Renovate moves it); carries the
                 # coding-agent CLIs and ghapp >= 0.3.0 (GHAPP_BROKER_URL client).
-                image: ghcr.io/igou-io/igou-devenv:latest@sha256:dea24f0108b5735096e7fe39010afb40971be495fd8910b7521de0fa0844fd02
+                image: ghcr.io/igou-io/igou-devenv:latest@sha256:2b1b0506ea6ab3bb6e7bc6dc37a9b0d094282a52575248880521e3d361dd4ccc
                 command:
                   - sleep
                   - infinity
