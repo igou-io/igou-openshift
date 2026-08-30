@@ -28,6 +28,7 @@ resources:
   - quay-pull-externalsecret.yaml
   - hermes-env-externalsecret.yaml
   - hermes-session-readonly-externalsecret.yaml
+  - hermes-sre-am-relay-externalsecret.yaml
   - am-relay-configmap.yaml
   - context-configmap.yaml
   - skill-alert-triage-configmap.yaml
@@ -37,5 +38,7 @@ resources:
   - ghbroker-deployment.yaml
   - ghbroker-networkpolicy.yaml
   - docs-sync-cronjob.yaml
+  - heartbeat-cronjob.yaml
+  - am-relay-route.yaml
   - hermesinstance.yaml
   - hermes-sre-dashboard-route.yaml

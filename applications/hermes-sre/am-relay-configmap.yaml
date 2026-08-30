@@ -4,8 +4,15 @@
 # cannot sign requests. So the webhook platform binds 127.0.0.1:8644 and this
 # sidecar (same pod) accepts Alertmanager on :8645, signs the body with the
 # route secret (X-Webhook-Signature-V2 = HMAC-SHA256("<ts>.<body>")) and
-# forwards over loopback. The secret only protects a loopback socket, so it
-# can live in git; the NetworkPolicy on :8645 is the real authorization.
+# forwards over loopback. The signing secret only protects a loopback socket,
+# so it can live in git. Inbound authorization is the hermes-sre-am-relay
+# bearer token (required on every POST — the relay is exposed on a Route for
+# the rk8s Alertmanager, so network policy alone is no longer sufficient).
+# The relay also answers 503 (Retry-After) while Hermes is at its session
+# limit: Alertmanager retries 5xx, so alerts queue upstream instead of the
+# gateway rejecting them. Capacity is read from the gateway's exact lease
+# file (runtime/active_sessions.json, pid-alive via the shared PID namespace);
+# MAX_SESSIONS must match config max_concurrent_sessions.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -19,6 +26,27 @@ data:
     SECRET = os.environ["WEBHOOK_SECRET"].encode()
     TARGET = os.environ.get("WEBHOOK_TARGET", "127.0.0.1:8644")
     ROUTE = os.environ.get("WEBHOOK_ROUTE", "alertmanager")
+    TOKEN = os.environ.get("INBOUND_TOKEN", "")
+    MAX_SESSIONS = int(os.environ.get("MAX_SESSIONS", "0"))
+    LEASES = os.environ.get("LEASES_FILE", "/opt/data/runtime/active_sessions.json")
+
+    def at_capacity():
+        if MAX_SESSIONS <= 0:
+            return False
+        try:
+            with open(LEASES) as f:
+                entries = json.load(f).get("entries", [])
+        except Exception:
+            return False
+        alive = 0
+        for e in entries:
+            try:
+                pid = int(e.get("pid", 0))
+            except (TypeError, ValueError):
+                continue
+            if pid > 0 and os.path.exists(f"/proc/{pid}"):
+                alive += 1
+        return alive >= MAX_SESSIONS
 
     class H(BaseHTTPRequestHandler):
         def log_message(self, fmt, *a):
@@ -30,6 +58,15 @@ data:
             self.send_response(404); self.end_headers()
 
         def do_POST(self):
+            if TOKEN and self.headers.get("Authorization", "") != f"Bearer {TOKEN}":
+                self.send_response(401); self.end_headers(); self.wfile.write(b"unauthorized")
+                sys.stderr.write("am-relay: rejected POST (bad or missing token)\n")
+                return
+            if at_capacity():
+                self.send_response(503); self.send_header("Retry-After", "120")
+                self.end_headers(); self.wfile.write(b"hermes at session limit; retry")
+                sys.stderr.write("am-relay: 503 busy (session limit), Alertmanager will retry\n")
+                return
             n = int(self.headers.get("Content-Length", "0"))
             body = self.rfile.read(n)
             ts = str(int(time.time()))

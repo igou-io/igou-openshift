@@ -254,6 +254,15 @@ spec:
           value: hermes-sre-alertmanager-loopback-relay
         - name: RELAY_PORT
           value: '8645'
+        - name: INBOUND_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: hermes-sre-am-relay
+              key: token
+        # Keep in sync with config max_concurrent_sessions below; at this
+        # many live leases the relay answers 503 so Alertmanager retries.
+        - name: MAX_SESSIONS
+          value: '4'
       ports:
         - name: am-relay
           containerPort: 8645
@@ -280,6 +289,11 @@ spec:
       volumeMounts:
         - name: am-relay
           mountPath: /opt/am-relay
+          readOnly: true
+        # Exact session-lease file for the 503-on-busy check; pid liveness
+        # works because the pod shares its PID namespace.
+        - name: data
+          mountPath: /opt/data
           readOnly: true
   storage:
     # ~/.hermes state: sessions, memory, skills, cron store, auth.json,
@@ -336,7 +350,7 @@ spec:
         clarify_timeout: 600
         environment_probe: false
         max_turns: 150
-        reasoning_effort: max
+        reasoning_effort: xhigh
         restart_drain_timeout: 180
       approvals:
         mode: manual
@@ -511,6 +525,15 @@ spec:
                   Follow the `openshift-alert-triage` skill; the knowledge base is
                   at /workspace/igou-docs (start with
                   reference/Symptom-Keyed Troubleshooting.md).
+                  Incident memory: EDA files a GitHub issue in
+                  igou-io/igou-inventory for every critical|warning alert. First run
+                  GH_TOKEN=$(ghapp token --repo igou-io/igou-inventory --permission issues=write) \
+                  gh issue list -R igou-io/igou-inventory --state open --search "<alertname>".
+                  If you already posted a diagnosis comment there for this same firing
+                  episode, reply with ONE line linking the issue and stop. Otherwise
+                  investigate, add your diagnosis as a comment on that issue (create
+                  nothing yourself; if no issue exists just skip the comment) and put
+                  the issue link in your reply.
                   Investigate the FIRING alerts (skip resolved ones unless they
                   need a closing note): find the affected component, the likely
                   cause and the evidence. You cannot change anything; do not try.

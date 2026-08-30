@@ -25,6 +25,7 @@ spec:
         - https://console-openshift-console.apps.ocp.igou.systems
         - https://devspaces.apps.ocp.igou.systems
         - https://hermes-dashboard.apps.ocp.igou.systems
+        - https://hermes-sre-am-relay.apps.ocp.igou.systems/healthz
         - https://headlamp.rk8s.igou.systems
         - https://prometheus.rk8s.igou.systems
       labels:
