@@ -19,7 +19,9 @@ spec:
       - forgejo
       - gitea-mirror
       - grafana
-      - hermes
+      - hermes-sre
+      - hermes-assistant
+      - hermes-developer
       - sands-of-time
       - gotify
       - searxng
