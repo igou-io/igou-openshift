@@ -4,3 +4,4 @@ resources:
   - 99-master-load-nvme-tcp-machineconfig.yaml
   - 99-master-crio-nofile-machineconfig.yaml
   - 99-worker-crio-nofile-machineconfig.yaml
+  - 99-worker-kdump-machineconfig.yaml

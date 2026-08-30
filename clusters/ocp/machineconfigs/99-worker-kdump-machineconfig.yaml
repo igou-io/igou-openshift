@@ -1,0 +1,23 @@
+---
+# hpg5 hard-reset 38 times on 2026-08-28 (08:03-10:50 UTC) and left no
+# evidence: kdump was inactive and /var/crash empty (igou-inventory#809).
+# hpg5 has no BMC, so a vmcore is the only post-mortem source available.
+# Reserves crash memory and enables kdump on the worker pool (hpg5, p330 via
+# kata-oc, which inherits role=worker MachineConfigs; truenas-w1). Dumps land
+# in /var/crash on the node. Applying this reboots the pool one node at a time.
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  name: 99-worker-kdump
+  labels:
+    machineconfiguration.openshift.io/role: worker
+spec:
+  kernelArguments:
+    - crashkernel=256M
+  config:
+    ignition:
+      version: 3.2.0
+    systemd:
+      units:
+        - name: kdump.service
+          enabled: true
