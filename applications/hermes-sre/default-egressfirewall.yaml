@@ -971,6 +971,13 @@ spec:
       ports:
         - protocol: TCP
           port: 8729
+    # rk8s ingress VIP (prometheus.rk8s / headlamp.rk8s routes)
+    - type: Allow
+      to:
+        cidrSelector: 10.10.9.11/32
+      ports:
+        - protocol: TCP
+          port: 443
     # TrueNAS JSON-RPC WebSocket API
     - type: Allow
       to:

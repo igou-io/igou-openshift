@@ -14,11 +14,17 @@ spec:
     - Egress
   ingress:
     - from:
-        # containerized hermes (applications/hermes-k8s); the hermes VM
+        # the purpose-scoped hermes instances (applications/hermes-*); the hermes VM
         # namespace was retired 2026-08-24
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: hermes-k8s
+              kubernetes.io/metadata.name: hermes-assistant
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-developer
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-sre
       ports:
         - protocol: TCP
           port: 8080
