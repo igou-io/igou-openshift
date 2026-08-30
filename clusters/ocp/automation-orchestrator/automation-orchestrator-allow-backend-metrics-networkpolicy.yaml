@@ -1,0 +1,29 @@
+# The operator's default-deny-ingress policy plus allow-backend-ingress admit
+# port 8000 only from the orchestrator's own pods, and its
+# allow-metrics-ingress policy covers background-worker/temporal/worker but
+# not the backend, so cluster monitoring can never reach the backend's
+# /metrics (TargetDown since install). NetworkPolicies are additive; this one
+# admits the platform and user-workload Prometheus pods on the backend port.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: automation-orchestrator-allow-backend-metrics
+  namespace: automation-orchestrator
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: backend
+      app.kubernetes.io/name: automation-orchestrator
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-monitoring
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-user-workload-monitoring
+      ports:
+        - port: 8000
+          protocol: TCP

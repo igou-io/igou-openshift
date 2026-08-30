@@ -1,0 +1,42 @@
+# The automation-orchestrator operator runs the backend with
+# `--ssl-cert-reqs 2` (client certificate REQUIRED) but ships a ServiceMonitor
+# that only carries the CA, so Prometheus never completes the TLS handshake
+# and that operator-owned target is permanently down (TargetDown since
+# 2026-08-20). The operator server-side-applies its ServiceMonitor on every
+# reconcile, so patching it does not stick. This second ServiceMonitor
+# presents the backend's own serving cert as the client cert (signed by the
+# same internal CA, CN on the S2S allowlist) and scrapes /metrics
+# successfully. The operator's own target is null-routed in
+# components/alertmanager-config.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: automation-orchestrator-backend-mtls
+  namespace: automation-orchestrator
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: backend
+      app.kubernetes.io/instance: automation-orchestrator
+      app.kubernetes.io/name: automation-orchestrator
+  namespaceSelector:
+    matchNames:
+      - automation-orchestrator
+  endpoints:
+    - port: https
+      path: /metrics
+      scheme: https
+      interval: 30s
+      tlsConfig:
+        serverName: automation-orchestrator-backend
+        ca:
+          secret:
+            name: automation-orchestrator-internal-ca
+            key: ca.crt
+        cert:
+          secret:
+            name: automation-orchestrator-backend-tls
+            key: tls.crt
+        keySecret:
+          name: automation-orchestrator-backend-tls
+          key: tls.key
