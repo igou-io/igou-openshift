@@ -11,8 +11,11 @@ inspects**; it cannot change anything:
   the baked `~/.bashrc.d/05-agent-profile.sh` activate it in every shell
   (`kubectl config get-contexts` → `ocp-cluster-reader`, `rk8s-cluster-reader`).
 - GitHub via its own `ghbroker`, policy `contents:read` + `issues:write` only.
-- No Slack socket (the shared Slack app stays on the interactive instance; reports
-  go out via webhook), no Forgejo token, no GCP service accounts.
+- Own Slack app "Hermes SRE" (tokens on `lab_agents/hermes-sre`), confined to
+  `#igoucloud-hermes-sre` (`SLACK_ALLOWED_CHANNELS`) and DMs; no slash commands
+  (Slack routes a command name to the most recently installed app workspace-wide, so
+  only the assistant app registers them). Alertmanager investigations are delivered
+  to that channel (`deliver: slack`). No Forgejo token, no GCP service accounts.
 - Egress: the hermes-k8s allow-list plus the infra targets on their read-only ports
   (rk8s/OCP API 6443, RouterOS 8729, TrueNAS 443, *.apps routes 443).
 - Own data PVC and workspace PVC (`repos/` unused; `home/` subtrees start empty —
