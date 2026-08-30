@@ -482,7 +482,9 @@ spec:
 
                   You are the read-only SRE instance: every session already has
                   KUBECONFIG contexts ocp-cluster-reader and rk8s-cluster-reader,
-                  RouterOS (ROUTEROS_*) and TrueNAS (TRUENAS_*) read access, and
+                  the RouterOS CLI (`routeros-ro all system/resource`, `-h` for help),
+                  the TrueNAS CLI (`truenas-ro system.info`, `truenas-ro pool.query`,
+                  `truenas-ro alert.list` — API-key login, no username), and
                   Prometheus/Thanos and Loki are reachable with the OCP token.
                   Investigate the FIRING alerts (skip resolved ones unless they
                   need a closing note): find the affected component, the likely
