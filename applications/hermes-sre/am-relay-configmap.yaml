@@ -21,7 +21,7 @@ metadata:
 data:
   relay.py: |
     import hashlib, hmac, http.client, json, os, sys, time
-    from http.server import BaseHTTPRequestHandler, HTTPServer
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
     SECRET = os.environ["WEBHOOK_SECRET"].encode()
     TARGET = os.environ.get("WEBHOOK_TARGET", "127.0.0.1:8644")
@@ -52,7 +52,10 @@ data:
         # BaseHTTPRequestHandler answers HTTP/1.0 by default, which the
         # blackbox-exporter http_2xx module (valid_http_versions 1.1/2.0)
         # rejects. HTTP/1.1 requires an accurate Content-Length on every
-        # response, hence the single reply helper.
+        # response, hence the single reply helper. It also keeps connections
+        # alive, so the server must be threaded: a plain HTTPServer serves one
+        # connection to completion and a parked keep-alive client starves the
+        # kubelet readiness probe.
         protocol_version = "HTTP/1.1"
 
         def log_message(self, fmt, *a):
@@ -99,4 +102,4 @@ data:
                 self._reply(502, str(e).encode())
                 sys.stderr.write(f"am-relay: forward failed: {e}\n")
 
-    HTTPServer(("0.0.0.0", int(os.environ.get("RELAY_PORT", "8645"))), H).serve_forever()
+    ThreadingHTTPServer(("0.0.0.0", int(os.environ.get("RELAY_PORT", "8645"))), H).serve_forever()
