@@ -278,6 +278,13 @@ serviceAccounts:
         clusterRole: cluster-reader
       - name: cluster-read-only-monitoring-view
         clusterRole: cluster-monitoring-view
+    # Alertmanager API (silences, receivers, /api/v2/alerts) — cluster-reader +
+    # cluster-monitoring-view cover Thanos/Prometheus but not alertmanagers/api.
+    # Read-only agent sessions (hermes-sre, t3 read-only bundle) need it.
+    roleBindings:
+      - namespace: openshift-monitoring
+        roles:
+          - monitoring-alertmanager-view
     pushSecrets:
       - name: cluster-read-only-token-push
         refreshInterval: "0"
