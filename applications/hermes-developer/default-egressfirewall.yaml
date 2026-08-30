@@ -938,6 +938,79 @@ spec:
           port: 3500
 
     # Default deny all other IPv4 egress.
+    # --- hermes-developer: package registries not in the shared list ---
+    - type: Allow
+      to:
+        dnsName: crates.io
+    - type: Allow
+      to:
+        dnsName: static.crates.io
+    - type: Allow
+      to:
+        dnsName: index.crates.io
+    - type: Allow
+      to:
+        dnsName: galaxy.ansible.com
+    - type: Allow
+      to:
+        dnsName: sum.golang.org
+    # --- hermes-developer: read-only infrastructure targets (ADR-0006 bundle) ---
+    # rk8s API (cm3588-nas-01)
+    - type: Allow
+      to:
+        cidrSelector: 10.10.9.30/32
+      ports:
+        - protocol: TCP
+          port: 6443
+    # RouterOS api-ssl (rb5009, crs328, crs317, crs310)
+    - type: Allow
+      to:
+        cidrSelector: 10.10.99.1/32
+      ports:
+        - protocol: TCP
+          port: 8729
+    - type: Allow
+      to:
+        cidrSelector: 10.10.99.20/32
+      ports:
+        - protocol: TCP
+          port: 8729
+    - type: Allow
+      to:
+        cidrSelector: 10.10.99.22/32
+      ports:
+        - protocol: TCP
+          port: 8729
+    - type: Allow
+      to:
+        cidrSelector: 10.10.99.23/32
+      ports:
+        - protocol: TCP
+          port: 8729
+    # rk8s ingress VIP (prometheus.rk8s / headlamp.rk8s routes)
+    - type: Allow
+      to:
+        cidrSelector: 10.10.9.11/32
+      ports:
+        - protocol: TCP
+          port: 443
+    # TrueNAS JSON-RPC WebSocket API
+    - type: Allow
+      to:
+        cidrSelector: 10.10.9.213/32
+      ports:
+        - protocol: TCP
+          port: 443
+    # OCP API + *.apps routes (Thanos/Loki/Alertmanager/AAP) via the VIP
+    - type: Allow
+      to:
+        cidrSelector: 10.10.9.10/32
+      ports:
+        - protocol: TCP
+          port: 6443
+        - protocol: TCP
+          port: 443
+
     - type: Deny
       to:
         cidrSelector: 0.0.0.0/0

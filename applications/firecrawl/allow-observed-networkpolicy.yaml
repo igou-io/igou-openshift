@@ -49,11 +49,17 @@ spec:
     # hermes VM (KubeVirt masquerade, SNATs to pod IP) calls the firecrawl API
     # for website extraction; documented in hermes-egress policy. Not sampled.
     - from:
-        # containerized hermes (applications/hermes-k8s); the hermes VM
+        # the purpose-scoped hermes instances (applications/hermes-*); the hermes VM
         # namespace was retired 2026-08-24
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: hermes-k8s
+              kubernetes.io/metadata.name: hermes-assistant
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-developer
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-sre
       ports:
         - port: 3002
           protocol: TCP
