@@ -429,6 +429,27 @@ spec:
           - tts
           - vision
           - web
+        # Alertmanager arrives over the webhook platform, whose default is the
+        # webhook-safe toolset (no terminal) — the SRE investigation needs the
+        # same tools as an interactive session.
+        webhook:
+          - browser
+          - clarify
+          - code_execution
+          - computer_use
+          - cronjob
+          - delegation
+          - file
+          - image_gen
+          - memory
+          - messaging
+          - session_search
+          - skills
+          - terminal
+          - todo
+          - tts
+          - vision
+          - web
       platforms:
         api_server:
           enabled: true
