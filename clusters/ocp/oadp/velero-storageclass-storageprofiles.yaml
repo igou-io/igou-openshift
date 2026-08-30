@@ -1,0 +1,34 @@
+---
+# CDI creates a StorageProfile per StorageClass and fires
+# CDIStorageProfilesIncomplete (info) when it cannot infer access/volume
+# modes. The *-csi-velero classes are Velero data-mover staging classes only
+# (see components/democratic-csi/kustomization.yaml), so nothing ever
+# populates a DataVolume on them; these profiles just spell out the modes so
+# the alert stops. CDI owns the objects and their status; only spec is set
+# here, applied server-side so ArgoCD does not fight the controller.
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: StorageProfile
+metadata:
+  name: freenas-nvmeof-ssd-csi-velero
+  annotations:
+    argocd.argoproj.io/sync-options: ServerSideApply=true
+spec:
+  claimPropertySets:
+    - accessModes:
+        - ReadWriteOnce
+      volumeMode: Block
+  cloneStrategy: snapshot
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: StorageProfile
+metadata:
+  name: freenas-nfs-ssd-csi-velero
+  annotations:
+    argocd.argoproj.io/sync-options: ServerSideApply=true
+spec:
+  claimPropertySets:
+    - accessModes:
+        - ReadWriteMany
+        - ReadWriteOnce
+      volumeMode: Filesystem
+  cloneStrategy: snapshot
