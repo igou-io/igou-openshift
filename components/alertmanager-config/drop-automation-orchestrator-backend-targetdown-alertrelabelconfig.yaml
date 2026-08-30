@@ -1,0 +1,36 @@
+---
+# Drop the permanently-firing TargetDown for the automation-orchestrator
+# operator's own backend ServiceMonitor on the Prometheus -> Alertmanager
+# path. That operator-owned target can never come up: the backend requires a
+# client certificate (`--ssl-cert-reqs 2`), the operator's monitor sends only
+# a CA, the serving cert has no pod-IP SAN, and the operator server-side-
+# applies the monitor on every reconcile (#824). Metrics actually flow through
+# the GitOps-owned automation-orchestrator-backend-mtls ServiceMonitor, whose
+# target is up.
+#
+# Tradeoff: both ServiceMonitors scrape the same Service, so their targets
+# share identical alert labels (job/service/namespace) and TargetDown cannot
+# distinguish the operator's dead target from the -mtls one — if the -mtls
+# scrape breaks, its TargetDown is dropped too. The alertmanager.yaml
+# null-route from #824 already accepts exactly this blindness; this object
+# extends it from "no notifications" to "never reaches Alertmanager", so the
+# alert also leaves the active-alerts API that the EDA pipeline, hermes-sre
+# relay, and alert sweeps read.
+#
+# NOTE: AlertRelabelConfig only relabels alerts on the Prometheus ->
+# Alertmanager path. Dropped alerts still show in the web console
+# Observe > Alerting list (the console reads the Prometheus rules API,
+# upstream of this relabeling).
+apiVersion: monitoring.openshift.io/v1
+kind: AlertRelabelConfig
+metadata:
+  name: drop-automation-orchestrator-backend-targetdown
+  namespace: openshift-monitoring
+spec:
+  configs:
+    - sourceLabels:
+        - alertname
+        - namespace
+        - job
+      regex: 'TargetDown;automation-orchestrator;automation-orchestrator-backend'
+      action: Drop
