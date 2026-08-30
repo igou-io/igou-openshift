@@ -14,7 +14,7 @@ spec:
   # Default llamacpp image (ghcr.io/ggml-org/llama.cpp:server) is CPU-only and
   # ignores --n-gpu-layers. Override with the CUDA build so the 2x RTX 4060 Ti
   # on casval are actually used for inference.
-  image: ghcr.io/ggml-org/llama.cpp:server-cuda13@sha256:6b0d70753bee71cb0b5890ecc0220da751fb99059403b1fd201b33a771b7cb53
+  image: ghcr.io/ggml-org/llama.cpp:server-cuda13@sha256:85d887ab073ab471d6a33617d63d6c6566ba0f60556e4c307c63c5be71eb9683
   # At rest this model is OFF (replicas: 0) so the casval burst baremetal node
   # stays scaled to zero — the pod pins to casval (nodeSelector burst below), and
   # a running replica is what holds the cluster-autoscaler's casval MachineSet at 1.
