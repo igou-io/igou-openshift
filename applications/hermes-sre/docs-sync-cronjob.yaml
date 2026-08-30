@@ -74,15 +74,21 @@ spec:
                 - pipefail
                 - -c
                 - |
-                  token=$(ghapp token --repo "$REPO")
-                  auth="AUTHORIZATION: bearer ${token}"
+                  # Explicit contents=read: the CLI's default set asks for write,
+                  # which this namespace's broker policy denies. Git-over-HTTPS on
+                  # GitHub takes Basic x-access-token:<token>, not Bearer; the
+                  # image's system-wide ghapp credential helper is disabled so a
+                  # failure cannot fall through to a second (write) mint.
+                  token=$(ghapp token --repo "$REPO" --permission contents=read)
+                  [ -n "$token" ]
+                  auth="Authorization: Basic $(printf 'x-access-token:%s' "$token" | base64 -w0)"
+                  g() { git -c credential.helper= -c "http.extraHeader=${auth}" "$@"; }
                   if [ -d "$DEST/.git" ]; then
-                    git -C "$DEST" -c "http.extraHeader=${auth}" fetch --depth 1 origin main
+                    g -C "$DEST" fetch -q --depth 1 origin main
                     git -C "$DEST" reset -q --hard origin/main
                   else
                     rm -rf "$DEST"
-                    git -c "http.extraHeader=${auth}" clone -q --depth 1 --branch main \
-                      "https://github.com/${REPO}.git" "$DEST"
+                    g clone -q --depth 1 --branch main "https://github.com/${REPO}.git" "$DEST"
                   fi
                   echo "igou-docs at $(git -C "$DEST" rev-parse --short HEAD)"
               resources:
