@@ -81,6 +81,13 @@ spec:
     # ghapp broker over HTTP (needs hermes_github_app_plugin >= the PR#32
     # client, which understands GHAPP_BROKER_URL). Replaces the VM's
     # GHAPP_BROKER_SOCKET bind mount.
+    # Slack: own app, answers only in #igoucloud-hermes-sre and DMs.
+    - name: SLACK_ALLOWED_USERS
+      value: U4ZFYHTU4
+    - name: SLACK_HOME_CHANNEL
+      value: C0BTMS7AV34
+    - name: SLACK_ALLOWED_CHANNELS
+      value: C0BTMS7AV34
     - name: GHAPP_BROKER_URL
       value: http://ghbroker.hermes-sre.svc.cluster.local:8085
   envFrom:
@@ -442,7 +449,9 @@ spec:
             routes:
               alertmanager:
                 secret: hermes-sre-alertmanager-loopback-relay
-                deliver: log
+                deliver: slack
+                deliver_extra:
+                  chat_id: C0BTMS7AV34
                 prompt: |
                   Alertmanager delivered {status} alert(s) (receiver hermes-sre).
                   Group labels: {groupLabels}
@@ -457,11 +466,10 @@ spec:
                   Investigate the FIRING alerts (skip resolved ones unless they
                   need a closing note): find the affected component, the likely
                   cause and the evidence. You cannot change anything; do not try.
-                  Then post a concise Slack message (<= 20 lines: alert, impact,
-                  evidence, suggested fix, links) with:
-                    curl -sS -X POST -H 'Content-Type: application/json' \
-                      -d "$(jq -cn --arg t "$MSG" '{text:$t}')" "$SLACK_WEBHOOK_URL"
-                  If the alert is noise, say so in one line and post that.
+                  Reply with a concise message (<= 20 lines: alert, impact,
+                  evidence, suggested fix, links); it is delivered to
+                  #igoucloud-hermes-sre automatically. If the alert is noise,
+                  reply with one line saying so.
       plugins:
         disabled: []
         enabled:

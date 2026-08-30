@@ -79,6 +79,13 @@ spec:
     # ghapp broker over HTTP (needs hermes_github_app_plugin >= the PR#32
     # client, which understands GHAPP_BROKER_URL). Replaces the VM's
     # GHAPP_BROKER_SOCKET bind mount.
+    # Slack: own app, answers only in #igoucloud-hermes-developer and DMs.
+    - name: SLACK_ALLOWED_USERS
+      value: U4ZFYHTU4
+    - name: SLACK_HOME_CHANNEL
+      value: C0BTKUWC4J2
+    - name: SLACK_ALLOWED_CHANNELS
+      value: C0BTKUWC4J2
     - name: GHAPP_BROKER_URL
       value: http://ghbroker.hermes-developer.svc.cluster.local:8085
   envFrom:
