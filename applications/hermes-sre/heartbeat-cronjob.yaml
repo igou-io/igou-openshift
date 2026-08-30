@@ -33,7 +33,7 @@ spec:
               type: RuntimeDefault
           containers:
             - name: heartbeat
-              image: ghcr.io/igou-io/igou-devenv:latest@sha256:b4a00fad0be27dafd3afbf2c96f302ef1703e0bde5465f27e9fccdb76dc11e97
+              image: ghcr.io/igou-io/igou-devenv:latest@sha256:e1cfc53edf3c7875bfe37d578280f38ac03ad0e362ef138197767e013fab771d
               env:
                 - name: TOKEN
                   valueFrom:
