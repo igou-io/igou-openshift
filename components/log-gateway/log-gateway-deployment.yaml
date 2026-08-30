@@ -11,6 +11,10 @@ metadata:
   namespace: log-gateway
 spec:
   replicas: 1
+  # Recreate: the single always-on node runs at ~99% CPU requests, so a
+  # RollingUpdate surge pod can never schedule and rollouts wedge Pending.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/name: log-gateway

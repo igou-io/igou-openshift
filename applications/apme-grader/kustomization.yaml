@@ -13,6 +13,10 @@ helmCharts:
     repo: https://ansible.github.io/apme
     valuesInline:
       image:
+        # quay.io/ansible/apme-primary went private (anonymous pulls 401) so
+        # the engine pod could never pull it; CI always publishes to GHCR and
+        # every 2026.8.6 image is public there.
+        registry: ghcr.io/ansible
         # Pinned to chart 0.1.4 appVersion so a chart republish cannot drift
         # the rule set out from under benchmark grading runs.
         tag: "2026.8.6"

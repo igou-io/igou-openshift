@@ -20,6 +20,11 @@ helmCharts:
     repo: https://kubernetes-sigs.github.io/cluster-api-operator
     includeCRDs: true
     valuesInline:
+      # Recreate: pinned to the single control-plane node, which runs at
+      # ~99% CPU requests — a RollingUpdate surge pod can never schedule
+      # and chart upgrades wedge with the new pod Pending.
+      strategy:
+        type: Recreate
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
