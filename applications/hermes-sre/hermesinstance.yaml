@@ -81,13 +81,13 @@ spec:
     # ghapp broker over HTTP (needs hermes_github_app_plugin >= the PR#32
     # client, which understands GHAPP_BROKER_URL). Replaces the VM's
     # GHAPP_BROKER_SOCKET bind mount.
-    # Slack: own app, answers only in #igoucloud-hermes-sre (ID filled at wiring time) and DMs.
+    # Slack: own app, answers only in #igoucloud-hermes-sre and DMs.
     - name: SLACK_ALLOWED_USERS
       value: U4ZFYHTU4
     - name: SLACK_HOME_CHANNEL
-      value: CHANNEL_ID_TODO
+      value: C0BTMS7AV34
     - name: SLACK_ALLOWED_CHANNELS
-      value: CHANNEL_ID_TODO
+      value: C0BTMS7AV34
     - name: GHAPP_BROKER_URL
       value: http://ghbroker.hermes-sre.svc.cluster.local:8085
   envFrom:
@@ -451,7 +451,7 @@ spec:
                 secret: hermes-sre-alertmanager-loopback-relay
                 deliver: slack
                 deliver_extra:
-                  chat_id: CHANNEL_ID_TODO
+                  chat_id: C0BTMS7AV34
                 prompt: |
                   Alertmanager delivered {status} alert(s) (receiver hermes-sre).
                   Group labels: {groupLabels}
