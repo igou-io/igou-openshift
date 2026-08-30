@@ -296,6 +296,14 @@ spec:
     - name: am-relay
       configMap:
         name: hermes-sre-am-relay
+    # Environment brief (SOUL.md) and the homelab triage skill — see
+    # context-configmap.yaml / skill-alert-triage-configmap.yaml.
+    - name: sre-context
+      configMap:
+        name: hermes-sre-context
+    - name: skill-alert-triage
+      configMap:
+        name: hermes-sre-skill-openshift-alert-triage
     - name: hermes-workspace
       persistentVolumeClaim:
         claimName: hermes-workspace
@@ -313,6 +321,14 @@ spec:
     - name: hermes-workspace
       subPath: home/.codex
       mountPath: /opt/data/.codex
+    # subPath file mount: the rest of /opt/data (PVC) stays writable.
+    - name: sre-context
+      subPath: SOUL.md
+      mountPath: /opt/data/SOUL.md
+      readOnly: true
+    - name: skill-alert-triage
+      mountPath: /opt/data/agent-skills/homelab/openshift-alert-triage
+      readOnly: true
   config:
     raw:
       _config_version: 33
@@ -376,7 +392,9 @@ spec:
           - spotify
         slack:
           - spotify
-      max_concurrent_sessions: '2'
+      # Alert webhooks are rejected outright (not queued) once the limit is
+      # reached; 2 meant one human thread + one alert filled it.
+      max_concurrent_sessions: '4'
       memory:
         write_approval: true
       moa:
@@ -490,6 +508,9 @@ spec:
                   the TrueNAS CLI (`truenas-ro system.info`, `truenas-ro pool.query`,
                   `truenas-ro alert.list` — API-key login, no username), and
                   Prometheus/Thanos and Loki are reachable with the OCP token.
+                  Follow the `openshift-alert-triage` skill; the knowledge base is
+                  at /workspace/igou-docs (start with
+                  reference/Symptom-Keyed Troubleshooting.md).
                   Investigate the FIRING alerts (skip resolved ones unless they
                   need a closing note): find the affected component, the likely
                   cause and the evidence. You cannot change anything; do not try.
@@ -497,10 +518,12 @@ spec:
                   evidence, suggested fix, links); it is delivered to
                   #igoucloud-hermes-sre automatically. If the alert is noise,
                   reply with one line saying so.
+      # No firecrawl here: the plugin needs a lazy install, which
+      # security.allow_lazy_installs forbids, so every web_extract failed.
+      # Search stays on the in-cluster SearXNG.
       plugins:
         disabled: []
-        enabled:
-          - browser/firecrawl
+        enabled: []
       quick_commands:
         oc-context:
           command: oc config current-context 2>/dev/null || true
@@ -511,8 +534,13 @@ spec:
       security:
         allow_lazy_installs: false
         tirith_fail_open: false
+      # The Slack channel thread grew past 240k tokens in a day; reset idle
+      # conversations so each investigation starts from the brief, not from
+      # yesterday's compacted history. Webhook sessions are per-delivery anyway.
       session_reset:
-        mode: none
+        mode: idle
+        idle_minutes: 120
+        notify: false
       skills:
         disabled:
           - polymarket
@@ -650,6 +678,10 @@ spec:
                   - name: agent-envs
                     mountPath: /etc/agent/envs
                     readOnly: true
+                  - name: sre-context
+                    subPath: AGENTS.md
+                    mountPath: /workspace/AGENTS.md
+                    readOnly: true
                   - name: tmp
                     mountPath: /tmp
                 resources:
@@ -685,6 +717,9 @@ spec:
                         name: hermes-session-readonly-truenas
               - name: tmp
                 emptyDir: {}
+              - name: sre-context
+                configMap:
+                  name: hermes-sre-context
       tool_loop_guardrails:
         hard_stop_enabled: true
       tools:
@@ -695,9 +730,8 @@ spec:
       updates:
         pre_update_backup: false
       web:
-        backend: firecrawl
-        extract_backend: firecrawl
         search_backend: searxng
+        keyless_fallback: false
         use_gateway: false
       x_search:
         model: grok-4.20-reasoning

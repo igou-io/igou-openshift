@@ -21,6 +21,10 @@ spec:
         - podSelector:
             matchLabels:
               app.kubernetes.io/managed-by: hermes-agent
+        # igou-docs mirror (docs-sync-cronjob.yaml) mints its clone token here.
+        - podSelector:
+            matchLabels:
+              app: igou-docs-sync
       ports:
         - protocol: TCP
           port: 8085
