@@ -5,6 +5,26 @@
 # the API on each alert. Auth is a short-lived contents:read token from the
 # namespace's ghbroker (policy: allowed_repos), passed as an HTTP header so
 # nothing is written into .git/config.
+# Job pods are created by the job controller, so SCC admission only sees the
+# pod's own SA (session pods, by contrast, are admitted through the creating
+# hermes-agent SA's hermes-agent-root SCC). restricted-v2 refuses a fixed uid
+# 1000, and the mirror must be uid 1000 to match what sessions read/write, so
+# the zero-permission session SA gets nonroot-v2 (any non-root uid, nothing
+# else) for this job only.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: system:openshift:scc:nonroot-v2
+  namespace: hermes-sre
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:openshift:scc:nonroot-v2
+subjects:
+  - kind: ServiceAccount
+    name: hermes-session-noperms
+    namespace: hermes-sre
+---
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -26,6 +46,7 @@ spec:
             app: igou-docs-sync
         spec:
           restartPolicy: Never
+          serviceAccountName: hermes-session-noperms
           automountServiceAccountToken: false
           enableServiceLinks: false
           securityContext:
