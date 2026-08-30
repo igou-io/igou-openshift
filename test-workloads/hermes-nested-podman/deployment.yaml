@@ -80,7 +80,7 @@ spec:
           value: ''
         - name: WHATSAPP_ENABLED
           value: 'false'
-        image: ghcr.io/igou-io/hermes-agent-podman:latest@sha256:17f72be9b1cf2d4ff2db178ec0af031cb894fb22ce5af7f2ede0371a6ce60b38
+        image: ghcr.io/igou-io/hermes-agent-podman:latest@sha256:ecc7f47598516cefa3b5cdce5a6506c8eb3b61334d7aaeca0d53615ee21a138d
         imagePullPolicy: Always
         name: hermes-agent
         resources:
@@ -128,7 +128,7 @@ spec:
         env:
         - name: HERMES_HOME
           value: /opt/data
-        image: ghcr.io/igou-io/hermes-agent-podman:latest@sha256:17f72be9b1cf2d4ff2db178ec0af031cb894fb22ce5af7f2ede0371a6ce60b38
+        image: ghcr.io/igou-io/hermes-agent-podman:latest@sha256:ecc7f47598516cefa3b5cdce5a6506c8eb3b61334d7aaeca0d53615ee21a138d
         imagePullPolicy: Always
         name: bootstrap-config
         securityContext:
