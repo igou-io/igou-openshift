@@ -25,6 +25,7 @@ data:
         - igou-io/igou-ansible
         - igou-io/igou-containers
         - igou-io/igou-devenv
+        - igou-io/igou-docs
         - igou-io/igou-inventory
         - igou-io/igou-kubernetes
         - igou-io/igou-openshift

@@ -1,0 +1,103 @@
+---
+# Hermes skill delivered as a ConfigMap and mounted into the external skills
+# dir (skills.external_dirs -> /opt/data/agent-skills/homelab). The mount is a
+# directory, so the PVC-backed parent stays writable for agent-created skills.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hermes-sre-skill-openshift-alert-triage
+  namespace: hermes-sre
+data:
+  SKILL.md: |
+    ---
+    name: openshift-alert-triage
+    description: Triage a firing Alertmanager/Prometheus alert on the igou homelab (ocp + rk8s) with the read-only CLIs and produce the standard Slack report. Use for any alert investigation or "what is wrong with X" question.
+    version: 1.0.0
+    author: igou-io
+    platforms: [linux]
+    metadata:
+      hermes:
+        tags: [sre, openshift, alerts, loki, prometheus]
+    ---
+
+    # OpenShift alert triage (read-only)
+
+    Goal: in as few terminal calls as possible, name the affected component,
+    show the evidence, state the likely cause and a GitOps-shaped fix.
+
+    ## 1. Scope the alert (1-2 calls)
+
+    ```bash
+    ocp-alerts --json | python3 -c '
+    import json,sys
+    for a in json.load(sys.stdin):
+        l=a["labels"]; print(a.get("startsAt","")[:19], l.get("severity"), l.get("alertname"), l.get("namespace",""), l.get("pod","") or l.get("instance",""))'
+    ```
+
+    Note `severity`, `namespace`, `pod`/`deployment`/`instance`, `startsAt`,
+    and the `runbook_url`/`description` annotations. If the alert names a rule
+    you do not know, find its source:
+    `grep -rl "alert: <AlertName>" /workspace/igou-docs /workspace/igou-openshift 2>/dev/null`
+    (the rule text is in `components/user-workload-monitoring/` or the
+    operator's bundled rules).
+
+    ## 2. Look at the object (1-3 calls)
+
+    ```bash
+    oc get pods -n NS -o wide
+    oc describe pod -n NS POD | sed -n '/Conditions:/,$p'
+    oc get events -n NS --sort-by=.lastTimestamp | tail -30
+    ```
+
+    For rk8s alerts prefix with `kubectl --context rk8s-cluster-reader`.
+    For host alerts (`instance` is an IP or hostname, no namespace) there is no
+    pod: use metrics and `routeros-ro` / `truenas-ro`.
+
+    ## 3. Logs (1-2 calls)
+
+    ```bash
+    ocp-logs '{kubernetes_namespace_name="NS", kubernetes_pod_name=~"POD.*"}' --since 2h --limit 200
+    oc logs -n NS POD --previous --tail=100        # crash loops
+    ocp-logs --tenant infrastructure '{kubernetes_namespace_name="openshift-NS"}' --since 1h
+    ```
+
+    LogQL rules: the stream selector goes in `{}`; labels are
+    `kubernetes_namespace_name`, `kubernetes_pod_name`,
+    `kubernetes_container_name`; filters go after: `|= "text"`, `!= "text"`,
+    `|~ "regex"`. Never pass `--since` without a selector.
+
+    ## 4. Metrics only when logs are not enough (1 call)
+
+    ```bash
+    TOK=$(oc whoami -t)
+    curl -sk -H "Authorization: Bearer $TOK" \
+      https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems/api/v1/query \
+      --data-urlencode 'query=<PromQL from the alert expr>' | python3 -m json.tool | head -60
+    ```
+
+    `ocp-alerts --thanos` lists the rule expressions if you need them.
+
+    ## 5. Correlate
+
+    - Storage symptoms (`VolumeFailedDelete`, quota, `dataset is busy`): `truenas-ro alert.list`, `truenas-ro pool.query`.
+    - Network symptoms (probe failures, BGP/BFD, PXE): `routeros-ro all system/resource`, `routeros-ro <host> interface`.
+    - Backups: `oc get backup -n openshift-adp --sort-by=.metadata.creationTimestamp | tail -5`; `oc get schedule -n openshift-adp`.
+    - Deploy drift: `oc get applications.argoproj.io -n openshift-gitops APP -o jsonpath='{.status.sync.status} {.status.health.status}'`.
+    - Known failure modes: `grep -ril "<symptom>" /workspace/igou-docs/reference/Symptom-Keyed\ Troubleshooting.md`.
+
+    ## 6. Report (Slack, <= 20 lines)
+
+    ```
+    *<AlertName>* (severity) — FIRING since <ts> / RESOLVED
+    *Component:* ns/object
+    *Impact:* what users/services lose
+    *Evidence:* 2-4 exact facts (counts, log lines, event text)
+    *Likely cause:* one sentence, say "not proven" if so
+    *Suggested fix:* the GitOps file/object to change, or the runbook step
+    *Links:* console alert / runbook / relevant docs page
+    No changes made.
+    ```
+
+    Stop conditions: the alert is `resolved` → one closing line. A 403 → say what
+    is missing and report what you have. Ten terminal calls without progress →
+    report the partial findings rather than continuing to probe.

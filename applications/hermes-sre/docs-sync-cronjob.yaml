@@ -1,0 +1,91 @@
+---
+# Keeps a read-only mirror of igou-io/igou-docs in the shared workspace PVC
+# (repos/igou-docs -> /workspace/igou-docs in every session pod) so the SRE
+# can consult the knowledge base instead of rediscovering the estate through
+# the API on each alert. Auth is a short-lived contents:read token from the
+# namespace's ghbroker (policy: allowed_repos), passed as an HTTP header so
+# nothing is written into .git/config.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: igou-docs-sync
+  namespace: hermes-sre
+spec:
+  schedule: '*/30 * * * *'
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 600
+      ttlSecondsAfterFinished: 3600
+      template:
+        metadata:
+          labels:
+            app: igou-docs-sync
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          enableServiceLinks: false
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: sync
+              image: ghcr.io/igou-io/igou-devenv:latest@sha256:b4a00fad0be27dafd3afbf2c96f302ef1703e0bde5465f27e9fccdb76dc11e97
+              env:
+                - name: HOME
+                  value: /tmp
+                - name: GHAPP_BROKER_URL
+                  value: http://ghbroker.hermes-sre.svc.cluster.local:8085
+                - name: REPO
+                  value: igou-io/igou-docs
+                - name: DEST
+                  value: /workspace/igou-docs
+              command:
+                - bash
+                - -euo
+                - pipefail
+                - -c
+                - |
+                  token=$(ghapp token --repo "$REPO")
+                  auth="AUTHORIZATION: bearer ${token}"
+                  if [ -d "$DEST/.git" ]; then
+                    git -C "$DEST" -c "http.extraHeader=${auth}" fetch --depth 1 origin main
+                    git -C "$DEST" reset -q --hard origin/main
+                  else
+                    rm -rf "$DEST"
+                    git -c "http.extraHeader=${auth}" clone -q --depth 1 --branch main \
+                      "https://github.com/${REPO}.git" "$DEST"
+                  fi
+                  echo "igou-docs at $(git -C "$DEST" rev-parse --short HEAD)"
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+              volumeMounts:
+                - name: workspace
+                  subPath: repos
+                  mountPath: /workspace
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: workspace
+              persistentVolumeClaim:
+                claimName: hermes-workspace
+            - name: tmp
+              emptyDir: {}

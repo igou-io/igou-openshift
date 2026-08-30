@@ -29,10 +29,13 @@ resources:
   - hermes-env-externalsecret.yaml
   - hermes-session-readonly-externalsecret.yaml
   - am-relay-configmap.yaml
+  - context-configmap.yaml
+  - skill-alert-triage-configmap.yaml
   - hermes-workspace-pvc.yaml
   - ghbroker-externalsecret.yaml
   - ghbroker-policy-configmap.yaml
   - ghbroker-deployment.yaml
   - ghbroker-networkpolicy.yaml
+  - docs-sync-cronjob.yaml
   - hermesinstance.yaml
   - hermes-sre-dashboard-route.yaml
