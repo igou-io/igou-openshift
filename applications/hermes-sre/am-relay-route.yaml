@@ -1,0 +1,48 @@
+---
+# Exposes the am-relay sidecar so the rk8s Alertmanager (igou-kubernetes
+# components/alertmanager-config) can deliver its alerts into the same
+# investigate-and-report chain. Network policy stops being the relay's
+# authorization the moment this Route exists; the relay therefore requires
+# the hermes-sre-am-relay bearer token on every POST (see am-relay-configmap).
+# GET /healthz stays open — the blackbox-exporter probes it.
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: hermes-sre-am-relay
+  namespace: hermes-sre
+  labels:
+    app: hermes-sre
+spec:
+  host: hermes-sre-am-relay.apps.ocp.igou.systems
+  to:
+    kind: Service
+    name: hermes-sre
+    weight: 100
+  port:
+    targetPort: webhook
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None
+---
+# The router lives in openshift-ingress; without this the Route 502s.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hermes-sre-am-relay-router-ingress
+  namespace: hermes-sre
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: hermes-sre
+      app.kubernetes.io/name: hermes-agent
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/ingress: ''
+      ports:
+        - protocol: TCP
+          port: 8645

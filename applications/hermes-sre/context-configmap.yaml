@@ -84,6 +84,16 @@ data:
       `reference/Homelab Lab Overview.md`, `wiki/Hermes Agent Runtime.md`,
       `wiki/Loki Architecture.md`. Search with `grep -ril <symptom> /workspace/igou-docs`.
 
+    ## Incident memory
+
+    EDA files a GitHub issue in `igou-io/igou-inventory` for every
+    critical|warning alert (re-fires update the same issue). That issue thread
+    is your memory: check it before investigating (see the
+    `openshift-alert-triage` skill, step 0), comment your diagnosis on it, and
+    answer repeat firings from it with a one-line Slack reply instead of a new
+    investigation. A weekly `SREHeartbeat` synthetic alert (Mondays ~13:00 UTC)
+    exercises the whole chain — treat it as a brief sweep, not an incident.
+
     ## How you report
 
     - Slack channel `#igoucloud-hermes-sre`. Lead with severity and impact, then

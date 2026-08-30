@@ -42,6 +42,23 @@ directory, nothing hand-seeded on the PVC):
   limit), `session_reset: idle 120 min`, and no firecrawl plugin (lazy installs
   are disabled, so `web_extract` could never work; search stays on SearXNG).
 
+Alert-path hardening (2026-08-30, second pass):
+
+- `am-relay` requires the `hermes-sre-am-relay` bearer token on every POST
+  (item `lab_rk8s/hermes-sre-am-relay`; mounted into alertmanager-main via
+  cluster-monitoring-config `alertmanagerMain.secrets`) and answers **503**
+  while Hermes is at `max_concurrent_sessions` — Alertmanager retries 5xx, so
+  alerts queue upstream instead of being rejected.
+- `am-relay-route.yaml` exposes the relay for the **rk8s** Alertmanager
+  (igou-kubernetes `components/alertmanager-config`); `/healthz` is probed by
+  the blackbox-exporter (`BlackboxProbeFailed` = watcher for the watcher).
+- `heartbeat-cronjob.yaml` fires a synthetic `SREHeartbeat` through the full
+  chain every Monday 13:00 UTC; no Slack report = the chain is broken.
+- Incident memory: the agent reads/comments the EDA-filed issue in
+  `igou-io/igou-inventory` per alert (skill step 0) and answers repeat
+  firings from it; the OCP route also batches with `group_interval: 30m`,
+  `repeat_interval: 12h`.
+
 Follow-ups: own 1Password item for dashboard auth/API key (uses `hermes` today);
 alert ingestion (Alertmanager webhook → api_server) so this instance monitors rather
 than only answers; a ClusterRole for `hermes.agent` CRs if it should inspect Hermes.

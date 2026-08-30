@@ -25,3 +25,4 @@ data:
       secrets:
         - alertmanager-eda-event-stream
         - alertmanager-slack-bot-token
+        - hermes-sre-am-relay

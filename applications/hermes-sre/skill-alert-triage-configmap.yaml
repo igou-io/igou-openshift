@@ -25,6 +25,25 @@ data:
     Goal: in as few terminal calls as possible, name the affected component,
     show the evidence, state the likely cause and a GitOps-shaped fix.
 
+    ## 0. Incident memory (1 call)
+
+    EDA automatically files/updates a GitHub issue in `igou-io/igou-inventory`
+    for every critical|warning alert. Check it before doing anything else:
+
+    ```bash
+    export GH_TOKEN=$(ghapp token --repo igou-io/igou-inventory --permission issues=write)
+    gh issue list -R igou-io/igou-inventory --state open --search "<AlertName>" \
+      --json number,title,updatedAt,comments
+    ```
+
+    - Your own comment already covers this firing episode (same alert, nothing
+      new since) -> post ONE Slack line linking the issue and stop.
+    - Issue exists, no diagnosis yet (or the situation changed) -> investigate,
+      then `gh issue comment <n> -R igou-io/igou-inventory --body "<diagnosis>"`
+      and link the issue in the Slack report.
+    - No issue (info-severity, synthetic, or user question) -> just investigate.
+    - Never create issues yourself; EDA owns their lifecycle.
+
     ## 1. Scope the alert (1-2 calls)
 
     ```bash
@@ -94,9 +113,13 @@ data:
     *Evidence:* 2-4 exact facts (counts, log lines, event text)
     *Likely cause:* one sentence, say "not proven" if so
     *Suggested fix:* the GitOps file/object to change, or the runbook step
-    *Links:* console alert / runbook / relevant docs page
+    *Links:* console alert / runbook / incident issue / relevant docs page
     No changes made.
     ```
+
+    Post the same diagnosis as a comment on the incident issue (step 0) so the
+    next firing of this alert can be answered from memory instead of a fresh
+    investigation.
 
     Stop conditions: the alert is `resolved` → one closing line. A 403 → say what
     is missing and report what you have. Ten terminal calls without progress →

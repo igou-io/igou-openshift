@@ -1,0 +1,82 @@
+---
+# Weekly synthetic alert through the real delivery chain: relay (token auth)
+# -> Hermes webhook -> read-only Kata session -> Slack report. A missing
+# Monday-morning heartbeat report in #igoucloud-hermes-sre means the chain is
+# broken somewhere the blackbox /healthz probe cannot see (webhook platform,
+# session backend, model provider, Slack delivery).
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sre-heartbeat
+  namespace: hermes-sre
+spec:
+  schedule: '0 13 * * 1'
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 300
+      ttlSecondsAfterFinished: 86400
+      template:
+        metadata:
+          labels:
+            app: sre-heartbeat
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          enableServiceLinks: false
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: heartbeat
+              image: ghcr.io/igou-io/igou-devenv:latest@sha256:b4a00fad0be27dafd3afbf2c96f302ef1703e0bde5465f27e9fccdb76dc11e97
+              env:
+                - name: TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: hermes-sre-am-relay
+                      key: token
+              command:
+                - bash
+                - -euo
+                - pipefail
+                - -c
+                - |
+                  ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+                  desc="Scheduled end-to-end check of the alert chain. Run a brief"
+                  desc="$desc read-only sweep (OCP nodes + firing alerts, rk8s nodes,"
+                  desc="$desc TrueNAS pools/alerts, RouterOS reachability) and post the"
+                  desc="$desc usual report prefixed with SREHeartbeat. Skip the"
+                  desc="$desc incident-memory lookup; this alert is synthetic."
+                  payload=$(jq -n --arg ts "$ts" --arg desc "$desc" '{
+                    version: "4", groupKey: "{}:{alertname=\"SREHeartbeat\"}",
+                    status: "firing", receiver: "hermes-sre",
+                    groupLabels: {alertname: "SREHeartbeat"},
+                    commonLabels: {alertname: "SREHeartbeat", severity: "warning"},
+                    commonAnnotations: {summary: "Weekly synthetic heartbeat", description: $desc},
+                    alerts: [{status: "firing",
+                      labels: {alertname: "SREHeartbeat", severity: "warning"},
+                      annotations: {summary: "Weekly synthetic heartbeat"},
+                      startsAt: $ts}]}')
+                  code=$(curl -s -o /tmp/resp -w '%{http_code}' -m 30 \
+                    -H "Authorization: Bearer ${TOKEN}" -H 'Content-Type: application/json' \
+                    --data-binary "$payload" http://hermes-sre.hermes-sre.svc:8644/)
+                  cat /tmp/resp; echo
+                  case "$code" in 2*) exit 0;; *) echo "relay returned $code"; exit 1;; esac
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 100m
+                  memory: 128Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: false
+                capabilities:
+                  drop:
+                    - ALL
