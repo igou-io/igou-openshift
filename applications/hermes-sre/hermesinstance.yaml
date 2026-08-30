@@ -245,7 +245,7 @@ spec:
           subPath: home/.codex
           mountPath: /codex
     - name: am-relay
-      image: ghcr.io/igou-io/igou-devenv:latest@sha256:71fab8a11495abb52f892b4e4549a431ee8efc381f773ca90ccfcd50af00158c
+      image: ghcr.io/igou-io/igou-devenv:latest@sha256:e8ef652dd79ce352ed062c1a1d0a24682be30301e8bead05ae7e688f451764e8
       command:
         - python3
         - /opt/am-relay/relay.py
@@ -598,7 +598,7 @@ spec:
               - name: workspace
                 # :latest is digest-pinned (Renovate moves it); carries the
                 # coding-agent CLIs and ghapp >= 0.3.0 (GHAPP_BROKER_URL client).
-                image: ghcr.io/igou-io/igou-devenv:latest@sha256:71fab8a11495abb52f892b4e4549a431ee8efc381f773ca90ccfcd50af00158c
+                image: ghcr.io/igou-io/igou-devenv:latest@sha256:e8ef652dd79ce352ed062c1a1d0a24682be30301e8bead05ae7e688f451764e8
                 command:
                   - sleep
                   - infinity
