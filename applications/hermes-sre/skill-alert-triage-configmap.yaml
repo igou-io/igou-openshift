@@ -103,6 +103,8 @@ data:
     - Backups: `oc get backup -n openshift-adp --sort-by=.metadata.creationTimestamp | tail -5`; `oc get schedule -n openshift-adp`.
     - Deploy drift: `oc get applications.argoproj.io -n openshift-gitops APP -o jsonpath='{.status.sync.status} {.status.health.status}'`.
     - Known failure modes: `grep -ril "<symptom>" /workspace/igou-docs/reference/Symptom-Keyed\ Troubleshooting.md`.
+    - Still no cause and the symptom is storage / network / rk8s / "what
+      changed": switch to the matching `triage-domains` deep-dive.
 
     ## 6. Report (Slack, <= 20 lines)
 
@@ -121,7 +123,9 @@ data:
     next firing of this alert can be answered from memory instead of a fresh
     investigation. If the fix is declarative and you are confident in it,
     continue with the `propose-fix` skill and add the PR link to both the
-    Slack report and the issue comment.
+    Slack report and the issue comment. When a critical alert resolves after
+    a real investigation — or the docs had nothing for the symptom — close
+    the loop with the `incident-reporting` skill.
 
     Stop conditions: the alert is `resolved` → one closing line. A 403 → say what
     is missing and report what you have. Ten terminal calls without progress →

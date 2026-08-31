@@ -32,8 +32,13 @@ directory, nothing hand-seeded on the PVC):
 - `context-configmap.yaml` — `SOUL.md` (environment brief: where it runs, which
   CLI to reach for, the estate, report format) mounted over `/opt/data/SOUL.md`,
   and the same brief as `/workspace/AGENTS.md` for coding CLIs inside sessions.
-- `skill-alert-triage-configmap.yaml` — `openshift-alert-triage` skill mounted
-  into `skills.external_dirs` (`/opt/data/agent-skills/homelab/`).
+- `skill-*-configmap.yaml` — the homelab skills mounted into
+  `skills.external_dirs` (`/opt/data/agent-skills/homelab/`):
+  `openshift-alert-triage`, `propose-fix`, `sre-sweeps` (the scheduled
+  sweep procedures), `triage-domains` (storage/network/rk8s/change-correlation
+  deep-dives, one skill with reference files to keep the skill index small)
+  and `incident-reporting` (postmortem comments + runbook-gap issues on
+  `igou-io/igou-docs` — issues survive that repo's `contents: read` cap).
 - `docs-sync-cronjob.yaml` — read-only mirror of `igou-io/igou-docs` refreshed
   every 30 min into the workspace PVC (`/workspace/igou-docs` in sessions) using
   a broker-minted `contents:read` token (`igou-docs` is in the broker policy and
@@ -63,12 +68,36 @@ Propose-fix (2026-08-31): the broker ceiling is now `contents: write` +
 `pull_requests: write` so the SRE can PROPOSE fixes as PRs (`propose-fix`
 skill: clone, branch, delegate implementation to
 `codex exec -m gpt-5.6-sol -c model_reasoning_effort=medium`, validate,
-push, PR, link on the incident issue). Never merges — enforced by contract
-(SOUL + skill), not the token: GitHub's merge API needs the same
-contents:write as pushing. `default_permissions` stays `contents: read`;
-write tokens exist only when a mint explicitly requests them. Branch
-protection on the repos is the hard backstop if contract-level ever feels
-thin.
+push, PR, link on the incident issue). Never merges — by contract (SOUL +
+skill) AND by ruleset: every writable repo's `protect-default-branch`
+ruleset carries a restrict-updates rule whose bypass list is repo-admin +
+igou-dev + renovate, so GitHub refuses a default-branch update (= a merge)
+by the igou-hermes App even though its token holds `contents: write`
+(verified 2026-08-31; note `bypass_actors` reads as null without an
+`administration`-scoped token). `default_permissions` stays
+`contents: read`; write tokens exist only when a mint explicitly requests
+them.
+
+Scheduled sweeps (2026-08-31): four `sre-sweep-*` CronJobs post synthetic
+info-severity alerts (severity `info` so EDA files no incident issues)
+through the same relay chain as the heartbeat, each naming a section of the
+`sre-sweeps` skill; one Slack digest per sweep, exceptions only:
+
+- `sre-sweep-daily-health` (11:00 UTC daily) — OADP/CNPG backup
+  verification, ArgoCD drift, cert/CSR state, rk8s nodes. Watches for the
+  failures that never fire an alert.
+- `sre-sweep-hygiene` (Mon 13:30 UTC, after the heartbeat) — long-firing
+  alerts, silences due a decision, the week's flappiest rules, and
+  incident-memory grooming (proposes closure comments; EDA/human close).
+- `sre-sweep-capacity` (Tue 13:00 UTC) — TrueNAS pools, fullest PVCs, node
+  pressure, pending OLM updates.
+- `sre-sweep-pr-followup` (Mon+Thu 14:30 UTC) — CI state of its own open
+  PRs, review nudges, stale-proposal flags. Needs the broker's
+  `checks`/`statuses: read` ceiling (policy change: roll the ghbroker
+  Deployment — it reads policy at startup only).
+
+The payload script is shared (`sre-sweep-post` ConfigMap); the heartbeat now
+also resolves through the skill (`SREHeartbeat` section, per-hop OK/FAIL).
 
 Follow-ups: own 1Password item for dashboard auth/API key (uses `hermes` today);
 alert ingestion (Alertmanager webhook → api_server) so this instance monitors rather

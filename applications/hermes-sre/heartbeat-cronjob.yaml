@@ -47,11 +47,12 @@ spec:
                 - -c
                 - |
                   ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-                  desc="Scheduled end-to-end check of the alert chain. Run a brief"
-                  desc="$desc read-only sweep (OCP nodes + firing alerts, rk8s nodes,"
-                  desc="$desc TrueNAS pools/alerts, RouterOS reachability) and post the"
-                  desc="$desc usual report prefixed with SREHeartbeat. Skip the"
-                  desc="$desc incident-memory lookup; this alert is synthetic."
+                  desc="Scheduled end-to-end check of the alert chain. Follow the"
+                  desc="$desc SREHeartbeat section of the sre-sweeps skill: verify each"
+                  desc="$desc hop (contexts, broker mint, alert/log CLIs, TrueNAS,"
+                  desc="$desc RouterOS, docs mirror) plus nodes and firing alerts, and"
+                  desc="$desc post the per-hop report prefixed with SREHeartbeat. Skip"
+                  desc="$desc the incident-memory lookup; this alert is synthetic."
                   payload=$(jq -n --arg ts "$ts" --arg desc "$desc" '{
                     version: "4", groupKey: "{}:{alertname=\"SREHeartbeat\"}",
                     status: "firing", receiver: "hermes-sre",

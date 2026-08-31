@@ -33,6 +33,10 @@ resources:
   - context-configmap.yaml
   - skill-alert-triage-configmap.yaml
   - skill-propose-fix-configmap.yaml
+  - skill-sre-sweeps-configmap.yaml
+  - skill-triage-domains-configmap.yaml
+  - skill-incident-reporting-configmap.yaml
+  - sre-sweep-post-configmap.yaml
   - hermes-workspace-pvc.yaml
   - ghbroker-externalsecret.yaml
   - ghbroker-policy-configmap.yaml
@@ -40,6 +44,10 @@ resources:
   - ghbroker-networkpolicy.yaml
   - docs-sync-cronjob.yaml
   - heartbeat-cronjob.yaml
+  - sre-sweep-daily-health-cronjob.yaml
+  - sre-sweep-hygiene-cronjob.yaml
+  - sre-sweep-capacity-cronjob.yaml
+  - sre-sweep-pr-followup-cronjob.yaml
   - am-relay-route.yaml
   - hermesinstance.yaml
   - hermes-sre-dashboard-route.yaml

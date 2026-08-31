@@ -1,0 +1,74 @@
+---
+# Hermes skill: close the loop after a triage — durable postmortem comment on
+# the incident issue, and a docs-gap issue when no runbook covered the
+# symptom. Same ConfigMap-into-external_dirs delivery as openshift-alert-triage.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hermes-sre-skill-incident-reporting
+  namespace: hermes-sre
+data:
+  SKILL.md: |
+    ---
+    name: incident-reporting
+    description: Close out a finished triage - postmortem timeline comment on the incident issue, and a runbook-gap issue on igou-io/igou-docs when no docs page covered the symptom. Issues only, never repo content.
+    version: 1.0.0
+    author: igou-io
+    platforms: [linux]
+    metadata:
+      hermes:
+        tags: [sre, postmortem, issues, docs]
+    ---
+
+    # Incident reporting (issues only)
+
+    Two follow-ups, both cheap, both compounding: the postmortem makes the
+    NEXT firing answerable from memory; the gap issue makes the docs grow
+    where they actually failed you.
+
+    ## Postmortem comment (on resolution)
+
+    When: a critical alert resolves after a real investigation, or a human
+    asks "what happened". Not for noise, synthetics, or one-line triages —
+    a postmortem nobody needed is clutter on the incident issue.
+
+    Where: ONE comment on the existing EDA incident issue in
+    `igou-io/igou-inventory` (never a new issue — EDA owns their lifecycle).
+
+    ```bash
+    export GH_TOKEN=$(ghapp token --repo igou-io/igou-inventory --permission issues=write)
+    gh issue comment N -R igou-io/igou-inventory --body "<postmortem>"
+    ```
+
+    Format (<= 30 lines, headings exactly these so later greps work):
+    ```
+    ## Postmortem: <AlertName> <first-fired date>
+    **Window:** <firing start> -> <resolved> (<duration>)
+    **Impact:** what actually degraded, or "no user-visible impact"
+    **Detection:** alert | heartbeat | human report
+    **Timeline:** 3-6 timestamped lines (fired / diagnosed / fix merged / resolved)
+    **Root cause:** one or two sentences; "not proven" is allowed and better than a guess
+    **Resolution:** what change resolved it (PR link) or "self-recovered"
+    **Follow-ups:** open PRs/issues, or "none"
+    ```
+    Mention the postmortem in one Slack line with the issue link.
+
+    ## Runbook-gap issue
+
+    When: during a triage, the knowledge base (/workspace/igou-docs — the
+    symptom-keyed page and the domain pages) had nothing for the symptom and
+    you had to derive the diagnosis from scratch. That derivation is the
+    value; capture it.
+
+    ```bash
+    export GH_TOKEN=$(ghapp token --repo igou-io/igou-docs --permission issues=write)
+    gh issue list -R igou-io/igou-docs --state open --search "<symptom keyword>"   # dedup first
+    gh issue create -R igou-io/igou-docs --title "runbook gap: <symptom, one line>" \
+      --body "<what fired, what the docs lacked, the diagnosis that worked (exact commands), where it should live (page/section), incident issue link>"
+    ```
+
+    Rules: search before filing (comment on an existing gap issue instead of
+    duplicating); one symptom per issue; you cannot PR igou-docs (broker
+    caps it at contents:read) — the issue IS the contribution, a human lands
+    the page. Do not file gaps discovered by sweeps for checks that merely
+    403'd — those are permission-scope findings for the digest, not docs gaps.
