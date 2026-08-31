@@ -21,7 +21,7 @@ data:
         - david-igou/ansible-collection-linux_baseline
         - david-igou/ansible-collection-molecule_provisioners
         - david-igou/ansible-collection-routeros_configuration
-        - david-igou/ansible-collection-rustfs_configuration
+        - david-igou/ansible-collection-rustfs
         - igou-io/igou-ansible
         - igou-io/igou-containers
         - igou-io/igou-devenv
