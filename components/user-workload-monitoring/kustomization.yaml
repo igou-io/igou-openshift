@@ -14,7 +14,6 @@ resources:
   - exporters/truenas
   - exporters/rk8s-federate
   - exporters/snmp-exporter
-  - exporters/codex-desktop
   - rules/externalsecrets-alerts-prometheusrule.yaml
   - rules/cert-manager-alerts-prometheusrule.yaml
   - rules/cnpg-alerts-forgejo-prometheusrule.yaml

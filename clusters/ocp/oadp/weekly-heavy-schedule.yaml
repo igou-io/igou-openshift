@@ -4,7 +4,6 @@
 # daily-*) fully supersedes the TrueNAS name-addressed snapshot/
 # replication schedules (igou-inventory truenas_k8s_protected_volumes,
 # removed in favor of OADP):
-# - windows-images: codex-desktop boot + vTPM/EFI persistent-state PVCs.
 # - comfyui: comfyui-data only (comfyui-models carries the
 #   velero.io/exclude-from-backup label — re-downloadable weights).
 # - openshift-virtualization-os-images: the manually-built win2k25/win11
@@ -21,7 +20,6 @@ spec:
   schedule: "0 6 * * 6"
   template:
     includedNamespaces:
-      - windows-images
       - comfyui
       - openshift-virtualization-os-images
     # NOTE: do NOT excludedResources: [pods] here — the kubevirt velero
