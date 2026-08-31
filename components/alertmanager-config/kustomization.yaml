@@ -6,7 +6,7 @@ resources:
   - alertmanager-eda-event-stream-externalsecret.yaml
   - hermes-sre-am-relay-externalsecret.yaml
   - alertmanager-slack-bot-token-externalsecret.yaml
-  - drop-automation-orchestrator-backend-targetdown-alertrelabelconfig.yaml
+  - drop-automation-orchestrator-targetdown-alertrelabelconfig.yaml
   - drop-unsupported-hco-modification-alertrelabelconfig.yaml
 secretGenerator:
   - name: alertmanager-main

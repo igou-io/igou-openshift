@@ -53,16 +53,14 @@ route:
     - matchers:
         - alertname = HighOverallControlPlaneMemory
       receiver: 'null'
-    # The automation-orchestrator operator's own backend ServiceMonitor can
-    # never scrape: the backend requires a client certificate, the operator's
-    # monitor sends none, the serving cert has no pod-IP SAN, and the operator
-    # re-applies the monitor every reconcile. Metrics come from the
-    # GitOps-owned automation-orchestrator-backend-mtls ServiceMonitor
-    # instead, so this specific job is unfixable noise, not an outage.
+    # Orchestrator monitoring was removed entirely (2026-08-31): the operator
+    # re-applies its own broken backend ServiceMonitor every reconcile
+    # (mandatory client cert, no pod-IP SAN), so TargetDown from this
+    # namespace is permanent noise. Belt to the AlertRelabelConfig's
+    # suspenders — relabeling already drops these upstream.
     - matchers:
         - alertname = TargetDown
         - namespace = automation-orchestrator
-        - job = automation-orchestrator-backend
       receiver: 'null'
     - matchers:
         - severity =~ "critical|warning"
