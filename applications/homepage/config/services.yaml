@@ -166,10 +166,18 @@
     # gitea, n8n, temporalio: manifests staged in applications/ but not wired
     # into clusters/ocp/values.yaml — no ArgoCD app, empty namespaces, routes
     # 503. Re-add tiles (or annotate their Ingress) when actually onboarded.
-    - Hermes Dashboard:
+    - Hermes Assistant:
         icon: mdi-robot
         href: https://hermes-dashboard.apps.ocp.igou.systems
-        description: agent dashboard
+        description: personal agent
+    - Hermes Developer:
+        icon: mdi-robot
+        href: https://hermes-developer.apps.ocp.igou.systems
+        description: development agent
+    - Hermes SRE:
+        icon: mdi-robot
+        href: https://hermes-sre.apps.ocp.igou.systems
+        description: operations agent
     - Sands of Time:
         icon: mdi-timer-sand
         href: https://sands-of-time.apps.ocp.igou.systems
