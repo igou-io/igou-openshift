@@ -14,5 +14,3 @@ resources:
   - temporal-visibility-database.yaml
   - orchestrator-pg-daily-scheduledbackup.yaml
   - automation-orchestrator-automationorchestrator.yaml
-  - automation-orchestrator-backend-mtls-servicemonitor.yaml
-  - automation-orchestrator-allow-backend-metrics-networkpolicy.yaml

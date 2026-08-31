@@ -46,8 +46,10 @@ spec:
   storage:
     size: 10Gi
     storageClass: freenas-nvmeof-ssd-csi
+  # Orchestrator monitoring removed entirely (2026-08-31); the operator
+  # deletes the PodMonitor when this is false.
   monitoring:
-    enablePodMonitor: true
+    enablePodMonitor: false
   resources:
     requests:
       cpu: 250m

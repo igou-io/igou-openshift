@@ -1,0 +1,25 @@
+# Drop TargetDown for the whole automation-orchestrator namespace on the
+# Prometheus -> Alertmanager path. Monitoring for the orchestrator was removed
+# entirely (2026-08-31): the GitOps-owned -mtls ServiceMonitor and the
+# allow-backend-metrics NetworkPolicy are gone and the CNPG PodMonitor is
+# disabled. The operator still server-side-applies its own ServiceMonitors on
+# every reconcile (#824) — its backend target can never scrape (mandatory
+# client cert, no pod-IP SAN), so TargetDown from this namespace is permanent
+# noise, not an outage signal.
+#
+# NOTE: AlertRelabelConfig only relabels alerts on the Prometheus ->
+# Alertmanager path. Dropped alerts still show in the web console
+# Observe > Alerting list (the console reads the Prometheus rules API,
+# upstream of this relabeling).
+apiVersion: monitoring.openshift.io/v1
+kind: AlertRelabelConfig
+metadata:
+  name: drop-automation-orchestrator-targetdown
+  namespace: openshift-monitoring
+spec:
+  configs:
+    - sourceLabels:
+        - alertname
+        - namespace
+      regex: 'TargetDown;automation-orchestrator'
+      action: Drop
