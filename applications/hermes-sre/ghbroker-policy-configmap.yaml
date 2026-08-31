@@ -29,8 +29,14 @@ data:
         - igou-io/igou-inventory
         - igou-io/igou-kubernetes
         - igou-io/igou-openshift
+      # contents/pull_requests write let the SRE PROPOSE fixes as PRs
+      # (branch + PR only). Merging is forbidden by contract (SOUL +
+      # propose-fix skill), not by the token: GitHub's merge API needs the
+      # same contents:write as pushing. default_permissions stays read, so
+      # write tokens exist only when a mint explicitly asks for them.
       max_permissions:
-        contents: read
+        contents: write
         issues: write
+        pull_requests: write
       default_permissions:
         contents: read

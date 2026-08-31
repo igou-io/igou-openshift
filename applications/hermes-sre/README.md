@@ -59,6 +59,17 @@ Alert-path hardening (2026-08-30, second pass):
   firings from it; the OCP route also batches with `group_interval: 30m`,
   `repeat_interval: 12h`.
 
+Propose-fix (2026-08-31): the broker ceiling is now `contents: write` +
+`pull_requests: write` so the SRE can PROPOSE fixes as PRs (`propose-fix`
+skill: clone, branch, delegate implementation to
+`codex exec -m gpt-5.6-sol -c model_reasoning_effort=medium`, validate,
+push, PR, link on the incident issue). Never merges — enforced by contract
+(SOUL + skill), not the token: GitHub's merge API needs the same
+contents:write as pushing. `default_permissions` stays `contents: read`;
+write tokens exist only when a mint explicitly requests them. Branch
+protection on the repos is the hard backstop if contract-level ever feels
+thin.
+
 Follow-ups: own 1Password item for dashboard auth/API key (uses `hermes` today);
 alert ingestion (Alertmanager webhook → api_server) so this instance monitors rather
 than only answers; a ClusterRole for `hermes.agent` CRs if it should inspect Hermes.

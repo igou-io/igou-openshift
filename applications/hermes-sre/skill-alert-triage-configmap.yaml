@@ -119,7 +119,9 @@ data:
 
     Post the same diagnosis as a comment on the incident issue (step 0) so the
     next firing of this alert can be answered from memory instead of a fresh
-    investigation.
+    investigation. If the fix is declarative and you are confident in it,
+    continue with the `propose-fix` skill and add the PR link to both the
+    Slack report and the issue comment.
 
     Stop conditions: the alert is `resolved` → one closing line. A 403 → say what
     is missing and report what you have. Ten terminal calls without progress →
