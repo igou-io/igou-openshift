@@ -318,6 +318,9 @@ spec:
     - name: skill-alert-triage
       configMap:
         name: hermes-sre-skill-openshift-alert-triage
+    - name: skill-propose-fix
+      configMap:
+        name: hermes-sre-skill-propose-fix
     - name: hermes-workspace
       persistentVolumeClaim:
         claimName: hermes-workspace
@@ -342,6 +345,9 @@ spec:
       readOnly: true
     - name: skill-alert-triage
       mountPath: /opt/data/agent-skills/homelab/openshift-alert-triage
+      readOnly: true
+    - name: skill-propose-fix
+      mountPath: /opt/data/agent-skills/homelab/propose-fix
       readOnly: true
   config:
     raw:
@@ -536,7 +542,10 @@ spec:
                   the issue link in your reply.
                   Investigate the FIRING alerts (skip resolved ones unless they
                   need a closing note): find the affected component, the likely
-                  cause and the evidence. You cannot change anything; do not try.
+                  cause and the evidence. You cannot change live infrastructure;
+                  do not try. If you are confident in a declarative fix, you may
+                  open a pull request per the `propose-fix` skill (branch + PR
+                  only, never merge) and link it in your reply.
                   Reply with a concise message (<= 20 lines: alert, impact,
                   evidence, suggested fix, links); it is delivered to
                   #igoucloud-hermes-sre automatically. If the alert is noise,
