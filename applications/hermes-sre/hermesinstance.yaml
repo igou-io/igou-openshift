@@ -1,5 +1,5 @@
 ---
-# Production Hermes on the kubernetes terminal backend (fork build c80e5bd17,
+# Production Hermes on the kubernetes terminal backend (fork build 7edb83f6e,
 # david-igou/hermes-agent feat/kubernetes-terminal-backend). Replaced the
 # hermes VM (applications/hermes-agent, retired 2026-08-24) at the
 # 2026-08-14 cutover.
@@ -25,11 +25,11 @@ metadata:
     argocd.argoproj.io/sync-wave: '10'
 spec:
   image:
-    # Built from the fork's own 5-stage Dockerfile at c80e5bd17 (the exact
+    # Built from the fork's own 5-stage Dockerfile at 7edb83f6e (the exact
     # tree of the pending upstream PR) and hosted on the cluster's Quay.
     repository: quay.apps.ocp.igou.systems/igou-io/hermes-agent
-    tag: k8s-prod-fae30986
-    digest: sha256:728c7d269a5b93d4ed871bfbef3d9647034f218e74b4ff959e41d860d9bc6c48
+    tag: k8s-prod-7edb83f6
+    digest: sha256:f04f47076ba41351c18e25728d8f33602b442c2996c868073ce799364baedea9
     pullPolicy: IfNotPresent
   security:
     # We own the SA: the kubernetes backend needs pod create/get/list/delete
@@ -131,7 +131,7 @@ spec:
   # hermes-dashboard.service used; scrypt BasicAuth comes from hermes-env.
   sidecars:
     - name: dashboard
-      image: quay.apps.ocp.igou.systems/igou-io/hermes-agent@sha256:728c7d269a5b93d4ed871bfbef3d9647034f218e74b4ff959e41d860d9bc6c48
+      image: quay.apps.ocp.igou.systems/igou-io/hermes-agent@sha256:f04f47076ba41351c18e25728d8f33602b442c2996c868073ce799364baedea9
       imagePullPolicy: IfNotPresent
       args:
         - dashboard
@@ -195,7 +195,7 @@ spec:
     # it copies Hermes-store tokens into the shared CLI file whenever the
     # store's last_refresh is strictly newer. Latest-wins in both directions.
     - name: codex-auth-sync
-      image: quay.apps.ocp.igou.systems/igou-io/hermes-agent@sha256:728c7d269a5b93d4ed871bfbef3d9647034f218e74b4ff959e41d860d9bc6c48
+      image: quay.apps.ocp.igou.systems/igou-io/hermes-agent@sha256:f04f47076ba41351c18e25728d8f33602b442c2996c868073ce799364baedea9
       command:
         - python3
         - -u
