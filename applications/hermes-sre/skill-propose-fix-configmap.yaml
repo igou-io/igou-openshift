@@ -1,0 +1,87 @@
+---
+# Hermes skill: propose an infrastructure fix as a pull request. Same
+# ConfigMap-into-external_dirs delivery as openshift-alert-triage.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hermes-sre-skill-propose-fix
+  namespace: hermes-sre
+data:
+  SKILL.md: |
+    ---
+    name: propose-fix
+    description: Turn a confident diagnosis into a small pull request against the igou GitOps/automation repos (branch + PR only — merging is forbidden). Implementation is delegated to a Codex agent; you spec, review, validate and open the PR.
+    version: 1.0.0
+    author: igou-io
+    platforms: [linux]
+    metadata:
+      hermes:
+        tags: [sre, git, pull-request, codex]
+    ---
+
+    # Propose a fix (PR only, never merge)
+
+    Preconditions: you diagnosed the problem yourself (alert-triage skill),
+    the fix is declarative (a file in `igou-io/igou-openshift`,
+    `igou-kubernetes`, `igou-ansible`, `igou-inventory`, `igou-devenv`,
+    `igou-containers`), and it is small and single-purpose. If any of that
+    is false, comment the diagnosis on the incident issue instead.
+
+    Hard rules — no exceptions:
+    - Never merge, approve or close a PR. Never push to main/master. Never
+      force-push. Never touch more than one concern per PR.
+    - A human reviews and merges; ArgoCD/AAP applies it afterwards. Your PR
+      is a proposal, and saying so in the description is part of the job.
+
+    ## 1. Clone and branch (in the session)
+
+    ```bash
+    REPO=igou-io/igou-openshift            # the repo you diagnosed
+    export GH_TOKEN=$(ghapp token --repo "$REPO" --permission contents=write --permission pull_requests=write)
+    cd /tmp && git clone --depth 20 "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" repo && cd repo
+    git checkout -b sre/<short-slug>
+    git config user.name "hermes-sre" && git config user.email "hermes-sre@igou.systems"
+    ```
+
+    ## 2. Delegate the implementation to Codex
+
+    Write a precise spec: the file(s) to change, the exact intent, the
+    acceptance check, and the conventions (block-style YAML; match the
+    file's comment density; never touch operator-owned objects). Then:
+
+    ```bash
+    codex exec --full-auto -m gpt-5.6-sol -c model_reasoning_effort=medium "<spec>"
+    ```
+
+    One codex agent at a time — all Hermes instances share a single Codex
+    auth lineage and its rate limits. You review its diff (`git diff`);
+    trivial corrections you may make yourself.
+
+    ## 3. Validate before pushing
+
+    - igou-openshift / igou-kubernetes: `kustomize build <changed dir>` (add
+      `--enable-helm` where the kustomization inflates charts; delete any
+      `charts/` dirs it downloads) and `yamllint -c .yamllint <files>`.
+    - igou-ansible: `ansible-lint` + `ansible-playbook --syntax-check`.
+    - Anything failing -> iterate with codex, do not push broken work.
+
+    ## 4. Push and open the PR
+
+    ```bash
+    git add -A && git commit -m "fix(<scope>): <what and why, one line>"
+    git push origin HEAD
+    gh pr create -R "$REPO" --base main --head sre/<short-slug> \
+      --title "fix(<scope>): <summary>" \
+      --body "Proposed by hermes-sre from <alertname> (<incident issue link>).
+    <diagnosis summary, evidence, what the change does, how it was validated>
+    Not merging — human review requested."
+    ```
+
+    (igou-kubernetes uses base `master`.)
+
+    ## 5. Close the loop
+
+    - Comment the PR link on the incident issue (issues=write token).
+    - Put the PR link in the Slack report; state that no live change
+      happened and the PR awaits review.
+    - Do not monitor CI to completion; the human reviewer owns it from here.
