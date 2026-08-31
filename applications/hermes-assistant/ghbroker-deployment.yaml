@@ -7,8 +7,8 @@
 # possession was on the VM — so ghbroker-networkpolicy.yaml is load-bearing:
 # only the agent pod and session pods may reach :8085.
 #
-# Image: built from david-igou/hermes_github_app_plugin feat/http-broker
-# (PR #32) with Containerfile.broker; rebuild from a release tag once merged.
+# Image: built from david-igou/hermes_github_app_plugin main@115e45d
+# (Containerfile.broker now lives in that repo; adds repo_max_permissions).
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -38,7 +38,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: ghbroker
-          image: quay.apps.ocp.igou.systems/igou-io/ghapp-broker@sha256:76e2316532b461309f86cdff268b537f5ebfcd0127b51a5c5bc7120fde7727b5
+          image: quay.apps.ocp.igou.systems/igou-io/ghapp-broker@sha256:a7ee9ecb6303da9984e6896b131a3b57df4d228f7deca26697f734970825c3d7
           args:
             - --listen
             - 0.0.0.0:8085
