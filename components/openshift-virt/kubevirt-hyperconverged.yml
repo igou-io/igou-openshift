@@ -58,6 +58,23 @@ spec:
   # VMCannotBeEvicted alert under the KubeVirt default of LiveMigrate.
   # See igou-io/igou-openshift#405.
   evictionStrategy: None
+  # No VM here is ever live-migratable (RWO disks, see evictionStrategy above),
+  # so with the HCO default of [LiveMigrate] alone a running VMI can never be
+  # moved onto the new virt-launcher image: after every CNV control-plane
+  # update every long-running VMI goes outdated and
+  # OutdatedVirtualMachineInstanceWorkloads fires 24h later. Adding Evict lets
+  # CNV shut down and restart outdated VMIs itself — VMs reboot unannounced
+  # shortly after an operator update (the subscription auto-approves, and with
+  # evictionStrategy None there is no PDB to throttle the batch), which is the
+  # same trade-off already accepted for node drains. LiveMigrate stays listed
+  # first so any future RWX-backed VM migrates instead of rebooting.
+  # See igou-io/igou-inventory#768.
+  workloadUpdateStrategy:
+    workloadUpdateMethods:
+      - LiveMigrate
+      - Evict
+    batchEvictionSize: 10
+    batchEvictionInterval: 1m0s
   featureGates:
     deployTektonTaskResources: true
     enableCommonBootImageImport: true
