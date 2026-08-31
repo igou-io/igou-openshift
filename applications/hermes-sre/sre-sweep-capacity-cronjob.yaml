@@ -1,0 +1,74 @@
+---
+# Weekly capacity and update-backlog sweep: TrueNAS pool usage, fullest
+# PVCs, node pressure on both clusters, pending OLM updates. Posts a
+# synthetic alert through the am-relay; the session follows the sre-sweeps
+# skill (SRESweepCapacity).
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sre-sweep-capacity
+  namespace: hermes-sre
+spec:
+  schedule: '0 13 * * 2'
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 300
+      ttlSecondsAfterFinished: 86400
+      template:
+        metadata:
+          labels:
+            app: sre-sweep-capacity
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          enableServiceLinks: false
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: post-alert
+              image: ghcr.io/igou-io/igou-devenv:latest@sha256:e1cfc53edf3c7875bfe37d578280f38ac03ad0e362ef138197767e013fab771d
+              command:
+                - bash
+                - /opt/sweep/post-alert.sh
+              env:
+                - name: TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: hermes-sre-am-relay
+                      key: token
+                - name: ALERTNAME
+                  value: SRESweepCapacity
+                - name: SUMMARY
+                  value: Weekly capacity sweep (TrueNAS pools, PVC fill, node pressure, pending OLM updates)
+                - name: DESCRIPTION
+                  value: >-
+                    Scheduled read-only sweep. Follow the SRESweepCapacity
+                    section of the sre-sweeps skill and post its digest.
+                    This alert is synthetic: skip the incident-memory lookup.
+              volumeMounts:
+                - name: sweep
+                  mountPath: /opt/sweep
+                  readOnly: true
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 100m
+                  memory: 128Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: false
+                capabilities:
+                  drop:
+                    - ALL
+          volumes:
+            - name: sweep
+              configMap:
+                name: sre-sweep-post
