@@ -38,6 +38,10 @@ data:
         contents: write
         issues: write
         pull_requests: write
+        # Read-only CI visibility for the PR-followup sweep (sre-sweeps
+        # skill): the igou-hermes App already holds checks/statuses read.
+        checks: read
+        statuses: read
       default_permissions:
         contents: read
       # igou-inventory and igou-docs are private repos where GitHub branch

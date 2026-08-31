@@ -321,6 +321,15 @@ spec:
     - name: skill-propose-fix
       configMap:
         name: hermes-sre-skill-propose-fix
+    - name: skill-sre-sweeps
+      configMap:
+        name: hermes-sre-skill-sre-sweeps
+    - name: skill-triage-domains
+      configMap:
+        name: hermes-sre-skill-triage-domains
+    - name: skill-incident-reporting
+      configMap:
+        name: hermes-sre-skill-incident-reporting
     - name: hermes-workspace
       persistentVolumeClaim:
         claimName: hermes-workspace
@@ -348,6 +357,15 @@ spec:
       readOnly: true
     - name: skill-propose-fix
       mountPath: /opt/data/agent-skills/homelab/propose-fix
+      readOnly: true
+    - name: skill-sre-sweeps
+      mountPath: /opt/data/agent-skills/homelab/sre-sweeps
+      readOnly: true
+    - name: skill-triage-domains
+      mountPath: /opt/data/agent-skills/homelab/triage-domains
+      readOnly: true
+    - name: skill-incident-reporting
+      mountPath: /opt/data/agent-skills/homelab/incident-reporting
       readOnly: true
   config:
     raw:

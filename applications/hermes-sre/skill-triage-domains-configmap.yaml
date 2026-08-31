@@ -1,0 +1,129 @@
+---
+# Hermes skill: per-domain deep-dives behind openshift-alert-triage. One skill
+# with reference files (not four skills) to keep the skill index small — the
+# router in SKILL.md picks the file, the model reads only that file.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hermes-sre-skill-triage-domains
+  namespace: hermes-sre
+data:
+  SKILL.md: |
+    ---
+    name: triage-domains
+    description: Domain deep-dives when the generic alert-triage pass is not enough - storage (democratic-csi/TrueNAS), network (MetalLB/BGP/OVN), rk8s, and change correlation (what merged recently).
+    version: 1.0.0
+    author: igou-io
+    platforms: [linux]
+    metadata:
+      hermes:
+        tags: [sre, storage, network, rk8s, argocd]
+    ---
+
+    # Triage deep-dives
+
+    Start with `openshift-alert-triage`; come here when the symptom is in one
+    of these domains and the generic pass did not name a cause. Read ONLY the
+    matching file:
+
+    - PVC/PV stuck, mount or provisioning failures, `dataset is busy`,
+      NVMe-oF/iSCSI errors, snapshot problems -> `storage.md`
+    - LoadBalancer/VIP unreachable, BGP/BFD, probe failures, slow first
+      byte, secondary-interface/Multus, *.dmz routes -> `network.md`
+    - Anything on the rk8s cluster (its Alertmanager relays here too) -> `rk8s.md`
+    - "It worked yesterday" / find what changed -> `change-correlation.md`
+
+    Every path stays read-only and ends in the standard triage report.
+  storage.md: |
+    # Storage: democratic-csi + TrueNAS
+
+    Layout: TrueNAS pools `fast` (NVMe mirrors) / `ssd` (SATA mirrors,
+    default SC freenas-nvmeof-ssd-csi) / `cold` (RAIDZ2), each exposed via
+    iSCSI, NFS and NVMe-oF as separate democratic-csi releases.
+
+    1. Controller side first:
+       ```bash
+       oc get pods -n democratic-csi | grep -v Running
+       oc logs -n democratic-csi -l app.kubernetes.io/csi-role=controller --since 1h --tail 100 | grep -i error
+       ```
+       Known: zvol create intermittently 504s on the TrueNAS API — the
+       provisioner retries and succeeds; a single 504 is noise, repeated
+       ones for one PVC are not.
+    2. Object side: `oc describe pvc -n NS NAME | sed -n '/Events:/,$p'`,
+       `oc get volumeattachment | grep <pv>`, and the pod's mount events.
+    3. TrueNAS side: `truenas-ro alert.list`, `truenas-ro pool.query`
+       (degraded vdev? capacity?). "dataset is busy" on delete usually means
+       a leftover snapshot or an attached initiator; say which and stop.
+    4. Snapshots: native `freenas-<proto>-<pool>-csi` classes live in the
+       source pool (die with it); `-detached` classes are full send/receive
+       copies onto `cold` (minutes-per-GiB, not instant — slow is expected).
+    5. Retain-policy PVs and name-addressed restore paths are documented in
+       igou-openshift `docs/runbooks/restore-pvc-from-truenas.md`; link it
+       instead of restating it.
+  network.md: |
+    # Network: MetalLB/BGP, OVN-K, Gateway API
+
+    1. MetalLB/BGP: `oc get pods -n metallb-system | grep -v Running`, then
+       peer state from both ends — speaker logs
+       (`oc logs -n metallb-system -l component=speaker --since 1h | grep -iE 'bgp|bfd'`)
+       and the router (`routeros-ro <router> routing/bgp/session`, `-h` for
+       syntax). VIPs are `autoAssign: false` pools SPLIT with rk8s — the
+       router import-filters announcements on the wrong side; a "VIP not
+       advertised" symptom right after a pool change is that filter.
+    2. Known failure mode: reachable VIP but deterministic ~7 s first-byte
+       stall = asymmetric-return conntrack drop on the router (MetalLB accept
+       rules must sit above `drop invalid` in the forward chain). Check the
+       symptom-keyed page before re-deriving it.
+    3. OVN-K secondary networking: `oc get nncp` (all Available?), ovnkube
+       pod health in openshift-ovn-kubernetes, and for localnet symptoms the
+       OVS bridge needs `allow-extra-patch-ports: true` (nmstate NNCPs under
+       clusters/ocp/nmstate/).
+    4. Gateway API tiers: shared per-tier Gateways in
+       clusters/ocp/gateway-api/; guest-dmz serves *.dmz.igou.systems on a
+       pinned VIP. Pinned VIPs (hermes-ssh, jellyfin, guest-dmz) are
+       cross-repo contracts with router DNS/firewall in igou-inventory —
+       a one-sided change IS the likely cause; name both files.
+    5. Blackbox probe alerts: the probe list lives in
+       components/user-workload-monitoring/exporters/blackbox-exporter/;
+       check whether the target or the prober moved.
+  rk8s.md: |
+    # rk8s (k3s) triage
+
+    Prefix everything: `kubectl --context rk8s-cluster-reader ...`. Its
+    Alertmanager posts into this instance via the am-relay Route, so rk8s
+    alerts arrive exactly like OCP ones — but `ocp-alerts`/`ocp-logs` are
+    OCP-only; on rk8s you have kubectl and metrics only.
+
+    1. `kubectl --context rk8s-cluster-reader get nodes -o wide`, then the
+       namespace/pod/events pass from the main triage skill.
+    2. k3s differences that masquerade as app bugs: default StorageClass is
+       `local-path` (node-local! a PVC without explicit storageClassName is
+       pinned to one node), no SCC (workloads need explicit numeric
+       runAsUser), and the ArgoCD app-of-apps has selfHeal but
+       autoSyncPrune=false — removed sub-components linger until a manual
+       pruning sync, so "deleted but still running" is expected drift.
+    3. GitOps source is igou-io/igou-kubernetes (default branch `master`);
+       MetalLB pool split and alertmanager-config live there.
+  change-correlation.md: |
+    # Change correlation: what merged recently?
+
+    First question for any regression. Map the symptom to its ArgoCD app,
+    then to recent commits on its source path.
+
+    ```bash
+    oc get applications.argoproj.io -n openshift-gitops -o json | jq -r '.items[]
+      | select(.spec.destination.namespace=="NS")
+      | "\(.metadata.name) path=\(.spec.source.path) rev=\(.status.sync.revision[:8]) synced=\(.status.operationState.finishedAt)"'
+    export GH_TOKEN=$(ghapp token --repo igou-io/igou-openshift --permission contents=read)
+    gh api "repos/igou-io/igou-openshift/commits?path=<path>&per_page=5" \
+      --jq '.[] | "\(.sha[:8]) \(.commit.committer.date[:16]) \(.commit.message | split("\n")[0])"'
+    ```
+
+    - Compare the app's synced revision with those commits: a commit newer
+      than `finishedAt` has NOT rolled out yet — do not blame it.
+    - For rk8s substitute igou-io/igou-kubernetes; for host/router/TrueNAS
+      symptoms the change stream is igou-io/igou-ansible + igou-io/igou-inventory
+      (AAP job history is not visible read-only — say so rather than guess).
+    - Renovate merges land in waves (Sunday schedule, automerge-on-green);
+      a digest-only image bump timing-matching the regression is the usual
+      suspect. Name the PR in the report.
