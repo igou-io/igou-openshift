@@ -40,3 +40,12 @@ data:
         pull_requests: write
       default_permissions:
         contents: read
+      # igou-inventory and igou-docs are private repos where GitHub branch
+      # protection is unavailable (free plan), so the write ceiling above
+      # must not apply to them: capped at read here (issues stay writable
+      # for incident memory). Tightening only; broker >= 115e45d.
+      repo_max_permissions:
+        igou-io/igou-inventory:
+          contents: read
+        igou-io/igou-docs:
+          contents: read
