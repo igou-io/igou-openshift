@@ -565,10 +565,95 @@ spec:
         idle_minutes: 120
         notify: false
       skills:
+        # Skill diet (design review follow-up): the stock catalog is ~80
+        # skills and ~36k chars of index the model reasons over every turn,
+        # and it mis-selects from it. Keep only what a read-only SRE uses:
+        # openshift-alert-triage (homelab), github-issues +
+        # codebase-inspection (incident memory / repo reading),
+        # systematic-debugging + plan, blocked-page-recovery. Disabled is
+        # by NAME (deleting from /opt/data/skills does not stick — the
+        # update path re-syncs bundled skills).
         disabled:
+          - airtable
+          - apple-notes
+          - apple-reminders
+          - architecture-diagram
+          - arxiv
+          - ascii-art
+          - ascii-video
+          - baoyu-infographic
+          - blogwatcher
+          - box
+          - claude-code
+          - claude-design
+          - codex
+          - comfyui
+          - competitor-news-monitor
+          - computer-use
+          - design-md
+          - document-to-action-items
+          - docx
+          - dogfood
+          - email-inbox-triage
+          - evaluation
+          - excalidraw
+          - findmy
+          - gif-search
+          - github-auth
+          - github-code-review
+          - github-issue-to-pr
+          - github-pr-workflow
+          - github-repo-management
+          - google-workspace
+          - grounded-citations
+          - hermes-agent
+          - hermes-agent-skill-authoring
+          - himalaya
+          - huggingface-hub
+          - humanizer
+          - imessage
+          - inference
+          - inspecting-hermes-desktop-dom
+          - llm-wiki
+          - manim-video
+          - maps
+          - meeting-action-items
+          - merge-reconciler
+          - models
+          - nano-pdf
+          - node-inspect-debugger
+          - notion
+          - obsidian
+          - ocr-and-documents
+          - opencode
+          - openhue
+          - p5js
+          - pdf
           - polymarket
+          - popular-web-designs
+          - powerpoint
+          - pretext
+          - product-price-monitor
+          - python-debugpy
+          - requesting-code-review
+          - research-paper-writing
+          - sdlc-review
+          - session-librarian
+          - simplify-code
+          - sketch
+          - songsee
+          - songwriting-and-ai-music
+          - spike
+          - teams-meeting-pipeline
+          - test-driven-development
+          - touchdesigner-mcp
+          - weekly-review-planning
+          - xlsx
+          - xurl
+          - youtube-content
         external_dirs:
-          - /opt/data/agent-skills/common
+          # common/ dropped: its only skill (osrs-market-analyst) is an
+          # assistant workload that leaked in at cutover.
           - /opt/data/agent-skills/homelab
         guard_agent_created: true
         write_approval: true
