@@ -1,0 +1,69 @@
+---
+# Scale-to-zero shell for refreshing coding-CLI OAuth credentials on the
+# workspace PVC. HOME points at the PVC's home/ subtree, while the executable
+# payload remains visible from the devenv image under /home/igou/.local.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-login
+  namespace: hermes-sre
+spec:
+  replicas: 0
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: auth-login
+  template:
+    metadata:
+      labels:
+        app: auth-login
+    spec:
+      # This SA already holds the hermes-agent-root SCC needed to admit the
+      # image's fixed uid 1000. Its API token is deliberately not mounted.
+      serviceAccountName: hermes-agent
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: auth-login
+          # Keep this pin aligned with terminal.kubernetes.spec in the
+          # HermesInstance; this is the image that carries the coding CLIs.
+          image: ghcr.io/igou-io/igou-devenv:latest@sha256:e1cfc53edf3c7875bfe37d578280f38ac03ad0e362ef138197767e013fab771d
+          command:
+            - sleep
+            - infinity
+          env:
+            - name: HOME
+              value: /auth-home
+            # HOME is intentionally redirected, so do not rely on the image's
+            # /home/igou/.bashrc to add the baked CLI directory to PATH.
+            - name: PATH
+              value: /home/igou/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+          volumeMounts:
+            - name: workspace
+              subPath: home
+              mountPath: /auth-home
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: workspace
+          persistentVolumeClaim:
+            claimName: hermes-workspace
