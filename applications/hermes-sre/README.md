@@ -18,7 +18,8 @@ inspects**; it cannot change anything:
   to that channel (`deliver: slack`). No Forgejo token, no GCP service accounts.
 - Egress: the hermes-k8s allow-list plus the infra targets on their read-only ports
   (rk8s/OCP API 6443, RouterOS 8729, TrueNAS 443, *.apps routes 443).
-- Own data PVC and workspace PVC (`repos/` unused; `home/` subtrees start empty —
+- Own data PVC and workspace PVC (`repos/` is the shared `/workspace`; `home/`
+  subtrees start empty —
   coding-CLI OAuth state is seeded or refreshed per instance with the
   scale-to-zero `auth-login` Deployment below).
 
@@ -77,13 +78,16 @@ directory, nothing hand-seeded on the PVC):
   deep-dives, one skill with reference files to keep the skill index small)
   and `incident-reporting` (postmortem comments + runbook-gap issues on
   `igou-io/igou-docs` — issues survive that repo's `contents: read` cap).
+  These operational skills are immutable and GitOps-owned. Agent-created skills
+  live separately in the writable, PVC-backed `/opt/data/skills` directory.
 - `docs-sync-cronjob.yaml` — read-only mirror of `igou-io/igou-docs` refreshed
   every 30 min into the workspace PVC (`/workspace/igou-docs` in sessions) using
   a broker-minted `contents:read` token (`igou-docs` is in the broker policy and
   must be on the igou-hermes App installation).
 - `max_concurrent_sessions: 4` (alert webhooks are rejected, not queued, at the
-  limit), `session_reset: idle 120 min`, and no firecrawl plugin (lazy installs
-  are disabled, so `web_extract` could never work; search stays on SearXNG).
+  limit), `session_reset: idle 120 min`, and no Firecrawl configuration. Lazy
+  installs remain disabled and search stays on SearXNG; issue #859 tracks baking
+  the plugin into the pinned image before restoring `web_extract`.
 
 Alert-path hardening (2026-08-30, second pass):
 
@@ -91,12 +95,15 @@ Alert-path hardening (2026-08-30, second pass):
   (item `lab_rk8s/hermes-sre-am-relay`; mounted into alertmanager-main via
   cluster-monitoring-config `alertmanagerMain.secrets`) and answers **503**
   while Hermes is at `max_concurrent_sessions` — Alertmanager retries 5xx, so
-  alerts queue upstream instead of being rejected.
+  alerts queue upstream instead of being rejected. It reads the authoritative
+  `active_agents` count from Hermes' authenticated `/health/detailed` endpoint;
+  it does not rely on cross-container PID visibility.
 - `am-relay-route.yaml` exposes the relay for the **rk8s** Alertmanager
   (igou-kubernetes `components/alertmanager-config`); `/healthz` is probed by
   the blackbox-exporter (`BlackboxProbeFailed` = watcher for the watcher).
 - `heartbeat-cronjob.yaml` fires a synthetic `SREHeartbeat` through the full
-  chain every Monday 13:00 UTC; no Slack report = the chain is broken.
+  chain every Monday 09:00 America/New_York; no Slack report = the chain is
+  broken.
 - Incident memory: the agent reads/comments the EDA-filed issue in
   `igou-io/igou-inventory` per alert (skill step 0) and answers repeat
   firings from it; the OCP route also batches with `group_interval: 30m`,
@@ -116,26 +123,29 @@ by the igou-hermes App even though its token holds `contents: write`
 `contents: read`; write tokens exist only when a mint explicitly requests
 them.
 
-Scheduled sweeps (2026-08-31): four `sre-sweep-*` CronJobs post synthetic
-info-severity alerts (severity `info` so EDA files no incident issues)
-through the same relay chain as the heartbeat, each naming a section of the
-`sre-sweeps` skill; one Slack digest per sweep, exceptions only:
+Scheduled sweeps (native Hermes cron): four jobs run in fresh isolated agent
+sessions with the `sre-sweeps` skill, `/workspace` workdir, pinned
+`openai-codex/gpt-5.6-luna` model at `high` reasoning, and direct delivery to
+the SRE Slack channel. `cron.max_parallel_jobs: 1` serializes them. Manage them
+with `hermes cron`; never patch `/opt/data/cron/jobs.json`. Issue #860 tracks a
+future operator API for declarative reconciliation.
 
-- `sre-sweep-daily-health` (11:00 UTC daily) — OADP/CNPG backup
+- `sre-sweep-daily-health` (07:00 America/New_York daily) — OADP/CNPG backup
   verification, ArgoCD drift, cert/CSR state, rk8s nodes. Watches for the
   failures that never fire an alert.
-- `sre-sweep-hygiene` (Mon 13:30 UTC, after the heartbeat) — long-firing
+- `sre-sweep-hygiene` (Mon 09:30 America/New_York, after the heartbeat) — long-firing
   alerts, silences due a decision, the week's flappiest rules, and
   incident-memory grooming (proposes closure comments; EDA/human close).
-- `sre-sweep-capacity` (Tue 13:00 UTC) — TrueNAS pools, fullest PVCs, node
+- `sre-sweep-capacity` (Tue 09:00 America/New_York) — TrueNAS pools, fullest PVCs, node
   pressure, pending OLM updates.
-- `sre-sweep-pr-followup` (Mon+Thu 14:30 UTC) — CI state of its own open
+- `sre-sweep-pr-followup` (Mon+Thu 10:30 America/New_York) — CI state of its own open
   PRs, review nudges, stale-proposal flags. Needs the broker's
   `checks`/`statuses: read` ceiling (policy change: roll the ghbroker
   Deployment — it reads policy at startup only).
 
-The payload script is shared (`sre-sweep-post` ConfigMap); the heartbeat now
-also resolves through the skill (`SREHeartbeat` section, per-hop OK/FAIL).
+The separate Kubernetes heartbeat still resolves through the skill
+(`SREHeartbeat` section, per-hop OK/FAIL) because its purpose is testing the
+external Alertmanager/relay path rather than merely scheduling agent work.
 
 Follow-ups: own 1Password item for dashboard auth/API key (uses `hermes` today);
 alert ingestion (Alertmanager webhook → api_server) so this instance monitors rather
