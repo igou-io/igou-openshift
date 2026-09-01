@@ -457,6 +457,12 @@ applications:
         kind: ServiceAccount
         managedFieldsManagers:
           - openshift.io/image-registry-pull-secrets_service-account-controller
+      # Operated manually only while refreshing coding-CLI credentials.
+      - group: apps
+        kind: Deployment
+        name: auth-login
+        jsonPointers:
+          - /spec/replicas
 
   hermes-assistant:
     project: cluster-apps
@@ -487,6 +493,12 @@ applications:
         kind: ServiceAccount
         managedFieldsManagers:
           - openshift.io/image-registry-pull-secrets_service-account-controller
+      # Operated manually only while refreshing coding-CLI credentials.
+      - group: apps
+        kind: Deployment
+        name: auth-login
+        jsonPointers:
+          - /spec/replicas
 
   comfyui:
     project: cluster-apps

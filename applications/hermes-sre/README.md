@@ -19,7 +19,45 @@ inspects**; it cannot change anything:
 - Egress: the hermes-k8s allow-list plus the infra targets on their read-only ports
   (rk8s/OCP API 6443, RouterOS 8729, TrueNAS 443, *.apps routes 443).
 - Own data PVC and workspace PVC (`repos/` unused; `home/` subtrees start empty —
-  coding-CLI OAuth state must be seeded per instance, see gaps).
+  coding-CLI OAuth state is seeded or refreshed per instance with the
+  scale-to-zero `auth-login` Deployment below).
+
+## Refresh coding-CLI authentication
+
+The `auth-login` Deployment uses the same `igou-devenv` image as terminal
+sessions and mounts this instance's persistent workspace `home/` subtree as
+its `HOME`. It normally has zero replicas. To refresh Cursor or Codex:
+
+```bash
+namespace=hermes-sre
+oc -n "$namespace" scale deployment/auth-login --replicas=1
+oc -n "$namespace" rollout status deployment/auth-login --timeout=5m
+oc -n "$namespace" exec -it deployment/auth-login -- bash
+```
+
+Inside the shell, confirm the image and run the required device login:
+
+```bash
+command -v cursor-agent codex
+NO_OPEN_BROWSER=1 cursor-agent login
+cursor-agent status
+codex login --device-auth
+codex login status
+exit
+```
+
+Only run the provider login that needs refreshing. The displayed URL/code is
+completed in a browser on the operator's workstation. Always return the helper
+to zero replicas afterward:
+
+```bash
+oc -n hermes-sre scale deployment/auth-login --replicas=0
+```
+
+Credentials persist on `hermes-workspace` and are immediately visible to new
+terminal sessions. Codex is also shared with Hermes through `/opt/data/.codex`;
+the `codex-auth-sync` sidecar keeps later single-use refresh-token rotations in
+sync.
 
 Shared with `hermes-k8s` (owned there): the operator (ns `hermes-operator`) and the
 `hermes-agent-root` SCC. The instance keeps the same image, security context and
