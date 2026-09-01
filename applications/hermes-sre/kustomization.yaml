@@ -38,6 +38,8 @@ resources:
   - skill-incident-reporting-configmap.yaml
   - sre-sweep-post-configmap.yaml
   - hermes-workspace-pvc.yaml
+  - auth-login-deployment.yaml
+  - auth-login-networkpolicy.yaml
   - ghbroker-externalsecret.yaml
   - ghbroker-policy-configmap.yaml
   - ghbroker-deployment.yaml
