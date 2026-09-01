@@ -50,7 +50,7 @@ data:
     file's comment density; never touch operator-owned objects). Then:
 
     ```bash
-    codex exec --full-auto -m gpt-5.6-sol -c model_reasoning_effort=medium "<spec>"
+    codex exec --dangerously-bypass-approvals-and-sandbox -m gpt-5.6-sol -c model_reasoning_effort=medium "<spec>"
     ```
 
     One codex agent at a time — all Hermes instances share a single Codex
