@@ -284,13 +284,8 @@ spec:
         # many live leases the relay answers 503 so Alertmanager retries.
         - name: MAX_SESSIONS
           value: '4'
-        - name: GATEWAY_STATUS_URL
-          value: http://127.0.0.1:8642/health/detailed
-        - name: API_SERVER_KEY
-          valueFrom:
-            secretKeyRef:
-              name: hermes-env
-              key: API_SERVER_KEY
+        - name: GATEWAY_STATUS_PATH
+          value: /opt/data/gateway_state.json
       ports:
         - name: am-relay
           containerPort: 8645
@@ -317,6 +312,9 @@ spec:
       volumeMounts:
         - name: am-relay
           mountPath: /opt/am-relay
+          readOnly: true
+        - name: data
+          mountPath: /opt/data
           readOnly: true
   storage:
     # ~/.hermes state: sessions, memory, skills, cron store, auth.json,

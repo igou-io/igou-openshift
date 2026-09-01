@@ -10,9 +10,9 @@
 # the rk8s Alertmanager, so network policy alone is no longer sufficient).
 # The relay also answers 503 (Retry-After) while Hermes is at its session
 # limit: Alertmanager retries 5xx, so alerts queue upstream instead of the
-# gateway rejecting them. Capacity is read from the authenticated Hermes
-# health endpoint's authoritative active_agents count; MAX_SESSIONS must match
-# config max_concurrent_sessions.
+# gateway rejecting them. Capacity is read from Hermes' PVC-backed gateway
+# state, whose active_agents count is persisted at every turn boundary;
+# MAX_SESSIONS must match config max_concurrent_sessions.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -28,25 +28,14 @@ data:
     ROUTE = os.environ.get("WEBHOOK_ROUTE", "alertmanager")
     TOKEN = os.environ.get("INBOUND_TOKEN", "")
     MAX_SESSIONS = int(os.environ.get("MAX_SESSIONS", "0"))
-    STATUS_URL = os.environ.get(
-        "GATEWAY_STATUS_URL", "http://127.0.0.1:8642/health/detailed"
-    )
-    API_SERVER_KEY = os.environ.get("API_SERVER_KEY", "")
+    STATUS_PATH = os.environ.get("GATEWAY_STATUS_PATH", "/opt/data/gateway_state.json")
 
     def at_capacity():
         if MAX_SESSIONS <= 0:
             return False
         try:
-            target = STATUS_URL.removeprefix("http://")
-            host, _, path = target.partition("/")
-            conn = http.client.HTTPConnection(host, timeout=3)
-            headers = {"Authorization": f"Bearer {API_SERVER_KEY}"}
-            conn.request("GET", f"/{path}", headers=headers)
-            response = conn.getresponse()
-            payload = json.loads(response.read())
-            conn.close()
-            if response.status != 200:
-                return False
+            with open(STATUS_PATH, encoding="utf-8") as status_file:
+                payload = json.load(status_file)
             active = max(0, int(payload.get("active_agents", 0)))
         except Exception:
             # Preserve alert availability if the status probe itself fails;
