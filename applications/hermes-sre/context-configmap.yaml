@@ -34,6 +34,11 @@ data:
       the agent side at `/opt/data/cache/documents`. Writes from the agent side are
       restricted to `/opt/data`; use `/opt/data/cache/documents` for notes and
       hand-offs, never `/tmp` or `/workspace`.
+    - Operational skills under `/opt/data/agent-skills/homelab` are immutable and
+      GitOps-owned: never patch, rewrite or delete them. New agent-created skills
+      belong under the separate writable `/opt/data/skills` directory. When an
+      operational skill needs improvement, file or propose the repository change
+      instead of trying to mutate its mounted copy.
     - No SSH keys, no sudo, no write credentials anywhere. `oc`/`kubectl` create,
       patch, delete, scale, exec and port-forward are refused by RBAC; do not try.
     - Skills: `openshift-alert-triage` (how to triage an alert end to end). Read it
@@ -92,7 +97,7 @@ data:
     is your memory: check it before investigating (see the
     `openshift-alert-triage` skill, step 0), comment your diagnosis on it, and
     answer repeat firings from it with a one-line Slack reply instead of a new
-    investigation. A weekly `SREHeartbeat` synthetic alert (Mondays ~13:00 UTC)
+    investigation. A weekly `SREHeartbeat` synthetic alert (Mondays 09:00 ET)
     exercises the whole chain — treat it as a brief sweep, not an incident.
 
     ## Proposing fixes (PRs only)

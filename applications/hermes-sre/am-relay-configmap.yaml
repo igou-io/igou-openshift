@@ -10,9 +10,9 @@
 # the rk8s Alertmanager, so network policy alone is no longer sufficient).
 # The relay also answers 503 (Retry-After) while Hermes is at its session
 # limit: Alertmanager retries 5xx, so alerts queue upstream instead of the
-# gateway rejecting them. Capacity is read from the gateway's exact lease
-# file (runtime/active_sessions.json, pid-alive via the shared PID namespace);
-# MAX_SESSIONS must match config max_concurrent_sessions.
+# gateway rejecting them. Capacity is read from the authenticated Hermes
+# health endpoint's authoritative active_agents count; MAX_SESSIONS must match
+# config max_concurrent_sessions.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -28,25 +28,31 @@ data:
     ROUTE = os.environ.get("WEBHOOK_ROUTE", "alertmanager")
     TOKEN = os.environ.get("INBOUND_TOKEN", "")
     MAX_SESSIONS = int(os.environ.get("MAX_SESSIONS", "0"))
-    LEASES = os.environ.get("LEASES_FILE", "/opt/data/runtime/active_sessions.json")
+    STATUS_URL = os.environ.get(
+        "GATEWAY_STATUS_URL", "http://127.0.0.1:8642/health/detailed"
+    )
+    API_SERVER_KEY = os.environ.get("API_SERVER_KEY", "")
 
     def at_capacity():
         if MAX_SESSIONS <= 0:
             return False
         try:
-            with open(LEASES) as f:
-                entries = json.load(f).get("entries", [])
+            target = STATUS_URL.removeprefix("http://")
+            host, _, path = target.partition("/")
+            conn = http.client.HTTPConnection(host, timeout=3)
+            headers = {"Authorization": f"Bearer {API_SERVER_KEY}"}
+            conn.request("GET", f"/{path}", headers=headers)
+            response = conn.getresponse()
+            payload = json.loads(response.read())
+            conn.close()
+            if response.status != 200:
+                return False
+            active = max(0, int(payload.get("active_agents", 0)))
         except Exception:
+            # Preserve alert availability if the status probe itself fails;
+            # Hermes remains the final authority and can still reject the turn.
             return False
-        alive = 0
-        for e in entries:
-            try:
-                pid = int(e.get("pid", 0))
-            except (TypeError, ValueError):
-                continue
-            if pid > 0 and os.path.exists(f"/proc/{pid}"):
-                alive += 1
-        return alive >= MAX_SESSIONS
+        return active >= MAX_SESSIONS
 
     class H(BaseHTTPRequestHandler):
         # BaseHTTPRequestHandler answers HTTP/1.0 by default, which the

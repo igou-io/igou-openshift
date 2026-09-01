@@ -27,6 +27,7 @@ resources:
   - agent-egress-networkpolicy.yaml
   - quay-pull-externalsecret.yaml
   - hermes-env-externalsecret.yaml
+  - hermes-slack-externalsecret.yaml
   - hermes-session-readonly-externalsecret.yaml
   - hermes-sre-am-relay-externalsecret.yaml
   - am-relay-configmap.yaml
@@ -36,7 +37,6 @@ resources:
   - skill-sre-sweeps-configmap.yaml
   - skill-triage-domains-configmap.yaml
   - skill-incident-reporting-configmap.yaml
-  - sre-sweep-post-configmap.yaml
   - hermes-workspace-pvc.yaml
   - auth-login-deployment.yaml
   - auth-login-networkpolicy.yaml
@@ -46,10 +46,6 @@ resources:
   - ghbroker-networkpolicy.yaml
   - docs-sync-cronjob.yaml
   - heartbeat-cronjob.yaml
-  - sre-sweep-daily-health-cronjob.yaml
-  - sre-sweep-hygiene-cronjob.yaml
-  - sre-sweep-capacity-cronjob.yaml
-  - sre-sweep-pr-followup-cronjob.yaml
   - am-relay-route.yaml
   - hermesinstance.yaml
   - hermes-sre-dashboard-route.yaml

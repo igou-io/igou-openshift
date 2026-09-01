@@ -63,6 +63,9 @@ spec:
           - FOWNER
           - SETGID
           - SETUID
+    networkPolicy:
+      allowedIngressNamespaces:
+        - openshift-user-workload-monitoring
   # NOTE: no HERMES_UID/HERMES_GID here — the operator injects them itself,
   # and a duplicate definition makes its server-side apply loop on conflicts.
   env:
@@ -74,8 +77,6 @@ spec:
       value: http://127.0.0.1:8642
     - name: SEARXNG_URL
       value: http://searxng.searxng.svc.cluster.local:8080
-    - name: FIRECRAWL_API_URL
-      value: http://firecrawl-api.firecrawl.svc.cluster.local:3002
     - name: HERMES_DASHBOARD_FILES_ROOT
       value: /opt/data/dashboard-files
     # ghapp broker over HTTP (needs hermes_github_app_plugin >= the PR#32
@@ -91,12 +92,21 @@ spec:
     - name: GHAPP_BROKER_URL
       value: http://ghbroker.hermes-sre.svc.cluster.local:8085
   envFrom:
-    # API_SERVER_KEY, dashboard BasicAuth trio, Slack tokens,
-    # OPENCODE_GO_API_KEY — see hermes-env-externalsecret.yaml.
+    # API_SERVER_KEY, dashboard BasicAuth trio and OPENCODE_GO_API_KEY.
+    # Slack tokens use the operator-native gateways secret refs below.
     - secretRef:
         name: hermes-env
     - secretRef:
         name: hermes-sre-slack-webhook
+  gateways:
+    slack:
+      enabled: true
+      botTokenSecretRef:
+        name: hermes-slack
+        key: SLACK_BOT_TOKEN
+      appTokenSecretRef:
+        name: hermes-slack
+        key: SLACK_APP_TOKEN
   # Agent container requests/limits (hermes-k8s ran unbounded; peaked 1.58Gi).
   resources:
     requests:
@@ -105,6 +115,17 @@ spec:
     limits:
       cpu: "2"
       memory: 3Gi
+  observability:
+    metrics:
+      enabled: true
+      port: 9090
+      secure: false
+    serviceMonitor:
+      enabled: true
+      interval: 30s
+      scrapeTimeout: 10s
+    prometheusRule:
+      enabled: true
   networking:
     service:
       type: ClusterIP
@@ -263,6 +284,13 @@ spec:
         # many live leases the relay answers 503 so Alertmanager retries.
         - name: MAX_SESSIONS
           value: '4'
+        - name: GATEWAY_STATUS_URL
+          value: http://127.0.0.1:8642/health/detailed
+        - name: API_SERVER_KEY
+          valueFrom:
+            secretKeyRef:
+              name: hermes-env
+              key: API_SERVER_KEY
       ports:
         - name: am-relay
           containerPort: 8645
@@ -290,11 +318,6 @@ spec:
         - name: am-relay
           mountPath: /opt/am-relay
           readOnly: true
-        # Exact session-lease file for the 503-on-busy check; pid liveness
-        # works because the pod shares its PID namespace.
-        - name: data
-          mountPath: /opt/data
-          readOnly: true
   storage:
     # ~/.hermes state: sessions, memory, skills, cron store, auth.json,
     # SOUL.md. Sized like the VM's hermes-state DataVolume.
@@ -303,9 +326,8 @@ spec:
       size: 30Gi
       storageClassName: freenas-nvmeof-ssd-csi
   # The shared RWX workspace, visible from BOTH sides exactly like the VM's
-  # bind mounts: the agent sees repos at /opt/data/agent-repos and collected
-  # documents at /opt/data/cache/documents; sessions see the same data at
-  # /workspace and /output (see terminal.kubernetes.spec below).
+  # bind mounts: the agent and sessions see repos at /workspace and collected
+  # documents at /opt/data/cache/documents and /output respectively.
   extraVolumes:
     - name: am-relay
       configMap:
@@ -336,7 +358,11 @@ spec:
   extraVolumeMounts:
     - name: hermes-workspace
       subPath: repos
-      mountPath: /opt/data/agent-repos
+      mountPath: /workspace
+    - name: sre-context
+      subPath: AGENTS.md
+      mountPath: /workspace/AGENTS.md
+      readOnly: true
     - name: hermes-workspace
       subPath: output
       mountPath: /opt/data/cache/documents
@@ -389,6 +415,8 @@ spec:
         use_gateway: false
       checkpoints:
         delete_orphans: true
+      cron:
+        max_parallel_jobs: 1
       command_allowlist:
         - execute_code
         - delete in root path
@@ -466,6 +494,14 @@ spec:
           - todo
           - tts
           - vision
+          - web
+        # Native scheduled SRE sweeps use a deliberately small surface. Skill
+        # injection and delivery are scheduler features; the agent only needs
+        # repository/file inspection, read-only terminal access and web search.
+        cron:
+          - file
+          - skills
+          - terminal
           - web
         slack:
           - browser
@@ -682,6 +718,8 @@ spec:
           # common/ dropped: its only skill (osrs-market-analyst) is an
           # assistant workload that leaked in at cutover.
           - /opt/data/agent-skills/homelab
+        # /opt/data/skills remains the separate writable, PVC-backed home for
+        # agent-created skills. External GitOps skills above stay immutable.
         guard_agent_created: true
         write_approval: true
       slack:

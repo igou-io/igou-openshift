@@ -10,7 +10,8 @@ metadata:
   name: sre-heartbeat
   namespace: hermes-sre
 spec:
-  schedule: '0 13 * * 1'
+  schedule: '0 9 * * 1'
+  timeZone: America/New_York
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 2
