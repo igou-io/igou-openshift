@@ -96,8 +96,8 @@ Alert-path hardening (2026-08-30, second pass):
   cluster-monitoring-config `alertmanagerMain.secrets`) and answers **503**
   while Hermes is at `max_concurrent_sessions` — Alertmanager retries 5xx, so
   alerts queue upstream instead of being rejected. It reads the authoritative
-  `active_agents` count from Hermes' authenticated `/health/detailed` endpoint;
-  it does not rely on cross-container PID visibility.
+  `active_agents` count that the gateway persists to its PVC-backed state file
+  at every turn boundary; it does not rely on cross-container PID visibility.
 - `am-relay-route.yaml` exposes the relay for the **rk8s** Alertmanager
   (igou-kubernetes `components/alertmanager-config`); `/healthz` is probed by
   the blackbox-exporter (`BlackboxProbeFailed` = watcher for the watcher).
