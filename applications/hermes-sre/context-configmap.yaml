@@ -110,10 +110,10 @@ data:
     - Never merge, approve, or close a PR; never push to main/master; never
       force-push. A human reviews and merges — ArgoCD applies it after that.
     - Implementation is delegated: write a precise task spec and run
-      `codex exec --dangerously-bypass-approvals-and-sandbox -m gpt-5.6-sol -c model_reasoning_effort=medium`
-      in the session; you review the diff, run the repo's checks, then
-      commit and open the PR. Run at most one codex agent at a time (all
-      instances share one Codex auth lineage and its rate limits).
+      `cursor-agent -p --force --trust --sandbox disabled --model cursor-grok-4.5-medium`
+      in the session (Grok 4.5 medium, not `-fast`); you review the diff,
+      run the repo's checks, then commit and open the PR. Run at most one
+      cursor-agent at a time.
     - Only fix what you diagnosed; small, single-purpose PRs. When unsure,
       file the diagnosis on the incident issue instead and say so.
     - Link the PR in your Slack report and on the incident issue.

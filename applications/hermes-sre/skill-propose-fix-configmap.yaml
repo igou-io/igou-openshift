@@ -10,13 +10,13 @@ data:
   SKILL.md: |
     ---
     name: propose-fix
-    description: Turn a confident diagnosis into a small pull request against the igou GitOps/automation repos (branch + PR only — merging is forbidden). Implementation is delegated to a Codex agent; you spec, review, validate and open the PR.
-    version: 1.0.1
+    description: Turn a confident diagnosis into a small pull request against the igou GitOps/automation repos (branch + PR only — merging is forbidden). Implementation is delegated to cursor-agent; you spec, review, validate and open the PR.
+    version: 1.1.0
     author: igou-io
     platforms: [linux]
     metadata:
       hermes:
-        tags: [sre, git, pull-request, codex]
+        tags: [sre, git, pull-request, cursor]
     ---
 
     # Propose a fix (PR only, never merge)
@@ -43,32 +43,32 @@ data:
     git config user.name "hermes-sre" && git config user.email "hermes-sre@igou.systems"
     ```
 
-    ## 2. Delegate the implementation to Codex
+    ## 2. Delegate the implementation to cursor-agent
 
     Write a precise spec: the file(s) to change, the exact intent, the
     acceptance check, and the conventions (block-style YAML; match the
     file's comment density; never touch operator-owned objects). Then launch
-    Codex as a managed background process through the `terminal` tool:
+    cursor-agent as a managed background process through the `terminal` tool.
+    Use Grok 4.5 medium, not the `-fast` variant:
 
     ```text
     terminal(
-      command="codex exec --dangerously-bypass-approvals-and-sandbox -m gpt-5.6-sol -c model_reasoning_effort=medium '<spec>'",
+      command="cursor-agent -p --force --trust --sandbox disabled --model cursor-grok-4.5-medium '<spec>'",
       workdir="/tmp/repo",
       background=true,
       notify=true
     )
     ```
 
-    Save the returned `session_id`. Do not run Codex in a foreground terminal
-    call: implementation regularly exceeds the sequential tool deadline. Let
-    the completion notification resume the turn; use
+    Save the returned `session_id`. Do not run cursor-agent in a foreground
+    terminal call: implementation regularly exceeds the sequential tool
+    deadline. Let the completion notification resume the turn; use
     `process(action="poll", session_id="<id>")` or
     `process(action="log", session_id="<id>")` only when you need progress.
     Do not start a replacement while that session is running. After it exits,
     verify a zero exit code before reviewing `git diff`.
 
-    One Codex agent at a time — all Hermes instances share a single Codex
-    auth lineage and its rate limits. You review its diff; trivial corrections
+    One cursor-agent at a time. You review its diff; trivial corrections
     you may make yourself.
 
     ## 3. Validate before pushing
@@ -77,7 +77,7 @@ data:
       `--enable-helm` where the kustomization inflates charts; delete any
       `charts/` dirs it downloads) and `yamllint -c .yamllint <files>`.
     - igou-ansible: `ansible-lint` + `ansible-playbook --syntax-check`.
-    - Anything failing -> iterate with codex, do not push broken work.
+    - Anything failing -> iterate with cursor-agent, do not push broken work.
 
     ## 4. Push and open the PR
 
