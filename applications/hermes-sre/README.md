@@ -112,7 +112,8 @@ Alert-path hardening (2026-08-30, second pass):
 Propose-fix (2026-08-31): the broker ceiling is now `contents: write` +
 `pull_requests: write` so the SRE can PROPOSE fixes as PRs (`propose-fix`
 skill: clone, branch, delegate implementation to
-`codex exec -m gpt-5.6-sol -c model_reasoning_effort=medium`, validate,
+`cursor-agent -p --force --trust --sandbox disabled --model cursor-grok-4.5-medium`
+(Grok 4.5 medium, not fast), validate,
 push, PR, link on the incident issue). Never merges — by contract (SOUL +
 skill) AND by ruleset: every writable repo's `protect-default-branch`
 ruleset carries a restrict-updates rule whose bypass list is repo-admin +
