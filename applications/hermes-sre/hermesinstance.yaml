@@ -115,17 +115,9 @@ spec:
     limits:
       cpu: "2"
       memory: 3Gi
-  observability:
-    metrics:
-      enabled: true
-      port: 9090
-      secure: false
-    serviceMonitor:
-      enabled: true
-      interval: 30s
-      scrapeTimeout: 10s
-    prometheusRule:
-      enabled: true
+  # No Prometheus scrape: the agent does not listen on /metrics (OTLP-only
+  # gateway health export). Enabling observability.metrics here recreates a
+  # permanent HermesMetricsDown (Service :9090 with nothing bound).
   networking:
     service:
       type: ClusterIP
@@ -134,10 +126,6 @@ spec:
           port: 8443
           protocol: TCP
           targetPort: 8443
-        - name: metrics
-          port: 9090
-          protocol: TCP
-          targetPort: 9090
         - name: dashboard
           port: 9119
           protocol: TCP
