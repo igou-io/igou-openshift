@@ -49,7 +49,14 @@ helmCharts:
 
     tolerations: []
 
-    affinity: {}
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+                - key: node-role.kubernetes.io/control-plane
+                  operator: DoesNotExist
     extraPodSpec:
       automountServiceAccountToken: "false"
 

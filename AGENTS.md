@@ -40,7 +40,13 @@ Components are placed in order of dependencies. Storage and secrets management a
 - **Sync policy defaults**: auto-sync enabled, auto-prune disabled, unlimited retry with exponential backoff
 - **Secrets**: externalized via External Secrets Operator + 1Password ClusterSecretStore — never stored in git
 - **Container images**: pinned to digest where possible (Renovate manages updates)
-- **Control-plane tolerations**: many components explicitly tolerate/schedule on the master node (the only always-on node; the `casval` burst worker is 0 replicas at rest)
+- **Control-plane placement**: always-on components (Connect, ESO, CAPI, CNPG,
+  log-gateway, ingress) stay pinned to the master. Workloads that expose
+  affinity prefer dedicated workers via `preferredDuringScheduling`
+  `node-role.kubernetes.io/control-plane DoesNotExist` (`ocp` is also labeled
+  `worker`, so selecting `worker` would still match the master). Soft
+  preference: they still schedule on `ocp` if workers are full or drained.
+  GitOps and RHACS have no preferred-affinity knob.
 - **File naming**: YAML files should be named `<metadata.name>-<kind>.yaml` whenever possible (e.g. `my-app-deployment.yaml`, `cluster-read-only-serviceaccount.yaml`)
 
 # Agent Workflow

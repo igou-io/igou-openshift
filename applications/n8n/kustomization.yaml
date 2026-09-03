@@ -280,7 +280,14 @@ helmCharts:
 
       nodeSelector: {}
       tolerations: []
-      affinity: {}
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
 
     # # # # # # # # # # # # # # # #
     #
@@ -465,7 +472,14 @@ helmCharts:
 
       nodeSelector: {}
       tolerations: []
-      affinity: {}
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
 
     # Webhook related settings
     # With .Values.scaling.webhook.enabled=true you disable Webhooks from the main process, but you enable the processing on a different Webhook instance.
@@ -650,7 +664,14 @@ helmCharts:
         # targetMemoryUtilizationPercentage: 80
       nodeSelector: {}
       tolerations: []
-      affinity: {}
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
 
     #
     # User defined supplementary K8s manifests
