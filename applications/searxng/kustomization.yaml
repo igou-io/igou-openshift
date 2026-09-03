@@ -22,6 +22,14 @@ helmCharts:
     valuesInline:
       defaultPodOptions:
         automountServiceAccountToken: false
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - key: node-role.kubernetes.io/control-plane
+                      operator: DoesNotExist
       controllers:
         searxng:
           type: deployment

@@ -22,6 +22,17 @@ helmCharts:
 
       defaultPodOptions:
         automountServiceAccountToken: false
+        # Prefer dedicated workers. ocp is also labeled worker, so exclude
+        # control-plane rather than selecting worker. Soft: still schedules
+        # on the master if workers are full or drained.
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - key: node-role.kubernetes.io/control-plane
+                      operator: DoesNotExist
         securityContext:
           seccompProfile:
             type: RuntimeDefault
