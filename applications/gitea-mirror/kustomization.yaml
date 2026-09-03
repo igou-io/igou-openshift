@@ -29,7 +29,12 @@ helmCharts:
       gitea-mirror:
         type: deployment
         replicas: 1
-        strategy: RollingUpdate
+        # RWO config PVC: RollingUpdate deadlocks (new pod cannot attach
+        # while the old one holds the volume). Live objects also default
+        # spec.strategy.rollingUpdate, so apply with Replace.
+        annotations:
+          argocd.argoproj.io/sync-options: Replace=true
+        strategy: Recreate
         pod:
           securityContext:
             seccompProfile:
