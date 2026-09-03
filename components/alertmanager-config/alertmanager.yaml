@@ -53,6 +53,16 @@ route:
     - matchers:
         - alertname = HighOverallControlPlaneMemory
       receiver: 'null'
+    # Same class of SNO-hostile control-plane alert: the expr is
+    # sum(rate(container_cpu_usage_seconds_total{namespace=~"openshift-.*"}[4m]))
+    # / 8 * 100 > 60. The denominator 8 is a hardcoded upstream constant, not
+    # this node's 20 CPUs, so it trips at 4.8 cores of *all* openshift-*
+    # usage (apiserver + logging collector + monitoring + gitops). Steady
+    # state here is 5–8 cores; it has flapped since 2026-08-28
+    # (igou-inventory#786). Prefer-workers did not change the numerator.
+    - matchers:
+        - alertname = HighOverallControlPlaneCPU
+      receiver: 'null'
     # Orchestrator monitoring was removed entirely (2026-08-31): the operator
     # re-applies its own broken backend ServiceMonitor every reconcile
     # (mandatory client cert, no pod-IP SAN), so TargetDown from this
