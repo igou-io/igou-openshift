@@ -115,17 +115,19 @@ spec:
     limits:
       cpu: "2"
       memory: 3Gi
+  # Hermes has no HTTP /metrics endpoint: monitoring exports via OTLP push
+  # (docs/observability/monitoring.md in NousResearch/hermes-agent), so the
+  # operator's default scrape target can never come up (alert
+  # HermesMetricsDown fired continuously 2026-09-01 to 2026-09-02). All
+  # observability scraping is explicitly disabled; the operator deletes the
+  # ServiceMonitor/PrometheusRule when these are false.
   observability:
     metrics:
-      enabled: true
-      port: 9090
-      secure: false
+      enabled: false
     serviceMonitor:
-      enabled: true
-      interval: 30s
-      scrapeTimeout: 10s
+      enabled: false
     prometheusRule:
-      enabled: true
+      enabled: false
   networking:
     service:
       type: ClusterIP
@@ -134,10 +136,6 @@ spec:
           port: 8443
           protocol: TCP
           targetPort: 8443
-        - name: metrics
-          port: 9090
-          protocol: TCP
-          targetPort: 9090
         - name: dashboard
           port: 9119
           protocol: TCP
