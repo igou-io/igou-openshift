@@ -78,6 +78,21 @@ spec:
         - test:
             - field: .verb
               matches: '^(get|list|watch)$'
+    # OLM sweeps per-namespace ClusterServiceVersion copies
+    # (loki-operator.v6.6.0 across ~150 namespaces) with full ~190KB
+    # WriteRequestBodies at 2-5k events/min (~40MB/s). That trips
+    # LokiTenantRateLimit on the 10MiB/s audit tenant; the gateway
+    # cannot even serve these bodies (192MB for 2000 events), so they
+    # are pure audit noise. CSV writes remain visible via gitops/cluster
+    # state; delete this filter if an auditor needs them.
+    - name: drop-audit-olm-csv-churn
+      type: drop
+      drop:
+        - test:
+            - field: .objectRef.resource
+              matches: '^clusterserviceversions$'
+            - field: .message
+              matches: 'clusterserviceversions'
     # democratic-csi structural noise the winston logLevel=warn (#484)
     # can't reach: bare "executing ... command:" stdout writes and
     # csi-proxy's unconditional per-request/response dumps — all driven
@@ -124,5 +139,6 @@ spec:
         - audit-api
       filterRefs:
         - drop-audit-read-verbs
+        - drop-audit-olm-csv-churn
       outputRefs:
         - default-lokistack
