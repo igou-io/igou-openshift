@@ -9,46 +9,6 @@ metadata:
   namespace: openshift-cluster-api
   labels:
     cluster.x-k8s.io/cluster-name: ocp-hb42r
-  annotations:
-    # Bounds for the cluster-api cluster-autoscaler. Replicas stays 0; the
-    # autoscaler scales up to 1 when a Pending pod opts in via the burst
-    # nodeSelector + toleration and back to 0 once the workload drains.
-    cluster.x-k8s.io/cluster-api-autoscaler-node-group-min-size: "0"
-    cluster.x-k8s.io/cluster-api-autoscaler-node-group-max-size: "1"
-    # Capacity hints — the autoscaler can't introspect a 0-replica node group,
-    # so it simulates "if I provisioned a node here, would this Pending pod
-    # fit?" using these values. Must reflect the casval host accurately.
-    capacity.cluster-autoscaler.kubernetes.io/cpu: "192"
-    capacity.cluster-autoscaler.kubernetes.io/memory: "428Gi"
-    # Match what the real casval node advertises once nvidia-device-plugin
-    # registers the resource (2 physical GPUs, no time-slicing).
-    #
-    # Caveat: cluster-autoscaler can't scale this group from 0 the *first*
-    # time — see kubernetes/autoscaler#5278. The CAPI provider's template
-    # simulator treats nvidia.com/gpu as unavailable until some live node in
-    # the cluster has already registered it, regardless of these annotations.
-    # Bootstrap by manually scaling the MachineSet to 1 once; afterwards
-    # scale-to-zero / scale-from-zero works normally.
-    capacity.cluster-autoscaler.kubernetes.io/gpu-count: "2"
-    capacity.cluster-autoscaler.kubernetes.io/gpu-type: "nvidia.com/gpu"
-    # Labels the *real* casval node will advertise once it joins. The
-    # autoscaler builds a synthetic template node from this list to evaluate
-    # whether a Pending pod would fit if we scaled up — anything the pod's
-    # nodeSelector relies on must be declared here. The CAPI provider does
-    # NOT auto-inject kubelet baseline labels, so list them explicitly:
-    #   - kubernetes.io/arch, kubernetes.io/os: kubelet baseline; KubeVirt
-    #       virt-controller adds kubernetes.io/arch=amd64 to every launcher
-    #       pod's nodeSelector.
-    #   - node-role.kubernetes.io/burst, node-role.kubernetes.io/worker:
-    #       propagated by CAPI from the MachineSet template labels.
-    #   - kubevirt.io/schedulable: set by virt-handler once it lands; required
-    #       because KubeVirt's mutating admission webhook adds it as a
-    #       nodeSelector on every virt-launcher pod.
-    #   - machine-type.node.kubevirt.io/pc-q35-rhel9.6.0: set by KubeVirt's
-    #       node-labeller; required for VMs that pin spec.domain.machine.type
-    #       (the default for RHEL/CentOS VirtualMachines).
-    capacity.cluster-autoscaler.kubernetes.io/labels: "node-role.kubernetes.io/burst=,node-role.kubernetes.io/worker=,kubernetes.io/arch=amd64,kubernetes.io/os=linux,kubevirt.io/schedulable=true,machine-type.node.kubevirt.io/pc-q35-rhel9.6.0=true"
-    capacity.cluster-autoscaler.kubernetes.io/taints: "workload=burst:NoSchedule"
 spec:
   clusterName: ocp-hb42r
   replicas: 0

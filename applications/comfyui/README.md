@@ -10,18 +10,17 @@ on-demand `casval` burst node.
 - Image: `docker.io/yanwk/comfyui-boot`, slim CUDA 13.0 family (digest-pinned,
   Renovate-managed). CUDA 13.0 runtime runs on casval's 595 driver (CUDA 13.2).
 
-## Scaling (this is a manually-scaled, autoscale-aware app)
+## Scaling
 
-`casval` is an on-demand CAPI burst node; the cluster-autoscaler powers it down
-when nothing needs it. A permanently-Running GPU pod would pin it on, so the
-Deployment ships **`replicas: 0`** and ArgoCD ignores `/spec/replicas`
-(`clusters/ocp/values.yaml`) — scale-ups are never reverted.
+`casval` is an on-demand CAPI burst node. Start an AO `casval-lease` before
+scaling ComfyUI. The Deployment ships **`replicas: 0`** and ArgoCD ignores
+`/spec/replicas` (`clusters/ocp/values.yaml`) so scale-ups are never reverted.
 
 ```bash
-# Start it — a pending GPU pod triggers the autoscaler to boot casval.
+# After casval is Ready, start ComfyUI.
 oc -n comfyui scale deploy/comfyui --replicas=1
 
-# Stop it when done so casval can power off.
+# Stop ComfyUI when done; the casval lease releases the node at expiry.
 oc -n comfyui scale deploy/comfyui --replicas=0
 ```
 
