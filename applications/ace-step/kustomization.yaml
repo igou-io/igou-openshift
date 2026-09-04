@@ -1,0 +1,153 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: ace-step
+resources:
+  - ace-step-namespace.yaml
+helmCharts:
+  - name: app-template
+    namespace: ace-step
+    version: 4.6.2
+    releaseName: ace-step
+    repo: oci://ghcr.io/bjw-s-labs/helm
+    valuesFile: values-dummy.yaml
+    valuesInline:
+      controllers:
+        ace-step:
+          type: deployment
+          replicas: 1
+          strategy: RollingUpdate
+          # For the GPU deployment, uncomment the nodeSelector and toleration
+          # together with the nvidia.com/gpu requests below. Two GPUs selects
+          # the on-demand casval burst worker and excludes the 2 GiB P620.
+          pod:
+            # nodeSelector:
+            #   node-role.kubernetes.io/burst: ""
+            # tolerations:
+            #   - key: workload
+            #     operator: Equal
+            #     value: burst
+            #     effect: NoSchedule
+            securityContext:
+              runAsNonRoot: true
+              seccompProfile:
+                type: RuntimeDefault
+          containers:
+            app:
+              image:
+                repository: ghcr.io/ace-step/ace-step-1.5
+                tag: 0.1.8@sha256:95652cd780c78a1b1a7f6f0335530430f0ae53d96c7c12d59f9f39fa23d38567
+                pullPolicy: IfNotPresent
+              # The upstream entrypoint uses `uv run`, which tries to rebuild
+              # an editable dependency under root-owned /app at runtime.
+              # OpenShift's arbitrary UID cannot write there; the image already
+              # contains the frozen environment, so skip uv's runtime sync.
+              command:
+                - uv
+                - run
+                - --no-sync
+                - python
+                - -m
+                - acestep.acestep_v15_pipeline
+              args:
+                - --server-name
+                - 0.0.0.0
+                - --port
+                - "7860"
+                - --backend
+                - pt
+              env:
+                ACESTEP_INIT_SERVICE: "false"
+                HF_HOME: /app/checkpoints/huggingface
+                HOME: /tmp
+                PYTHONDONTWRITEBYTECODE: "1"
+              probes:
+                startup:
+                  enabled: true
+                  custom: true
+                  spec:
+                    httpGet:
+                      path: /
+                      port: 7860
+                    periodSeconds: 15
+                    failureThreshold: 60
+                readiness:
+                  enabled: true
+                  custom: true
+                  spec:
+                    httpGet:
+                      path: /
+                      port: 7860
+                    periodSeconds: 10
+                    timeoutSeconds: 5
+                liveness:
+                  enabled: true
+                  custom: true
+                  spec:
+                    httpGet:
+                      path: /
+                      port: 7860
+                    periodSeconds: 30
+                    timeoutSeconds: 5
+                    failureThreshold: 6
+              resources:
+                requests:
+                  cpu: "2"
+                  memory: 8Gi
+                  # nvidia.com/gpu: "2"
+                limits:
+                  memory: 32Gi
+                  # nvidia.com/gpu: "2"
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                capabilities:
+                  drop:
+                    - ALL
+      persistence:
+        checkpoints:
+          type: emptyDir
+          advancedMounts:
+            ace-step:
+              app:
+                - path: /app/checkpoints
+        gradio-outputs:
+          type: emptyDir
+          advancedMounts:
+            ace-step:
+              app:
+                - path: /app/gradio_outputs
+        output:
+          type: emptyDir
+          advancedMounts:
+            ace-step:
+              app:
+                - path: /app/output
+        tmp:
+          type: emptyDir
+          advancedMounts:
+            ace-step:
+              app:
+                - path: /tmp
+      service:
+        app:
+          controller: ace-step
+          ports:
+            http:
+              port: 80
+              targetPort: 7860
+      ingress:
+        app:
+          className: openshift-default
+          annotations:
+            route.openshift.io/termination: edge
+          hosts:
+            - host: ace-step.apps.ocp.igou.systems
+              paths:
+                - path: /
+                  pathType: Prefix
+                  service:
+                    identifier: app
+                    port: http
+      serviceAccount:
+        ace-step:
+          enabled: true
