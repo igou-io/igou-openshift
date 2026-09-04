@@ -583,6 +583,14 @@ applications:
     source:
       path: applications/homepage
 
+  ace-step:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/ace-step
+
   forgejo:
     project: cluster-apps
     annotations:
