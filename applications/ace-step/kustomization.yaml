@@ -15,18 +15,17 @@ helmCharts:
         ace-step:
           type: deployment
           replicas: 1
-          strategy: RollingUpdate
-          # For the GPU deployment, uncomment the nodeSelector and toleration
-          # together with the nvidia.com/gpu requests below. Two GPUs selects
-          # the on-demand casval burst worker and excludes the 2 GiB P620.
+          # Exclusive nvidia.com/gpu: 2 — a rolling update would deadlock
+          # waiting for a second pair of GPUs that casval does not have.
+          strategy: Recreate
           pod:
-            # nodeSelector:
-            #   node-role.kubernetes.io/burst: ""
-            # tolerations:
-            #   - key: workload
-            #     operator: Equal
-            #     value: burst
-            #     effect: NoSchedule
+            nodeSelector:
+              node-role.kubernetes.io/burst: ""
+            tolerations:
+              - key: workload
+                operator: Equal
+                value: burst
+                effect: NoSchedule
             securityContext:
               runAsNonRoot: true
               seccompProfile:
@@ -93,10 +92,10 @@ helmCharts:
                 requests:
                   cpu: "2"
                   memory: 8Gi
-                  # nvidia.com/gpu: "2"
+                  nvidia.com/gpu: "2"
                 limits:
                   memory: 32Gi
-                  # nvidia.com/gpu: "2"
+                  nvidia.com/gpu: "2"
               securityContext:
                 allowPrivilegeEscalation: false
                 runAsNonRoot: true
