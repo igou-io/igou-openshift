@@ -590,6 +590,13 @@ applications:
       argocd.argoproj.io/sync-wave: '20'
     source:
       path: applications/ace-step
+    # Replicas are scaled manually. Leave them alone so ArgoCD does not
+    # revert a scale-down back to the 1 checked into git.
+    ignoreDifferences:
+      - group: apps
+        kind: Deployment
+        jsonPointers:
+          - /spec/replicas
 
   forgejo:
     project: cluster-apps
