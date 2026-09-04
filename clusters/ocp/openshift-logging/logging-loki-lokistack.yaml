@@ -48,12 +48,13 @@ spec:
             priority: 20
             days: 7
       ingestion:
-        # Operator defaults (4MB/s tenant rate) discarded ~40% of lines
-        # during the initial node-backlog replay (reason=rate_limited).
-        # ~15GB/day steady state fits easily; headroom is for catch-up
-        # bursts after node outages.
-        ingestionRate: 10
-        ingestionBurstSize: 20
+        # Measured audit-tenant ingest has run 25-45 MB/s sustained since 2026-09-02
+        # (OLM CSV PUT churn landing full request bodies in the audit tenant under
+        # the WriteRequestBodies profile). Exceeded the old 10 MB/s tenant rate;
+        # distributor 429'd audit pushes (LokiTenantRateLimit, ~19 MB/s discarded
+        # as rate_limited). Headroom is for audit write-path growth plus post-outage catch-up bursts.
+        ingestionRate: 30
+        ingestionBurstSize: 60
         perStreamRateLimit: 5
         perStreamRateLimitBurst: 15
   # Ruler on so AlertingRule CRs (phase 6) deliver into the platform
