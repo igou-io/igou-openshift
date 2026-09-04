@@ -10,10 +10,10 @@ End-to-end validation that VLAN 9 (`trunk-network` localnet via the
 | `vm-hpg5` | `hpg5.igou.systems` (worker) | B — secondary network |
 | `vm-casval` | `casval` (CAPI burst worker) | C — secondary + burst toleration |
 
-`vm-casval` triggers the CAPI cluster-autoscaler to scale the casval
-MachineSet from 0 → 1: its launcher pod stays Pending until BMC powers casval
-on, RHCOS deploys, the node joins, the `mapping-casval` NNCE converges, and
-the VM schedules. Plan ~10–15 min from apply to running.
+Start an AO `casval-lease` before applying this workload. The casval VM's
+launcher stays Pending until BMC powers casval on, RHCOS deploys, the node
+joins, the `mapping-casval` NNCE converges, and the VM schedules. Plan up to
+30 minutes from lease start to Ready.
 
 `vlan9-no-ipam` has IPAM disabled — VMs rely on DHCP on VLAN 9. The
 qemu-guest-agent reports the lease back to KubeVirt for inspection via
@@ -33,8 +33,8 @@ oc -n vlan9-vm-multinode get vmi -o custom-columns=NAME:.metadata.name,NODE:.sta
 virtctl -n vlan9-vm-multinode ssh igou@vm-ocp
 ```
 
-Teardown also drains casval — autoscaler scales the MachineSet back to 0 once
-the launcher pod is gone, then CAPM3 deprovisions the BMH:
+Delete the workload before the lease expires so CAPM3 can drain and
+deprovision the BMH cleanly:
 
 ```bash
 oc delete -k test-workloads/vlan9-vm-multinode/

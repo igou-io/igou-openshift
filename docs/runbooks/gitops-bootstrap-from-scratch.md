@@ -192,7 +192,7 @@ out of `clusters/ocp/values.yaml` (or `oc -n openshift-gitops get applications`)
  9  apiserver(+certs), ingresscontroller-certs
 10  cluster-api-operator, gateway-api, grafana, loki-operator, openshift-logging,
     openshift-pipelines, tailscale-operator, intel-device-plugins-operator
-11  cluster-api           12  cluster-api-autoscaler
+11  cluster-api
 19  firecrawl
 20  cloudnative-pg, hermes-agent, jellyfin, llmkube, searxng, gotify,
     pac-tenants, remote-tenants

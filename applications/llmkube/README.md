@@ -261,8 +261,8 @@ With both in place ArgoCD will:
 - Show the CR as **Synced** even when live replicas differ from git
 - Not overwrite `spec.replicas` during a sync or self-heal
 
-The same pattern is already used for the casval `MachineSet` replicas (managed
-by the cluster-autoscaler) in the `cluster-api` application entry.
+The same pattern is used for casval `MachineSet` replicas, which are managed
+by the AAP `casval_scale` job in the `cluster-api` application entry.
 
 ---
 
@@ -270,8 +270,8 @@ by the cluster-autoscaler) in the `cluster-api` application entry.
 
 The casval baremetal MachineSet (`clusters/ocp/cluster-api/casval-worker-machineset.yaml`)
 provisions a single burst node with a `workload=burst:NoSchedule` taint and the
-`node-role.kubernetes.io/burst` label. The cluster autoscaler scales it from 0→1
-when a matching Pending pod appears and back to 0 once it drains.
+`node-role.kubernetes.io/burst` label. Start an AO `casval-lease` before scaling
+a casval-hosted InferenceService.
 
 All InferenceService CRs that should run on casval must include:
 
@@ -286,7 +286,7 @@ spec:
       effect: NoSchedule
 ```
 
-Casval node capacity (used for autoscaler simulation):
+Casval node capacity:
 
 | Resource | Value |
 |---|---|

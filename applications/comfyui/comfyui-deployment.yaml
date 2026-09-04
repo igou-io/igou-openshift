@@ -5,11 +5,9 @@ metadata:
   name: comfyui
   namespace: comfyui
 spec:
-  # Checked in at 0 on purpose. casval is an on-demand CAPI burst node that the
-  # cluster-autoscaler powers down when idle; a permanently-Running GPU pod
-  # would pin it on. Scale to 1 by hand to run (autoscaler boots casval), back
-  # to 0 when done. ArgoCD ignores /spec/replicas so it never reverts a
-  # scale-up (see clusters/ocp/values.yaml).
+  # Checked in at 0 on purpose. Start an AO casval lease, then scale this to 1;
+  # return it to 0 before the lease ends. ArgoCD ignores /spec/replicas so it
+  # never reverts a scale-up (see clusters/ocp/values.yaml).
   replicas: 0
   # Exclusive GPU + a RWO PVC: the old pod must release both before the new one
   # starts.

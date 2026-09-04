@@ -15,13 +15,10 @@ spec:
   # ignores --n-gpu-layers. Override with the CUDA build so the 2x RTX 4060 Ti
   # on casval are actually used for inference.
   image: ghcr.io/ggml-org/llama.cpp:server-cuda13@sha256:4e7a6b0f87777ca3b2791c2688552588aab1457de83631557c9ff8313dbb58b5
-  # At rest this model is OFF (replicas: 0) so the casval burst baremetal node
-  # stays scaled to zero — the pod pins to casval (nodeSelector burst below), and
-  # a running replica is what holds the cluster-autoscaler's casval MachineSet at 1.
-  # To bring the big model up, scale to 1 (live patch or here); a Pending burst pod
-  # triggers the autoscaler to provision casval 0->1 (~12 min cold). ArgoCD ignores
-  # /spec/replicas (clusters/ocp/values.yaml ignoreDifferences) so a live scale-up
-  # is not reverted, but the checked-in value is the bootstrap/resting default.
+  # At rest this model is OFF (replicas: 0) along with the casval burst node.
+  # Start an AO casval lease and wait for the node to become Ready before scaling
+  # this model to 1. ArgoCD ignores /spec/replicas, so the live scale-up is not
+  # reverted; the checked-in value remains the resting default.
   replicas: 0
   # Tuning targets: Qwen3.6-35B-A3B UD-Q5_K_XL (~25 GiB) on 2x RTX 4060 Ti 16 GiB.
   # Hybrid linear-attn MoE: only 10/40 layers hold a KV cache (2 KV heads), so KV is
