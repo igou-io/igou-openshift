@@ -4,8 +4,9 @@
 # tenants application/infrastructure/audit gated by OpenShift RBAC at the
 # LokiStack gateway.
 # 1x.demo = single replica of each component, no ingest HA — fine at lab
-# scale (measured 2026-07-23: ~27.5 GB/day ingest, ~3.9 GB/day stored,
-# peak 0.5 MB/s vs the 10 MB/s tenant limit); documented upgrade path is
+# scale (measured 2026-07-23: ~27.5 GB/day ingest, ~3.9 GB/day stored;
+# audit peaks ~45 MB/s since WriteRequestBodies — tenants override below);
+# documented upgrade path is
 # 1x.pico (HA, RF=2, ~430Gi+ storage floor) if ingest ever grows past it.
 apiVersion: loki.grafana.com/v1
 kind: LokiStack
@@ -56,6 +57,17 @@ spec:
         ingestionBurstSize: 20
         perStreamRateLimit: 5
         perStreamRateLimitBurst: 15
+    # Audit is the only tenant that needs more than the 10 MB/s global
+    # limit. Since WriteRequestBodies (2026-08-03, CIS 1.2.19), full API
+    # write request bodies flow into the audit tenant, peaking ~45 MB/s;
+    # the global limit discarded ~311 lines/s (LokiTenantRateLimit 429
+    # alert 2026-09-04). 50 MB/s rate + 100 burst gives ~2x peak headroom;
+    # other tenants stay under 0.2 MB/s.
+    tenants:
+      audit:
+        ingestion:
+          ingestionRate: 50
+          ingestionBurstSize: 100
   # Ruler on so AlertingRule CRs (phase 6) deliver into the platform
   # Alertmanager (auto-wired by the operator on OpenShift).
   rules:
