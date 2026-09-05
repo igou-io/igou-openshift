@@ -3,6 +3,8 @@ kind: Kustomization
 namespace: ace-step
 resources:
   - ace-step-namespace.yaml
+  - ace-step-checkpoints-persistentvolumeclaim.yaml
+  - ace-step-output-persistentvolumeclaim.yaml
 helmCharts:
   - name: app-template
     namespace: ace-step
@@ -58,6 +60,7 @@ helmCharts:
                 ACESTEP_INIT_SERVICE: "false"
                 HF_HOME: /app/checkpoints/huggingface
                 HOME: /tmp
+                TMPDIR: /tmp
                 PYTHONDONTWRITEBYTECODE: "1"
               probes:
                 startup:
@@ -104,13 +107,15 @@ helmCharts:
                     - ALL
       persistence:
         checkpoints:
-          type: emptyDir
+          type: persistentVolumeClaim
+          existingClaim: ace-step-checkpoints
           advancedMounts:
             ace-step:
               app:
                 - path: /app/checkpoints
         gradio-outputs:
-          type: emptyDir
+          type: persistentVolumeClaim
+          existingClaim: ace-step-output
           advancedMounts:
             ace-step:
               app:

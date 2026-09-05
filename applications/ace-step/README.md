@@ -20,6 +20,14 @@ before leaving ACE-Step at `1`.
 
 ArgoCD ignores `/spec/replicas` so a live scale-down is not reverted.
 
+## Persistence
+
+- `ace-step-checkpoints` (100Gi, `freenas-nvmeof-ssd-csi`, RWO) at
+  `/app/checkpoints` — Hugging Face `ACE-Step/Ace-Step1.5` bundle plus
+  `HF_HOME`. Scale 0→1 must not redownload.
+- `ace-step-output` (20Gi, same class) at `/app/gradio_outputs` — generated
+  songs. `/app/output` stays emptyDir (unused by 1.5). `/tmp` stays emptyDir.
+
 ```bash
 # After casval is Ready (a Pending GPU pod also drives the autoscaler).
 oc -n ace-step scale deploy/ace-step --replicas=1
