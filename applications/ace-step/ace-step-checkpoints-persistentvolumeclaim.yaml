@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ace-step-checkpoints
+  namespace: ace-step
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      # Live Ace-Step1.5 bundle is ~9.5Gi (turbo DiT 4.5G + 1.7B LM 3.6G +
+      # Qwen3-Embedding 1.2G + VAE 322M). 100Gi leaves room for XL turbo later
+      # without a PVC recreate.
+      storage: 100Gi
+  storageClassName: freenas-nvmeof-ssd-csi
