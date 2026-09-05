@@ -41,6 +41,10 @@
             name: name
             label: status
             limit: 4
+    - Automation Orchestrator:
+        icon: ansible.png
+        href: https://orchestrator.apps.ocp.igou.systems
+        description: workflow orchestration
     - RHDH:
         icon: backstage.png
         href: https://rhdh.apps.ocp.igou.systems
@@ -71,9 +75,9 @@
           refreshInterval: 60000
           metrics:
             - label: ocp critical
-              query: 'count(ALERTS{alertstate="firing",severity="critical",cluster!="rk8s"}) or vector(0)'
+              query: 'count(ALERTS{alertstate="firing",severity="critical",cluster!="rk8s",alertname!~"HighOverallControlPlaneCPU|CDIDefaultStorageClassDegraded"}) or vector(0)'
             - label: ocp warning
-              query: 'count(ALERTS{alertstate="firing",severity="warning",cluster!="rk8s"}) or vector(0)'
+              query: 'count(ALERTS{alertstate="firing",severity="warning",cluster!="rk8s",alertname!~"HighOverallControlPlaneCPU|CDIDefaultStorageClassDegraded"}) or vector(0)'
             - label: rk8s firing
               query: 'count(ALERTS{alertstate="firing",severity=~"warning|critical",cluster="rk8s"}) or vector(0)'
     - OCP Alerts:
@@ -82,7 +86,7 @@
         description: firing on ocp
         widget:
           type: customapi
-          url: https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems/api/v1/query?query=count%20by%20(alertname,severity)%20(ALERTS%7Balertstate%3D%22firing%22,severity%3D~%22warning%7Ccritical%22,cluster!%3D%22rk8s%22%7D)
+          url: https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems/api/v1/query?query=count%20by%20(alertname,severity)%20(ALERTS%7Balertstate%3D%22firing%22,severity%3D~%22warning%7Ccritical%22,cluster!%3D%22rk8s%22,alertname!~%22HighOverallControlPlaneCPU%7CCDIDefaultStorageClassDegraded%22%7D)
           headers:
             Authorization: "Bearer {{HOMEPAGE_VAR_THANOS_TOKEN}}"
           refreshInterval: 60000
