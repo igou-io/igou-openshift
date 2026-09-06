@@ -751,7 +751,7 @@
         description: tv
     - UniFi:
         icon: unifi.png
-        href: https://unifi.igounas.igou.systems
+        href: https://unifi.infra.igou.systems
         description: network controller
     - igounas:
         icon: truenas.png

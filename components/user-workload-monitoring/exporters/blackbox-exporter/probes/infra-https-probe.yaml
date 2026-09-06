@@ -51,7 +51,7 @@ spec:
         - https://homepage.biscuit.igou.systems/
         - https://quay.apps.ocp.igou.systems
         - https://igounas.igou.systems/
-        - https://unifi.igounas.igou.systems
+        - https://unifi.infra.igou.systems
         - https://prowlarr.biscuit.igou.systems/ping
         - https://radarr.biscuit.igou.systems/ping
         - https://romm.biscuit.igou.systems
