@@ -1,7 +1,6 @@
 ---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: shelfmark
 resources:
   - default-deny-networkpolicy.yaml
   - allow-shelfmark-networkpolicy.yaml
@@ -9,7 +8,9 @@ resources:
   - shelfmark-books-nfs-pv.yaml
   - shelfmark-books-nfs-pvc.yaml
   - shelfmark-config-pvc.yaml
-  - shelfmark-anyuid-clusterrolebinding.yaml
+  - shelfmark-scc.yaml
+  - shelfmark-scc-clusterrole.yaml
+  - shelfmark-scc-clusterrolebinding.yaml
   - shelfmark-route.yaml
 helmCharts:
   - name: app-template
@@ -54,15 +55,17 @@ helmCharts:
                 - /bin/bash
                 - -c
               args:
-                - mkdir -p /mnt/books/shelfmark-incoming
+                - mkdir -p /mnt/books/shelfmark-incoming && chown 1000:1000 /mnt/config
               securityContext:
                 allowPrivilegeEscalation: false
-                runAsNonRoot: true
-                runAsUser: 1000
-                runAsGroup: 1000
+                runAsNonRoot: false
+                runAsUser: 0
+                runAsGroup: 0
                 capabilities:
                   drop:
                     - ALL
+                  add:
+                    - CHOWN
           containers:
             app:
               image:
@@ -122,6 +125,8 @@ helmCharts:
           existingClaim: shelfmark-config
           advancedMounts:
             shelfmark:
+              create-incoming:
+                - path: /mnt/config
               app:
                 - path: /config
         books:

@@ -1,0 +1,50 @@
+---
+# The built-in anyuid SCC rejects an explicit seccompProfile: RuntimeDefault.
+# Keep the required UID/GID and seccomp settings with a purpose-specific SCC
+# instead of weakening the pod or the cluster-wide anyuid SCC. RunAsAny is
+# needed only because the init container must create the NFS subdirectory as
+# root; the main container is explicitly fixed to UID/GID 1000.
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: shelfmark-uid1000
+  annotations:
+    argocd.argoproj.io/sync-wave: "-2"
+    kubernetes.io/description: >-
+      Shelfmark-only SCC for the non-root Shelfmark workload and its root-only
+      storage initialization helper. No host access or privilege escalation;
+      CHOWN is allowed only for the helper's empty application volumes.
+allowHostDirVolumePlugin: false
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegeEscalation: false
+allowPrivilegedContainer: false
+allowedCapabilities:
+  - CHOWN
+defaultAddCapabilities: null
+requiredDropCapabilities:
+  - ALL
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: MustRunAs
+fsGroup:
+  type: RunAsAny
+supplementalGroups:
+  type: RunAsAny
+seccompProfiles:
+  - runtime/default
+readOnlyRootFilesystem: false
+volumes:
+  - configMap
+  - csi
+  - downwardAPI
+  - emptyDir
+  - ephemeral
+  - persistentVolumeClaim
+  - projected
+  - secret
+users: []
+groups: []

@@ -34,12 +34,17 @@ the rest of the Calibre library.
 
 ## OpenShift security
 
-The dedicated `shelfmark` ServiceAccount is bound to the OpenShift `anyuid`
-SCC only so the pod may request the fixed UID/GID needed by the shared books
-filesystem. Shelfmark still runs non-root as UID/GID `1000:1000`, with
-`runAsNonRoot: true`, `allowPrivilegeEscalation: false`, seccomp
-`RuntimeDefault`, and all Linux capabilities dropped. No Tor or WireGuard
-features are enabled.
+The dedicated `shelfmark` ServiceAccount is bound to the purpose-specific
+`shelfmark-uid1000` SCC. The built-in `anyuid` SCC rejects an explicit
+`RuntimeDefault` seccomp profile, so this SCC retains the requested seccomp,
+no-escalation, and dropped-capability settings without changing the
+cluster-wide SCCs. The init container runs as UID 0 only to create the NFS
+subdirectory and initialize the root of Shelfmark's own config PVC; it has
+only the `CHOWN` capability, and does not change existing ownership or
+permissions in the Calibre library. The main Shelfmark container still runs
+non-root as UID/GID `1000:1000`, with `runAsNonRoot: true`,
+`allowPrivilegeEscalation: false`, seccomp `RuntimeDefault`, and all Linux
+capabilities dropped. No Tor or WireGuard features are enabled.
 
 ## Network and access
 
