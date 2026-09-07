@@ -126,7 +126,7 @@ them.
 
 Scheduled sweeps (native Hermes cron): four jobs run in fresh isolated agent
 sessions with the `sre-sweeps` skill, `/workspace` workdir, pinned
-`openai-codex/gpt-5.6-luna` model at `high` reasoning, and direct delivery to
+`opencode-go/glm-5.3-flash` model, and direct delivery to
 the SRE Slack channel. `cron.max_parallel_jobs: 1` serializes them. Manage them
 with `hermes cron`; never patch `/opt/data/cron/jobs.json`. Issue #860 tracks a
 future operator API for declarative reconciliation.
