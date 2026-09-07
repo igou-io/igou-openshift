@@ -544,6 +544,14 @@ applications:
     source:
       path: applications/jellyfin
 
+  calibre-web:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/calibre-web
+
   llmkube:
     project: cluster-apps
     annotations:

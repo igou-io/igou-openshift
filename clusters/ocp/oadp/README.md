@@ -35,12 +35,15 @@ see `docs/runbooks/oadp-restore.md`.
 
 | Schedule | When | Namespaces | TTL |
 |---|---|---|---|
-| `daily-apps` | 08:00 (04:00 ET) | forgejo, gitea-mirror, grafana, hermes-sre, hermes-assistant, hermes-developer, sands-of-time, gotify, searxng, jellyfin | 30d |
+| `daily-apps` | 08:00 (04:00 ET) | forgejo, gitea-mirror, grafana, hermes-sre, hermes-assistant, hermes-developer, sands-of-time, gotify, searxng, jellyfin, calibre-web | 30d |
 | `daily-platform` | 08:30 | ansible-automation-platform (Fernet key!), stackrox | 30d |
 | `weekly-heavy` | Sat 06:00 | windows-images, comfyui, openshift-virtualization-os-images | 90d |
 
 `jellyfin-media` (1Ti static NFS PV) and `comfyui-models` (200Gi of
 re-downloadable weights) carry `velero.io/exclude-from-backup: "true"`.
+Calibre-Web's static NFS `books` volume is intentionally included through the
+pod's `backup.velero.io/backup-volumes` annotation; its dynamic config PVC uses
+the normal CSI snapshot data mover.
 To add a namespace, extend the right Schedule; if its PVCs use a driver
 other than nvmeof-{ssd,fast,cold}, also add a `*-velero`
 VolumeSnapshotClass for that driver (exactly one Velero-labeled class per
