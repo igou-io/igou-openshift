@@ -552,6 +552,16 @@ applications:
     source:
       path: applications/calibre-web
 
+  shelfmark:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    destination:
+      namespace: shelfmark
+    source:
+      path: applications/shelfmark
+
   llmkube:
     project: cluster-apps
     annotations:

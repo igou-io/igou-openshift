@@ -1,0 +1,3 @@
+---
+# Intentionally empty: required by kustomize helmCharts when valuesInline is used.
+foo: bar
