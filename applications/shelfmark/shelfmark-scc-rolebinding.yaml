@@ -1,8 +1,9 @@
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
   name: shelfmark-uid1000
+  namespace: shelfmark
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 roleRef:

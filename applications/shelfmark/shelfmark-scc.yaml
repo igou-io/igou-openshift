@@ -2,8 +2,8 @@
 # The built-in anyuid SCC rejects an explicit seccompProfile: RuntimeDefault.
 # Keep the required UID/GID and seccomp settings with a purpose-specific SCC
 # instead of weakening the pod or the cluster-wide anyuid SCC. RunAsAny is
-# needed only because the init container must create the NFS subdirectory as
-# root; the main container is explicitly fixed to UID/GID 1000.
+# needed because init-config explicitly runs as root to initialize the config
+# PVC; the main container and create-incoming init are fixed to UID/GID 1000.
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
@@ -12,8 +12,9 @@ metadata:
     argocd.argoproj.io/sync-wave: "-2"
     kubernetes.io/description: >-
       Shelfmark-only SCC for the non-root Shelfmark workload and its root-only
-      storage initialization helper. No host access or privilege escalation;
-      CHOWN is allowed only for the helper's empty application volumes.
+      config-volume initialization helper. No host access or privilege
+      escalation; CHOWN is the only addable capability and is used only by
+      init-config.
 allowHostDirVolumePlugin: false
 allowHostIPC: false
 allowHostNetwork: false
