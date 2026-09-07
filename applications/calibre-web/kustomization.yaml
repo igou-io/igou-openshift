@@ -9,6 +9,7 @@ resources:
   - calibre-web-books-nfs-pv.yaml
   - calibre-web-books-nfs-pvc.yaml
   - calibre-web-config-pvc.yaml
+  - calibre-web-anyuid-clusterrolebinding.yaml
 helmCharts:
   - name: app-template
     namespace: calibre-web
@@ -43,11 +44,12 @@ helmCharts:
           containers:
             app:
               image:
-                repository: ghcr.io/igou-io/calibre-web
-                tag: latest
+                repository: lscr.io/linuxserver/calibre-web
+                tag: 0.6.27-ls400@sha256:b1b9d15e12561ab4cd7cb01a693000e57925bf1906c69d04d5685891c7376ead
                 pullPolicy: IfNotPresent
               env:
-                HOME: /config
+                PGID: "1000"
+                PUID: "1000"
                 TZ: America/New_York
               probes:
                 startup:
@@ -77,11 +79,7 @@ helmCharts:
                   memory: 1Gi
               securityContext:
                 allowPrivilegeEscalation: false
-                runAsNonRoot: true
-                readOnlyRootFilesystem: true
-                capabilities:
-                  drop:
-                    - ALL
+                runAsUser: 0
       persistence:
         config:
           type: persistentVolumeClaim

@@ -2,6 +2,7 @@
 
 Calibre-Web serves an ebook library stored on a deliberately static TrueNAS
 NFS dataset. Application state and the library are kept on separate volumes.
+The deployment uses the digest-pinned LinuxServer.io image.
 
 ## Storage
 
@@ -18,6 +19,15 @@ NFS-share, quota, and snapshot lifecycle through `igou-ansible` and
 The daily OADP application schedule protects the config PVC with CSI data
 movement and the NFS-mounted library with Velero file-system backup. TrueNAS
 also takes dataset-native daily and weekly snapshots.
+
+## OpenShift security exception
+
+LinuxServer.io's s6 init must start as root so it can apply `PUID=1000` and
+`PGID=1000`, initialize `/config`, and then drop privileges for Calibre-Web.
+The dedicated `calibre-web` service account is therefore granted the `anyuid`
+SCC and the pod explicitly starts as UID 0. Privilege escalation remains
+disabled and seccomp remains `RuntimeDefault`. Do not reuse this service
+account for another workload.
 
 ## Secure first-run bootstrap
 
