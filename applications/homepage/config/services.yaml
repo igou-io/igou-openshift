@@ -190,6 +190,10 @@
         icon: mdi-image-multiple
         href: https://comfyui.apps.ocp.igou.systems
         description: image generation (on-demand)
+    - Calibre-Web:
+        icon: mdi-book-open-variant
+        href: https://calibre-web.apps.ocp.igou.systems
+        description: ebook library
 
 - Servers:
     - ocp master (ms01):
