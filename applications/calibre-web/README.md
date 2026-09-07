@@ -9,16 +9,16 @@ The deployment uses the digest-pinned LinuxServer.io image.
 | Purpose | PVC | Source | Access |
 | --- | --- | --- | --- |
 | Settings and application database (`/config`) | `calibre-web-config` | `freenas-nvmeof-ssd-csi` | RWO, 5Gi |
-| Ebook library (`/books`) | `calibre-web-books` | Static NFS PV, `10.10.9.213:/mnt/cold/ebooks` | RWX, 1Ti |
+| Ebook library (`/books`) | `calibre-web-books` | Static NFS PV, `10.10.9.213:/mnt/cold/media/data/media/books` | RWX, 1Ti |
 
 The library PV has a `Retain` reclaim policy and a dedicated storage class so
-it cannot be replaced by dynamic provisioning. TrueNAS owns dataset, user,
-NFS-share, quota, and snapshot lifecycle through `igou-ansible` and
-`igou-inventory`.
+it cannot be replaced by dynamic provisioning. It reuses the existing TrueNAS
+`media` NFS export also mounted by Jellyfin; Calibre-Web is restricted to its
+`books` subdirectory.
 
 The daily OADP application schedule protects the config PVC with CSI data
-movement and the NFS-mounted library with Velero file-system backup. TrueNAS
-also takes dataset-native daily and weekly snapshots.
+movement and the NFS-mounted library with Velero file-system backup. The
+existing recursive weekly snapshot of `cold/media` also covers the books.
 
 ## OpenShift security exception
 

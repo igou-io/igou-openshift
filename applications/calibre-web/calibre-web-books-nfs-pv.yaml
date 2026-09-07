@@ -15,7 +15,7 @@ spec:
     - hard
   nfs:
     server: 10.10.9.213
-    path: /mnt/cold/ebooks
+    path: /mnt/cold/media/data/media/books
     readOnly: false
   claimRef:
     namespace: calibre-web
