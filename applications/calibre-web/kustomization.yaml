@@ -10,6 +10,7 @@ resources:
   - calibre-web-books-nfs-pvc.yaml
   - calibre-web-config-pvc.yaml
   - calibre-web-anyuid-clusterrolebinding.yaml
+  - calibre-web-route.yaml
 helmCharts:
   - name: app-template
     namespace: calibre-web
