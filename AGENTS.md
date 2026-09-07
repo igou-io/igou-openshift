@@ -147,7 +147,9 @@ Layout:
 
 - **`components/cluster-api-operator/`** installs the upstream `cluster-api-operator` Helm chart, which deploys CAPI CoreProvider, CAPM3 InfrastructureProvider, and CAPM3 IPAMProvider into `capi-system` / `capm3-system` / `capi-operator-system`. Do **not** replace this with OCP-native MAPI — that's been considered and rejected for the topology reason above.
 - **`clusters/ocp/cluster-api/`** contains the per-cluster CAPI workload: `Cluster`, `Metal3Cluster`, `MachineSet` (in `openshift-cluster-api` namespace), `Metal3MachineTemplate`, `BareMetalHost`, BMC secret, and the CSR-approver / node-cleanup cronjobs.
-- The CAPI cluster-autoscaler runs from `cluster-api-autoscaler-system`.
+- Casval is scaled on demand by the AAP `casval_scale` job template and the
+  Automation Orchestrator `casval-lease` workflow. ArgoCD ignores only the
+  MachineSet replica field so those explicit leases are not reverted.
 
 **Known conflict**: OCP 4.21's payload also ships the upstream CAPI IPAM CRDs (`ipaddressclaims.ipam.cluster.x-k8s.io`, `ipaddresses.ipam.cluster.x-k8s.io`) because OCP itself is migrating to CAPI. Both CVO and `capi-operator` write to those CRDs, which can cause `ClusterOperatorDegraded` (`Failing=True`, `UpdatePayloadResourceInvalid`) on `clusterversion/version`. Resolution lives in the IPAMProvider config, not by removing the upstream CAPI install.
 
@@ -181,7 +183,7 @@ Repo-specific behavior:
 - Docker major updates require manual merge by default.
 - Docker images whose package name matches `/igou/` are allowed to automerge, including majors.
 - OCI Helm charts managed by Kustomize do not get Docker digest pinning (`matchDepTypes: HelmChart`, `pinDigests: false`).
-- `ghcr.io/defilantech/llmkube-controller` is disabled in Renovate. Bump `applications/llmkube` chart version and image digest together manually because newer controller builds can drop required args and crash-loop.
+- The `llmkube` Helm chart and `ghcr.io/defilantech/llmkube-controller` image are both disabled in Renovate. Bump `applications/llmkube` chart version and image digest together manually because newer controller builds can drop required args and crash-loop.
 - `components/democratic-csi/kustomization.yaml` has a regex custom manager for inline `tag@sha256` image pins in the chart's nonstandard image schema.
 
 Merge policy for Renovate PRs:

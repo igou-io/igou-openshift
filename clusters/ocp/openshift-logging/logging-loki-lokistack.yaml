@@ -56,6 +56,15 @@ spec:
         ingestionBurstSize: 20
         perStreamRateLimit: 5
         perStreamRateLimitBurst: 15
+    # OLM writes ~250 audit events/s with 100-250KB ClusterServiceVersion
+    # status payloads (2026-09-02), pushing the audit tenant to 24-45 MB/s
+    # against the 10 MB/s global cap -> constant 429s on loki_api_v1_push
+    # (LokiTenantRateLimit). Raise audit only, other tenants stay at 10.
+    tenants:
+      audit:
+        ingestion:
+          ingestionRate: 50
+          ingestionBurstSize: 100
   # Ruler on so AlertingRule CRs (phase 6) deliver into the platform
   # Alertmanager (auto-wired by the operator on OpenShift).
   rules:

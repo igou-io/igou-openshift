@@ -28,10 +28,8 @@ spec:
     spec:
       # Pattern C — burst. The selector targets the burst role label (set by
       # CAPI propagation from the MachineSet template). DO NOT use
-      # kubernetes.io/hostname=casval — the autoscaler's synthetic template
-      # node only carries labels declared in
-      # capacity.cluster-autoscaler.kubernetes.io/labels on the MachineSet,
-      # which can't include a per-node hostname.
+      # kubernetes.io/hostname=casval because the hostname is not present until
+      # after the CAPI Machine has registered its Node.
       nodeSelector:
         node-role.kubernetes.io/burst: ""
       tolerations:

@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ace-step-output
+  namespace: ace-step
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      # Gradio writes songs under /app/gradio_outputs (first 90s mp3 was ~1.4MiB
+      # plus small session/latent sidecars). /app/output stayed unused.
+      storage: 20Gi
+  storageClassName: freenas-nvmeof-ssd-csi
