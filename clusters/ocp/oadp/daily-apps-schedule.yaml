@@ -27,5 +27,6 @@ spec:
       - searxng
       - jellyfin
       - calibre-web
+      - shelfmark
     snapshotMoveData: true
     ttl: 720h0m0s

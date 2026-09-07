@@ -1,0 +1,152 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: shelfmark
+resources:
+  - default-deny-networkpolicy.yaml
+  - allow-shelfmark-networkpolicy.yaml
+  - shelfmark-namespace.yaml
+  - shelfmark-books-nfs-pv.yaml
+  - shelfmark-books-nfs-pvc.yaml
+  - shelfmark-config-pvc.yaml
+  - shelfmark-anyuid-clusterrolebinding.yaml
+  - shelfmark-route.yaml
+helmCharts:
+  - name: app-template
+    namespace: shelfmark
+    version: 4.6.2
+    releaseName: shelfmark
+    repo: oci://ghcr.io/bjw-s-labs/helm
+    valuesFile: values-dummy.yaml
+    valuesInline:
+      defaultPodOptions:
+        automountServiceAccountToken: false
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - key: node-role.kubernetes.io/control-plane
+                      operator: DoesNotExist
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          seccompProfile:
+            type: RuntimeDefault
+      controllers:
+        shelfmark:
+          type: deployment
+          replicas: 1
+          strategy: Recreate
+          annotations:
+            argocd.argoproj.io/sync-options: Replace=true
+          serviceAccount:
+            identifier: shelfmark
+          initContainers:
+            create-incoming:
+              image:
+                repository: ghcr.io/calibrain/shelfmark
+                tag: v1.3.15@sha256:9602290324993c801b319d3166b202b96bd9039af2416f0916dae03a5bdca815
+                pullPolicy: IfNotPresent
+              command:
+                - /bin/bash
+                - -c
+              args:
+                - mkdir -p /mnt/books/shelfmark-incoming
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                runAsUser: 1000
+                runAsGroup: 1000
+                capabilities:
+                  drop:
+                    - ALL
+          containers:
+            app:
+              image:
+                repository: ghcr.io/calibrain/shelfmark
+                tag: v1.3.15@sha256:9602290324993c801b319d3166b202b96bd9039af2416f0916dae03a5bdca815
+                pullPolicy: IfNotPresent
+              env:
+                TZ: America/New_York
+                FLASK_PORT: "8084"
+                CONFIG_DIR: /config
+                INGEST_DIR: /books
+                ENABLE_LOGGING: "false"
+              probes:
+                startup:
+                  enabled: true
+                  type: HTTP
+                  path: /api/health
+                  port: 8084
+                  spec:
+                    failureThreshold: 60
+                    periodSeconds: 5
+                    timeoutSeconds: 3
+                readiness:
+                  enabled: true
+                  type: HTTP
+                  path: /api/health
+                  port: 8084
+                  spec:
+                    periodSeconds: 10
+                    timeoutSeconds: 3
+                liveness:
+                  enabled: true
+                  type: HTTP
+                  path: /api/health
+                  port: 8084
+                  spec:
+                    periodSeconds: 10
+                    timeoutSeconds: 3
+              resources:
+                requests:
+                  cpu: 250m
+                  memory: 512Mi
+                limits:
+                  cpu: "2"
+                  memory: 3Gi
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                runAsUser: 1000
+                runAsGroup: 1000
+                capabilities:
+                  drop:
+                    - ALL
+      persistence:
+        config:
+          type: persistentVolumeClaim
+          existingClaim: shelfmark-config
+          advancedMounts:
+            shelfmark:
+              app:
+                - path: /config
+        books:
+          type: persistentVolumeClaim
+          existingClaim: shelfmark-books
+          advancedMounts:
+            shelfmark:
+              create-incoming:
+                - path: /mnt/books
+              app:
+                - path: /books
+                  subPath: shelfmark-incoming
+        tmp:
+          type: emptyDir
+          advancedMounts:
+            shelfmark:
+              app:
+                - path: /tmp
+      service:
+        app:
+          controller: shelfmark
+          ports:
+            http:
+              port: 80
+              targetPort: 8084
+      serviceAccount:
+        shelfmark:
+          enabled: true
