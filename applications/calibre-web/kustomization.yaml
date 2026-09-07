@@ -1,0 +1,115 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: calibre-web
+resources:
+  - default-deny-networkpolicy.yaml
+  - allow-calibre-web-networkpolicy.yaml
+  - calibre-web-namespace.yaml
+  - calibre-web-books-nfs-pv.yaml
+  - calibre-web-books-nfs-pvc.yaml
+  - calibre-web-config-pvc.yaml
+helmCharts:
+  - name: app-template
+    namespace: calibre-web
+    version: 4.6.2
+    releaseName: calibre-web
+    repo: oci://ghcr.io/bjw-s-labs/helm
+    valuesFile: values-dummy.yaml
+    valuesInline:
+      defaultPodOptions:
+        automountServiceAccountToken: false
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - key: node-role.kubernetes.io/control-plane
+                      operator: DoesNotExist
+      controllers:
+        calibre-web:
+          type: deployment
+          replicas: 1
+          strategy: Recreate
+          annotations:
+            argocd.argoproj.io/sync-options: Replace=true
+          pod:
+            annotations:
+              backup.velero.io/backup-volumes: books
+            securityContext:
+              seccompProfile:
+                type: RuntimeDefault
+          containers:
+            app:
+              image:
+                repository: ghcr.io/igou-io/calibre-web
+                tag: latest
+                pullPolicy: IfNotPresent
+              env:
+                HOME: /config
+                TZ: America/New_York
+              probes:
+                startup:
+                  enabled: true
+                  type: HTTP
+                  path: /
+                  port: 8083
+                  spec:
+                    failureThreshold: 30
+                    periodSeconds: 10
+                readiness:
+                  enabled: true
+                  type: HTTP
+                  path: /
+                  port: 8083
+                liveness:
+                  enabled: true
+                  type: HTTP
+                  path: /
+                  port: 8083
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: "1"
+                  memory: 1Gi
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+      persistence:
+        config:
+          type: persistentVolumeClaim
+          existingClaim: calibre-web-config
+          advancedMounts:
+            calibre-web:
+              app:
+                - path: /config
+        books:
+          type: persistentVolumeClaim
+          existingClaim: calibre-web-books
+          advancedMounts:
+            calibre-web:
+              app:
+                - path: /books
+        tmp:
+          type: emptyDir
+          advancedMounts:
+            calibre-web:
+              app:
+                - path: /tmp
+      service:
+        app:
+          controller: calibre-web
+          ports:
+            http:
+              port: 80
+              targetPort: 8083
+      serviceAccount:
+        calibre-web:
+          enabled: true
