@@ -38,11 +38,13 @@ helmCharts:
           pod:
             annotations:
               backup.velero.io/backup-volumes: books
-            securityContext:
-              seccompProfile:
-                type: RuntimeDefault
           containers:
             app:
+              # No pod/container securityContext at all: OpenShift SCC admission
+              # rejected the pod otherwise (Forbidden: seccomp may not be set /
+              # runAsUser must be in the namespace range). The SA already gets
+              # anyuid via calibre-web-anyuid, which allows the root entrypoint
+              # the LinuxServer.io image needs.
               image:
                 repository: lscr.io/linuxserver/calibre-web
                 tag: 0.6.27-ls400@sha256:b1b9d15e12561ab4cd7cb01a693000e57925bf1906c69d04d5685891c7376ead
@@ -77,9 +79,6 @@ helmCharts:
                 limits:
                   cpu: "1"
                   memory: 1Gi
-              securityContext:
-                allowPrivilegeEscalation: false
-                runAsUser: 0
       persistence:
         config:
           type: persistentVolumeClaim
