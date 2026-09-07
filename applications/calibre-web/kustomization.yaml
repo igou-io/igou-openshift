@@ -38,9 +38,10 @@ helmCharts:
           pod:
             annotations:
               backup.velero.io/backup-volumes: books
-            securityContext:
-              seccompProfile:
-                type: RuntimeDefault
+          # No pod-level seccompProfile on OpenShift: anyuid's seccompProfiles
+          # is empty (implicit runtime/default gate), and setting the field
+          # emits legacy seccomp.security.alpha.kubernetes.io annotations that
+          # SCC admission rejects (2026-09-07).
           containers:
             app:
               image:
