@@ -115,9 +115,21 @@ spec:
     limits:
       cpu: "2"
       memory: 3Gi
-  # No Prometheus scrape: the agent does not listen on /metrics (OTLP-only
-  # gateway health export). Enabling observability.metrics here recreates a
-  # permanent HermesMetricsDown (Service :9090 with nothing bound).
+  # Hermes has no HTTP /metrics endpoint: monitoring exports via OTLP push
+  # (docs/observability/monitoring.md in NousResearch/hermes-agent), so the
+  # operator's default scrape target can never come up (alert
+  # HermesMetricsDown fired continuously 2026-09-01 to 2026-09-02). All
+  # observability scraping is explicitly disabled; the operator deletes the
+  # ServiceMonitor/PrometheusRule when these are false.
+  observability:
+    metrics:
+      enabled: false
+    serviceMonitor:
+      enabled: false
+    prometheusRule:
+      enabled: false
+  # Re-enabling observability.metrics recreates a permanent HermesMetricsDown
+  # (Service :9090 with nothing bound).
   networking:
     service:
       type: ClusterIP
