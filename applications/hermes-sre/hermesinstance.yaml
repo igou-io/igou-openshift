@@ -127,9 +127,9 @@ spec:
     serviceMonitor:
       enabled: false
     prometheusRule:
-      enabled: false Re-enabling
-  # observability.metrics recreates a permanent HermesMetricsDown (Service
-  # :9090 with nothing bound).
+      enabled: false
+  # Re-enabling observability.metrics recreates a permanent HermesMetricsDown
+  # (Service :9090 with nothing bound).
   networking:
     service:
       type: ClusterIP
