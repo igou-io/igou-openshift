@@ -26,5 +26,6 @@ spec:
       - gotify
       - searxng
       - jellyfin
+      - calibre-web
     snapshotMoveData: true
     ttl: 720h0m0s
