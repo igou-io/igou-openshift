@@ -1,7 +1,6 @@
 ---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: shelfmark
 resources:
   - default-deny-networkpolicy.yaml
   - allow-shelfmark-networkpolicy.yaml
@@ -9,7 +8,9 @@ resources:
   - shelfmark-books-nfs-pv.yaml
   - shelfmark-books-nfs-pvc.yaml
   - shelfmark-config-pvc.yaml
-  - shelfmark-anyuid-clusterrolebinding.yaml
+  - shelfmark-scc.yaml
+  - shelfmark-scc-clusterrole.yaml
+  - shelfmark-scc-rolebinding.yaml
   - shelfmark-route.yaml
 helmCharts:
   - name: app-template
@@ -63,6 +64,26 @@ helmCharts:
                 capabilities:
                   drop:
                     - ALL
+            init-config:
+              image:
+                repository: ghcr.io/calibrain/shelfmark
+                tag: v1.3.15@sha256:9602290324993c801b319d3166b202b96bd9039af2416f0916dae03a5bdca815
+                pullPolicy: IfNotPresent
+              command:
+                - /bin/bash
+                - -c
+              args:
+                - chown 1000:1000 /mnt/config
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: false
+                runAsUser: 0
+                runAsGroup: 0
+                capabilities:
+                  drop:
+                    - ALL
+                  add:
+                    - CHOWN
           containers:
             app:
               image:
@@ -122,6 +143,8 @@ helmCharts:
           existingClaim: shelfmark-config
           advancedMounts:
             shelfmark:
+              init-config:
+                - path: /mnt/config
               app:
                 - path: /config
         books:
