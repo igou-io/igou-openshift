@@ -109,10 +109,6 @@ spec:
           port: 8443
           protocol: TCP
           targetPort: 8443
-        - name: metrics
-          port: 9090
-          protocol: TCP
-          targetPort: 9090
         - name: dashboard
           port: 9119
           protocol: TCP
@@ -298,14 +294,6 @@ spec:
           base_url: http://qwen3-35b-a3b.llmkube-system.svc.cluster.local:8080/v1
           model: qwen3.6-35b-a3b
           name: qwen3-35b-a3b
-        - api_key: sk-no-key
-          base_url: http://qwen35-2b.llmkube-system.svc.cluster.local:8080/v1
-          model: qwen3.5-2b
-          name: qwen35-2b
-        - api_key: sk-no-key
-          base_url: http://gemma-4-e2b.llmkube-system.svc.cluster.local:8080/v1
-          model: gemma-4-e2b
-          name: gemma-4-e2b
         # Qwen3.8-27B on casval (burst, 2x 4060 Ti): 23-28 tok/s w/ MTP,
         # 128k ctx, tool-calling verified — the strongest in-cluster model.
         # Scale-from-zero: first request after idle needs casval provisioned
@@ -337,9 +325,9 @@ spec:
             aggregator_temperature: 0.4
             reference_temperature: 0.6
       model:
-        base_url: https://chatgpt.com/backend-api/codex
-        default: gpt-5.6-luna
-        provider: openai-codex
+        base_url: https://opencode.ai/zen/go/v1
+        default: glm-5.3-flash
+        provider: opencode-go
       onboarding:
         seen:
           busy_input_prompt: true
@@ -460,7 +448,7 @@ spec:
               - name: workspace
                 # :latest is digest-pinned (Renovate moves it); carries the
                 # coding-agent CLIs and ghapp >= 0.3.0 (GHAPP_BROKER_URL client).
-                image: ghcr.io/igou-io/igou-devenv:latest@sha256:e1cfc53edf3c7875bfe37d578280f38ac03ad0e362ef138197767e013fab771d
+                image: ghcr.io/igou-io/igou-devenv:latest@sha256:de0fa4fe9ec2fe119790e692b081e3b67b8edc154fb763b8e98c38be85d88cb6
                 command:
                   - sleep
                   - infinity

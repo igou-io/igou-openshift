@@ -205,9 +205,9 @@ applications:
           - /spec/customDeploy
           - /spec/preprovisioningNetworkDataName
           - /spec/networkData
-      # The cluster-autoscaler owns replicas for autoscaler-managed
-      # MachineSets — leave it to the autoscaler so ArgoCD doesn't revert
-      # scale-ups to 0 and trigger a delete/recreate loop.
+      # The casval_scale AAP job owns replicas for this on-demand MachineSet.
+      # Leave the live value alone so ArgoCD does not revert an active lease
+      # to the 0 checked into git and trigger a delete/recreate loop.
       # (PR #598 accidentally re-parented this whole block under etcd-backup
       # by inserting that entry mid-app; that broke every casval burst
       # scale-up from 2026-07 onward — self-heal deleted Machines
@@ -242,15 +242,6 @@ applications:
       namespace: openshift-adp
     source:
       path: clusters/ocp/oadp
-
-  cluster-api-autoscaler:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '12'
-    destination:
-      namespace: cluster-api-autoscaler-system
-    source:
-      path: components/cluster-api-autoscaler
 
   loki-operator:
     annotations:
@@ -457,6 +448,12 @@ applications:
         kind: ServiceAccount
         managedFieldsManagers:
           - openshift.io/image-registry-pull-secrets_service-account-controller
+      # Operated manually only while refreshing coding-CLI credentials.
+      - group: apps
+        kind: Deployment
+        name: auth-login
+        jsonPointers:
+          - /spec/replicas
 
   hermes-assistant:
     project: cluster-apps
@@ -487,6 +484,12 @@ applications:
         kind: ServiceAccount
         managedFieldsManagers:
           - openshift.io/image-registry-pull-secrets_service-account-controller
+      # Operated manually only while refreshing coding-CLI credentials.
+      - group: apps
+        kind: Deployment
+        name: auth-login
+        jsonPointers:
+          - /spec/replicas
 
   comfyui:
     project: cluster-apps
@@ -495,9 +498,8 @@ applications:
       argocd.argoproj.io/sync-wave: '20'
     source:
       path: applications/comfyui
-    # Replicas are scaled manually (and the cluster-autoscaler powers casval
-    # up/down in response) — leave them alone so ArgoCD doesn't revert
-    # scale-ups back to the 0 checked into git.
+    # Replicas are scaled manually. Leave them alone so ArgoCD does not
+    # revert scale-ups back to the 0 checked into git.
     ignoreDifferences:
       - group: apps
         kind: Deployment
@@ -542,6 +544,14 @@ applications:
     source:
       path: applications/jellyfin
 
+  calibre-web:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/calibre-web
+
   llmkube:
     project: cluster-apps
     annotations:
@@ -549,9 +559,8 @@ applications:
       argocd.argoproj.io/sync-wave: '20'
     source:
       path: applications/llmkube
-    # Replicas on InferenceService CRs are scaled manually (and by the
-    # cluster-autoscaler indirectly via casval) — leave them alone so ArgoCD
-    # doesn't revert scale-ups back to the value checked into git.
+    # Replicas on InferenceService CRs are scaled manually. Leave them alone
+    # so ArgoCD does not revert scale-ups back to the value checked into git.
     ignoreDifferences:
       - group: inference.llmkube.dev
         kind: InferenceService
@@ -581,6 +590,21 @@ applications:
       argocd.argoproj.io/sync-wave: '20'
     source:
       path: applications/homepage
+
+  ace-step:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/ace-step
+    # Replicas are scaled manually. Leave them alone so ArgoCD does not
+    # revert a scale-down back to the 1 checked into git.
+    ignoreDifferences:
+      - group: apps
+        kind: Deployment
+        jsonPointers:
+          - /spec/replicas
 
   forgejo:
     project: cluster-apps
@@ -636,16 +660,6 @@ applications:
       namespace: stackrox
     source:
       path: components/rhacs-operator
-
-  # Weekly CIS scans, observe-only — remediations never auto-apply (#550).
-  compliance-operator:
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '22'
-    destination:
-      namespace: openshift-compliance
-    source:
-      path: components/compliance-operator
 
   # OpenShift Dev Spaces — in-cluster IDE for the RHDH golden paths
   # ("Open in Dev Spaces" links on scaffolded repos).

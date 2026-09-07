@@ -59,12 +59,29 @@ spec:
   # Single-replica sizing for the one always-on control-plane node; the
   # operator defaults are 2 backend / 2 UI / 2 worker. The background worker
   # keeps its default HPA (1-5 replicas on CPU) and Redis is fixed at 1.
+  # Prefer dedicated workers. ocp is also labeled worker, so exclude
+  # control-plane rather than selecting worker. Soft: still schedules on
+  # the master if workers are full or drained. Redis has no affinity
+  # field; orchestrator-pg stays pinned.
   backend:
     replicas: 1
+    affinity: &prefer-workers
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+                - key: node-role.kubernetes.io/control-plane
+                  operator: DoesNotExist
   ui:
     replicas: 1
+    affinity: *prefer-workers
   worker:
     replicas: 1
+    affinity: *prefer-workers
+  backgroundWorker:
+    affinity: *prefer-workers
   temporal:
     server:
       replicas: 1
+      affinity: *prefer-workers

@@ -10,7 +10,8 @@ metadata:
   name: sre-heartbeat
   namespace: hermes-sre
 spec:
-  schedule: '0 13 * * 1'
+  schedule: '0 9 * * 1'
+  timeZone: America/New_York
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 2
@@ -33,7 +34,7 @@ spec:
               type: RuntimeDefault
           containers:
             - name: heartbeat
-              image: ghcr.io/igou-io/igou-devenv:latest@sha256:e1cfc53edf3c7875bfe37d578280f38ac03ad0e362ef138197767e013fab771d
+              image: ghcr.io/igou-io/igou-devenv:latest@sha256:de0fa4fe9ec2fe119790e692b081e3b67b8edc154fb763b8e98c38be85d88cb6
               env:
                 - name: TOKEN
                   valueFrom:

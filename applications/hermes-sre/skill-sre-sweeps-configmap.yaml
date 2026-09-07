@@ -1,8 +1,8 @@
 ---
-# Hermes skill: the scheduled read-only sweeps. Each sre-sweep-* CronJob posts
-# a synthetic info-severity alert through the am-relay whose description names
-# a section below; the weekly SREHeartbeat synthetic lands here too. Same
-# ConfigMap-into-external_dirs delivery as openshift-alert-triage.
+# Hermes skill: procedures for native Hermes cron sweeps. The separate weekly
+# SREHeartbeat Kubernetes CronJob also lands here after traversing the external
+# Alertmanager relay path. Same ConfigMap-into-external_dirs delivery as
+# openshift-alert-triage.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -12,7 +12,7 @@ data:
   SKILL.md: |
     ---
     name: sre-sweeps
-    description: Run the scheduled read-only sweep named by a synthetic SRESweep*/SREHeartbeat alert (backups, ArgoCD drift, certs, alert hygiene, capacity, OLM updates, own-PR follow-up, chain check) and post one Slack digest.
+    description: Run a named scheduled read-only SRE sweep or the synthetic SREHeartbeat check (backups, ArgoCD drift, certs, alert hygiene, capacity, OLM updates, own-PR follow-up, chain check) and produce one Slack digest.
     version: 1.0.0
     author: igou-io
     platforms: [linux]
@@ -24,8 +24,8 @@ data:
     # Scheduled sweeps (read-only)
 
     Rules for every sweep:
-    - The alert is synthetic: skip the incident-memory lookup step of
-      `openshift-alert-triage`.
+    - This is scheduled maintenance rather than an incident: skip the
+      incident-memory lookup step of `openshift-alert-triage`.
     - One Slack digest per sweep, <= 20 lines, first line the alertname.
       Report exceptions only; when every check is green, the digest is ONE
       line ("all green" + the checks' names), not a table of OKs.

@@ -40,7 +40,13 @@ Components are placed in order of dependencies. Storage and secrets management a
 - **Sync policy defaults**: auto-sync enabled, auto-prune disabled, unlimited retry with exponential backoff
 - **Secrets**: externalized via External Secrets Operator + 1Password ClusterSecretStore — never stored in git
 - **Container images**: pinned to digest where possible (Renovate manages updates)
-- **Control-plane tolerations**: many components explicitly tolerate/schedule on the master node (the only always-on node; the `casval` burst worker is 0 replicas at rest)
+- **Control-plane placement**: always-on components (Connect, ESO, CAPI, CNPG,
+  log-gateway, ingress) stay pinned to the master. Workloads that expose
+  affinity prefer dedicated workers via `preferredDuringScheduling`
+  `node-role.kubernetes.io/control-plane DoesNotExist` (`ocp` is also labeled
+  `worker`, so selecting `worker` would still match the master). Soft
+  preference: they still schedule on `ocp` if workers are full or drained.
+  GitOps and RHACS have no preferred-affinity knob.
 - **File naming**: YAML files should be named `<metadata.name>-<kind>.yaml` whenever possible (e.g. `my-app-deployment.yaml`, `cluster-read-only-serviceaccount.yaml`)
 
 # Agent Workflow
@@ -141,7 +147,9 @@ Layout:
 
 - **`components/cluster-api-operator/`** installs the upstream `cluster-api-operator` Helm chart, which deploys CAPI CoreProvider, CAPM3 InfrastructureProvider, and CAPM3 IPAMProvider into `capi-system` / `capm3-system` / `capi-operator-system`. Do **not** replace this with OCP-native MAPI — that's been considered and rejected for the topology reason above.
 - **`clusters/ocp/cluster-api/`** contains the per-cluster CAPI workload: `Cluster`, `Metal3Cluster`, `MachineSet` (in `openshift-cluster-api` namespace), `Metal3MachineTemplate`, `BareMetalHost`, BMC secret, and the CSR-approver / node-cleanup cronjobs.
-- The CAPI cluster-autoscaler runs from `cluster-api-autoscaler-system`.
+- Casval is scaled on demand by the AAP `casval_scale` job template and the
+  Automation Orchestrator `casval-lease` workflow. ArgoCD ignores only the
+  MachineSet replica field so those explicit leases are not reverted.
 
 **Known conflict**: OCP 4.21's payload also ships the upstream CAPI IPAM CRDs (`ipaddressclaims.ipam.cluster.x-k8s.io`, `ipaddresses.ipam.cluster.x-k8s.io`) because OCP itself is migrating to CAPI. Both CVO and `capi-operator` write to those CRDs, which can cause `ClusterOperatorDegraded` (`Failing=True`, `UpdatePayloadResourceInvalid`) on `clusterversion/version`. Resolution lives in the IPAMProvider config, not by removing the upstream CAPI install.
 

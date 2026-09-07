@@ -6,20 +6,14 @@ metadata:
   namespace: hermes-developer
 spec:
   egress:
-    # === DEBUG WINDOW (open, operator-held until go-live) — allow-all egress for
-    # ongoing convergence/debug work. Re-lock (remove this rule) at go-live. ===
-    # - type: Allow
-    #   to:
-    #     cidrSelector: 0.0.0.0/0
-    # === Phase-2b install window (MANUAL operator toggle — no Ansible touches this file) ===
-    # Hermes's installer + dnf need broad internet. To run the convergence's
-    # install phase, PREPEND an allow-all rule here (OVN evaluates in order,
-    # first match wins), commit, let Argo sync, run the workflow's install
-    # nodes, then REVERT it to re-lock:
-    #   - type: Allow
-    #     to:
-    #       cidrSelector: 0.0.0.0/0
-    # The committed default below stays LOCKED.
+    # TEMPORARY: Cursor publishes rotating backend addresses but no destination
+    # CIDRs, and OVN's dnsName rule can admit a different A record from the one
+    # selected by the CLI. Keep east-west isolation in NetworkPolicy; replace
+    # this external allow-all with an FQDN-aware HTTPS proxy in issue #857.
+    - type: Allow
+      to:
+        cidrSelector: 0.0.0.0/0
+
     # kube-apiserver — REQUIRED by the kubernetes terminal backend (the VM
     # never talked to the API server, this deployment does constantly). The
     # 172.30.0.1:443 ClusterIP DNATs to the master's node IP:6443, and

@@ -16,11 +16,25 @@ helmCharts:
   repo: oci://ghcr.io/bjw-s-labs/helm
   valuesFile: values-dummy.yaml
   valuesInline:
+    defaultPodOptions:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
     controllers:
       gitea-mirror:
         type: deployment
         replicas: 1
-        strategy: RollingUpdate
+        # RWO config PVC: RollingUpdate deadlocks (new pod cannot attach
+        # while the old one holds the volume). Live objects also default
+        # spec.strategy.rollingUpdate, so apply with Replace.
+        annotations:
+          argocd.argoproj.io/sync-options: Replace=true
+        strategy: Recreate
         pod:
           securityContext:
             seccompProfile:

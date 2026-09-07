@@ -15,6 +15,18 @@ spec:
           requests:
             cpu: 500m
             memory: 1Gi
+        # Prefer dedicated workers. ocp is also labeled worker, so exclude
+        # control-plane rather than selecting worker. Soft: still schedules
+        # on the master if workers are full or drained. Postgres stays on
+        # the CNPG quay-pg pin.
+        affinity: &prefer-workers
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - key: node-role.kubernetes.io/control-plane
+                      operator: DoesNotExist
     # Postgres provided by the CNPG quay-pg cluster (see quay-pg-cluster.yaml).
     # DB_URI is rendered into config-bundle-secret by ExternalSecret.
     - kind: postgres
@@ -27,6 +39,7 @@ spec:
           requests:
             cpu: 500m
             memory: 512Mi
+        affinity: *prefer-workers
     # Clair's database shares the CNPG quay-pg cluster (see clair-database.yaml
     # + Cluster.spec.managed.roles in quay-pg-cluster.yaml). connstrings are
     # rendered into the config bundle alongside DB_URI.
@@ -34,6 +47,8 @@ spec:
       managed: false
     - kind: redis
       managed: true
+      overrides:
+        affinity: *prefer-workers
     - kind: horizontalpodautoscaler
       managed: false
     - kind: objectstorage
@@ -48,6 +63,7 @@ spec:
           requests:
             cpu: 500m
             memory: 512Mi
+        affinity: *prefer-workers
     - kind: monitoring
       managed: true
     - kind: tls

@@ -19,6 +19,15 @@ helmCharts:
     repo: oci://ghcr.io/bjw-s-labs/helm
     valuesFile: values-dummy.yaml
     valuesInline:
+      defaultPodOptions:
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - key: node-role.kubernetes.io/control-plane
+                      operator: DoesNotExist
       controllers:
         alertmanager-gotify-bridge:
           type: deployment

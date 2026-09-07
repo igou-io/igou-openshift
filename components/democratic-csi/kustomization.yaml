@@ -42,6 +42,17 @@ helmCharts:
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
+      # Prefer dedicated workers. ocp is also labeled worker, so exclude
+      # control-plane rather than selecting worker. Soft: still schedules
+      # on the master if workers are full or drained. Node DaemonSets stay.
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
       rbac:
         enabled: true
         openshift:
@@ -135,6 +146,17 @@ helmCharts:
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
+      # Prefer dedicated workers. ocp is also labeled worker, so exclude
+      # control-plane rather than selecting worker. Soft: still schedules
+      # on the master if workers are full or drained. Node DaemonSets stay.
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
       rbac:
         enabled: true
         openshift:
@@ -225,6 +247,17 @@ helmCharts:
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
+      # Prefer dedicated workers. ocp is also labeled worker, so exclude
+      # control-plane rather than selecting worker. Soft: still schedules
+      # on the master if workers are full or drained. Node DaemonSets stay.
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
       rbac:
         enabled: true
         openshift:
@@ -301,6 +334,17 @@ helmCharts:
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
+      # Prefer dedicated workers. ocp is also labeled worker, so exclude
+      # control-plane rather than selecting worker. Soft: still schedules
+      # on the master if workers are full or drained. Node DaemonSets stay.
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
       rbac:
         enabled: true
         openshift:
@@ -393,6 +437,17 @@ helmCharts:
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
+      # Prefer dedicated workers. ocp is also labeled worker, so exclude
+      # control-plane rather than selecting worker. Soft: still schedules
+      # on the master if workers are full or drained. Node DaemonSets stay.
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
       rbac:
         enabled: true
         openshift:
@@ -506,6 +561,17 @@ helmCharts:
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
+      # Prefer dedicated workers. ocp is also labeled worker, so exclude
+      # control-plane rather than selecting worker. Soft: still schedules
+      # on the master if workers are full or drained. Node DaemonSets stay.
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
       rbac:
         enabled: true
         openshift:
@@ -584,6 +650,17 @@ helmCharts:
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
+      # Prefer dedicated workers. ocp is also labeled worker, so exclude
+      # control-plane rather than selecting worker. Soft: still schedules
+      # on the master if workers are full or drained. Node DaemonSets stay.
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
       rbac:
         enabled: true
         openshift:
@@ -675,6 +752,17 @@ helmCharts:
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
+      # Prefer dedicated workers. ocp is also labeled worker, so exclude
+      # control-plane rather than selecting worker. Soft: still schedules
+      # on the master if workers are full or drained. Node DaemonSets stay.
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
       rbac:
         enabled: true
         openshift:
@@ -790,6 +878,17 @@ helmCharts:
       tolerations:
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
+      # Prefer dedicated workers. ocp is also labeled worker, so exclude
+      # control-plane rather than selecting worker. Soft: still schedules
+      # on the master if workers are full or drained. Node DaemonSets stay.
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
       rbac:
         enabled: true
         openshift:
