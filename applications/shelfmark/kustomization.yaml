@@ -46,24 +46,6 @@ helmCharts:
           serviceAccount:
             identifier: shelfmark
           initContainers:
-            create-incoming:
-              image:
-                repository: ghcr.io/calibrain/shelfmark
-                tag: v1.3.15@sha256:9602290324993c801b319d3166b202b96bd9039af2416f0916dae03a5bdca815
-                pullPolicy: IfNotPresent
-              command:
-                - /bin/bash
-                - -c
-              args:
-                - mkdir -p /mnt/books/shelfmark-incoming
-              securityContext:
-                allowPrivilegeEscalation: false
-                runAsNonRoot: true
-                runAsUser: 1000
-                runAsGroup: 1000
-                capabilities:
-                  drop:
-                    - ALL
             init-config:
               image:
                 repository: ghcr.io/calibrain/shelfmark
@@ -152,11 +134,9 @@ helmCharts:
           existingClaim: shelfmark-books
           advancedMounts:
             shelfmark:
-              create-incoming:
-                - path: /mnt/books
               app:
                 - path: /books
-                  subPath: shelfmark-incoming
+                  readOnly: false
         tmp:
           type: emptyDir
           advancedMounts:
