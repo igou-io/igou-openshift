@@ -29,6 +29,9 @@ helmCharts:
                   matchExpressions:
                     - key: node-role.kubernetes.io/control-plane
                       operator: DoesNotExist
+        securityContext:
+          supplementalGroups:
+            - 3006
       controllers:
         calibre-web:
           type: deployment
