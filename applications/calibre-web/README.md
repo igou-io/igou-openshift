@@ -28,6 +28,8 @@ existing recursive weekly snapshot of `cold/media` also covers the books.
 
 LinuxServer.io's s6 init must start as root so it can apply `PUID=1000` and
 `PGID=1000`, initialize `/config`, and then drop privileges for Calibre-Web.
+The pod also carries supplemental group `3006`, the shared media group that
+grants the UID 1000 application write access to the shared NFS library.
 The dedicated `calibre-web` service account is therefore granted the `anyuid`
 SCC and the pod explicitly starts as UID 0. Privilege escalation remains
 disabled and seccomp remains `RuntimeDefault`. Do not reuse this service

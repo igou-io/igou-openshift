@@ -39,7 +39,9 @@ changing the cluster-wide SCCs.
 
 The `init-config` container runs as UID 0, mounts only Shelfmark's config PVC,
 and uses the sole addable capability, `CHOWN`, to initialize that PVC for UID/GID
-`1000:1000`. The main Shelfmark container still runs non-root as UID/GID
+`1000:1000`. The pod also carries supplemental group `3006`, the shared media
+group required for UID 1000 to write the NFS-backed library. The main Shelfmark
+container still runs non-root as UID/GID
 `1000:1000`, with `runAsNonRoot: true`, `allowPrivilegeEscalation: false`,
 seccomp `RuntimeDefault`, and all Linux capabilities dropped. No Tor or
 WireGuard features are enabled.
