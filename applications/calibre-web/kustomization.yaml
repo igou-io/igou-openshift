@@ -29,9 +29,6 @@ helmCharts:
                   matchExpressions:
                     - key: node-role.kubernetes.io/control-plane
                       operator: DoesNotExist
-        securityContext:
-          supplementalGroups:
-            - 3006
       controllers:
         calibre-web:
           type: deployment
@@ -54,7 +51,7 @@ helmCharts:
                 tag: 0.6.27-ls400@sha256:b1b9d15e12561ab4cd7cb01a693000e57925bf1906c69d04d5685891c7376ead
                 pullPolicy: IfNotPresent
               env:
-                PGID: "1000"
+                PGID: "3006"
                 PUID: "1000"
                 TZ: America/New_York
               probes:
