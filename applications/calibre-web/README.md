@@ -9,12 +9,16 @@ The deployment uses the digest-pinned LinuxServer.io image.
 | Purpose | PVC | Source | Access |
 | --- | --- | --- | --- |
 | Settings and application database (`/config`) | `calibre-web-config` | `freenas-nvmeof-ssd-csi` | RWO, 5Gi |
-| Ebook library (`/books`) | `calibre-web-books` | Static NFS PV, `10.10.9.213:/mnt/cold/media/data/media/books` | RWX, 1Ti |
+| Ebook library (`/books`) | `calibre-web-books` | Static NFS PV, `10.10.9.213:/mnt/cold/media/data/media/books` | RWX, 1Ti, read-write |
 
 The library PV has a `Retain` reclaim policy and a dedicated storage class so
 it cannot be replaced by dynamic provisioning. It reuses the existing TrueNAS
 `media` NFS export also mounted by Jellyfin; Calibre-Web is restricted to its
 `books` subdirectory.
+
+The Calibre library database is seeded at `/books/metadata.db` from the
+upstream Calibre-Web sample database. The database is written directly to the
+retained PVC and is intentionally not stored in Git.
 
 The daily OADP application schedule protects the config PVC with CSI data
 movement and the NFS-mounted library with Velero file-system backup. The
@@ -46,3 +50,7 @@ oc -n calibre-web port-forward service/calibre-web-app 8083:80
 Add the standard edge-terminated OpenShift ingress only after that bootstrap is
 complete. Never record the replacement password in Git, command output, or PR
 text.
+
+Shelfmark mounts the same TrueNAS-backed `/books` volume read-write. Downloads
+and library changes made by Shelfmark are therefore visible to Calibre-Web
+immediately; do not treat the Shelfmark Route as an isolation boundary.

@@ -95,6 +95,7 @@ helmCharts:
             calibre-web:
               app:
                 - path: /books
+                  readOnly: false
         tmp:
           type: emptyDir
           advancedMounts:

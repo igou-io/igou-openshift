@@ -16,19 +16,16 @@ ghcr.io/calibrain/shelfmark:v1.3.15@sha256:9602290324993c801b319d3166b202b96bd90
 | Purpose | PVC | Source | Mount |
 | --- | --- | --- | --- |
 | Configuration and application state | `shelfmark-config` | `freenas-nvmeof-ssd-csi`, RWO, 5Gi | `/config` |
-| Books/output | `shelfmark-books` | Static NFS PV, RWX, 1Ti | `/books` |
+| Books/output | `shelfmark-books` | Static NFS PV, RWX, 1Ti, read-write | `/books` |
 
 The static `shelfmark-books-nfs` PV uses the same TrueNAS export as
 Calibre-Web: `10.10.9.213:/mnt/cold/media/data/media/books`, using NFS 4.1,
 hard mounts, and a `Retain` reclaim policy. It has a unique static storage
 class, claim reference, PV, and PVC because PVCs are namespace-scoped.
 
-Shelfmark does not see the complete export. A non-root init container mounts
-the full `shelfmark-books` PVC at `/mnt/books` and creates
-`/mnt/books/shelfmark-incoming` if needed. The main container mounts the same
-PVC with `subPath: shelfmark-incoming` at `/books`. Consequently, Shelfmark
-downloads land under `books/shelfmark-incoming` and must not write directly to
-the rest of the Calibre library.
+Shelfmark mounts the complete PVC at `/books` read-write. Its downloads and
+library changes use the same directory that Calibre-Web serves, so both
+applications see the shared library immediately.
 
 `/tmp` is an `emptyDir`; no temporary-data PVC is used.
 
@@ -40,10 +37,8 @@ SCC rejects an explicit `RuntimeDefault` seccomp profile, so this SCC retains
 the requested seccomp, no-escalation, and dropped-capability settings without
 changing the cluster-wide SCCs.
 
-The `create-incoming` init container remains non-root as UID/GID `1000:1000`
-and mounts only the books PVC to create `shelfmark-incoming`. A separate
-`init-config` container runs as UID 0, mounts only Shelfmark's config PVC, and
-uses the sole addable capability, `CHOWN`, to initialize that PVC for UID/GID
+The `init-config` container runs as UID 0, mounts only Shelfmark's config PVC,
+and uses the sole addable capability, `CHOWN`, to initialize that PVC for UID/GID
 `1000:1000`. The main Shelfmark container still runs non-root as UID/GID
 `1000:1000`, with `runAsNonRoot: true`, `allowPrivilegeEscalation: false`,
 seccomp `RuntimeDefault`, and all Linux capabilities dropped. No Tor or
@@ -88,7 +83,6 @@ oc get pv shelfmark-books-nfs
 oc get networkpolicy -n shelfmark
 oc get events -n shelfmark --sort-by=.lastTimestamp
 oc describe pod -n shelfmark -l app.kubernetes.io/name=shelfmark
-oc logs -n shelfmark -l app.kubernetes.io/name=shelfmark -c create-incoming
 oc logs -n shelfmark -l app.kubernetes.io/name=shelfmark -c app
 oc get application shelfmark -n openshift-gitops -o wide
 ```
@@ -101,6 +95,5 @@ curl --fail http://127.0.0.1:8084/api/health
 curl --fail --location --silent --show-error https://shelfmark.apps.ocp.igou.systems/api/health
 ```
 
-Any write test must be limited to `/books`, which maps to
-`books/shelfmark-incoming`; do not create test files elsewhere in the shared
-Calibre export.
+Any write test must use a temporary file under `/books` and remove it
+immediately; do not create test files that remain in the shared Calibre export.
