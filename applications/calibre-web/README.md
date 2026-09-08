@@ -18,10 +18,12 @@ it cannot be replaced by dynamic provisioning. It reuses the existing TrueNAS
 `books` subdirectory.
 
 The Calibre library database is stored at `/config/calibre-db/metadata.db` on
-the CSI-backed ext4 PVC. An idempotent init container downloads the upstream
-Calibre-Web sample database only when that file is absent; an existing database
-is never overwritten. The init container mounts only `/config` and never
-modifies `/books`.
+the CSI-backed ext4 PVC. Initialize this directory and seed a valid Calibre
+`metadata.db` with a separate one-shot task after the deployment rolls out.
+That task should leave an existing database untouched, install new files
+atomically, and set ownership and permissions for UID 1000 and GID 3006. It
+must operate on `/config` only and must not modify `/books`; a persistent
+bootstrap Job is intentionally not part of this GitOps application.
 
 Calibre-Web must use split-library mode:
 
@@ -68,9 +70,9 @@ After the pod is healthy, forward the service locally and complete the setup at
 `http://127.0.0.1:8083`. In Admin > Edit Calibre Database Configuration, set
 the database location to `/config/calibre-db`, enable `Separate Book Files from
 Library`, and set the separate book files location to `/books`. Immediately
-replace the default administrator password. The init container does not rewrite
-the existing Calibre-Web `app.db`, so this UI step is required after the first
-deployment if it still points at `/books`.
+replace the default administrator password. The one-shot database
+initialization task does not rewrite the existing Calibre-Web `app.db`, so this
+UI step is required after the first deployment if it still points at `/books`.
 
 ```bash
 oc -n calibre-web port-forward service/calibre-web-app 8083:80
