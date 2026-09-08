@@ -34,6 +34,8 @@ helmCharts:
           runAsNonRoot: true
           runAsUser: 1000
           runAsGroup: 1000
+          supplementalGroups:
+            - 3006
           seccompProfile:
             type: RuntimeDefault
       controllers:
