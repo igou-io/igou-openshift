@@ -7,7 +7,7 @@
 # config.raw is the VM's live ~/.hermes/config.yaml reduced to its delta
 # against the shipped defaults (computed with the same image), with:
 #   * the docker/podman terminal block replaced by the kubernetes backend
-#     (per-session Kata VMs on the kata-oc pool),
+#     (regular per-session pods on the tenant worker pool),
 #   * VM filesystem paths rewritten to their /opt/data equivalents,
 #   * the storescrape quick_commands dropped (they exec VM-host wrappers).
 # NOTE the operational flip: on the VM the UI owned config.yaml; here this CR
@@ -724,20 +724,19 @@ spec:
         lifetime_seconds: 1800
         kubernetes:
           namespace: hermes-sre
-          # Kata cold starts exceed the 120 s default.
+          # Keep extra headroom for image pulls and PVC attachment.
           ready_timeout_seconds: 300
           # `spec` is the whole session PodSpec, posted verbatim. Sessions are
-          # per-session Kata VMs on the kata-oc pool: hardware isolation where
-          # the VM had rootless-podman containers.
+          # regular OCI pods on the tenant worker pool. Omitting
+          # runtimeClassName avoids CRI-O's VM-runtime teardown path.
           spec:
-            runtimeClassName: kata
             priorityClassName: llmkube-low
             affinity:
               nodeAffinity:
                 requiredDuringSchedulingIgnoredDuringExecution:
                   nodeSelectorTerms:
                     - matchExpressions:
-                        - key: node-role.kubernetes.io/kata-oc
+                        - key: node-role.kubernetes.io/tenant
                           operator: Exists
             serviceAccountName: hermes-session-noperms
             automountServiceAccountToken: false

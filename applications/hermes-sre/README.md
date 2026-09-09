@@ -4,7 +4,7 @@ Second `HermesInstance` (namespace `hermes-sre`), split from `hermes-k8s` per th
 purpose-scoped plan (assistant / developer / sre). This one **monitors and
 inspects**; it cannot change anything:
 
-- Every Kata session pod carries the igou-devenv **`read-only` bundle**
+- Every session pod carries the igou-devenv **`read-only` bundle**
   (ADR-0006): OCP + rk8s `cluster-read-only` SAs, RouterOS `mktxp` (`read,api`),
   TrueNAS `agent-ro` (`READONLY_ADMIN`). The bundle is an ExternalSecret rendered in
   the `envs/*.env` format into `/etc/agent/envs`; `AGENT_PROFILE=read-only` makes

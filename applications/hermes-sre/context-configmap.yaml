@@ -23,7 +23,7 @@ data:
     ## Where you run
 
     - Agent pod in OpenShift namespace `hermes-sre`; every `terminal` call runs
-      in a fresh Kata session pod (devenv image, uid 1000, 30 min lifetime).
+      in a fresh regular session pod (devenv image, uid 1000, 30 min lifetime).
     - Sessions carry the igou-devenv `read-only` bundle (`AGENT_PROFILE=read-only`),
       activated automatically in every shell: `KUBECONFIG` has two contexts,
       `ocp-cluster-reader` (current) and `rk8s-cluster-reader`
