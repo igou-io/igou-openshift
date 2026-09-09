@@ -12,7 +12,6 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: '3'
 spec:
-  default: false
   driverType: gpu
   repository: nvcr.io/nvidia
   image: driver
