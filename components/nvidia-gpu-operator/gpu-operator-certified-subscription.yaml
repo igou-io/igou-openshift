@@ -6,8 +6,11 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: '1'
 spec:
-  channel: v26.7
-  installPlanApproval: Automatic
+  # Keep the Pascal P620 on the known-good operator release. Upgrade only after
+  # deliberate compatibility testing and review.
+  channel: v26.3
+  startingCSV: gpu-operator-certified.v26.3.3
+  installPlanApproval: Manual
   name: gpu-operator-certified
   source: certified-operators
   sourceNamespace: openshift-marketplace
