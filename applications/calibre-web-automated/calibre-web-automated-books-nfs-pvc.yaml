@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: calibre-web-automated-books
+  namespace: calibre-web-automated
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Ti
+  storageClassName: calibre-web-automated-static-nfs
+  volumeName: calibre-web-automated-books-nfs

@@ -552,6 +552,16 @@ applications:
     source:
       path: applications/calibre-web
 
+  calibre-web-automated:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    destination:
+      namespace: calibre-web-automated
+    source:
+      path: applications/calibre-web-automated
+
   shelfmark:
     project: cluster-apps
     annotations:
