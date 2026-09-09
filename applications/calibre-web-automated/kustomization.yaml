@@ -1,0 +1,134 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: calibre-web-automated
+resources:
+  - default-deny-networkpolicy.yaml
+  - allow-calibre-web-automated-networkpolicy.yaml
+  - calibre-web-automated-namespace.yaml
+  - calibre-web-automated-books-nfs-pv.yaml
+  - calibre-web-automated-books-nfs-pvc.yaml
+  - calibre-web-automated-config-pvc.yaml
+  - calibre-web-automated-anyuid-clusterrolebinding.yaml
+  - calibre-web-automated-route.yaml
+helmCharts:
+  - name: app-template
+    namespace: calibre-web-automated
+    version: 4.6.2
+    releaseName: calibre-web-automated
+    repo: oci://ghcr.io/bjw-s-labs/helm
+    valuesFile: values-dummy.yaml
+    valuesInline:
+      defaultPodOptions:
+        automountServiceAccountToken: false
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - key: node-role.kubernetes.io/control-plane
+                      operator: DoesNotExist
+      controllers:
+        calibre-web-automated:
+          type: deployment
+          replicas: 1
+          strategy: Recreate
+          annotations:
+            argocd.argoproj.io/sync-options: Replace=true
+          pod:
+            annotations:
+              backup.velero.io/backup-volumes: books
+          serviceAccount:
+            identifier: calibre-web-automated
+          containers:
+            app:
+              image:
+                repository: crocodilestick/calibre-web-automated
+                tag: v4.0.6@sha256:c31a738b6d5ec6982c050063dd3f063b6943eb1051fc81144789f840d9093a8d
+                pullPolicy: IfNotPresent
+              env:
+                PUID: "1000"
+                PGID: "3006"
+                TZ: America/New_York
+                NETWORK_SHARE_MODE: "true"
+                CWA_WATCH_MODE: poll
+              probes:
+                startup:
+                  enabled: true
+                  type: HTTP
+                  path: /
+                  port: 8083
+                  spec:
+                    failureThreshold: 60
+                    periodSeconds: 5
+                    timeoutSeconds: 3
+                readiness:
+                  enabled: true
+                  type: HTTP
+                  path: /
+                  port: 8083
+                  spec:
+                    periodSeconds: 10
+                    timeoutSeconds: 3
+                liveness:
+                  enabled: true
+                  type: HTTP
+                  path: /
+                  port: 8083
+                  spec:
+                    periodSeconds: 30
+                    timeoutSeconds: 3
+              resources:
+                requests:
+                  cpu: 250m
+                  memory: 512Mi
+                limits:
+                  cpu: "2"
+                  memory: 2Gi
+      persistence:
+        config:
+          type: persistentVolumeClaim
+          existingClaim: calibre-web-automated-config
+          advancedMounts:
+            calibre-web-automated:
+              app:
+                - path: /config
+        calibre-library:
+          type: persistentVolumeClaim
+          existingClaim: calibre-web-automated-config
+          advancedMounts:
+            calibre-web-automated:
+              app:
+                - path: /calibre-library
+                  subPath: calibre-db
+        books:
+          type: persistentVolumeClaim
+          existingClaim: calibre-web-automated-books
+          advancedMounts:
+            calibre-web-automated:
+              app:
+                - path: /books
+                  readOnly: true
+        ingest:
+          type: emptyDir
+          advancedMounts:
+            calibre-web-automated:
+              app:
+                - path: /cwa-book-ingest
+        tmp:
+          type: emptyDir
+          advancedMounts:
+            calibre-web-automated:
+              app:
+                - path: /tmp
+      service:
+        app:
+          controller: calibre-web-automated
+          ports:
+            http:
+              port: 80
+              targetPort: 8083
+      serviceAccount:
+        calibre-web-automated:
+          enabled: true
