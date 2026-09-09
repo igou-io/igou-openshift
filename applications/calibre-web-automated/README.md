@@ -51,8 +51,9 @@ CWA_WATCH_MODE: poll
 
 UID `1000` and GID `3006` match the existing media permission model. The
 dedicated `calibre-web-automated` ServiceAccount has
-`automountServiceAccountToken: false` and is the only subject of the
-`calibre-web-automated-anyuid` ClusterRoleBinding. That binding grants only the
+The CWA pod sets `automountServiceAccountToken: false` while using the
+dedicated `calibre-web-automated` ServiceAccount, which is the only subject of
+the `calibre-web-automated-anyuid` ClusterRoleBinding. That binding grants only the
 built-in `system:openshift:scc:anyuid` SCC so the upstream LinuxServer/s6
 startup process can initialize as root and launch the application as `abc`.
 The deployment is not privileged and does not use a privileged SCC.
