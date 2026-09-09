@@ -1,6 +1,6 @@
 ---
 # Weekly synthetic alert through the real delivery chain: relay (token auth)
-# -> Hermes webhook -> read-only Kata session -> Slack report. A missing
+# -> Hermes webhook -> read-only session pod -> Slack report. A missing
 # Monday-morning heartbeat report in #igoucloud-hermes-sre means the chain is
 # broken somewhere the blackbox /healthz probe cannot see (webhook platform,
 # session backend, model provider, Slack delivery).
