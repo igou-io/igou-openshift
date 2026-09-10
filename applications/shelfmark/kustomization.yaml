@@ -78,7 +78,7 @@ helmCharts:
                 TZ: America/New_York
                 FLASK_PORT: "8084"
                 CONFIG_DIR: /config
-                INGEST_DIR: /books
+                INGEST_DIR: /books/shelfmark-incoming
                 ENABLE_LOGGING: "false"
               probes:
                 startup:

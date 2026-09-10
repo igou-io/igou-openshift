@@ -5,6 +5,12 @@ dataset. Application state and the Calibre metadata database are kept on a
 separate CSI-backed volume. The deployment uses the digest-pinned
 LinuxServer.io image.
 
+## Migration rollback state
+
+Calibre-Web Automated is now the authoritative Calibre library manager. This
+stock Deployment is retained for rollback with `replicas: 0`; do not restart
+it against its old SQLite databases without an explicit rollback procedure.
+
 ## Storage
 
 | Purpose | PVC | Source | Access |

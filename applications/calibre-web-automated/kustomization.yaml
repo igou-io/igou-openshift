@@ -21,6 +21,9 @@ helmCharts:
     valuesInline:
       defaultPodOptions:
         automountServiceAccountToken: false
+        securityContext:
+          supplementalGroups:
+            - 3006
         affinity:
           nodeAffinity:
             preferredDuringSchedulingIgnoredDuringExecution:
@@ -109,13 +112,16 @@ helmCharts:
             calibre-web-automated:
               app:
                 - path: /books
-                  readOnly: true
+                  readOnly: false
         ingest:
-          type: emptyDir
+          type: persistentVolumeClaim
+          existingClaim: calibre-web-automated-books
           advancedMounts:
             calibre-web-automated:
               app:
                 - path: /cwa-book-ingest
+                  subPath: shelfmark-incoming
+                  readOnly: false
         tmp:
           type: emptyDir
           advancedMounts:

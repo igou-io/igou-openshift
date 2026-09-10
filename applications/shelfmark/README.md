@@ -24,8 +24,15 @@ hard mounts, and a `Retain` reclaim policy. It has a unique static storage
 class, claim reference, PV, and PVC because PVCs are namespace-scoped.
 
 Shelfmark mounts the complete PVC at `/books` read-write. Its downloads and
-library changes use the same directory that Calibre-Web serves, so both
-applications see the shared library immediately.
+library changes use the shared ingest directory `/books/shelfmark-incoming`.
+CWA mounts that same NFS subdirectory as `/cwa-book-ingest` and imports the
+downloads into the normal Calibre-managed library tree.
+
+The effective application setting is:
+
+```text
+INGEST_DIR=/books/shelfmark-incoming
+```
 
 `/tmp` is an `emptyDir`; no temporary-data PVC is used.
 
@@ -71,10 +78,11 @@ protects the config PVC. The Shelfmark books volume has no Velero filesystem
 backup annotation because it is the same underlying NFS data already protected
 through Calibre-Web.
 
-Calibre import/integration is **not implemented**. This deployment does not
-move downloaded files, run `calibredb`, modify Calibre metadata or databases,
-scan the library, or configure Calibre-Web, Hardcover, Prowlarr, download
-clients, OIDC, proxy authentication, Tor, or WireGuard.
+Shelfmark provides the download side of the Calibre integration. It writes
+downloads to `/books/shelfmark-incoming`; Calibre-Web Automated polls that
+directory and imports completed books into the shared Calibre library. The
+Shelfmark application does not write SQLite database files or run
+`calibredb` itself.
 
 ## Verification and troubleshooting
 
@@ -97,5 +105,6 @@ curl --fail http://127.0.0.1:8084/api/health
 curl --fail --location --silent --show-error https://shelfmark.apps.ocp.igou.systems/api/health
 ```
 
-Any write test must use a temporary file under `/books` and remove it
-immediately; do not create test files that remain in the shared Calibre export.
+Any write test must use a temporary file under `/books/shelfmark-incoming` and
+remove it immediately; do not create test files that remain in the shared
+Calibre export.

@@ -32,7 +32,7 @@ helmCharts:
       controllers:
         calibre-web:
           type: deployment
-          replicas: 1
+          replicas: 0
           strategy: Recreate
           annotations:
             argocd.argoproj.io/sync-options: Replace=true
