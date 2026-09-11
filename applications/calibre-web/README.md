@@ -42,8 +42,10 @@ Calibre-Web and Shelfmark. Do not configure the database location as `/books`
 or depend on `/books/metadata.db`.
 
 The daily OADP application schedule protects the config PVC with CSI data
-movement and the NFS-mounted library with Velero file-system backup. The
-existing recursive weekly snapshot of `cold/media` also covers the books.
+movement. Because this rollback Deployment is scaled to zero, the Velero
+file-system-backup annotation for the shared NFS library lives on the running
+Shelfmark pod instead. The existing recursive weekly snapshot of `cold/media`
+also covers the books.
 
 ## OpenShift security exception
 

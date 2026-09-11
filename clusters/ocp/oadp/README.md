@@ -1,29 +1,35 @@
 # OADP (Velero) — scheduled app backups to rustfs-cold
 
 Closes the 2026-07-03 post-mortem P1 ("Enable OADP/Velero … targeting
-RustFS/S3") and DR-assessment gaps #2/#5: scheduled, app-consistent
-backups of namespace objects **and** PV data as one restorable set, stored
-off the source pools, with staleness/failure alerting.
+RustFS/S3") and DR-assessment gaps #2/#5: scheduled backups of namespace
+objects **and** PV data as one restorable set, stored off the source pools,
+with staleness/failure alerting.
 
-**Live since 2026-08-02** (OADP 1.5.7). Drill-verified same day: a
+**Live since 2026-08-02**; the cluster currently runs OpenShift 4.22.10
+with OADP 1.6.1. Drill-verified on 2026-08-02: a
 sands-of-time backup (66 items, 1.3GB through the data mover) restored via
 `namespaceMapping` into a scratch namespace with data intact. Restores:
 see `docs/runbooks/oadp-restore.md`.
 
 ## Architecture
 
-- **Operator**: `redhat-oadp-operator`, channel `stable` — the 4.21
-  catalog's only channel, pinned to the 4.21-aligned OADP 1.5.x / Velero
-  1.16 track — namespace `openshift-adp`
+- **Operator**: `redhat-oadp-operator`, channel `stable` — the OpenShift
+  4.22-aligned OADP 1.6 / Velero 1.18 track — namespace `openshift-adp`
   (`components/redhat-oadp-operator`).
-- **Data flow**: backup → CSI `VolumeSnapshot` (local ZFS snapshot via the
-  `*-velero` VolumeSnapshotClasses) → node-agent **kopia data mover**
-  uploads the snapshot contents to `s3://velero/ocp/` on rustfs-cold →
-  snapshot deleted. Nothing long-lived stays on the source pool, and the
-  backup is a self-contained kopia repo on the cold spinners
-  (`defaultSnapshotMoveData: true` on the DPA).
+- **Data flow**: CSI PVCs use a `VolumeSnapshot` (local ZFS snapshot via the
+  `*-velero` VolumeSnapshotClasses) → node-agent **kopia data mover** →
+  `s3://velero/ocp/` on rustfs-cold → snapshot deletion. The shared static
+  NFS books volume is the exception: kopia reads it from the running Shelfmark
+  pod through Velero file-system backup. Nothing long-lived stays on the
+  source pool, and both paths produce self-contained kopia data in the backup
+  repository (`defaultSnapshotMoveData: true` on the DPA).
+- **Load control**: OADP 1.6 `nodeAgent.loadConcurrency` keeps one active
+  load per node and only one unprocessed load in the global preparation
+  queue. This bounds the snapshot-clone staging work admitted ahead of
+  node-agent processing without serializing transfers already running on
+  different nodes.
 - **VM backups**: the `kubevirt` plugin coordinates VirtualMachine /
-  DataVolume / PVC so the hermes VM restores as a unit (guest-agent
+  DataVolume / PVC so each Hermes VM restores as a unit (guest-agent
   freeze when available, else crash-consistent).
 - **Relation to existing layers**: etcd-backup covers cluster state; CNPG
   Barman covers databases point-in-time; the `-detached` snapshot classes
@@ -35,19 +41,20 @@ see `docs/runbooks/oadp-restore.md`.
 
 | Schedule | When | Namespaces | TTL |
 |---|---|---|---|
-| `daily-apps` | 08:00 (04:00 ET) | forgejo, gitea-mirror, grafana, hermes-sre, hermes-assistant, hermes-developer, sands-of-time, gotify, searxng, jellyfin, calibre-web | 30d |
+| `daily-apps` | 08:00 (04:00 ET) | forgejo, gitea-mirror, grafana, hermes-sre, hermes-assistant, hermes-developer, sands-of-time, gotify, searxng, jellyfin, calibre-web, shelfmark | 30d |
 | `daily-platform` | 08:30 | ansible-automation-platform (Fernet key!), stackrox | 30d |
-| `weekly-heavy` | Sat 06:00 | windows-images, comfyui, openshift-virtualization-os-images | 90d |
+| `weekly-heavy` | Sat 06:00 | comfyui, openshift-virtualization-os-images | 90d |
 
 `jellyfin-media` (1Ti static NFS PV) and `comfyui-models` (200Gi of
 re-downloadable weights) carry `velero.io/exclude-from-backup: "true"`.
-Calibre-Web's static NFS `books` volume is intentionally included through the
-pod's `backup.velero.io/backup-volumes` annotation; its dynamic config PVC uses
-the normal CSI snapshot data mover.
-To add a namespace, extend the right Schedule; if its PVCs use a driver
-other than nvmeof-{ssd,fast,cold}, also add a `*-velero`
-VolumeSnapshotClass for that driver (exactly one Velero-labeled class per
-driver may exist).
+The static NFS `books` export is intentionally included once through the
+running Shelfmark pod's `backup.velero.io/backup-volumes` annotation. The
+scaled-to-zero Calibre-Web Deployment mounts the same export but carries no
+annotation. Both applications' dynamic config PVCs use CSI snapshot data
+movement.
+To add a namespace, extend the right Schedule; if its PVCs use a driver not
+covered by the five existing `*-velero` VolumeSnapshotClasses, add one for
+that driver (exactly one Velero-labeled class per driver may exist).
 
 These schedules supersede the TrueNAS name-addressed snapshot/replication
 schedules (`truenas_k8s_protected_volumes` in igou-inventory) — those are
@@ -76,39 +83,18 @@ backups, whole-namespace restore, scratch-namespace drill via
 
 ## Known issues
 
-- **hermes fsfreeze (#636)**: the failing pre-backup hook is KubeVirt's
-  own, not ours — `virt-controller` stamps every virt-launcher pod with
-  `pre.hook.backup.velero.io/command = virt-freezer --freeze` on container
-  `compute`, and the backup log records `hookSource=annotation
-  hookOnError=Fail`. There is no annotation in git to adjust. On hermes it
-  fails with `guest-fsfreeze-freeze ... failed to open
-  /home/hermes/.hermes: Permission denied`, and the call is all-or-nothing
-  — nothing is frozen. Data movement still completes; the VM disks are
-  crash-consistent (the same consistency the retired ZFS snapshot layer
-  had), and hermes state additionally has the weekly
-  application-consistent tarball from igou-ansible
-  `playbooks/hermes/backup.yml`.
-
-  Worse than one noisy alert: a `PartiallyFailed` backup never publishes
-  `velero_backup_last_successful_timestamp`, and that series is absent for
-  `daily-apps` today, so `VeleroDailyBackupStale`'s `absent()` arm fires
-  permanently alongside `VeleroBackupPartiallyFailed`. Fixing the
-  stale-namespace errors will not clear it.
-
-  The fix is guest-side (igou-ansible / igou-inventory), but the mechanism
-  is **not yet pinned down** — do not guess at it. `/home/hermes/.hermes`
-  is `0700 hermes:hermes` (igou-ansible `playbooks/hermes/setup-os.yml`)
-  under a `/home/hermes` that is also `0700` (`hermes_home_mode` in
-  igou-inventory `group_vars/hermes.yml`), yet plain DAC does not explain
-  the `EACCES`: the CentOS Stream 10 `qemu-guest-agent` unit sets no
-  `User=` and no capability bounding, and the targeted policy already
-  allows `virt_qemu_ga_t self:capability { dac_override dac_read_search }`
-  unconditionally. Diagnose in the guest first — `getenforce`,
-  `ausearch -m AVC -c qemu-ga -ts recent`, `ls -ldZ /home/hermes
-  /home/hermes/.hermes`. A mislabeled mount point is a live candidate:
-  the policy grants `virt_qemu_ga_t` directory access on `mountpoint`
-  types (which `user_home_t` carries) and otherwise only behind the
-  off-by-default `virt_qemu_ga_read_nonsecurity_files` boolean.
+- **TrueNAS staging instability (2026-09-07 through 2026-09-10)**:
+  `daily-apps` repeatedly completed `PartiallyFailed` when its large initial
+  DataUpload burst hit TrueNAS API timeouts, democratic-csi operation locks,
+  and occasional clone-size `AlreadyExists` conflicts. OADP then reported
+  `timeout on preparing data upload`; only 4 of 14 volume uploads completed
+  on the 2026-09-10 run. The explicit one-entry preparation queue is the
+  declarative mitigation. Keep CSI snapshot data movement for its point-in-
+  time semantics and validate the next scheduled run before treating the
+  incident as resolved.
+- A `PartiallyFailed` backup does not publish
+  `velero_backup_last_successful_timestamp`, so the 36-hour stale alert also
+  fires. Treat those two alerts as one backup failure, not separate incidents.
 
 ## Gotchas
 

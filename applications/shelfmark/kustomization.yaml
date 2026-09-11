@@ -45,6 +45,9 @@ helmCharts:
           strategy: Recreate
           annotations:
             argocd.argoproj.io/sync-options: Replace=true
+          pod:
+            annotations:
+              backup.velero.io/backup-volumes: books
           serviceAccount:
             identifier: shelfmark
           initContainers:

@@ -36,9 +36,6 @@ helmCharts:
           strategy: Recreate
           annotations:
             argocd.argoproj.io/sync-options: Replace=true
-          pod:
-            annotations:
-              backup.velero.io/backup-volumes: books
           containers:
             app:
               # No pod/container securityContext at all: OpenShift SCC admission
