@@ -74,9 +74,12 @@ Route as an authentication boundary; external authentication is future work.
 ## Backups and scope
 
 The `shelfmark` namespace is included in the `daily-apps` OADP schedule. This
-protects the config PVC. The Shelfmark books volume has no Velero filesystem
-backup annotation because it is the same underlying NFS data already protected
-through Calibre-Web.
+protects the config PVC through CSI snapshot data movement. The running
+Shelfmark pod carries `backup.velero.io/backup-volumes: books`, so Velero also
+backs up the shared static NFS books volume with kopia file-system backup. The
+annotation deliberately lives here rather than on the scaled-to-zero
+Calibre-Web Deployment: file-system backup requires a running pod that mounts
+the volume, and only one copy of the shared export should enter each schedule.
 
 Shelfmark provides the download side of the Calibre integration. It writes
 downloads to `/books/shelfmark-incoming`; Calibre-Web Automated polls that
