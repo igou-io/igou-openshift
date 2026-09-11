@@ -23,6 +23,13 @@ spec:
     nodeAgent:
       enable: true
       uploaderType: kopia
+      # Keep one active load per node (the upstream default, made explicit)
+      # and admit only one unprocessed load to the preparation queue. The
+      # queue limit bounds snapshot-clone staging work ahead of node-agent
+      # processing while active transfers can still run on different nodes.
+      loadConcurrency:
+        globalConfig: 1
+        prepareQueueLength: 1
       # Stage data-mover backupPVCs on the -velero class, whose
       # volume-from-snapshot is a zfs clone. The source class's detached
       # copy (full zvol send/receive per volume, serialized on TrueNAS)
