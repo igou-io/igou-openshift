@@ -20,6 +20,13 @@ helmCharts:
     releaseName: forgejo
     repo: oci://code.forgejo.org/forgejo-helm
     valuesInline:
+      image:
+        registry: code.forgejo.org
+        repository: forgejo/forgejo
+        tag: 15.0.1-rootless
+        digest: sha256:4f4d168b4e792d0f73e5f4da0548f3b54b9c9d03fb85f277c97eb985cb9a290a
+        rootless: true
+
       service:
         http:
           type: ClusterIP
