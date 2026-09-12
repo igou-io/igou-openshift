@@ -8,6 +8,7 @@ resources:
   - shelfmark-books-nfs-pv.yaml
   - shelfmark-books-nfs-pvc.yaml
   - shelfmark-config-pvc.yaml
+  - shelfmark-prowlarr-externalsecret.yaml
   - shelfmark-scc.yaml
   - shelfmark-scc-clusterrole.yaml
   - shelfmark-scc-rolebinding.yaml
@@ -83,6 +84,12 @@ helmCharts:
                 CONFIG_DIR: /config
                 INGEST_DIR: /books/shelfmark-incoming
                 ENABLE_LOGGING: "false"
+                PROWLARR_ENABLED: "true"
+                PROWLARR_URL: https://prowlarr.biscuit.igou.systems
+                PROWLARR_INDEXER_TIMEOUT: "90"
+              envFrom:
+                - secretRef:
+                    name: shelfmark-prowlarr
               probes:
                 startup:
                   enabled: true

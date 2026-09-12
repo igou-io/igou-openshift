@@ -1,8 +1,8 @@
 # Shelfmark
 
 Shelfmark is a self-hosted book and audiobook search/download interface. This
-initial deployment provides the base application only; external providers,
-download clients, and authentication remain available for later configuration.
+deployment enables Prowlarr as a release source. Download clients and
+authentication remain available for later configuration.
 
 The deployment uses the upstream full image, which includes Chromium for its
 browser-based sources:
@@ -71,6 +71,28 @@ Shelfmark is exposed through an edge-terminated Route at:
 This initial deployment is intentionally unauthenticated. Do not treat the
 Route as an authentication boundary; external authentication is future work.
 
+## Prowlarr search
+
+Shelfmark searches the trackers configured in the existing Prowlarr instance
+at `https://prowlarr.biscuit.igou.systems`. The connection is configured with:
+
+```text
+PROWLARR_ENABLED=true
+PROWLARR_URL=https://prowlarr.biscuit.igou.systems
+PROWLARR_INDEXER_TIMEOUT=90
+```
+
+`PROWLARR_API_KEY` comes from the `shelfmark-prowlarr` item in the
+`lab_openshift` 1Password vault. The `shelfmark-prowlarr` ExternalSecret maps
+only that item's `password` field into the workload Secret. Indexers are not
+restricted in Shelfmark, so Prowlarr can search every configured indexer that
+advertises the relevant book category.
+
+This integration is search-only. No torrent or Usenet client is configured in
+Shelfmark, so selecting a Prowlarr result does not create a download. Enabling
+downloads later requires client credentials and a volume or remote-path mapping
+that lets Shelfmark read the completed client path.
+
 ## Backups and scope
 
 The `shelfmark` namespace is included in the `daily-apps` OADP schedule. This
@@ -94,6 +116,7 @@ oc get deployment,replicaset,pod,service,route -n shelfmark
 oc get pvc -n shelfmark
 oc get pv shelfmark-books-nfs
 oc get networkpolicy -n shelfmark
+oc get externalsecret,secret -n shelfmark
 oc get events -n shelfmark --sort-by=.lastTimestamp
 oc describe pod -n shelfmark -l app.kubernetes.io/name=shelfmark
 oc logs -n shelfmark -l app.kubernetes.io/name=shelfmark -c app
