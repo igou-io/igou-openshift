@@ -72,6 +72,19 @@
         "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)\\s+image: \\S+@(?<currentDigest>sha256:[a-f0-9]+)"
       ],
       "currentValueTemplate": "latest"
+    },
+    {
+      "description": "Forgejo rootless image tag and separate digest field in Helm valuesInline",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^applications/forgejo/kustomization\\.yaml$/"
+      ],
+      "matchStrings": [
+        "(?<depName>forgejo\\/forgejo)\\n(?<indentation>\\s+)tag: (?<currentValue>[^@].*?)\\n\\s+digest: (?<currentDigest>sha256:[a-f0-9]+)"
+      ],
+      "datasourceTemplate": "docker",
+      "packageNameTemplate": "code.forgejo.org/{{depName}}",
+      "autoReplaceStringTemplate": "{{depName}}\\n{{indentation}}tag: {{newValue}}\\n{{indentation}}digest: {{#if newDigest}}{{{newDigest}}}{{else}}{{{currentDigest}}}{{/if}}"
     }
   ]
 }
