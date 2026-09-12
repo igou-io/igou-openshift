@@ -17,6 +17,7 @@ ghcr.io/calibrain/shelfmark:v1.3.15@sha256:9602290324993c801b319d3166b202b96bd90
 | --- | --- | --- | --- |
 | Configuration and application state | `shelfmark-config` | `freenas-nvmeof-ssd-csi`, RWO, 5Gi | `/config` |
 | Books/output | `shelfmark-books` | Static NFS PV, RWX, 1Ti, read-write | `/books` |
+| qBittorrent completed files | `shelfmark-books` | Same static NFS PV, read-only | `/data/media/books` |
 
 The static `shelfmark-books-nfs` PV uses the same TrueNAS export as
 Calibre-Web: `10.10.9.213:/mnt/cold/media/data/media/books`, using NFS 4.1,
@@ -88,10 +89,25 @@ only that item's `password` field into the workload Secret. Indexers are not
 restricted in Shelfmark, so Prowlarr can search every configured indexer that
 advertises the relevant book category.
 
-This integration is search-only. No torrent or Usenet client is configured in
-Shelfmark, so selecting a Prowlarr result does not create a download. Enabling
-downloads later requires client credentials and a volume or remote-path mapping
-that lets Shelfmark read the completed client path.
+qBittorrent is the Prowlarr torrent client. Its `books` category saves into
+`/data/media/books/shelfmark-torrents`, and the existing books PVC is mounted a
+second time at `/data/media/books` so Shelfmark sees the exact path reported by
+qBittorrent. No remote-path mapping is required. Shelfmark copies completed
+files into `/books/shelfmark-incoming` for Calibre-Web Automated while leaving
+the torrent and its source files in place for seeding.
+
+The qBittorrent connection is configured with:
+
+```text
+PROWLARR_TORRENT_CLIENT=qbittorrent
+PROWLARR_TORRENT_ACTION=keep
+QBITTORRENT_URL=https://torrent.biscuit.igou.systems
+QBITTORRENT_CATEGORY=books
+```
+
+`QBITTORRENT_USERNAME` and `QBITTORRENT_PASSWORD` come from the
+`shelfmark-qbittorrent` item in the `lab_openshift` 1Password vault through the
+matching ExternalSecret.
 
 ## Backups and scope
 

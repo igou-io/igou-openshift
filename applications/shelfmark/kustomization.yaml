@@ -9,6 +9,7 @@ resources:
   - shelfmark-books-nfs-pvc.yaml
   - shelfmark-config-pvc.yaml
   - shelfmark-prowlarr-externalsecret.yaml
+  - shelfmark-qbittorrent-externalsecret.yaml
   - shelfmark-scc.yaml
   - shelfmark-scc-clusterrole.yaml
   - shelfmark-scc-rolebinding.yaml
@@ -87,9 +88,15 @@ helmCharts:
                 PROWLARR_ENABLED: "true"
                 PROWLARR_URL: https://prowlarr.biscuit.igou.systems
                 PROWLARR_INDEXER_TIMEOUT: "90"
+                PROWLARR_TORRENT_CLIENT: qbittorrent
+                PROWLARR_TORRENT_ACTION: keep
+                QBITTORRENT_URL: https://torrent.biscuit.igou.systems
+                QBITTORRENT_CATEGORY: books
               envFrom:
                 - secretRef:
                     name: shelfmark-prowlarr
+                - secretRef:
+                    name: shelfmark-qbittorrent
               probes:
                 startup:
                   enabled: true
@@ -149,6 +156,8 @@ helmCharts:
               app:
                 - path: /books
                   readOnly: false
+                - path: /data/media/books
+                  readOnly: true
         tmp:
           type: emptyDir
           advancedMounts:
