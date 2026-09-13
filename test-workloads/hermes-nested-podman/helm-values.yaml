@@ -4,7 +4,7 @@
 # conf, and the notmpcopyup patch baked in. No install-at-startup.
 image:
   repository: ghcr.io/igou-io/hermes-agent-podman
-  tag: "latest@sha256:06a4d2924bd7c9a84d84d07ebd59d8d4df6da71ab067a0f1ba59dbcd73d0f08d"
+  tag: "latest@sha256:51f2470aea6bc6ff77e6b5174bbc6eb93cefb52dc394a2ddcceb150ca8e7b304"
   pullPolicy: Always
 
 # command/args omitted: official s6 entrypoint supervises gateway run
