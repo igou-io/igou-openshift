@@ -35,9 +35,11 @@ do not have `NET_ADMIN`.
 
 The dedicated `qbittorrent-vpn` SCC is narrow: it disallows privileged mode,
 host namespaces, host ports, host directory volumes, privilege escalation,
-`SYS_ADMIN`, and `SYS_MODULE`. It uses `spc_t` because that is required by the
-tested userspace WireGuard implementation on this cluster. Every container in
-the Pod inherits that SELinux domain:
+and requires every container to drop `ALL` capabilities. Its only allowed
+capability is `NET_ADMIN`, which only Gluetun requests. It does not allow
+`SYS_ADMIN`, `SYS_MODULE`, or `NET_RAW`. It uses `spc_t` because that is
+required by the tested userspace WireGuard implementation on this cluster.
+Every container in the Pod inherits that SELinux domain:
 
 > The application topology is production-shaped and networking has been
 > validated, but userspace Gluetun currently requires `spc_t` on this cluster.
@@ -77,6 +79,14 @@ Gluetun test's mapping and adds `=` when the stored private key is the tested
 43-character unpadded value. No qBittorrent, Prowlarr, Radarr, Sonarr,
 FlareSolverr, TLS, Basic Auth, or other application secret is used.
 
+The ExternalSecret intentionally keeps `creationPolicy: Owner` and
+`deletionPolicy: Retain`. `creationPolicy: Owner` gives the generated
+`Secret/qbittorrent-mullvad` an owner reference to
+`ExternalSecret/qbittorrent-mullvad`, so deleting the ExternalSecret lets
+Kubernetes garbage-collect the generated Secret. `deletionPolicy: Retain`
+describes what happens when the provider-side secret disappears; it does not
+make the generated Kubernetes Secret survive deletion of its ExternalSecret.
+
 ## Manual deployment
 
 Run these commands from the repository root. The live deployment is
@@ -109,6 +119,12 @@ http://127.0.0.1:8191
 
 No FlareSolverr Service is created.
 
+There is no external Route, Ingress, HTTPRoute, Gateway, LoadBalancer, or
+NodePort in phase 1. The qBittorrent and Prowlarr ClusterIP Services are
+nevertheless reachable from Pods that can reach the `qbittorrent` namespace;
+ClusterIP is internal exposure, not network isolation. Production service
+ingress isolation remains phase-2 NetworkPolicy work.
+
 ## Verification
 
 Inspect startup ordering and admitted security settings without printing
@@ -125,6 +141,8 @@ oc get pod "$POD" -n qbittorrent \
   -o jsonpath='{.status.initContainerStatuses[0].name}{" started="}{.status.initContainerStatuses[0].state.running.startedAt}{" ready="}{.status.initContainerStatuses[0].ready}{"\\n"}'
 oc get pod "$POD" -n qbittorrent \
   -o jsonpath='{range .status.containerStatuses[*]}{.name}{" started="}{.state.running.startedAt}{" ready="}{.ready}{"\\n"}{end}'
+oc get scc qbittorrent-vpn -o json \
+  | jq '{allowedCapabilities,requiredDropCapabilities}'
 oc describe pod "$POD" -n qbittorrent
 oc get events -n qbittorrent --sort-by=.lastTimestamp
 ```
@@ -158,8 +176,9 @@ oc get pod "$POD" -n qbittorrent -o json \
       map({name, vpnSecret: ([.env[]? | select(.valueFrom.secretKeyRef != null) | .valueFrom.secretKeyRef.name])})'
 ```
 
-Expected runtime results are UID 0 and `NET_ADMIN` only for Gluetun, UID/GID
-1000 with no added capabilities for the three applications, and `spc_t` for
+Expected runtime results are UID 0 and effective capability mask
+`0000000000001000` (`NET_ADMIN`) only for Gluetun, UID/GID 1000 and effective
+capability mask `0000000000000000` for the three applications, and `spc_t` for
 all four containers. Only Gluetun has `secretKeyRef` entries for the generated
 Mullvad Secret.
 
@@ -251,6 +270,38 @@ The qBittorrent and Prowlarr probes check their own HTTP listeners, while
 Gluetun owns VPN health. FlareSolverr is intentionally not exposed by a
 Service, Route, Ingress, or Gateway resource.
 
+## ExternalSecret lifecycle test
+
+The installed External Secrets API documents `creationPolicy: Owner` as the
+policy that owns the generated Secret and `deletionPolicy: Retain` as the
+policy for provider-side deletion. Verify the owner reference without reading
+Secret data:
+
+```bash
+oc explain externalsecret.spec.target.creationPolicy
+oc explain externalsecret.spec.target.deletionPolicy
+oc get secret/qbittorrent-mullvad -n qbittorrent -o json \
+  | jq '{metadata: {name: .metadata.name}, ownerReferences: [.metadata.ownerReferences[]? | {kind, name, controller, blockOwnerDeletion}]}'
+```
+
+The disposable lifecycle test deletes only the ExternalSecret, waits for the
+owned generated Secret to disappear, then recreates the ExternalSecret and
+waits for the generated Secret to return:
+
+```bash
+oc delete externalsecret/qbittorrent-mullvad -n qbittorrent --wait=true
+until ! oc get secret/qbittorrent-mullvad -n qbittorrent >/dev/null 2>&1; do
+  sleep 1
+done
+oc apply -f applications/qbittorrent/mullvad-externalsecret.yaml
+oc wait --for=condition=Ready externalsecret/qbittorrent-mullvad \
+  -n qbittorrent --timeout=180s
+oc get secret/qbittorrent-mullvad -n qbittorrent -o json \
+  | jq '{metadata: {name: .metadata.name}, ownerReferences: [.metadata.ownerReferences[]? | {kind, name, controller, blockOwnerDeletion}]}'
+```
+
+Do not print `.data` from the generated Secret.
+
 ## Ephemeral-storage test
 
 Create markers in all disposable paths, recreate the Pod, and verify they are
@@ -291,7 +342,9 @@ Phase 2 can replace the disposable paths without changing the network shape:
 - replace `/data` with real shared media storage;
 - preserve `/data/torrents` and `/data/media` for hardlinks;
 - publish qBittorrent and Prowlarr through the trusted-lan Gateway;
-- add router DNS; and
+- add router DNS;
+- add NetworkPolicy around qBittorrent and Prowlarr Service ingress before
+  treating the UIs as production services; and
 - register the application in `clusters/ocp/values.yaml`.
 
 None of those phase-2 items is implemented here.
@@ -301,35 +354,65 @@ None of those phase-2 items is implemented here.
 The results below are recorded after a manual deployment from this branch.
 Public IP values are intentionally not recorded in Git.
 
-- API support: OpenShift 4.22.10 / Kubernetes 1.34 accepted the native
-  restartable init-sidecar fields.
+- API support: OpenShift 4.22.10 / Kubernetes 1.34 accepted
+  `initContainers[].restartPolicy: Always`. The live Pod ran the native
+  restartable Gluetun sidecar.
+- SCC policy: before this run, `qbittorrent-vpn` had
+  `requiredDropCapabilities: null` and `allowedCapabilities: [NET_ADMIN]`.
+  After the change it reported `requiredDropCapabilities: [ALL]` and
+  `allowedCapabilities: [NET_ADMIN]`, with no other allowed capabilities.
+  The Pod was admitted under `qbittorrent-vpn`.
 - Deployment status: `4/4 Running`, with all four containers ready after the
   replacement Pod was recreated.
-- Startup ordering: Gluetun started at `2026-09-14T22:09:39Z`; qBittorrent,
-  Prowlarr, and FlareSolverr started at `2026-09-14T22:09:50Z`. The native
-  sidecar startup probe held the regular containers until Gluetun was healthy.
-- SCC and isolation: the admitted SCC was `qbittorrent-vpn`; all four
-  containers reported `spc_t`. Gluetun ran as UID/GID 0 with effective
-  capability mask `0000000000001000` (`NET_ADMIN`); each application ran as
-  UID/GID 1000 with effective capability mask `0000000000000000` and no VPN
-  environment references. Only Gluetun had the two `qbittorrent-mullvad`
-  Secret references.
-- Storage: all five volumes were verified as `emptyDir`; the generated Secret
-  contained only `WIREGUARD_PRIVATE_KEY` and `WIREGUARD_ADDRESSES`.
+- Startup ordering: in the replacement Pod Gluetun started at
+  `2026-09-14T23:25:15Z`; qBittorrent, Prowlarr, and FlareSolverr started at
+  `2026-09-14T23:25:55Z`. Gluetun's startup probe succeeded before the regular
+  containers started. Its readiness/liveness health mechanism also remained
+  healthy.
+- Gluetun functionality: `/dev/net/tun` was present, `tun0` was up, the
+  Gluetun healthcheck succeeded, and the firewall had default DROP policies
+  with inbound allowances for 8080 and 9696 and outbound acceptance through
+  `tun0`.
+- Runtime isolation: all four containers reported
+  `system_u:system_r:spc_t:s0:c10,c40`. Gluetun ran as UID/GID 0 with
+  `CapEff: 0000000000001000` (`NET_ADMIN`) and qBittorrent, Prowlarr, and
+  FlareSolverr ran as UID/GID 1000 with
+  `CapEff: 0000000000000000`. Only Gluetun had the two
+  `qbittorrent-mullvad` Secret references; the applications had no VPN
+  environment variables or Secret references.
+- Storage: all five volumes were verified as `emptyDir`. Markers in
+  qBittorrent `/config`, qBittorrent `/data`, and Prowlarr `/config`
+  disappeared after Pod deletion, while `/data/torrents/movies` and
+  `/data/media/movies` were recreated.
 - Mullvad routing: qBittorrent, Prowlarr, and FlareSolverr each positively
-  reported a Mullvad connection from their own container context. Public IP
-  values are intentionally not recorded here.
-- Fail-closed restart: `MULLVAD=105`, `FAIL=45`, `NON_MULLVAD=0`; the
-  Deployment became available again after Gluetun recovered.
-- qBittorrent Service: ClusterIP `172.30.216.38:8080`, temporary debug Pod
+  returned Mullvad's `You are connected to Mullvad` classification from its
+  own container context using `https://am.i.mullvad.net/connected`. Each also
+  completed public DNS and HTTPS checks.
+- Fail-closed restart: `MULLVAD=75`, `FAIL=75`, `NON_MULLVAD=0`. Gluetun's
+  restart count increased to 1, application restart counts remained 0, and
+  the Deployment became available again after Gluetun recovered.
+- qBittorrent Service: ClusterIP `172.30.5.175:8080`, temporary debug Pod
   HTTP 200, and `oc port-forward` HTTP 200.
-- Prowlarr Service: ClusterIP `172.30.201.254:9696`, temporary debug Pod
+- Prowlarr Service: ClusterIP `172.30.205.1:9696`, temporary debug Pod
   returned `{"status":"OK"}`, and `oc port-forward` HTTP 200.
 - Prowlarr to FlareSolverr: from the Prowlarr container,
-  `http://127.0.0.1:8191/health` returned `{"status":"ok"}`.
-- DNS and HTTPS: OpenShift service DNS, public DNS, and public HTTPS all
-  succeeded from the shared workload namespace.
-- EmptyDir recreation: markers in qBittorrent `/config`, qBittorrent
-  `/data`, and Prowlarr `/config` disappeared after Pod deletion; the
-  required `/data/torrents/movies` and `/data/media/movies` directories were
-  recreated.
+  `http://127.0.0.1:8191/health` returned `{"status":"ok"}`. No
+  FlareSolverr Service was created.
+- ExternalSecret lifecycle: the installed CRD confirmed that
+  `creationPolicy: Owner` owns the generated Secret and
+  `deletionPolicy: Retain` controls provider-side deletion. The generated
+  Secret had an owner reference to `ExternalSecret/qbittorrent-mullvad`; after
+  deleting only the ExternalSecret, Kubernetes garbage-collected the Secret.
+  Reapplying the unchanged ExternalSecret recreated it and restored the owner
+  reference. Secret data was not inspected.
+- Services and isolation scope: no NetworkPolicy was created in phase 1.
+  The two ClusterIP Services were reachable from a temporary in-cluster Pod,
+  and the UIs remain reachable from any Pod permitted to reach the namespace.
+  NetworkPolicy-based production ingress isolation is documented as phase-2
+  work.
+- Repository validation: `kustomize build --enable-helm
+  applications/qbittorrent`, OpenShift server-side dry-run admission, and
+  `make test` all passed.
+- Cleanup: the `qbittorrent` namespace, Pod, Deployment, Services,
+  ExternalSecret, generated Secret, ServiceAccount, RoleBinding, SCC, and
+  ClusterRole were removed. No phase-1 resources remained on the cluster.

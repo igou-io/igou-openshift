@@ -17,7 +17,8 @@ allowPrivilegeEscalation: false
 allowedCapabilities:
   - NET_ADMIN
 defaultAddCapabilities: null
-requiredDropCapabilities: null
+requiredDropCapabilities:
+  - ALL
 fsGroup:
   type: RunAsAny
 runAsUser:
