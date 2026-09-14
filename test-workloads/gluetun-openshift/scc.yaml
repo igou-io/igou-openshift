@@ -1,0 +1,37 @@
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: gluetun-test
+  annotations:
+    kubernetes.io/description: >-
+      Narrow capability and host-access SCC for the disposable Gluetun/Mullvad
+      WireGuard sidecar test in gluetun-openshift-test. Its required spc_t
+      SELinux domain is a documented security caveat; it is not for general use.
+allowHostDirVolumePlugin: false
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegedContainer: false
+allowPrivilegeEscalation: false
+allowedCapabilities:
+  - NET_ADMIN
+defaultAddCapabilities: null
+requiredDropCapabilities: null
+fsGroup:
+  type: RunAsAny
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: MustRunAs
+  seLinuxOptions:
+    type: spc_t
+supplementalGroups:
+  type: RunAsAny
+readOnlyRootFilesystem: false
+seccompProfiles:
+  - runtime/default
+volumes:
+  - emptyDir
+users: []
+groups: []
