@@ -848,7 +848,7 @@ spec:
                     mountPath: /tmp
                 resources:
                   requests:
-                    cpu: 500m
+                    cpu: 100m
                     memory: 2Gi
                   # VM terminal containers got 4 CPU / 8 GiB.
                   limits:
