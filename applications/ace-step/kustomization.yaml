@@ -16,7 +16,13 @@ helmCharts:
       controllers:
         ace-step:
           type: deployment
-          replicas: 1
+          # Checked in at 0 on purpose: ACE-Step only runs during an active
+          # casval burst lease. Scale to 1 after the node is Ready (see
+          # README); ArgoCD ignores /spec/replicas so the live scale-up is
+          # not reverted. At rest, replicas: 1 leaves the pod Pending on the
+          # scaled-down casval MachineSet and holds the root app
+          # Progressing/OutOfSync (re-fires ArgoCDSyncAlert).
+          replicas: 0
           # Exclusive nvidia.com/gpu: 2 — a rolling update would deadlock
           # waiting for a second pair of GPUs that casval does not have.
           strategy: Recreate
