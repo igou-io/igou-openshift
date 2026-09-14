@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gluetun-egress-test
+  namespace: gluetun-openshift-test
+  labels:
+    app.kubernetes.io/name: gluetun-egress-test
+    app.kubernetes.io/part-of: gluetun-openshift-test
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gluetun-egress-test
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: gluetun-egress-test
+        app.kubernetes.io/part-of: gluetun-openshift-test
+      annotations:
+        io.kubernetes.cri-o.Devices: "/dev/net/tun"
+    spec:
+      serviceAccountName: gluetun-test
+      automountServiceAccountToken: false
+      hostNetwork: false
+      hostPID: false
+      hostIPC: false
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+        - name: gluetun-state
+          emptyDir: {}
+      containers:
+        - name: gluetun
+          image: ghcr.io/qdm12/gluetun:v3.41.3@sha256:fa19cc76b2af13d57a8d3dc3066f2ada061b1c761b8aecf989b3877c0486e027
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: VPN_SERVICE_PROVIDER
+              value: mullvad
+            - name: VPN_TYPE
+              value: wireguard
+            - name: WIREGUARD_IMPLEMENTATION
+              value: userspace
+            - name: WIREGUARD_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: gluetun-mullvad
+                  key: WIREGUARD_PRIVATE_KEY
+            - name: WIREGUARD_ADDRESSES
+              valueFrom:
+                secretKeyRef:
+                  name: gluetun-mullvad
+                  key: WIREGUARD_ADDRESSES
+            - name: TZ
+              value: America/New_York
+            - name: SERVER_COUNTRIES
+              value: Sweden
+            - name: PUID
+              value: "0"
+            - name: PGID
+              value: "0"
+            - name: FIREWALL_OUTBOUND_SUBNETS
+              value: 172.30.0.0/16
+            - name: DNS_KEEP_NAMESERVER
+              value: "on"
+            - name: PUBLICIP_FILE
+              value: /gluetun/ip
+          volumeMounts:
+            - name: gluetun-state
+              mountPath: /gluetun
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsUser: 0
+            capabilities:
+              add:
+                - NET_ADMIN
+              drop:
+                - ALL
+        - name: verifier
+          image: docker.io/nicolaka/netshoot:latest@sha256:b09d9b21381f47a79b3cbcb30da25266dc17186ea00ae65e99fdc51396f48e70
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - while :; do sleep 3600; done
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            runAsUser: 1000
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
