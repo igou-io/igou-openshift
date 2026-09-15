@@ -619,7 +619,9 @@ applications:
     source:
       path: applications/ace-step
     # Replicas are scaled manually. Leave them alone so ArgoCD does not
-    # revert a scale-down back to the 1 checked into git.
+    # revert a scale-down back to the 0 checked into git.
+    syncOptions:
+      - RespectIgnoreDifferences=true
     ignoreDifferences:
       - group: apps
         kind: Deployment
