@@ -55,9 +55,28 @@ Sonarr   -> qbittorrent.qbittorrent.svc:8080
 Sonarr   -> prowlarr.qbittorrent.svc:9696
 ```
 
-No Route, external DNS record, or TrueNAS compatibility alias is required for
-these internal relationships. Gluetun's outbound bypass remains limited to
-the OpenShift Service network, `172.30.0.0/16`.
+No external DNS record, host alias, pinned Service IP, or TrueNAS compatibility
+alias is required for these internal relationships. Gluetun's outbound bypass
+is limited to the private OpenShift Service network, `172.30.0.0/16`; public
+destinations are not included.
+
+## Egress and DNS fail-closed design
+
+Gluetun v3.41.3 captures the private resolver and search domains from the Pod's
+initial `ClusterFirst` resolver configuration before replacing
+`/etc/resolv.conf` with its local DNS listener. Local names such as
+`*.svc.cluster.local` are resolved by OpenShift DNS at `172.30.0.10`; public
+queries are sent to Cloudflare over DNS-over-TLS through `tun0`.
+`DNS_KEEP_NAMESERVER=off` is therefore intentional and provides split DNS
+without host aliases or fixed Service addresses.
+
+The Gluetun firewall is the egress kill switch. Its only direct exception for
+public address space is the selected Mullvad WireGuard server IP, protocol, and
+explicitly configured UDP port `51820`. The `172.30.0.0/16` outbound subnet
+exception is private cluster traffic only and preserves OpenShift DNS and
+Service connectivity. All application traffic and public DNS use `tun0`; if
+WireGuard is unavailable, that traffic is dropped instead of falling back to
+`eth0`.
 
 ## Image pins
 
@@ -298,6 +317,7 @@ oc wait --for=condition=available deployment/qbittorrent \
 oc get pv qbittorrent-config-iscsi qbittorrent-prowlarr-config-iscsi
 oc get pvc -n qbittorrent qbittorrent-config prowlarr-config
 oc get pod -n qbittorrent -o wide
+oc get egressfirewall -n qbittorrent default -o yaml
 ```
 
 For disposable UI checks, use ClusterIP port-forwards. Do not expose the
@@ -326,6 +346,14 @@ oc get pod "$POD" -n qbittorrent -o json \
 Only the Gluetun container should have the Mullvad Secret references and
 `NET_ADMIN`. qBittorrent, Prowlarr, and FlareSolverr must remain non-root with
 all capabilities dropped. No FlareSolverr Service is created.
+
+After rollout, confirm that Gluetun reports both its private resolver and local
+encrypted resolver with no `keeping the default container nameservers` warning,
+all three application containers receive a Mullvad-positive response, and the
+Radarr/Sonarr Kubernetes service names still resolve. Inspect Gluetun's OUTPUT
+chain and confirm that its only public `eth0` allow is UDP `51820` to the
+selected WireGuard server. Repeat the classified fail-closed restart test
+whenever a relay, DNS, firewall, or networking setting changes.
 
 ## Rollback
 
