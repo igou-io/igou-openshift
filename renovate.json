@@ -36,6 +36,12 @@
       "pinDigests": false
     },
     {
+      "description": "Forgejo image is owned by the custom regex manager (tag field + separate digest field in applications/forgejo/kustomization.yaml). The global docker:pinDigests preset must not emit pinDigest updates for it: on 2026-09-13 a pinDigest PR appended @sha256 to the tag line, the chart re-suffixed it into an invalid image reference, and Forgejo went down for ~12h. Disable digest pinning for this dependency so only the custom manager touches it.",
+      "matchManagers": ["regex"],
+      "matchPackageNames": ["code.forgejo.org/forgejo/forgejo"],
+      "pinDigests": false
+    },
+    {
       "description": "llmkube chart and controller image are a lockstep compatibility contract; newer controller builds can drop chart-required args and crash-loop (exit 2). Bump both together manually, not via Renovate.",
       "matchDatasources": ["docker"],
       "matchPackageNames": [
