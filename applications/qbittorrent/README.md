@@ -32,8 +32,10 @@ Phase 2B cutover has been planned and validated.
 
 Gluetun owns the shared Pod routing, Mullvad WireGuard connection, firewall,
 and `/gluetun` runtime state. Only Gluetun receives the Mullvad Secret and
-`NET_ADMIN`. The application containers run as UID/GID `1000`, drop all Linux
-capabilities, and have no VPN Secret reference.
+the `NET_ADMIN` and `NET_BIND_SERVICE` capabilities. `NET_BIND_SERVICE` is
+required for Gluetun's local split-DNS listener on port `53`; the application
+containers run as UID/GID `1000`, drop all Linux capabilities, and have no VPN
+Secret reference.
 
 The CRI-O `io.kubernetes.cri-o.Devices: "/dev/net/tun"` Pod annotation injects
 the TUN device without a `hostPath`. The tested userspace WireGuard setup
@@ -343,9 +345,10 @@ oc get pod "$POD" -n qbittorrent -o json \
   | jq '[.spec.volumes[] | {name,emptyDir,persistentVolumeClaim}]'
 ```
 
-Only the Gluetun container should have the Mullvad Secret references and
-`NET_ADMIN`. qBittorrent, Prowlarr, and FlareSolverr must remain non-root with
-all capabilities dropped. No FlareSolverr Service is created.
+Only the Gluetun container should have the Mullvad Secret references,
+`NET_ADMIN`, and `NET_BIND_SERVICE`. qBittorrent, Prowlarr, and FlareSolverr
+must remain non-root with all capabilities dropped. No FlareSolverr Service is
+created.
 
 After rollout, confirm that Gluetun reports both its private resolver and local
 encrypted resolver with no `keeping the default container nameservers` warning,

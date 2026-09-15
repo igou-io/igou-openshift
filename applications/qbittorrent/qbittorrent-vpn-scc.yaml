@@ -16,6 +16,7 @@ allowPrivilegedContainer: false
 allowPrivilegeEscalation: false
 allowedCapabilities:
   - NET_ADMIN
+  - NET_BIND_SERVICE
 defaultAddCapabilities: null
 requiredDropCapabilities:
   - ALL
