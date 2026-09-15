@@ -118,11 +118,55 @@ disappear with the Pod. Then scale the Deployment back to zero, confirm no
 destination writer or stale iSCSI session remains, leave the destination zvol
 and snapshots intact, and restart the unchanged TrueNAS Sonarr container.
 
-Before the later production `/data` cutover, restore the destination from its
-pre-first-boot snapshot or reseed it from the unchanged source after another
-clean shutdown and named source snapshot. A missing-payload validation boot
-can legitimately change application state and is not automatically the final
-production seed.
+## Phase 2B restore and reseed warning
+
+The existing `radarr-sonarr-pre-first-boot-20260915T095654Z` destination
+snapshot is a clean migration checkpoint, not production-ready final state.
+It predates some OpenShift-specific endpoint rewrites. Restoring it can
+reintroduce Docker/TrueNAS-era values.
+
+Phase 2B must use this order:
+
+```text
+restore or reseed clean source-derived config state
+        ↓
+apply all required OpenShift/Kubernetes endpoint rewrites
+        ↓
+verify those rewritten values
+        ↓
+take a NEW final pre-production-boot snapshot
+        ↓
+mount production /data
+        ↓
+perform first production boot
+```
+
+After any restore or reseed, verify or reapply these fields without logging
+secret-bearing resource bodies:
+
+| Application API resource | Field | Required value |
+| --- | --- | --- |
+| Radarr `/api/v3/downloadclient/{id}` for qBittorrent | `host` | `qbittorrent.qbittorrent.svc` |
+| Radarr `/api/v3/downloadclient/{id}` for qBittorrent | `port` | `8080` |
+| Sonarr `/api/v3/downloadclient/{id}` for qBittorrent | `host` | `qbittorrent.qbittorrent.svc` |
+| Sonarr `/api/v3/downloadclient/{id}` for qBittorrent | `port` | `8080` |
+| Radarr and Sonarr `/api/v3/indexer/{id}` Torznab resources | `baseUrl` host and port | `prowlarr.qbittorrent.svc:9696` |
+| Prowlarr `/api/v1/applications/{id}` for Radarr | `baseUrl` | `http://radarr.radarr.svc:7878` |
+| Prowlarr `/api/v1/applications/{id}` for Sonarr | `baseUrl` | `http://sonarr.sonarr.svc:8989` |
+| Both Prowlarr application resources | `prowlarrUrl` | `http://prowlarr.qbittorrent.svc:9696` |
+
+For Torznab resources, preserve each existing path and API-key field; replace
+only the Docker-era host and port in `baseUrl`. Use each application's normal
+GET/PUT resource semantics and verify the stored fields through the API before
+snapshotting. Do not print or reconstruct API keys, passwords, or complete
+secret-bearing resources in migration logs.
+
+Prowlarr's migrated database was also modified during this phase to point its
+Radarr and Sonarr application records at the new Services. Restoring Prowlarr
+from an older checkpoint can therefore require both application records and
+their `prowlarrUrl` fields to be reapplied. Connect production `/data` only
+after all three applications report the required values and a new final
+pre-production-boot snapshot has been taken.
 
 ## Validation record
 
