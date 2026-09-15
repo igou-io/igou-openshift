@@ -7,7 +7,7 @@ metadata:
     app.kubernetes.io/name: qbittorrent
     app.kubernetes.io/part-of: qbittorrent-vpn
 spec:
-  replicas: 1
+  replicas: 0
   strategy:
     type: Recreate
   selector:
@@ -28,6 +28,11 @@ spec:
       hostIPC: false
       dnsPolicy: ClusterFirst
       restartPolicy: Always
+      hostAliases:
+        - ip: 10.10.45.240
+          hostnames:
+            - radarr.biscuit.igou.systems
+            - sonarr.biscuit.igou.systems
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -38,17 +43,20 @@ spec:
                     operator: DoesNotExist
       securityContext:
         fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
         seccompProfile:
           type: RuntimeDefault
       volumes:
         - name: gluetun-state
           emptyDir: {}
         - name: qbittorrent-config
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: qbittorrent-config
         - name: data
           emptyDir: {}
         - name: prowlarr-config
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: prowlarr-config
         - name: flaresolverr-config
           emptyDir: {}
       initContainers:
@@ -80,7 +88,7 @@ spec:
             - name: DNS_KEEP_NAMESERVER
               value: "on"
             - name: FIREWALL_OUTBOUND_SUBNETS
-              value: 172.30.0.0/16
+              value: 172.30.0.0/16,10.10.45.240/32
             - name: FIREWALL_INPUT_PORTS
               value: 8080,9696
             - name: PUID
@@ -135,7 +143,7 @@ spec:
               memory: 512Mi
       containers:
         - name: qbittorrent
-          image: ghcr.io/home-operations/qbittorrent:5.2.3@sha256:4fcf15b7f265c2c8d7bc2a7e13240a07e0593c326f3cf3b5b9bb69eec5b79299
+          image: ghcr.io/home-operations/qbittorrent:5.2.2@sha256:24f2d793cb7f7a93e755e5d22e533be818e62eadc864f4a82315b901b6ffe807
           imagePullPolicy: IfNotPresent
           command:
             - /bin/bash
@@ -195,7 +203,7 @@ spec:
               cpu: 1
               memory: 1Gi
         - name: prowlarr
-          image: ghcr.io/home-operations/prowlarr:2.6.4@sha256:a5b8031268268b9d3a121c49ea7cc89248538e6379a3e29b0d419489bd95e004
+          image: ghcr.io/home-operations/prowlarr:2.5.0@sha256:9c89ef21672a20f4cd4a766b5a085ae5a61de54a79e0841e136330a711b85447
           imagePullPolicy: IfNotPresent
           env:
             - name: TZ
@@ -245,7 +253,7 @@ spec:
               cpu: 1
               memory: 1Gi
         - name: flaresolverr
-          image: ghcr.io/flaresolverr/flaresolverr:v3.5.2@sha256:c80ae007ce2ccdcd217a12426e4f039ef763ff90738c808d38810c3e59323767
+          image: ghcr.io/flaresolverr/flaresolverr:v3.5.0@sha256:139dfee1c6f89249c8d665d1333a42e8ec74ec0a86bc6bb1c8461e10d3a66a47
           imagePullPolicy: IfNotPresent
           env:
             - name: LOG_LEVEL
