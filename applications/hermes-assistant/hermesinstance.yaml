@@ -514,6 +514,10 @@ spec:
                   - name: gcp-sa
                     mountPath: /home/igou/.config/gcp-sa
                     readOnly: true
+                  # File sync writes many small files. Keep that traffic off
+                  # the shared RWX workspace and isolate it per session pod.
+                  - name: hermes-sync
+                    mountPath: /workspace/.hermes
                   - name: tmp
                     mountPath: /tmp
                 resources:
@@ -538,6 +542,8 @@ spec:
               - name: gcp-sa
                 secret:
                   secretName: gcp-sa-storescrape
+              - name: hermes-sync
+                emptyDir: {}
               - name: tmp
                 emptyDir: {}
       tool_loop_guardrails:

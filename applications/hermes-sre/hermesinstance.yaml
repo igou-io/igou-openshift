@@ -844,6 +844,10 @@ spec:
                     subPath: AGENTS.md
                     mountPath: /workspace/AGENTS.md
                     readOnly: true
+                  # File sync writes many small files. Keep that traffic off
+                  # the shared RWX workspace and isolate it per session pod.
+                  - name: hermes-sync
+                    mountPath: /workspace/.hermes
                   - name: tmp
                     mountPath: /tmp
                 resources:
@@ -877,6 +881,8 @@ spec:
                         name: hermes-session-readonly-routeros
                     - secret:
                         name: hermes-session-readonly-truenas
+              - name: hermes-sync
+                emptyDir: {}
               - name: tmp
                 emptyDir: {}
               - name: sre-context
