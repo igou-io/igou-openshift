@@ -86,11 +86,11 @@ helmCharts:
                 INGEST_DIR: /books/shelfmark-incoming
                 ENABLE_LOGGING: "false"
                 PROWLARR_ENABLED: "true"
-                PROWLARR_URL: https://prowlarr.biscuit.igou.systems
+                PROWLARR_URL: http://prowlarr.qbittorrent.svc:9696
                 PROWLARR_INDEXER_TIMEOUT: "90"
                 PROWLARR_TORRENT_CLIENT: qbittorrent
                 PROWLARR_TORRENT_ACTION: keep
-                QBITTORRENT_URL: https://torrent.biscuit.igou.systems
+                QBITTORRENT_URL: http://qbittorrent.qbittorrent.svc:8080
                 QBITTORRENT_CATEGORY: books
               envFrom:
                 - secretRef:
