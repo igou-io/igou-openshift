@@ -69,6 +69,8 @@ spec:
               value: wireguard
             - name: WIREGUARD_IMPLEMENTATION
               value: userspace
+            - name: WIREGUARD_ENDPOINT_PORT
+              value: "51820"
             - name: WIREGUARD_PRIVATE_KEY
               valueFrom:
                 secretKeyRef:

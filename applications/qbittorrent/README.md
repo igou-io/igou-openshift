@@ -72,10 +72,11 @@ without host aliases or fixed Service addresses.
 
 The Gluetun firewall is the egress kill switch. Its only direct exception for
 public address space is the selected Mullvad WireGuard server IP, protocol, and
-UDP port `51820`. The `172.30.0.0/16` outbound subnet exception is private
-cluster traffic only and preserves OpenShift DNS and Service connectivity. All
-application traffic and public DNS use `tun0`; if WireGuard is unavailable,
-that traffic is dropped instead of falling back to `eth0`.
+explicitly configured UDP port `51820`. The `172.30.0.0/16` outbound subnet
+exception is private cluster traffic only and preserves OpenShift DNS and
+Service connectivity. All application traffic and public DNS use `tun0`; if
+WireGuard is unavailable, that traffic is dropped instead of falling back to
+`eth0`.
 
 ## Image pins
 
