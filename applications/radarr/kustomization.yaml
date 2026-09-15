@@ -1,0 +1,13 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - radarr-namespace.yaml
+  - radarr-config-iscsi-pv.yaml
+  - radarr-config-pvc.yaml
+  - radarr-serviceaccount.yaml
+  - use-scc-nonroot-v2-role.yaml
+  - radarr-nonroot-v2-rolebinding.yaml
+  - radarr-deployment.yaml
+  - radarr-service.yaml

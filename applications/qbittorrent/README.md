@@ -43,6 +43,22 @@ requires `spc_t` on this cluster:
 > validated, but userspace Gluetun currently requires `spc_t` on this cluster.
 > This remains a production-security caveat to revisit separately.
 
+The current target application relationships use Kubernetes Services:
+
+```text
+Prowlarr -> qbittorrent.qbittorrent.svc:8080
+Prowlarr -> radarr.radarr.svc:7878
+Prowlarr -> sonarr.sonarr.svc:8989
+Radarr   -> qbittorrent.qbittorrent.svc:8080
+Radarr   -> prowlarr.qbittorrent.svc:9696
+Sonarr   -> qbittorrent.qbittorrent.svc:8080
+Sonarr   -> prowlarr.qbittorrent.svc:9696
+```
+
+No Route, external DNS record, or TrueNAS compatibility alias is required for
+these internal relationships. Gluetun's outbound bypass remains limited to
+the OpenShift Service network, `172.30.0.0/16`.
+
 ## Image pins
 
 The first migrated OpenShift boot used the exact live TrueNAS source image
@@ -213,15 +229,19 @@ zero for rollback. The live migration test results were:
   observed. SQLite integrity was `ok` before boot and again after Pod
   recreation. The database/config identity and safe config-key set remained
   present.
-- Prowlarr tests: qBittorrent and FlareSolverr test actions returned HTTP 200.
-  Direct HTTPS probes from the Prowlarr container reached both TrueNAS
-  application endpoints at `10.10.45.240` with HTTP 200. The Prowlarr
-  application test actions returned HTTP 400 only at the reverse callback
-  check because `prowlarrUrl` still names the old Docker-only
-  `http://gluetun:9696`, and TrueNAS cannot reach the OpenShift ClusterIP or
-  Pod CIDR. Adding a Route, Gateway, HTTPRoute, router DNS, or a TrueNAS
-  reverse-proxy change is outside Phase 2A. This callback must be solved
-  before final production application synchronization.
+- Historical Phase 2A Prowlarr tests: qBittorrent and FlareSolverr test actions
+  returned HTTP 200. Direct HTTPS probes from the Prowlarr container reached
+  both TrueNAS application endpoints at `10.10.45.240` with HTTP 200. The
+  Prowlarr application test actions returned HTTP 400 only at the reverse
+  callback check because `prowlarrUrl` still named the old Docker-only
+  `http://gluetun:9696`, and TrueNAS could not reach the OpenShift ClusterIP or
+  Pod CIDR. This describes only the temporary Phase 2A compatibility path.
+- Current OpenShift topology: the Radarr/Sonarr migration validation replaced
+  those application records with `http://radarr.radarr.svc:7878` and
+  `http://sonarr.sonarr.svc:8989`, with `prowlarrUrl` set to
+  `http://prowlarr.qbittorrent.svc:9696`. Both Prowlarr application test actions
+  then returned HTTP 200. The TrueNAS `hostAliases` and Gluetun
+  `10.10.45.240/32` outbound bypass are no longer part of the manifest.
 - Mullvad: qBittorrent, Prowlarr, and FlareSolverr each positively reported
   `You are connected to Mullvad` from their own container context.
 - Fail closed: the controlled Gluetun restart produced 60 classified probes:
@@ -242,11 +262,22 @@ zero for rollback. The live migration test results were:
 
 The tested destination PVC state is not automatically final production state.
 Booting qBittorrent while all payloads are missing can alter resume and
-application state. Before connecting `/data` to production media in Phase 2B,
-either restore both destination zvols from the pre-first-boot snapshots or
-wipe and reseed them from the unchanged TrueNAS source after another graceful
-shutdown and fresh source snapshot. The final cutover must start from config
-state synchronized with the actual payload tree.
+application state. The existing pre-first-boot destination snapshots are clean
+migration checkpoints, not production-ready final state; some were taken
+before the final OpenShift endpoint rewrites.
+
+Phase 2B must restore those checkpoints or reseed from clean source-derived
+state first, then reapply and verify every OpenShift/Kubernetes endpoint. That
+includes Prowlarr's Radarr and Sonarr `baseUrl` application fields and its own
+`prowlarrUrl` fields. A Prowlarr restore from an older snapshot can reintroduce
+the Phase 2A TrueNAS/Docker values even when the Radarr and Sonarr databases
+are correct.
+
+Only after the rewritten values have been verified should Phase 2B take a new
+final pre-production-boot snapshot, connect production `/data`, and perform
+the first production boot. The final cutover must start from config state
+synchronized with the actual payload tree and the current internal-Service
+topology.
 
 Do not delete the source dataset, source snapshots, destination zvols, iSCSI
 targets, extents, LUNs, PVs, or PVCs as part of Phase 2A rollback. The PV
@@ -305,9 +336,10 @@ TrueNAS qBittorrent, Prowlarr, FlareSolverr, Gluetun, and health-monitor
 containers. Restore the intended source active/paused torrent states and check
 the existing `*.biscuit.igou.systems` endpoints and integrations.
 
-The source snapshot and the pre-first-boot destination snapshots are the
-rollback points. Do not use the Phase 2A destination after missing-payload
-testing as the Phase 2B production seed without restoring or reseeding it.
+The source snapshot and pre-first-boot destination snapshots are rollback and
+clean-migration checkpoints. They are not final production seeds. After a
+restore or reseed, reapply and verify the OpenShift endpoint values and take a
+new final pre-production-boot snapshot before mounting production `/data`.
 
 ## Out of scope
 

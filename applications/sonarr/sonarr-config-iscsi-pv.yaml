@@ -1,0 +1,22 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: sonarr-config-iscsi
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+  storageClassName: ""
+  claimRef:
+    namespace: sonarr
+    name: sonarr-config
+  iscsi:
+    targetPortal: 10.10.9.213:3260
+    iqn: iqn.2005-10.org.freenas.ctl:sonarr-config
+    lun: 0
+    fsType: ext4
+    readOnly: false
