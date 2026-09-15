@@ -27,6 +27,21 @@ spec:
       hostPID: false
       hostIPC: false
       dnsPolicy: ClusterFirst
+      hostAliases:
+        - ip: 127.0.0.1
+          hostnames:
+            - qbittorrent.qbittorrent.svc
+            - qbittorrent.qbittorrent.svc.cluster.local
+            - prowlarr.qbittorrent.svc
+            - prowlarr.qbittorrent.svc.cluster.local
+        - ip: 172.30.238.52
+          hostnames:
+            - radarr.radarr.svc
+            - radarr.radarr.svc.cluster.local
+        - ip: 172.30.56.142
+          hostnames:
+            - sonarr.sonarr.svc
+            - sonarr.sonarr.svc.cluster.local
       restartPolicy: Always
       affinity:
         nodeAffinity:
@@ -81,12 +96,18 @@ spec:
                   key: WIREGUARD_ADDRESSES
             - name: SERVER_COUNTRIES
               value: Sweden
+            - name: SERVER_HOSTNAMES
+              value: se-mma-wg-004,se-mma-wg-005
             - name: TZ
               value: America/New_York
             - name: DNS_KEEP_NAMESERVER
-              value: "on"
+              value: "off"
+            - name: DNS_UPSTREAM_RESOLVER_TYPE
+              value: dot
+            - name: DNS_UPSTREAM_RESOLVERS
+              value: cloudflare
             - name: FIREWALL_OUTBOUND_SUBNETS
-              value: 172.30.0.0/16
+              value: 172.30.238.52/32,172.30.56.142/32
             - name: FIREWALL_INPUT_PORTS
               value: 8080,9696
             - name: PUID

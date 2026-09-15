@@ -9,6 +9,7 @@ metadata:
     app.kubernetes.io/part-of: media-stack
 spec:
   type: ClusterIP
+  clusterIP: 172.30.238.52
   selector:
     app.kubernetes.io/name: radarr
   ports:

@@ -55,9 +55,35 @@ Sonarr   -> qbittorrent.qbittorrent.svc:8080
 Sonarr   -> prowlarr.qbittorrent.svc:9696
 ```
 
-No Route, external DNS record, or TrueNAS compatibility alias is required for
-these internal relationships. Gluetun's outbound bypass remains limited to
-the OpenShift Service network, `172.30.0.0/16`.
+No external DNS record or TrueNAS compatibility alias is required for these
+internal relationships. The Pod uses stable host aliases for the four service
+names so public DNS can remain inside the VPN. The Radarr and Sonarr Services
+have pinned ClusterIPs, and Gluetun's direct outbound exception contains only
+those two `/32`s rather than the complete OpenShift Service network.
+
+## Egress and DNS fail-closed design
+
+Gluetun replaces the Pod resolver with its local DNS listener and forwards
+public queries to Cloudflare over DNS-over-TLS through `tun0`.
+`DNS_KEEP_NAMESERVER=off` is intentional: using the OpenShift resolver for
+public names would move the upstream query onto the node's ordinary egress and
+leak DNS metadata outside Mullvad. Kubernetes service discovery needed by this
+stack does not use DNS:
+
+- qBittorrent and Prowlarr service names resolve to `127.0.0.1` because both
+  processes share the Pod network namespace;
+- Radarr resolves to the pinned `172.30.238.52` ClusterIP; and
+- Sonarr resolves to the pinned `172.30.56.142` ClusterIP.
+
+The namespace-wide `EgressFirewall/default` is independent of Gluetun's
+iptables rules. OVN evaluates Service traffic after ClusterIP translation, so
+the policy permits the OpenShift Pod CIDR only on TCP ports `7878` and `8989`.
+It separately permits UDP `51820` to the two Mullvad relay addresses selected
+by `SERVER_HOSTNAMES=se-mma-wg-004,se-mma-wg-005`, then denies all remaining
+IPv4 and IPv6 egress. If Gluetun's firewall is absent or flushed, cleartext
+Internet traffic is still blocked by OVN. A relay address change fails closed;
+update the hostname selection and firewall addresses together after verifying
+Mullvad's current relay data.
 
 ## Image pins
 
@@ -298,6 +324,7 @@ oc wait --for=condition=available deployment/qbittorrent \
 oc get pv qbittorrent-config-iscsi qbittorrent-prowlarr-config-iscsi
 oc get pvc -n qbittorrent qbittorrent-config prowlarr-config
 oc get pod -n qbittorrent -o wide
+oc get egressfirewall -n qbittorrent default -o yaml
 ```
 
 For disposable UI checks, use ClusterIP port-forwards. Do not expose the
@@ -326,6 +353,13 @@ oc get pod "$POD" -n qbittorrent -o json \
 Only the Gluetun container should have the Mullvad Secret references and
 `NET_ADMIN`. qBittorrent, Prowlarr, and FlareSolverr must remain non-root with
 all capabilities dropped. No FlareSolverr Service is created.
+
+After rollout, confirm that Gluetun reports its local DNS listener and no
+`keeping the default container nameservers` warning, all three application
+containers receive a Mullvad-positive response, and the Radarr/Sonarr service
+names still resolve to their pinned ClusterIPs. Repeat the classified
+fail-closed restart test whenever a relay, DNS, firewall, or networking setting
+changes.
 
 ## Rollback
 
