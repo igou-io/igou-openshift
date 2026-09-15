@@ -34,5 +34,6 @@ seccompProfiles:
   - runtime/default
 volumes:
   - emptyDir
+  - persistentVolumeClaim
 users: []
 groups: []

@@ -1,0 +1,22 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: qbittorrent-prowlarr-config-iscsi
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+  storageClassName: ""
+  claimRef:
+    namespace: qbittorrent
+    name: prowlarr-config
+  iscsi:
+    targetPortal: 10.10.9.213:3260
+    iqn: iqn.2005-10.org.freenas.ctl:prowlarr-config
+    lun: 0
+    fsType: ext4
+    readOnly: false
