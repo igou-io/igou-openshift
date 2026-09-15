@@ -15,7 +15,6 @@ resources:
   - qbittorrent-vpn-scc.yaml
   - qbittorrent-vpn-scc-rbac.yaml
   - mullvad-externalsecret.yaml
-  - default-egressfirewall.yaml
   - qbittorrent-deployment.yaml
   - qbittorrent-service.yaml
   - prowlarr-service.yaml

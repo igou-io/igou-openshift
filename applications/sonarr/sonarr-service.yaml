@@ -9,7 +9,6 @@ metadata:
     app.kubernetes.io/part-of: media-stack
 spec:
   type: ClusterIP
-  clusterIP: 172.30.56.142
   selector:
     app.kubernetes.io/name: sonarr
   ports:
