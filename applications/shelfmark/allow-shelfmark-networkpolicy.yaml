@@ -41,6 +41,15 @@ spec:
         - port: 5353
           protocol: TCP
     - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: qbittorrent
+      ports:
+        - port: 8080
+          protocol: TCP
+        - port: 9696
+          protocol: TCP
+    - to:
         - ipBlock:
             cidr: 0.0.0.0/0
             except:
