@@ -80,6 +80,12 @@ Service connectivity. All application traffic and public DNS use `tun0`; if
 WireGuard is unavailable, that traffic is dropped instead of falling back to
 `eth0`.
 
+The Deployment uses the `Recreate` strategy and a Gluetun `postStart` hook that
+removes stale IPv4 and IPv6 policy-routing rules for table `51820`. Kubernetes
+sidecar restarts reuse the Pod network namespace, so these rules can otherwise
+survive an abrupt Gluetun exit and prevent WireGuard from reconnecting. The
+firewall remains fail closed while the sidecar restarts.
+
 ## Image pins
 
 The first migrated OpenShift boot used the exact live TrueNAS source image
