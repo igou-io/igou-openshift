@@ -6,6 +6,8 @@ resources:
   - sonarr-namespace.yaml
   - sonarr-config-iscsi-pv.yaml
   - sonarr-config-pvc.yaml
+  - sonarr-data-nfs-pv.yaml
+  - sonarr-data-pvc.yaml
   - sonarr-serviceaccount.yaml
   - use-scc-nonroot-v2-role.yaml
   - sonarr-nonroot-v2-rolebinding.yaml

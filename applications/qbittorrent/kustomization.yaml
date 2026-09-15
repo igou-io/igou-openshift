@@ -7,6 +7,8 @@ resources:
   - qbittorrent-namespace.yaml
   - qbittorrent-config-iscsi-pv.yaml
   - qbittorrent-config-pvc.yaml
+  - qbittorrent-data-nfs-pv.yaml
+  - qbittorrent-data-pvc.yaml
   - qbittorrent-prowlarr-config-iscsi-pv.yaml
   - prowlarr-config-pvc.yaml
   - qbittorrent-serviceaccount.yaml

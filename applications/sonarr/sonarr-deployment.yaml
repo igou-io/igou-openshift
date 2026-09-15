@@ -41,6 +41,8 @@ spec:
         runAsNonRoot: true
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
+        supplementalGroups:
+          - 3006
         seccompProfile:
           type: RuntimeDefault
       volumes:
@@ -48,7 +50,8 @@ spec:
           persistentVolumeClaim:
             claimName: sonarr-config
         - name: data
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: sonarr-data
       containers:
         - name: sonarr
           image: ghcr.io/home-operations/sonarr:4.0.18@sha256:2cd77fb3d81909a734d61bb8f71462044cb9d2f187e626a28a05a5c4e4be8fd2

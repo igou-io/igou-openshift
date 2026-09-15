@@ -41,6 +41,8 @@ spec:
         runAsNonRoot: true
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
+        supplementalGroups:
+          - 3006
         seccompProfile:
           type: RuntimeDefault
       volumes:
@@ -48,7 +50,8 @@ spec:
           persistentVolumeClaim:
             claimName: radarr-config
         - name: data
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: radarr-data
       containers:
         - name: radarr
           image: ghcr.io/home-operations/radarr:6.2.1@sha256:a566e7d364b96ce8ffb1b582266e656c69f3a12dec289d72bb0daa647ed4725e
