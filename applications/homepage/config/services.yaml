@@ -739,19 +739,19 @@
         description: rom library
     - qBittorrent:
         icon: qbittorrent.png
-        href: https://torrent.biscuit.igou.systems
+        href: https://torrent.lan.igou.systems
         description: torrents (vpn)
     - Prowlarr:
         icon: prowlarr.png
-        href: https://prowlarr.biscuit.igou.systems
+        href: https://prowlarr.lan.igou.systems
         description: indexers
     - Radarr:
         icon: radarr.png
-        href: https://radarr.biscuit.igou.systems
+        href: https://radarr.lan.igou.systems
         description: movies
     - Sonarr:
         icon: sonarr.png
-        href: https://sonarr.biscuit.igou.systems
+        href: https://sonarr.lan.igou.systems
         description: tv
     - UniFi:
         icon: unifi.png
