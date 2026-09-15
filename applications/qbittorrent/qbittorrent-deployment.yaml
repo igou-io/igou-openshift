@@ -69,6 +69,8 @@ spec:
               value: wireguard
             - name: WIREGUARD_IMPLEMENTATION
               value: userspace
+            - name: WIREGUARD_ENDPOINT_PORT
+              value: "51820"
             - name: WIREGUARD_PRIVATE_KEY
               valueFrom:
                 secretKeyRef:
@@ -84,7 +86,11 @@ spec:
             - name: TZ
               value: America/New_York
             - name: DNS_KEEP_NAMESERVER
-              value: "on"
+              value: "off"
+            - name: DNS_UPSTREAM_RESOLVER_TYPE
+              value: dot
+            - name: DNS_UPSTREAM_RESOLVERS
+              value: cloudflare
             - name: FIREWALL_OUTBOUND_SUBNETS
               value: 172.30.0.0/16
             - name: FIREWALL_INPUT_PORTS
