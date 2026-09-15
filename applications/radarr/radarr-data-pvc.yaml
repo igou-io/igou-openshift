@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: radarr-data
+  namespace: radarr
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 8Ti
+  storageClassName: ""
+  volumeMode: Filesystem
+  volumeName: radarr-data-nfs
