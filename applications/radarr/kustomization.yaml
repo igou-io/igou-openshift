@@ -13,3 +13,4 @@ resources:
   - radarr-nonroot-v2-rolebinding.yaml
   - radarr-deployment.yaml
   - radarr-service.yaml
+  - radarr-httproute.yaml

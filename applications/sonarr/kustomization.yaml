@@ -13,3 +13,4 @@ resources:
   - sonarr-nonroot-v2-rolebinding.yaml
   - sonarr-deployment.yaml
   - sonarr-service.yaml
+  - sonarr-httproute.yaml

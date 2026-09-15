@@ -572,6 +572,36 @@ applications:
     source:
       path: applications/shelfmark
 
+  qbittorrent:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    destination:
+      namespace: qbittorrent
+    source:
+      path: applications/qbittorrent
+
+  radarr:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    destination:
+      namespace: radarr
+    source:
+      path: applications/radarr
+
+  sonarr:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    destination:
+      namespace: sonarr
+    source:
+      path: applications/sonarr
+
   llmkube:
     project: cluster-apps
     annotations:

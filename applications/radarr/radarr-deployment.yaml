@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/name: radarr
     app.kubernetes.io/part-of: media-stack
 spec:
-  replicas: 0
+  replicas: 1
   strategy:
     type: Recreate
   selector:
