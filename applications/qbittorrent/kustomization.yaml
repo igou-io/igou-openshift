@@ -5,6 +5,10 @@ kind: Kustomization
 # scoped, and each namespaced resource declares namespace explicitly.
 resources:
   - qbittorrent-namespace.yaml
+  - qbittorrent-config-iscsi-pv.yaml
+  - qbittorrent-config-pvc.yaml
+  - qbittorrent-prowlarr-config-iscsi-pv.yaml
+  - prowlarr-config-pvc.yaml
   - qbittorrent-serviceaccount.yaml
   - qbittorrent-vpn-scc.yaml
   - qbittorrent-vpn-scc-rbac.yaml
