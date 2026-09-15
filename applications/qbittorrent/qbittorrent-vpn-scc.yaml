@@ -1,0 +1,38 @@
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: qbittorrent-vpn
+  annotations:
+    kubernetes.io/description: >-
+      Narrow SCC for the disposable qBittorrent Gluetun sidecar application.
+      Userspace WireGuard requires spc_t on this cluster; all other host
+      access and capabilities remain restricted.
+allowHostDirVolumePlugin: false
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegedContainer: false
+allowPrivilegeEscalation: false
+allowedCapabilities:
+  - NET_ADMIN
+defaultAddCapabilities: null
+requiredDropCapabilities:
+  - ALL
+fsGroup:
+  type: RunAsAny
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: MustRunAs
+  seLinuxOptions:
+    type: spc_t
+supplementalGroups:
+  type: RunAsAny
+readOnlyRootFilesystem: false
+seccompProfiles:
+  - runtime/default
+volumes:
+  - emptyDir
+users: []
+groups: []
