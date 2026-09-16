@@ -1,0 +1,3 @@
+---
+# Intentionally empty — all app-template values are in kustomization.yaml.
+foo: bar
