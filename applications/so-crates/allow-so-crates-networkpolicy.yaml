@@ -1,0 +1,128 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-so-crates
+  namespace: so-crates
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/controller: so-crates
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # The OAuth proxy is the only in-cluster caller allowed to reach the
+    # analysis backend. Kubelet probes arrive through the host-network path.
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/controller: so-crates-auth
+      ports:
+        - port: 8000
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/host-network: ''
+      ports:
+        - port: 8000
+          protocol: TCP
+  egress:
+    # OpenShift DNS is reached through the Service and is evaluated by OVN
+    # after DNAT, so allow both the Service and backend ports.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+        - port: 5353
+          protocol: UDP
+        - port: 5353
+          protocol: TCP
+    # Rule refresh and Load from URL use public HTTP(S) only. Private and
+    # link-local destinations remain excluded at the NetworkPolicy layer and
+    # are also enforced by the namespace EgressFirewall.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 100.64.0.0/10
+              - 169.254.0.0/16
+      ports:
+        - port: 80
+          protocol: TCP
+        - port: 443
+          protocol: TCP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-so-crates-auth
+  namespace: so-crates
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/controller: so-crates-auth
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Route traffic is delivered by the host-network router under the
+    # OVN-Kubernetes source-address behavior used by this cluster.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-ingress
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/host-network: ''
+      ports:
+        - port: 8443
+          protocol: TCP
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+        - port: 5353
+          protocol: UDP
+        - port: 5353
+          protocol: TCP
+    # The proxy performs OAuth/SAR TokenReview calls through the Kubernetes
+    # API Service. This cluster's Service DNATs to the API host on :6443.
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.10/32
+      ports:
+        - port: 6443
+          protocol: TCP
+    # oauth-openshift's ClusterIP DNATs to the authentication Pod on :6443.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-authentication
+      ports:
+        - port: 6443
+          protocol: TCP
+    # The proxy forwards authenticated requests to the analysis application.
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/controller: so-crates
+      ports:
+        - port: 8000
+          protocol: TCP

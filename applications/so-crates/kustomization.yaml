@@ -1,0 +1,199 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: so-crates
+resources:
+  - default-deny-networkpolicy.yaml
+  - allow-so-crates-networkpolicy.yaml
+  - default-egressfirewall.yaml
+  - so-crates-namespace.yaml
+  - so-crates-auth-serviceaccount.yaml
+  - so-crates-auth-clusterrolebinding.yaml
+  - so-crates-oauth-cookie-password.yaml
+  - so-crates-oauth-cookie-externalsecret.yaml
+  - so-crates-route.yaml
+helmCharts:
+  - name: app-template
+    namespace: so-crates
+    version: 4.6.2
+    releaseName: so-crates
+    repo: oci://ghcr.io/bjw-s-labs/helm
+    valuesFile: values-dummy.yaml
+    valuesInline:
+      defaultPodOptions:
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - key: node-role.kubernetes.io/control-plane
+                      operator: DoesNotExist
+      controllers:
+        so-crates:
+          type: deployment
+          replicas: 1
+          strategy: Recreate
+          pod:
+            automountServiceAccountToken: false
+            securityContext:
+              seccompProfile:
+                type: RuntimeDefault
+          containers:
+            app:
+              image:
+                repository: ghcr.io/dougburks/so-crates
+                # GHCR publishes this release as the numeric 4.1.0 tag; the
+                # digest is the real v4.1.0 manifest pin.
+                tag: v4.1.0@sha256:a6d6c63c0dd00d7de1a50658b0c71e59f9af2bf4ab4d77460d2d955b0863f2b5
+                pullPolicy: IfNotPresent
+              env:
+                DATA_DIR: /data
+                BIND_ADDRESS: 0.0.0.0
+                PORT: '8000'
+              ports:
+                - name: http
+                  containerPort: 8000
+                  protocol: TCP
+              probes:
+                startup:
+                  enabled: true
+                  type: HTTP
+                  path: /socrates.html
+                  port: 8000
+                  spec:
+                    failureThreshold: 36
+                    periodSeconds: 5
+                    timeoutSeconds: 5
+                readiness:
+                  enabled: true
+                  type: HTTP
+                  path: /socrates.html
+                  port: 8000
+                  spec:
+                    periodSeconds: 10
+                    timeoutSeconds: 5
+                    failureThreshold: 6
+                liveness:
+                  enabled: true
+                  type: HTTP
+                  path: /socrates.html
+                  port: 8000
+                  spec:
+                    periodSeconds: 30
+                    timeoutSeconds: 5
+                    failureThreshold: 10
+              resources:
+                requests:
+                  cpu: 500m
+                  memory: 1Gi
+                  ephemeral-storage: 2Gi
+                limits:
+                  cpu: '4'
+                  memory: 8Gi
+                  ephemeral-storage: 20Gi
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+        so-crates-auth:
+          type: deployment
+          forceRename: so-crates-auth
+          replicas: 1
+          strategy: Recreate
+          serviceAccount:
+            name: so-crates-auth
+          pod:
+            securityContext:
+              seccompProfile:
+                type: RuntimeDefault
+          containers:
+            proxy:
+              image:
+                repository: quay.io/openshift/origin-oauth-proxy
+                tag: '4.21@sha256:3ce7ede5f92c5202e77d9837e12c3309378d93bb547780048aef224b31be4bb6'
+                pullPolicy: IfNotPresent
+              args:
+                - '--provider=openshift'
+                - '--https-address=:8443'
+                - '--http-address='
+                - '--email-domain=*'
+                - '--upstream=http://so-crates:8000'
+                - '--openshift-service-account=so-crates-auth'
+                - '--openshift-sar={"namespace":"so-crates","resource":"services","name":"so-crates","verb":"get"}'
+                - '--tls-cert=/etc/tls/private/tls.crt'
+                - '--tls-key=/etc/tls/private/tls.key'
+                - '--cookie-secret-file=/etc/proxy/cookie/cookie-secret'
+                - '--pass-user-headers=true'
+                - '--skip-provider-button=true'
+              ports:
+                - name: https
+                  containerPort: 8443
+                  protocol: TCP
+              probes:
+                readiness:
+                  enabled: true
+                  type: TCP
+                  port: 8443
+                  spec:
+                    periodSeconds: 10
+                    timeoutSeconds: 5
+                    failureThreshold: 6
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+      persistence:
+        data:
+          type: emptyDir
+          advancedMounts:
+            so-crates:
+              app:
+                - path: /data
+        tmp:
+          type: emptyDir
+          advancedMounts:
+            so-crates:
+              app:
+                - path: /tmp
+        so-crates-auth-tls:
+          type: secret
+          name: so-crates-auth-tls
+          advancedMounts:
+            so-crates-auth:
+              proxy:
+                - path: /etc/tls/private
+                  readOnly: true
+        so-crates-oauth-cookie:
+          type: secret
+          name: so-crates-oauth-cookie
+          advancedMounts:
+            so-crates-auth:
+              proxy:
+                - path: /etc/proxy/cookie
+                  readOnly: true
+      service:
+        so-crates:
+          forceRename: so-crates
+          controller: so-crates
+          ports:
+            http:
+              port: 8000
+              targetPort: 8000
+              protocol: TCP
+        so-crates-auth:
+          forceRename: so-crates-auth
+          controller: so-crates-auth
+          annotations:
+            service.beta.openshift.io/serving-cert-secret-name: so-crates-auth-tls
+          ports:
+            https:
+              port: 8443
+              targetPort: 8443
+              protocol: TCP
