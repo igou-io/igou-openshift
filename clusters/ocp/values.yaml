@@ -641,6 +641,14 @@ applications:
     source:
       path: applications/homepage
 
+  so-crates:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/so-crates
+
   ace-step:
     project: cluster-apps
     annotations:

@@ -1,0 +1,119 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: so-crates
+resources:
+  - default-deny-networkpolicy.yaml
+  - allow-so-crates-networkpolicy.yaml
+  - default-egressfirewall.yaml
+  - so-crates-namespace.yaml
+  - so-crates-route.yaml
+helmCharts:
+  - name: app-template
+    namespace: so-crates
+    version: 4.6.2
+    releaseName: so-crates
+    repo: oci://ghcr.io/bjw-s-labs/helm
+    valuesFile: values-dummy.yaml
+    valuesInline:
+      defaultPodOptions:
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - key: node-role.kubernetes.io/control-plane
+                      operator: DoesNotExist
+      controllers:
+        so-crates:
+          type: deployment
+          replicas: 1
+          strategy: Recreate
+          pod:
+            automountServiceAccountToken: false
+            securityContext:
+              seccompProfile:
+                type: RuntimeDefault
+          containers:
+            app:
+              image:
+                repository: ghcr.io/dougburks/so-crates
+                # GHCR publishes this release as the numeric 4.1.0 tag; the
+                # digest is the real v4.1.0 manifest pin.
+                tag: 4.1.0@sha256:a6d6c63c0dd00d7de1a50658b0c71e59f9af2bf4ab4d77460d2d955b0863f2b5
+                pullPolicy: IfNotPresent
+              env:
+                DATA_DIR: /data
+                BIND_ADDRESS: 0.0.0.0
+                PORT: '8000'
+              ports:
+                - name: http
+                  containerPort: 8000
+                  protocol: TCP
+              probes:
+                startup:
+                  enabled: true
+                  type: HTTP
+                  path: /socrates.html
+                  port: 8000
+                  spec:
+                    failureThreshold: 36
+                    periodSeconds: 5
+                    timeoutSeconds: 5
+                readiness:
+                  enabled: true
+                  type: HTTP
+                  path: /socrates.html
+                  port: 8000
+                  spec:
+                    periodSeconds: 10
+                    timeoutSeconds: 5
+                    failureThreshold: 6
+                liveness:
+                  enabled: true
+                  type: HTTP
+                  path: /socrates.html
+                  port: 8000
+                  spec:
+                    periodSeconds: 30
+                    timeoutSeconds: 5
+                    failureThreshold: 10
+              resources:
+                requests:
+                  cpu: 500m
+                  memory: 1Gi
+                  ephemeral-storage: 2Gi
+                limits:
+                  cpu: '4'
+                  memory: 8Gi
+                  ephemeral-storage: 20Gi
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+      persistence:
+        data:
+          type: emptyDir
+          advancedMounts:
+            so-crates:
+              app:
+                - path: /data
+        tmp:
+          type: emptyDir
+          advancedMounts:
+            so-crates:
+              app:
+                - path: /tmp
+      service:
+        so-crates:
+          forceRename: so-crates
+          controller: so-crates
+          ports:
+            http:
+              port: 8000
+              targetPort: 8000
+              protocol: TCP

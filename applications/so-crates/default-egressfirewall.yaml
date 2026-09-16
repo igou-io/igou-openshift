@@ -1,0 +1,57 @@
+---
+apiVersion: k8s.ovn.org/v1
+kind: EgressFirewall
+metadata:
+  # OVN-Kubernetes requires this object to be named "default".
+  name: default
+  namespace: so-crates
+spec:
+  egress:
+    # The DNS Service DNATs to cluster DNS Pods before EgressFirewall
+    # evaluation. Keep this exception narrow and before the internal denies.
+    - type: Allow
+      to:
+        cidrSelector: 10.128.0.0/14
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+        - protocol: UDP
+          port: 5353
+        - protocol: TCP
+          port: 5353
+
+    # Never allow the analysis workload to reach private, cluster, homelab,
+    # carrier-grade NAT, or link-local destinations. OVN evaluates rules in
+    # order, so the required cluster exceptions above remain narrow.
+    - type: Deny
+      to:
+        cidrSelector: 10.0.0.0/8
+    - type: Deny
+      to:
+        cidrSelector: 172.16.0.0/12
+    - type: Deny
+      to:
+        cidrSelector: 192.168.0.0/16
+    - type: Deny
+      to:
+        cidrSelector: 100.64.0.0/10
+    - type: Deny
+      to:
+        cidrSelector: 169.254.0.0/16
+
+    # SO-CRATES rule refresh and Load from URL are limited to public HTTP(S).
+    - type: Allow
+      to:
+        cidrSelector: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 443
+
+    # Deny every other destination and port.
+    - type: Deny
+      to:
+        cidrSelector: 0.0.0.0/0
