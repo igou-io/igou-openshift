@@ -11,39 +11,43 @@ The deployed URL is:
 
 ## Architecture
 
-The app-template release creates two separate Deployments and Pods:
+The app-template release creates one Deployment and one Service:
 
 - `so-crates` runs the upstream v4.1.0 analysis image and listens on port 8000.
   PCAP processing invokes Suricata and then the bundled file, YARA, and Sigma
   analysis pipeline. The initial resource request is 500m CPU, 1Gi memory, and
   2Gi ephemeral storage; limits are 4 CPU, 8Gi memory, and 20Gi ephemeral
   storage.
-- `so-crates-auth` runs the pinned OpenShift OAuth proxy on port 8443. It is the
-  only externally reachable workload, and forwards authorized requests to the
-  internal `so-crates` Service on port 8000. Keeping the proxy in its own Pod
-  gives the auth boundary its own ServiceAccount, TLS endpoint, and selectors;
-  the analysis Pod cannot receive Route traffic directly.
+- The `so-crates` Service exposes the analysis container's HTTP port 8000.
 
-The Route uses OpenShift reencrypt TLS. The `so-crates-auth` Service receives
-an OpenShift service-serving certificate, and its ServiceAccount is annotated
-with the OAuth redirect reference for the `so-crates` Route. OAuth access is
-gated by the proxy SAR requiring `get` on the `so-crates` Service in this
-namespace. The proxy ServiceAccount has only the minimal
-`system:auth-delegator` ClusterRoleBinding needed for token review and
-subject-access checks.
+The OpenShift Route keeps the existing hostname and terminates TLS at the
+router with edge termination. It forwards plain HTTP to `so-crates:http`,
+which is port 8000. HTTP requests are redirected to HTTPS by the Route.
 
-Both Pods run on the normal OpenShift CRI-O runtime. Kata and
+SO-CRATES has no application authentication. Anyone who can reach the Route
+can use the application. Uploaded files and analysis results may therefore be
+visible or modifiable by any user with network access to the Route. The Route
+must not be treated as an authorization boundary. NetworkPolicy prevents
+ordinary in-cluster Pods from bypassing the Route to reach the backend, but it
+does not authenticate Route users.
+
+The workload runs on the normal OpenShift CRI-O runtime. Kata and
 `runtimeClassName` are deliberately not used. The analysis container is
 compatible with `restricted-v2`: it is non-root, disallows privilege
 escalation, drops all Linux capabilities, uses `RuntimeDefault` seccomp, and
 does not mount a Kubernetes ServiceAccount token. The analysis root filesystem
 is read-only; `/data` and `/tmp` are the only declared writable mounts.
 
+SO-CRATES runs as one replica with a `Recreate` strategy and uses the normal
+soft worker preference. This keeps the file-based analysis workspace
+consistent during replacement and avoids introducing a persistent database or
+shared filesystem.
+
 ## Ephemeral data
 
 `/data` is an `emptyDir`, not persistent storage. There is intentionally no
 PVC, PV, StorageClass dependency, NFS/RWX volume, or backup annotation in this
-phase. SO-CRATES runs as one replica with a `Recreate` strategy.
+phase.
 
 The lifecycle is intentionally disposable:
 
@@ -65,24 +69,30 @@ oc exec -n so-crates deploy/so-crates -- sh -c 'find /data -maxdepth 2 -type f -
 oc logs -n so-crates deploy/so-crates
 ```
 
-Do not place secrets or the OAuth cookie value in inspection output.
-
 ## Network isolation
 
-The namespace has default-deny ingress and egress policies. The auth Pod
-accepts only OpenShift router/host-network traffic on TCP/8443 and can reach
-the analysis Pod on TCP/8000. The analysis Pod accepts only the auth Pod and
-the host-network probe path on TCP/8000. DNS and the API/OAuth endpoints are
-allowed explicitly.
+The namespace has default-deny ingress and egress policies. The analysis Pod
+accepts TCP/8000 only from the `openshift-ingress` namespace and from the
+cluster's host-network source selector used for router traffic and kubelet
+probes. Ordinary Pods and unrelated namespaces cannot directly reach the
+backend.
 
-The namespace EgressFirewall accounts for OVN-Kubernetes post-DNAT behavior:
-the API Service reaches the control-plane host on `10.10.9.10:6443`, while
-OAuth and DNS reach cluster Pods in `10.128.0.0/14` on their backend ports.
-RFC1918, CGNAT, and link-local ranges are denied before public egress is
-allowed. TCP/80 and TCP/443 to public addresses are available for explicit
-rule refresh and the `Load from URL` feature; internal/private destinations
-remain blocked. SO-CRATES also applies its upstream URL safety validation,
-including redirect and DNS-rebinding checks.
+The analysis workload may reach OpenShift DNS and public TCP/80 and TCP/443.
+The public paths are used for explicit Suricata, YARA, or Sigma rule refreshes
+and for the `Load from URL` feature. Private, cluster, carrier-grade NAT, and
+link-local destinations remain excluded:
+
+- `10.0.0.0/8`
+- `172.16.0.0/12`
+- `192.168.0.0/16`
+- `100.64.0.0/10`
+- `169.254.0.0/16`
+
+The namespace EgressFirewall retains only the narrow cluster-DNS exception
+required by this cluster's OVN-Kubernetes post-DNAT behavior, then denies
+internal ranges, allows public TCP/80 and TCP/443, and denies everything
+else. SO-CRATES also applies its upstream URL safety validation, including
+redirect and DNS-rebinding checks.
 
 Rule refresh is not automatic at startup. Use the Rules modal and explicitly
 request the Suricata, YARA, or Sigma update when current public egress is
@@ -90,13 +100,12 @@ available.
 
 ## Image updates
 
-The SO-CRATES image is pinned to upstream v4.1.0 with a real GHCR digest and
-uses a Renovate-compatible `tag@sha256:digest` reference. GHCR currently
-publishes this release under the numeric `4.1.0` tag; the manifest keeps the
-requested `v4.1.0` release label alongside that digest. Upgrade by selecting
-the intended upstream release, resolving its GHCR digest, and updating both
-the tag and digest together. The OAuth proxy likewise remains digest-pinned
-to the repository's current `origin-oauth-proxy:4.21` lineage.
+The SO-CRATES image is pinned to the published upstream `4.1.0` GHCR tag and
+the verified digest
+`sha256:a6d6c63c0dd00d7de1a50658b0c71e59f9af2bf4ab4d77460d2d955b0863f2b5`.
+The `tag@sha256:digest` form is retained so Renovate can identify and update
+the dependency. Upgrade by selecting the intended upstream release, resolving
+its GHCR digest, and updating both the published tag and digest together.
 
 ## Live verification
 
@@ -109,12 +118,15 @@ oc get pvc -n so-crates
 oc get networkpolicy -n so-crates
 oc get egressfirewall default -n so-crates -o yaml
 oc exec -n so-crates deploy/so-crates -- sh -c 'id; test -w /data; test -w /tmp; touch /data/marker /tmp/marker'
-curl -I https://so-crates.apps.ocp.igou.systems/socrates.html
+curl -I http://so-crates.apps.ocp.igou.systems/socrates.html
+curl -fsS https://so-crates.apps.ocp.igou.systems/socrates.html >/dev/null
 ```
 
-Verify that the external request enters OAuth, that no Route targets
-`so-crates:8000`, that a harmless PCAP and a harmless log/binary sample can be
-analyzed, and that public rule refresh/URL loading succeeds while representative
-RFC1918, CGNAT, and link-local destinations fail. To verify the intentional
-loss semantics, create a marker under `/data`, delete only the analysis Pod,
-wait for its replacement, and confirm the marker is gone.
+Verify that HTTP redirects to HTTPS, the HTTPS request loads
+`/socrates.html` without credentials, the Route targets `so-crates:http`, and
+no second Route or separate authentication workload exists. Verify that a
+harmless PCAP and a harmless log/binary sample can be analyzed, and that public
+rule refresh and `Load from URL` work while representative RFC1918, CGNAT, and
+link-local destinations fail. To verify the intentional loss semantics,
+create a marker under `/data`, delete only the analysis Pod, wait for its
+replacement, and confirm the marker is gone.

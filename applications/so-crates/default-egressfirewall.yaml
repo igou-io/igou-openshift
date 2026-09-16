@@ -7,30 +7,8 @@ metadata:
   namespace: so-crates
 spec:
   egress:
-    # The Kubernetes API Service DNATs to the control-plane host at :6443.
-    - type: Allow
-      to:
-        cidrSelector: 10.10.9.10/32
-      ports:
-        - protocol: TCP
-          port: 6443
-
-    # oauth-openshift and OpenShift DNS Services DNAT to Pod IPs. These
-    # exceptions must precede the RFC1918 deny rules below.
-    - type: Allow
-      to:
-        cidrSelector: 10.128.0.0/14
-      ports:
-        - protocol: TCP
-          port: 6443
-    # The OAuth proxy's ClusterIP upstream is DNATed to the analysis Pod.
-    # NetworkPolicy still restricts this port to the proxy -> analysis path.
-    - type: Allow
-      to:
-        cidrSelector: 10.128.0.0/14
-      ports:
-        - protocol: TCP
-          port: 8000
+    # The DNS Service DNATs to cluster DNS Pods before EgressFirewall
+    # evaluation. Keep this exception narrow and before the internal denies.
     - type: Allow
       to:
         cidrSelector: 10.128.0.0/14

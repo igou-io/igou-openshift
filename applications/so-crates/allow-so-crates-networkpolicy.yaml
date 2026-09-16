@@ -12,12 +12,10 @@ spec:
     - Ingress
     - Egress
   ingress:
-    # The OAuth proxy is the only in-cluster caller allowed to reach the
-    # analysis backend. Kubelet probes arrive through the host-network path.
     - from:
-        - podSelector:
+        - namespaceSelector:
             matchLabels:
-              app.kubernetes.io/controller: so-crates-auth
+              kubernetes.io/metadata.name: openshift-ingress
       ports:
         - port: 8000
           protocol: TCP
@@ -60,69 +58,4 @@ spec:
         - port: 80
           protocol: TCP
         - port: 443
-          protocol: TCP
-
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-so-crates-auth
-  namespace: so-crates
-spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/controller: so-crates-auth
-  policyTypes:
-    - Ingress
-    - Egress
-  ingress:
-    # Route traffic is delivered by the host-network router under the
-    # OVN-Kubernetes source-address behavior used by this cluster.
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: openshift-ingress
-        - namespaceSelector:
-            matchLabels:
-              policy-group.network.openshift.io/host-network: ''
-      ports:
-        - port: 8443
-          protocol: TCP
-  egress:
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: openshift-dns
-      ports:
-        - port: 53
-          protocol: UDP
-        - port: 53
-          protocol: TCP
-        - port: 5353
-          protocol: UDP
-        - port: 5353
-          protocol: TCP
-    # The proxy performs OAuth/SAR TokenReview calls through the Kubernetes
-    # API Service. This cluster's Service DNATs to the API host on :6443.
-    - to:
-        - ipBlock:
-            cidr: 10.10.9.10/32
-      ports:
-        - port: 6443
-          protocol: TCP
-    # oauth-openshift's ClusterIP DNATs to the authentication Pod on :6443.
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: openshift-authentication
-      ports:
-        - port: 6443
-          protocol: TCP
-    # The proxy forwards authenticated requests to the analysis application.
-    - to:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/controller: so-crates
-      ports:
-        - port: 8000
           protocol: TCP

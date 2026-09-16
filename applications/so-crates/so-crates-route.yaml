@@ -7,12 +7,12 @@ metadata:
 spec:
   host: so-crates.apps.ocp.igou.systems
   port:
-    targetPort: https
+    targetPort: http
   tls:
-    termination: reencrypt
+    termination: edge
     insecureEdgeTerminationPolicy: Redirect
   to:
     kind: Service
-    name: so-crates-auth
+    name: so-crates
     weight: 100
   wildcardPolicy: None
