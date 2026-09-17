@@ -5,6 +5,9 @@ resources:
   - logging-loki-s3-externalsecret.yaml
   - logging-loki-lokistack.yaml
   - collector-serviceaccount.yaml
-  - collector-rbac.yaml
+  - collector-collect-application-logs-clusterrolebinding.yaml
+  - collector-collect-infrastructure-logs-clusterrolebinding.yaml
+  - collector-collect-audit-logs-clusterrolebinding.yaml
+  - collector-logging-collector-logs-writer-clusterrolebinding.yaml
   - collector-clusterlogforwarder.yaml
   - central-logging-alertingrule.yaml

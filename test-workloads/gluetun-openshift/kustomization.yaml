@@ -5,10 +5,11 @@ kind: Kustomization
 # ClusterRole are cluster-scoped, so every namespaced resource declares its
 # own namespace.
 resources:
-  - namespace.yaml
-  - serviceaccount.yaml
-  - scc.yaml
-  - scc-rbac.yaml
-  - mullvad-externalsecret.yaml
+  - gluetun-openshift-test-namespace.yaml
+  - gluetun-test-serviceaccount.yaml
+  - gluetun-test-securitycontextconstraints.yaml
+  - system-openshift-scc-gluetun-test-clusterrole.yaml
+  - system-openshift-scc-gluetun-test-rolebinding.yaml
+  - gluetun-mullvad-externalsecret.yaml
   - gluetun-egress-test-deployment.yaml
   - direct-egress-control-deployment.yaml

@@ -4,7 +4,8 @@ kind: Kustomization
 resources:
   - log-gateway-namespace.yaml
   - log-gateway-serviceaccount.yaml
-  - log-gateway-rbac.yaml
+  - log-gateway-infrastructure-writer-clusterrole.yaml
+  - log-gateway-infrastructure-writer-clusterrolebinding.yaml
   - log-gateway-configmap.yaml
   - log-gateway-deployment.yaml
   - log-gateway-service.yaml

@@ -1,0 +1,20 @@
+---
+# Metal3 IPAM split out of InfrastructureProvider in v1.11 — required for the
+# IPClaim CRD that CAPM3 depends on.
+apiVersion: operator.cluster.x-k8s.io/v1alpha2
+kind: IPAMProvider
+metadata:
+  name: metal3
+  namespace: capm3-system
+spec:
+  version: v1.12.4
+  deployment:
+    nodeSelector:
+      node-role.kubernetes.io/control-plane: ""
+    tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule

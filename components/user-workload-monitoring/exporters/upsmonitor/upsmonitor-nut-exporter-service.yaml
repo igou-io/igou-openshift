@@ -1,0 +1,19 @@
+---
+# DRuggeri nut_exporter on the upsmonitor Pi: ONE exporter instance serves
+# BOTH rack UPSes; the UPS to read is chosen per scrape via the ?ups= query
+# parameter, so the ServiceMonitor declares one endpoint per UPS against the
+# same target. Deployed by igou-ansible playbooks/upsmonitor/.
+apiVersion: v1
+kind: Service
+metadata:
+  name: upsmonitor-nut-exporter
+  labels:
+    app.kubernetes.io/name: upsmonitor-nut-exporter
+    app.kubernetes.io/part-of: upsmonitor
+spec:
+  clusterIP: None
+  ports:
+    - name: metrics
+      port: 9199
+      targetPort: 9199
+      protocol: TCP

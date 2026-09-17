@@ -5,12 +5,16 @@ resources:
   - capi-operator-system-namespace.yaml
   - capi-system-namespace.yaml
   - capm3-system-namespace.yaml
-  - providers.yaml
-  - capi-manager-scc-rolebinding.yaml
-  - capm3-manager-scc-rolebinding.yaml
-  - ipam-manager-scc-rolebinding.yaml
-  - machine-approver-capi-rbac.yaml
-  - capi-workload-cluster-access-rbac.yaml
+  - cluster-api-coreprovider.yaml
+  - metal3-infrastructureprovider.yaml
+  - metal3-ipamprovider.yaml
+  - capi-manager-scc-nonroot-v2-rolebinding.yaml
+  - capm3-manager-scc-nonroot-v2-rolebinding.yaml
+  - ipam-manager-scc-nonroot-v2-rolebinding.yaml
+  - system-openshift-controller-machine-approver-capi-clusterrole.yaml
+  - system-openshift-controller-machine-approver-capi-clusterrolebinding.yaml
+  - capi-workload-cluster-access-clusterrole.yaml
+  - capi-workload-cluster-access-clusterrolebinding.yaml
 
 helmCharts:
   - name: cluster-api-operator

@@ -1,0 +1,92 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: capi-csr-approver
+  namespace: openshift-cluster-api
+spec:
+  schedule: "* * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 60
+      backoffLimit: 0
+      ttlSecondsAfterFinished: 300
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: capi-csr-approver
+        spec:
+          serviceAccountName: capi-csr-approver
+          restartPolicy: Never
+          nodeSelector:
+            node-role.kubernetes.io/control-plane: ""
+          tolerations:
+          - key: node-role.kubernetes.io/master
+            operator: Exists
+            effect: NoSchedule
+          - key: node-role.kubernetes.io/control-plane
+            operator: Exists
+            effect: NoSchedule
+          containers:
+          - name: approver
+            image: registry.redhat.io/openshift4/ose-cli:latest@sha256:ef83967297f619f45075e7fd1428a1eb981622a6c174c46fb53b158ed24bed85
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                cpu: 100m
+                memory: 128Mi
+            command: ["/bin/bash", "-euo", "pipefail", "-c"]
+            args:
+            - |
+              NS=openshift-cluster-api
+
+              machine_count=$(oc get machine.cluster.x-k8s.io -n "$NS" \
+                -o name 2>/dev/null | wc -l)
+              if [ "${machine_count:-0}" -eq 0 ]; then
+                echo "No CAPI Machines in $NS."
+                exit 0
+              fi
+
+              pending=$(oc get csr --no-headers 2>&1 \
+                | awk '$NF == "Pending" {print $1, $3, $4}')
+              if [ -z "$pending" ]; then
+                echo "No pending CSRs."
+                exit 0
+              fi
+
+              echo "$pending" | while read -r name signer requestor; do
+                [ -z "$name" ] && continue
+
+                case "$signer" in
+                  kubernetes.io/kube-apiserver-client-kubelet)
+                    # Bootstrap CSR — only the node-bootstrapper SA (which
+                    # requires the ignition bootstrap token) can create these.
+                    if [ "$requestor" != "system:serviceaccount:openshift-machine-config-operator:node-bootstrapper" ]; then
+                      echo "Skipping $name: unexpected requestor for bootstrap signer"
+                      continue
+                    fi
+                    echo "Approving bootstrap CSR $name"
+                    oc adm certificate approve "$name" 2>&1 || true
+                    ;;
+                  kubernetes.io/kubelet-serving)
+                    # Serving CSR — the kubelet already holds a valid client
+                    # cert (approved above or by machine-approver), so the
+                    # node identity is authenticated.
+                    if [[ "$requestor" != system:node:* ]]; then
+                      echo "Skipping $name: unexpected requestor for serving signer"
+                      continue
+                    fi
+                    echo "Approving serving CSR $name (${requestor#system:node:})"
+                    oc adm certificate approve "$name" 2>&1 || true
+                    ;;
+                  *)
+                    ;;
+                esac
+              done
+
+              echo "Done"

@@ -1,0 +1,44 @@
+---
+# OPTIONAL: most agents need the public internet (pip, npm, git). Apply this
+# alongside the default-deny to allow egress to everything EXCEPT RFC1918 and
+# link-local space, leaving normal package installs working.
+#
+# COMPLETE THE except-LIST FOR YOUR CLUSTER. The ranges below only cover a
+# private-address topology. On a cluster whose nodes, API server endpoint or
+# service network sit on PUBLICLY ROUTABLE addresses (managed cloud clusters
+# with public node IPs and a public apiserver endpoint are the common case),
+# none of those are excluded and a session pod can reach the control plane and
+# the nodes. Add your pod, service, node and apiserver CIDRs:
+#
+#   # OpenShift
+#   oc get network.config/cluster -o jsonpath='{.status.clusterNetwork[*].cidr}{"\n"}{.status.serviceNetwork[*]}{"\n"}'
+#   oc get nodes -o jsonpath='{.items[*].status.addresses[?(@.type=="InternalIP")].address}{"\n"}'
+#   oc whoami --show-server
+#   # vanilla Kubernetes
+#   kubectl get svc kubernetes -n default -o jsonpath='{.spec.clusterIP}{"\n"}'
+#
+# Stronger alternative: deny those ranges with a higher-priority
+# AdminNetworkPolicy (Kubernetes >= 1.30 / OpenShift 4.15+) rather than relying
+# on an except-list the operator has to complete correctly.
+#
+# Delete this document if the session pods should be fully air-gapped.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hermes-session-allow-internet
+  namespace: hermes-k8s-test
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/managed-by: hermes-agent
+  policyTypes: ["Egress"]
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 169.254.0.0/16   # link-local / cloud instance metadata
+              - 100.64.0.0/10    # carrier-grade NAT, used by some CNIs

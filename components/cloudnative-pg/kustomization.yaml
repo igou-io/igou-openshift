@@ -1,9 +1,9 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- cloudnative-pg-operatorgroup.yml
+- cloudnative-pg-operatorgroup.yaml
 - cloudnative-pg-servicemonitor.yaml
-- cloudnative-pg-subscription.yml
+- cloudnative-pg-subscription.yaml
 - cnpg-metrics-service.yaml
 commonAnnotations:
   argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true

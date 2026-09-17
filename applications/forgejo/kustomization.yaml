@@ -6,10 +6,10 @@ resources:
   - allow-observed-networkpolicy.yaml
   - forgejo-namespace.yaml
   - forgejo-pg-cluster.yaml
-  - forgejo-pg-objectstore.yaml
-  - forgejo-pg-scheduledbackup.yaml
+  - forgejo-pg-backup-objectstore.yaml
+  - forgejo-pg-daily-scheduledbackup.yaml
   - cnpg-s3-credentials-externalsecret.yaml
-  - forgejo-pg-podmonitor.yaml
+  - forgejo-pg-metrics-podmonitor.yaml
   - forgejo-secrets-externalsecret.yaml
   - use-scc-nonroot-v2-role.yaml
   - forgejo-nonroot-v2-rolebinding.yaml

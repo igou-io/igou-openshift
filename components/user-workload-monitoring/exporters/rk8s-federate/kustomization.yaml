@@ -4,5 +4,7 @@ kind: Kustomization
 namespace: rk8s-federate
 resources:
   - rk8s-federate-namespace.yaml
-  - rk8s-federate.yaml
-  - rk8s-federate-prometheusrule.yaml
+  - rk8s-federate-service.yaml
+  - rk8s-federate-endpoints.yaml
+  - rk8s-federate-servicemonitor.yaml
+  - rk8s-federate-alerts-prometheusrule.yaml

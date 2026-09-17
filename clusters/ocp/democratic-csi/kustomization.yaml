@@ -3,14 +3,14 @@ kind: Kustomization
 namespace: democratic-csi
 resources:
   - ../../../components/democratic-csi
-  - democratic-csi-iscsi-fast-externalsecret.yml
-  - democratic-csi-iscsi-ssd-externalsecret.yml
-  - democratic-csi-iscsi-cold-externalsecret.yml
-  - democratic-csi-nfs-fast-externalsecret.yml
-  - democratic-csi-nfs-ssd-externalsecret.yml
-  - democratic-csi-nfs-cold-externalsecret.yml
-  - democratic-csi-nvmeof-fast-externalsecret.yml
-  - democratic-csi-nvmeof-ssd-externalsecret.yml
-  - democratic-csi-nvmeof-cold-externalsecret.yml
+  - democratic-csi-iscsi-fast-config-externalsecret.yaml
+  - democratic-csi-iscsi-ssd-config-externalsecret.yaml
+  - democratic-csi-iscsi-cold-config-externalsecret.yaml
+  - democratic-csi-nfs-fast-config-externalsecret.yaml
+  - democratic-csi-nfs-ssd-config-externalsecret.yaml
+  - democratic-csi-nfs-cold-config-externalsecret.yaml
+  - democratic-csi-nvmeof-fast-config-externalsecret.yaml
+  - democratic-csi-nvmeof-ssd-config-externalsecret.yaml
+  - democratic-csi-nvmeof-cold-config-externalsecret.yaml
 commonAnnotations:
   argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true

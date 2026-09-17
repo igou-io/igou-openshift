@@ -14,10 +14,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Install yamllint
-        run: pip install yamllint
+        run: pip install yamllint PyYAML
 
       - name: Run yamllint
         run: make lint
+
+      - name: Validate manifest file conventions
+        run: make validate-manifest-files
 
   validate-kustomize:
     name: Kustomize Build

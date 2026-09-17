@@ -46,7 +46,7 @@ resources:
   - hermes-sre-skill-sre-sweeps-configmap.yaml
   - hermes-sre-skill-triage-domains-configmap.yaml
   - hermes-sre-skill-incident-reporting-configmap.yaml
-  - hermes-workspace-persistentvolumeclaim.yaml
+  - hermes-workspace-pvc.yaml
   - auth-login-deployment.yaml
   - auth-login-networkpolicy.yaml
   - ghbroker-config-externalsecret.yaml
