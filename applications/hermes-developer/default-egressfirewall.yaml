@@ -6,10 +6,8 @@ metadata:
   namespace: hermes-developer
 spec:
   egress:
-    # TEMPORARY: Cursor publishes rotating backend addresses but no destination
-    # CIDRs, and OVN's dnsName rule can admit a different A record from the one
-    # selected by the CLI. Keep east-west isolation in NetworkPolicy; replace
-    # this external allow-all with an FQDN-aware HTTPS proxy in issue #857.
+    # TEMPORARY Phase A rollback path: Hermes HTTP/HTTPS is wired to the shared
+    # Squid proxy, but retain direct external egress until Phase B verification.
     - type: Allow
       to:
         cidrSelector: 0.0.0.0/0
@@ -115,7 +113,7 @@ spec:
         - protocol: TCP
           port: 443
 
-    # Cursor Agent / CLI (https://cursor.com/docs/enterprise/network-configuration)
+    # Cursor Agent / CLI direct fallback (retained during Phase A)
     - type: Allow
       to:
         dnsName: api.cursor.sh

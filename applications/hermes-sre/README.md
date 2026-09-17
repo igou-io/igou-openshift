@@ -16,8 +16,10 @@ inspects**; it cannot change anything:
   (Slack routes a command name to the most recently installed app workspace-wide, so
   only the assistant app registers them). Alertmanager investigations are delivered
   to that channel (`deliver: slack`). No Forgejo token, no GCP service accounts.
-- Egress: the hermes-k8s allow-list plus the infra targets on their read-only ports
-  (rk8s/OCP API 6443, RouterOS 8729, TrueNAS 443, *.apps routes 443).
+- Egress: external HTTP/HTTPS uses the shared Squid proxy; `NO_PROXY` keeps
+  SearXNG, the broker, model services, cluster APIs and other internal targets
+  on their explicit direct paths. The existing direct egress remains during
+  Phase A as rollback protection.
 - Own data PVC and workspace PVC (`repos/` is the shared `/workspace`; `home/`
   subtrees start empty —
   coding-CLI OAuth state is seeded or refreshed per instance with the
@@ -36,7 +38,9 @@ oc -n "$namespace" rollout status deployment/auth-login --timeout=5m
 oc -n "$namespace" exec -it deployment/auth-login -- bash
 ```
 
-Inside the shell, confirm the image and run the required device login:
+Inside the shell, confirm the image and run the required device login. The
+shell receives the shared HTTP/HTTPS proxy environment; cluster-local names
+are bypassed through `NO_PROXY`. Use the normal CLI names:
 
 ```bash
 command -v cursor-agent codex

@@ -91,6 +91,22 @@ spec:
       value: C0BTMS7AV34
     - name: GHAPP_BROKER_URL
       value: http://ghbroker.hermes-sre.svc.cluster.local:8085
+    # HTTP-aware clients use the shared cluster-local proxy for external
+    # traffic. Cluster services and the OCP/infra endpoints stay direct.
+    - name: HTTP_PROXY
+      value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+    - name: HTTPS_PROXY
+      value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+    - name: http_proxy
+      value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+    - name: https_proxy
+      value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+    - name: NO_PROXY
+      value: localhost,127.0.0.1,::1,.cluster.local,api.ocp.igou.systems,10.10.9.10
+    - name: no_proxy
+      value: localhost,127.0.0.1,::1,.cluster.local,api.ocp.igou.systems,10.10.9.10
+    - name: NODE_USE_ENV_PROXY
+      value: '1'
   envFrom:
     # API_SERVER_KEY, dashboard BasicAuth trio and OPENCODE_GO_API_KEY.
     # Slack tokens use the operator-native gateways secret refs below.
@@ -777,6 +793,20 @@ spec:
                   # credential helper automatically.
                   - name: GHAPP_BROKER_URL
                     value: http://ghbroker.hermes-sre.svc.cluster.local:8085
+                  - name: HTTP_PROXY
+                    value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+                  - name: HTTPS_PROXY
+                    value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+                  - name: http_proxy
+                    value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+                  - name: https_proxy
+                    value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+                  - name: NO_PROXY
+                    value: localhost,127.0.0.1,::1,.cluster.local,api.ocp.igou.systems,10.10.9.10
+                  - name: no_proxy
+                    value: localhost,127.0.0.1,::1,.cluster.local,api.ocp.igou.systems,10.10.9.10
+                  - name: NODE_USE_ENV_PROXY
+                    value: '1'
                   # Scope: the igou-devenv read-only bundle (envs/read-only.env),
                   # rendered by the hermes-session-readonly ExternalSecret into
                   # /etc/agent/envs and activated by ~/.bashrc.d/05-agent-profile.sh

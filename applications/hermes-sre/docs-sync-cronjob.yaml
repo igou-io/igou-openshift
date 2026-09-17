@@ -65,6 +65,20 @@ spec:
                   value: /tmp
                 - name: GHAPP_BROKER_URL
                   value: http://ghbroker.hermes-sre.svc.cluster.local:8085
+                - name: HTTP_PROXY
+                  value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+                - name: HTTPS_PROXY
+                  value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+                - name: http_proxy
+                  value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+                - name: https_proxy
+                  value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+                - name: NO_PROXY
+                  value: localhost,127.0.0.1,::1,.cluster.local,api.ocp.igou.systems,10.10.9.10
+                - name: no_proxy
+                  value: localhost,127.0.0.1,::1,.cluster.local,api.ocp.igou.systems,10.10.9.10
+                - name: NODE_USE_ENV_PROXY
+                  value: '1'
                 - name: REPO
                   value: igou-io/igou-docs
                 - name: DEST

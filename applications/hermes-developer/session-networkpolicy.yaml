@@ -38,7 +38,7 @@ spec:
 # Sessions need the public internet (pip, npm, git, the storescrape targets).
 # Everything RFC1918/link-local stays denied, which on this cluster covers the
 # node, service and pod networks. The EgressFirewall in this directory further
-# narrows off-cluster egress to the allowlisted dnsNames.
+# retains the existing direct external path as Phase A rollback protection.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -109,6 +109,15 @@ spec:
       ports:
         - protocol: TCP
           port: 8085
+    # HTTP-aware session clients use the shared cluster-local proxy for public
+    # HTTP/HTTPS; NO_PROXY keeps the explicit in-cluster paths direct.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: squid-proxy
+      ports:
+        - protocol: TCP
+          port: 3128
 ---
 # hermes-developer: read-only infrastructure targets reachable from session pods.
 # OVN-K applies the apiserver service DNAT (172.30.0.1:443 -> :6443) before

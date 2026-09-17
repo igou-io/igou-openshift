@@ -25,7 +25,9 @@ oc -n "$namespace" rollout status deployment/auth-login --timeout=5m
 oc -n "$namespace" exec -it deployment/auth-login -- bash
 ```
 
-Inside the shell, confirm the image and run the required device login:
+Inside the shell, confirm the image and run the required device login. The
+shell receives the shared HTTP/HTTPS proxy environment; cluster-local names
+are bypassed through `NO_PROXY`. Use the normal CLI names:
 
 ```bash
 command -v cursor-agent codex
