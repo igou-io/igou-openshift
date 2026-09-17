@@ -664,6 +664,14 @@ applications:
         jsonPointers:
           - /spec/replicas
 
+  it-tools:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/it-tools
+
   forgejo:
     project: cluster-apps
     annotations:

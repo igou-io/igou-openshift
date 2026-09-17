@@ -1,0 +1,19 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: it-tools-ingress
+  namespace: it-tools
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    # The OpenShift router uses host networking; match its namespace label.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/host-network: ""
+      ports:
+        - port: 8080
+          protocol: TCP

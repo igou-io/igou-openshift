@@ -1,0 +1,108 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: it-tools
+resources:
+  - it-tools-namespace.yaml
+  - default-deny-networkpolicy.yaml
+  - it-tools-ingress-networkpolicy.yaml
+helmCharts:
+  - name: app-template
+    namespace: it-tools
+    version: 4.6.2
+    releaseName: it-tools
+    repo: oci://ghcr.io/bjw-s-labs/helm
+    valuesFile: values-dummy.yaml
+    valuesInline:
+      defaultPodOptions:
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - key: node-role.kubernetes.io/control-plane
+                      operator: DoesNotExist
+      controllers:
+        it-tools:
+          type: deployment
+          replicas: 1
+          strategy: RollingUpdate
+          pod:
+            automountServiceAccountToken: false
+            securityContext:
+              seccompProfile:
+                type: RuntimeDefault
+          containers:
+            app:
+              image:
+                repository: ghcr.io/sharevb/it-tools
+                tag: 2026.7.11@sha256:5d79e8c7fbf39d6473c282b9c4f86ff85c4900ec22ef766ae3c6f0f9ca8dbb37
+                pullPolicy: IfNotPresent
+              ports:
+                - name: http
+                  containerPort: 8080
+                  protocol: TCP
+              probes:
+                startup:
+                  enabled: true
+                  type: HTTP
+                  path: /
+                  port: 8080
+                  spec:
+                    failureThreshold: 15
+                    periodSeconds: 2
+                    timeoutSeconds: 2
+                readiness:
+                  enabled: true
+                  type: HTTP
+                  path: /
+                  port: 8080
+                  spec:
+                    periodSeconds: 10
+                    timeoutSeconds: 2
+                    failureThreshold: 3
+                liveness:
+                  enabled: true
+                  type: HTTP
+                  path: /
+                  port: 8080
+                  spec:
+                    periodSeconds: 30
+                    timeoutSeconds: 2
+                    failureThreshold: 3
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 64Mi
+                limits:
+                  memory: 256Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                capabilities:
+                  drop:
+                    - ALL
+      service:
+        app:
+          controller: it-tools
+          ports:
+            http:
+              port: 80
+              targetPort: 8080
+              protocol: TCP
+      ingress:
+        app:
+          className: openshift-default
+          annotations:
+            route.openshift.io/termination: edge
+          hosts:
+            - host: it-tools.apps.ocp.igou.systems
+              paths:
+                - path: /
+                  pathType: Prefix
+                  service:
+                    identifier: app
+                    port: http
+      serviceAccount:
+        it-tools:
+          enabled: true
