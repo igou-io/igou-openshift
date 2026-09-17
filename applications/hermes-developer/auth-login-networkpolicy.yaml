@@ -1,7 +1,7 @@
 ---
 # The login shell needs DNS and public HTTPS for device-code OAuth, but no
-# ingress or access to RFC1918/link-local networks. The namespace EgressFirewall
-# further restricts public destinations to the checked-in provider allow-list.
+# ingress or access to RFC1918/link-local networks. The existing direct public
+# path remains as Phase A rollback protection while the proxy is verified.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -29,8 +29,8 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
-    # Cursor authentication must use cursor-agent-proxy; keep this explicit
-    # rather than broadening the helper's general in-cluster egress.
+    # All external HTTP-aware login clients use the shared proxy; keep this
+    # explicit rather than broadening the helper's general in-cluster egress.
     - to:
         - namespaceSelector:
             matchLabels:

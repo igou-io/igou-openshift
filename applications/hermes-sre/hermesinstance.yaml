@@ -91,6 +91,22 @@ spec:
       value: C0BTMS7AV34
     - name: GHAPP_BROKER_URL
       value: http://ghbroker.hermes-sre.svc.cluster.local:8085
+    # HTTP-aware clients use the shared cluster-local proxy for external
+    # traffic. Cluster services and the OCP/infra endpoints stay direct.
+    - name: HTTP_PROXY
+      value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+    - name: HTTPS_PROXY
+      value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+    - name: http_proxy
+      value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+    - name: https_proxy
+      value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+    - name: NO_PROXY
+      value: localhost,127.0.0.1,::1,.svc,.svc.cluster.local,.cluster.local,kubernetes.default.svc,searxng.searxng.svc.cluster.local,ghbroker.hermes-sre.svc.cluster.local,forgejo-http.forgejo.svc.cluster.local,qwen3-35b-a3b.llmkube-system.svc.cluster.local,qwen38-27b.llmkube-system.svc.cluster.local,sands-of-time.sands-of-time.svc.cluster.local,api.ocp.igou.systems,api.rk8s.igou.systems,10.10.9.10,10.10.9.30,10.10.9.11,10.10.99.1,10.10.99.20,10.10.99.22,10.10.99.23,10.10.9.213
+    - name: no_proxy
+      value: localhost,127.0.0.1,::1,.svc,.svc.cluster.local,.cluster.local,kubernetes.default.svc,searxng.searxng.svc.cluster.local,ghbroker.hermes-sre.svc.cluster.local,forgejo-http.forgejo.svc.cluster.local,qwen3-35b-a3b.llmkube-system.svc.cluster.local,qwen38-27b.llmkube-system.svc.cluster.local,sands-of-time.sands-of-time.svc.cluster.local,api.ocp.igou.systems,api.rk8s.igou.systems,10.10.9.10,10.10.9.30,10.10.9.11,10.10.99.1,10.10.99.20,10.10.99.22,10.10.99.23,10.10.9.213
+    - name: NODE_USE_ENV_PROXY
+      value: '1'
   envFrom:
     # API_SERVER_KEY, dashboard BasicAuth trio and OPENCODE_GO_API_KEY.
     # Slack tokens use the operator-native gateways secret refs below.
@@ -777,6 +793,20 @@ spec:
                   # credential helper automatically.
                   - name: GHAPP_BROKER_URL
                     value: http://ghbroker.hermes-sre.svc.cluster.local:8085
+                  - name: HTTP_PROXY
+                    value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+                  - name: HTTPS_PROXY
+                    value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+                  - name: http_proxy
+                    value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+                  - name: https_proxy
+                    value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+                  - name: NO_PROXY
+                    value: localhost,127.0.0.1,::1,.svc,.svc.cluster.local,.cluster.local,kubernetes.default.svc,searxng.searxng.svc.cluster.local,ghbroker.hermes-sre.svc.cluster.local,forgejo-http.forgejo.svc.cluster.local,qwen3-35b-a3b.llmkube-system.svc.cluster.local,qwen38-27b.llmkube-system.svc.cluster.local,sands-of-time.sands-of-time.svc.cluster.local,api.ocp.igou.systems,api.rk8s.igou.systems,10.10.9.10,10.10.9.30,10.10.9.11,10.10.99.1,10.10.99.20,10.10.99.22,10.10.99.23,10.10.9.213
+                  - name: no_proxy
+                    value: localhost,127.0.0.1,::1,.svc,.svc.cluster.local,.cluster.local,kubernetes.default.svc,searxng.searxng.svc.cluster.local,ghbroker.hermes-sre.svc.cluster.local,forgejo-http.forgejo.svc.cluster.local,qwen3-35b-a3b.llmkube-system.svc.cluster.local,qwen38-27b.llmkube-system.svc.cluster.local,sands-of-time.sands-of-time.svc.cluster.local,api.ocp.igou.systems,api.rk8s.igou.systems,10.10.9.10,10.10.9.30,10.10.9.11,10.10.99.1,10.10.99.20,10.10.99.22,10.10.99.23,10.10.9.213
+                  - name: NODE_USE_ENV_PROXY
+                    value: '1'
                   # Scope: the igou-devenv read-only bundle (envs/read-only.env),
                   # rendered by the hermes-session-readonly ExternalSecret into
                   # /etc/agent/envs and activated by ~/.bashrc.d/05-agent-profile.sh
@@ -807,8 +837,7 @@ spec:
                   # Coding-agent identities (the VM's docker_volumes bind-mount
                   # set), living on the PVC's home/ subtree so OAuth token
                   # refreshes persist across sessions. Enables dispatching
-                  # claude / codex / opencode / cursor-agent (via the
-                  # cursor-agent-proxy wrapper) from sessions.
+                  # claude / codex / opencode / cursor-agent from sessions.
                   - name: workspace
                     subPath: home/.claude
                     mountPath: /home/igou/.claude
@@ -844,10 +873,6 @@ spec:
                   - name: sre-context
                     subPath: AGENTS.md
                     mountPath: /workspace/AGENTS.md
-                    readOnly: true
-                  - name: cursor-agent-proxy
-                    mountPath: /usr/local/bin/cursor-agent-proxy
-                    subPath: cursor-agent-proxy
                     readOnly: true
                   # File sync writes many small files. Keep that traffic off
                   # the shared RWX workspace and isolate it per session pod.
@@ -893,10 +918,6 @@ spec:
               - name: sre-context
                 configMap:
                   name: hermes-sre-context
-              - name: cursor-agent-proxy
-                configMap:
-                  name: cursor-agent-proxy
-                  defaultMode: 0555
       tool_loop_guardrails:
         hard_stop_enabled: true
       tools:

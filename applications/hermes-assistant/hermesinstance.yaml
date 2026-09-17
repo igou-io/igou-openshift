@@ -81,6 +81,22 @@ spec:
     # GHAPP_BROKER_SOCKET bind mount.
     - name: GHAPP_BROKER_URL
       value: http://ghbroker.hermes-assistant.svc.cluster.local:8085
+    # HTTP-aware clients use the shared cluster-local proxy for external
+    # traffic. Cluster services and the OCP API stay on their direct paths.
+    - name: HTTP_PROXY
+      value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+    - name: HTTPS_PROXY
+      value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+    - name: http_proxy
+      value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+    - name: https_proxy
+      value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+    - name: NO_PROXY
+      value: localhost,127.0.0.1,::1,.svc,.svc.cluster.local,.cluster.local,kubernetes.default.svc,searxng.searxng.svc.cluster.local,firecrawl-api.firecrawl.svc.cluster.local,ghbroker.hermes-assistant.svc.cluster.local,forgejo-http.forgejo.svc.cluster.local,qwen3-35b-a3b.llmkube-system.svc.cluster.local,qwen38-27b.llmkube-system.svc.cluster.local,sands-of-time.sands-of-time.svc.cluster.local,api.ocp.igou.systems,10.10.9.10
+    - name: no_proxy
+      value: localhost,127.0.0.1,::1,.svc,.svc.cluster.local,.cluster.local,kubernetes.default.svc,searxng.searxng.svc.cluster.local,firecrawl-api.firecrawl.svc.cluster.local,ghbroker.hermes-assistant.svc.cluster.local,forgejo-http.forgejo.svc.cluster.local,qwen3-35b-a3b.llmkube-system.svc.cluster.local,qwen38-27b.llmkube-system.svc.cluster.local,sands-of-time.sands-of-time.svc.cluster.local,api.ocp.igou.systems,10.10.9.10
+    - name: NODE_USE_ENV_PROXY
+      value: '1'
     # Slack: this instance holds the shared app's tokens (see hermes-env).
     - name: SLACK_ALLOWED_USERS
       value: U4ZFYHTU4
@@ -463,6 +479,20 @@ spec:
                   # credential helper automatically.
                   - name: GHAPP_BROKER_URL
                     value: http://ghbroker.hermes-assistant.svc.cluster.local:8085
+                  - name: HTTP_PROXY
+                    value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+                  - name: HTTPS_PROXY
+                    value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+                  - name: http_proxy
+                    value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+                  - name: https_proxy
+                    value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+                  - name: NO_PROXY
+                    value: localhost,127.0.0.1,::1,.svc,.svc.cluster.local,.cluster.local,kubernetes.default.svc,searxng.searxng.svc.cluster.local,firecrawl-api.firecrawl.svc.cluster.local,ghbroker.hermes-assistant.svc.cluster.local,forgejo-http.forgejo.svc.cluster.local,qwen3-35b-a3b.llmkube-system.svc.cluster.local,qwen38-27b.llmkube-system.svc.cluster.local,sands-of-time.sands-of-time.svc.cluster.local,api.ocp.igou.systems,10.10.9.10
+                  - name: no_proxy
+                    value: localhost,127.0.0.1,::1,.svc,.svc.cluster.local,.cluster.local,kubernetes.default.svc,searxng.searxng.svc.cluster.local,firecrawl-api.firecrawl.svc.cluster.local,ghbroker.hermes-assistant.svc.cluster.local,forgejo-http.forgejo.svc.cluster.local,qwen3-35b-a3b.llmkube-system.svc.cluster.local,qwen38-27b.llmkube-system.svc.cluster.local,sands-of-time.sands-of-time.svc.cluster.local,api.ocp.igou.systems,10.10.9.10
+                  - name: NODE_USE_ENV_PROXY
+                    value: '1'
                   # opencode's hosted-model key, same forward the VM's
                   # docker_forward_env did. Same accepted tradeoff as the
                   # gcp-sa mount: session-visible by design.

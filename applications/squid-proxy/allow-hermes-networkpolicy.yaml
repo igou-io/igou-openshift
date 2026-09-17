@@ -12,13 +12,21 @@ spec:
     - Ingress
     - Egress
   ingress:
-    # Only Hermes session and scale-to-zero auth pods may use the proxy.
+    # Only Hermes agents, generated sessions, and scale-to-zero auth pods may
+    # use the proxy. The service remains cluster-internal.
     - from:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: hermes-developer
           podSelector:
             matchLabels:
+              app.kubernetes.io/instance: hermes-developer
+              app.kubernetes.io/name: hermes-agent
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-developer
+          podSelector:
+            matchLabels:
               app.kubernetes.io/managed-by: hermes-agent
         - namespaceSelector:
             matchLabels:
@@ -31,6 +39,13 @@ spec:
               kubernetes.io/metadata.name: hermes-sre
           podSelector:
             matchLabels:
+              app.kubernetes.io/instance: hermes-sre
+              app.kubernetes.io/name: hermes-agent
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-sre
+          podSelector:
+            matchLabels:
               app.kubernetes.io/managed-by: hermes-agent
         - namespaceSelector:
             matchLabels:
@@ -38,6 +53,43 @@ spec:
           podSelector:
             matchLabels:
               app: auth-login
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-assistant
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: hermes-assistant
+              app.kubernetes.io/name: hermes-agent
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-assistant
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/managed-by: hermes-agent
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-developer
+          podSelector:
+            matchLabels:
+              app: ghbroker
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-sre
+          podSelector:
+            matchLabels:
+              app: ghbroker
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-assistant
+          podSelector:
+            matchLabels:
+              app: ghbroker
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-sre
+          podSelector:
+            matchLabels:
+              app: igou-docs-sync
       ports:
         - protocol: TCP
           port: 3128
@@ -57,21 +109,29 @@ spec:
           port: 5353
         - protocol: TCP
           port: 5353
-    # HTTPS-only Cursor CONNECT destinations. Internal and special-use IPv4
-    # ranges are excluded independently of Squid's hostname ACLs.
+    # Public HTTP and HTTPS destinations. Internal and special-use IPv4 ranges
+    # are excluded independently of Squid's destination ACLs.
     - to:
         - ipBlock:
             cidr: 0.0.0.0/0
             except:
+              - 0.0.0.0/8
               - 10.0.0.0/8
               - 172.16.0.0/12
               - 192.168.0.0/16
               - 100.64.0.0/10
               - 127.0.0.0/8
               - 169.254.0.0/16
+              - 192.0.0.0/24
+              - 192.0.2.0/24
+              - 198.18.0.0/15
+              - 198.51.100.0/24
+              - 203.0.113.0/24
               - 224.0.0.0/4
               - 240.0.0.0/4
       ports:
+        - protocol: TCP
+          port: 80
         - protocol: TCP
           port: 443
     # Keep the same internal-range exclusions when the cluster is dual-stack.
@@ -85,5 +145,7 @@ spec:
               - fe80::/10
               - ff00::/8
       ports:
+        - protocol: TCP
+          port: 80
         - protocol: TCP
           port: 443

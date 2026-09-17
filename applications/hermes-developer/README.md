@@ -25,13 +25,14 @@ oc -n "$namespace" rollout status deployment/auth-login --timeout=5m
 oc -n "$namespace" exec -it deployment/auth-login -- bash
 ```
 
-Inside the shell, confirm the image and run the required device login. Cursor
-commands use the mounted `cursor-agent-proxy` wrapper; Codex remains direct:
+Inside the shell, confirm the image and run the required device login. The
+shell receives the shared HTTP/HTTPS proxy environment; cluster-local names
+are bypassed through `NO_PROXY`. Use the normal CLI names:
 
 ```bash
-command -v cursor-agent-proxy cursor-agent codex
-NO_OPEN_BROWSER=1 cursor-agent-proxy login
-cursor-agent-proxy status
+command -v cursor-agent codex
+NO_OPEN_BROWSER=1 cursor-agent login
+cursor-agent status
 codex login --device-auth
 codex login status
 exit

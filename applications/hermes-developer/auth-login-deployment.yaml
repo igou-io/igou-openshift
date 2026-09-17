@@ -46,14 +46,24 @@ spec:
             # /home/igou/.bashrc to add the baked CLI directory to PATH.
             - name: PATH
               value: /home/igou/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+            - name: HTTP_PROXY
+              value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+            - name: HTTPS_PROXY
+              value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+            - name: http_proxy
+              value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+            - name: https_proxy
+              value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+            - name: NO_PROXY
+              value: localhost,127.0.0.1,::1,.svc,.svc.cluster.local,.cluster.local,kubernetes.default.svc
+            - name: no_proxy
+              value: localhost,127.0.0.1,::1,.svc,.svc.cluster.local,.cluster.local,kubernetes.default.svc
+            - name: NODE_USE_ENV_PROXY
+              value: '1'
           volumeMounts:
             - name: workspace
               subPath: home
               mountPath: /auth-home
-            - name: cursor-agent-proxy
-              mountPath: /usr/local/bin/cursor-agent-proxy
-              subPath: cursor-agent-proxy
-              readOnly: true
           resources:
             requests:
               cpu: 50m
@@ -71,7 +81,3 @@ spec:
         - name: workspace
           persistentVolumeClaim:
             claimName: hermes-workspace
-        - name: cursor-agent-proxy
-          configMap:
-            name: cursor-agent-proxy
-            defaultMode: 0555

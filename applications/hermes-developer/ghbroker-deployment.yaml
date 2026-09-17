@@ -47,6 +47,18 @@ spec:
           env:
             - name: GHAPP_CONFIG
               value: /etc/ghbroker/config.yaml
+            - name: HTTP_PROXY
+              value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+            - name: HTTPS_PROXY
+              value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+            - name: http_proxy
+              value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+            - name: https_proxy
+              value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+            - name: NO_PROXY
+              value: localhost,127.0.0.1,::1,.svc,.svc.cluster.local,.cluster.local,kubernetes.default.svc
+            - name: no_proxy
+              value: localhost,127.0.0.1,::1,.svc,.svc.cluster.local,.cluster.local,kubernetes.default.svc
           ports:
             - name: broker
               containerPort: 8085

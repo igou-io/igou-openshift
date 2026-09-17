@@ -10,7 +10,7 @@ data:
   SKILL.md: |
     ---
     name: propose-fix
-    description: Turn a confident diagnosis into a small pull request against the igou GitOps/automation repos (branch + PR only — merging is forbidden). Implementation is delegated to cursor-agent-proxy; you spec, review, validate and open the PR.
+    description: Turn a confident diagnosis into a small pull request against the igou GitOps/automation repos (branch + PR only — merging is forbidden). Implementation is delegated to cursor-agent; you spec, review, validate and open the PR.
     version: 1.1.0
     author: igou-io
     platforms: [linux]
@@ -43,24 +43,24 @@ data:
     git config user.name "hermes-sre" && git config user.email "hermes-sre@igou.systems"
     ```
 
-    ## 2. Delegate the implementation to cursor-agent-proxy
+    ## 2. Delegate the implementation to cursor-agent
 
     Write a precise spec: the file(s) to change, the exact intent, the
     acceptance check, and the conventions (block-style YAML; match the
     file's comment density; never touch operator-owned objects). Then launch
-    cursor-agent-proxy as a managed background process through the `terminal` tool.
+    cursor-agent as a managed background process through the `terminal` tool.
     Use Grok 4.5 medium, not the `-fast` variant:
 
     ```text
     terminal(
-      command="cursor-agent-proxy -p --force --trust --sandbox disabled --model cursor-grok-4.5-medium '<spec>'",
+      command="cursor-agent -p --force --trust --sandbox disabled --model cursor-grok-4.5-medium '<spec>'",
       workdir="/tmp/repo",
       background=true,
       notify=true
     )
     ```
 
-    Save the returned `session_id`. Do not run cursor-agent-proxy in a foreground
+    Save the returned `session_id`. Do not run cursor-agent in a foreground
     terminal call: implementation regularly exceeds the sequential tool
     deadline. Let the completion notification resume the turn; use
     `process(action="poll", session_id="<id>")` or
@@ -68,7 +68,7 @@ data:
     Do not start a replacement while that session is running. After it exits,
     verify a zero exit code before reviewing `git diff`.
 
-    One cursor-agent-proxy at a time. You review its diff; trivial corrections
+    One cursor-agent at a time. You review its diff; trivial corrections
     you may make yourself.
 
     ## 3. Validate before pushing
@@ -77,7 +77,7 @@ data:
       `--enable-helm` where the kustomization inflates charts; delete any
       `charts/` dirs it downloads) and `yamllint -c .yamllint <files>`.
     - igou-ansible: `ansible-lint` + `ansible-playbook --syntax-check`.
-    - Anything failing -> iterate with cursor-agent-proxy, do not push broken work.
+    - Anything failing -> iterate with cursor-agent, do not push broken work.
 
     ## 4. Push and open the PR
 

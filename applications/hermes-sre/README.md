@@ -16,8 +16,10 @@ inspects**; it cannot change anything:
   (Slack routes a command name to the most recently installed app workspace-wide, so
   only the assistant app registers them). Alertmanager investigations are delivered
   to that channel (`deliver: slack`). No Forgejo token, no GCP service accounts.
-- Egress: the hermes-k8s allow-list plus the infra targets on their read-only ports
-  (rk8s/OCP API 6443, RouterOS 8729, TrueNAS 443, *.apps routes 443).
+- Egress: external HTTP/HTTPS uses the shared Squid proxy; `NO_PROXY` keeps
+  SearXNG, the broker, model services, cluster APIs and other internal targets
+  on their explicit direct paths. The existing direct egress remains during
+  Phase A as rollback protection.
 - Own data PVC and workspace PVC (`repos/` is the shared `/workspace`; `home/`
   subtrees start empty —
   coding-CLI OAuth state is seeded or refreshed per instance with the
@@ -36,13 +38,14 @@ oc -n "$namespace" rollout status deployment/auth-login --timeout=5m
 oc -n "$namespace" exec -it deployment/auth-login -- bash
 ```
 
-Inside the shell, confirm the image and run the required device login. Cursor
-commands use the mounted `cursor-agent-proxy` wrapper; Codex remains direct:
+Inside the shell, confirm the image and run the required device login. The
+shell receives the shared HTTP/HTTPS proxy environment; cluster-local names
+are bypassed through `NO_PROXY`. Use the normal CLI names:
 
 ```bash
-command -v cursor-agent-proxy cursor-agent codex
-NO_OPEN_BROWSER=1 cursor-agent-proxy login
-cursor-agent-proxy status
+command -v cursor-agent codex
+NO_OPEN_BROWSER=1 cursor-agent login
+cursor-agent status
 codex login --device-auth
 codex login status
 exit
@@ -113,7 +116,7 @@ Alert-path hardening (2026-08-30, second pass):
 Propose-fix (2026-08-31): the broker ceiling is now `contents: write` +
 `pull_requests: write` so the SRE can PROPOSE fixes as PRs (`propose-fix`
 skill: clone, branch, delegate implementation to
-`cursor-agent-proxy -p --force --trust --sandbox disabled --model cursor-grok-4.5-medium`
+`cursor-agent -p --force --trust --sandbox disabled --model cursor-grok-4.5-medium`
 (Grok 4.5 medium, not fast), validate,
 push, PR, link on the incident issue). Never merges — by contract (SOUL +
 skill) AND by ruleset: every writable repo's `protect-default-branch`

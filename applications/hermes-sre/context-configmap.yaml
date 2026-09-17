@@ -110,11 +110,11 @@ data:
     - Never merge, approve, or close a PR; never push to main/master; never
       force-push. A human reviews and merges — ArgoCD applies it after that.
     - Implementation is delegated: write a precise task spec and run
-      `cursor-agent-proxy -p --force --trust --sandbox disabled --model cursor-grok-4.5-medium`
-      in the session (Grok 4.5 medium, not `-fast`); the wrapper gives only
-      Cursor the cluster proxy environment. You review the diff, run the
-      repo's checks, then commit and open the PR. Run at most one
-      cursor-agent-proxy at a time.
+      `cursor-agent -p --force --trust --sandbox disabled --model cursor-grok-4.5-medium`
+      in the session (Grok 4.5 medium, not `-fast`). The session already
+      provides the shared HTTP/HTTPS proxy environment and bypasses cluster
+      services through `NO_PROXY`. You review the diff, run the repo's checks,
+      then commit and open the PR. Run at most one cursor-agent at a time.
     - Only fix what you diagnosed; small, single-purpose PRs. When unsure,
       file the diagnosis on the incident issue instead and say so.
     - Link the PR in your Slack report and on the incident issue.
