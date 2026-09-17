@@ -1,0 +1,104 @@
+---
+# Complete network boundary for generated Hermes sessions. Ingress is denied;
+# public HTTP/HTTPS is available only through Squid, while the explicit internal
+# dependencies and read-only infrastructure endpoints remain direct.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hermes-session
+  namespace: hermes-developer
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/managed-by: hermes-agent
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress: []
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - protocol: UDP
+          port: 5353
+        - protocol: TCP
+          port: 5353
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: forgejo
+      ports:
+        - protocol: TCP
+          port: 3000
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: llmkube-system
+      ports:
+        - protocol: TCP
+          port: 8080
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: sands-of-time
+      ports:
+        - protocol: TCP
+          port: 8000
+    - to:
+        - podSelector:
+            matchLabels:
+              app: ghbroker
+      ports:
+        - protocol: TCP
+          port: 8085
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: squid-proxy
+      ports:
+        - protocol: TCP
+          port: 3128
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.10/32
+      ports:
+        - protocol: TCP
+          port: 6443
+        - protocol: TCP
+          port: 443
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.30/32
+      ports:
+        - protocol: TCP
+          port: 6443
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.11/32
+      ports:
+        - protocol: TCP
+          port: 443
+    - to:
+        - ipBlock:
+            cidr: 10.10.99.1/32
+        - ipBlock:
+            cidr: 10.10.99.20/32
+        - ipBlock:
+            cidr: 10.10.99.22/32
+        - ipBlock:
+            cidr: 10.10.99.23/32
+      ports:
+        - protocol: TCP
+          port: 8729
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.213/32
+      ports:
+        - protocol: TCP
+          port: 443

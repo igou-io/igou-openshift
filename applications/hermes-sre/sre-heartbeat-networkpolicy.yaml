@@ -1,0 +1,39 @@
+---
+# The heartbeat resolves the namespace-local Hermes Service, then OVN applies
+# Service DNAT before evaluating egress ACLs. The command uses Service port
+# 8644, but the policy must allow the am-relay container's post-DNAT port 8645.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: sre-heartbeat
+  namespace: hermes-sre
+spec:
+  podSelector:
+    matchLabels:
+      app: sre-heartbeat
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress: []
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - protocol: UDP
+          port: 5353
+        - protocol: TCP
+          port: 5353
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: hermes-sre
+              app.kubernetes.io/name: hermes-agent
+      ports:
+        - protocol: TCP
+          port: 8645

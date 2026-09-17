@@ -15,21 +15,27 @@ kind: Kustomization
 # information for that CRD-backed kind and treats it as namespaced.
 
 resources:
-  - namespace.yaml
-  - scc-rbac.yaml
-  - rbac.yaml
-  - default-egressfirewall.yaml
-  - session-networkpolicy.yaml
-  - agent-egress-networkpolicy.yaml
-  - quay-pull-externalsecret.yaml
+  - hermes-developer-namespace.yaml
+  - hermes-agent-serviceaccount.yaml
+  - hermes-session-noperms-serviceaccount.yaml
+  - hermes-session-exec-role.yaml
+  - hermes-session-exec-rolebinding.yaml
+  - system-openshift-scc-hermes-agent-root-rolebinding.yaml
+  - hermes-agent-networkpolicy.yaml
+  - hermes-session-networkpolicy.yaml
+  - quay-local-pull-externalsecret.yaml
   - hermes-env-externalsecret.yaml
   - hermes-session-readonly-externalsecret.yaml
-  - hermes-workspace-pvc.yaml
+  - hermes-session-readonly-rk8s-externalsecret.yaml
+  - hermes-session-readonly-routeros-externalsecret.yaml
+  - hermes-session-readonly-truenas-externalsecret.yaml
+  - hermes-workspace-persistentvolumeclaim.yaml
   - auth-login-deployment.yaml
   - auth-login-networkpolicy.yaml
-  - ghbroker-externalsecret.yaml
+  - ghbroker-config-externalsecret.yaml
   - ghbroker-policy-configmap.yaml
   - ghbroker-deployment.yaml
+  - ghbroker-service.yaml
   - ghbroker-networkpolicy.yaml
-  - hermesinstance.yaml
+  - hermes-developer-hermesinstance.yaml
   - hermes-developer-dashboard-route.yaml

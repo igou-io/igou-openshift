@@ -1,11 +1,10 @@
-# Network scoping for the ghapp broker. The TCP listener is unauthenticated —
-# these policies ARE the client authorization (see ghbroker-deployment.yaml).
 ---
-# Only the agent pod and session pods may reach the broker.
+# The broker listener is unauthenticated, so ingress policy is its client
+# authorization boundary. The broker itself can reach only DNS and Squid.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: ghbroker-ingress
+  name: ghbroker
   namespace: hermes-assistant
 spec:
   podSelector:
@@ -13,6 +12,7 @@ spec:
       app: ghbroker
   policyTypes:
     - Ingress
+    - Egress
   ingress:
     - from:
         - podSelector:
@@ -25,20 +25,6 @@ spec:
       ports:
         - protocol: TCP
           port: 8085
-
----
-# The broker itself needs only DNS and the shared public HTTP/HTTPS proxy.
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: ghbroker-egress
-  namespace: hermes-assistant
-spec:
-  podSelector:
-    matchLabels:
-      app: ghbroker
-  policyTypes:
-    - Egress
   egress:
     - to:
         - namespaceSelector:
