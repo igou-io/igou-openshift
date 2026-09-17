@@ -1,14 +1,14 @@
 ---
-# The operator's own NetworkPolicy allows egress on 53 and 443, which is
-# correct on vanilla Kubernetes but NOT on OVN-Kubernetes: the load-balancer
+# This policy replaces the operator baseline, whose generic TCP/443 egress is
+# incompatible with enforced proxy-only public web access. On OVN-Kubernetes,
+# the load-balancer
 # DNAT from ClusterIP to the backend pod happens BEFORE egress ACLs are
 # evaluated, so the rule must match the POST-DNAT port. kube-apiserver's
 # 172.30.0.1:443 becomes :6443, and OpenShift CoreDNS's 172.30.0.10:53
 # becomes :5353. Neither matched, so the agent could reach nothing —
 # in-cluster auth failed and DNS timed out.
 #
-# NetworkPolicies are additive, so this supplements rather than replaces the
-# operator's policy.
+# It also preserves the operator baseline's same-namespace service ingress.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -20,7 +20,18 @@ spec:
       app.kubernetes.io/instance: hermes-assistant
       app.kubernetes.io/name: hermes-agent
   policyTypes:
+    - Ingress
     - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-assistant
+      ports:
+        - protocol: TCP
+          port: 8443
+        - protocol: TCP
+          port: 9119
   egress:
     # In-cluster Forgejo: hermes itself can create repos / push to sandbox.
     - to:
@@ -53,7 +64,10 @@ spec:
         - protocol: TCP
           port: 3128
     # kube-apiserver: needed to create session pods and open exec streams.
-    - ports:
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.10/32
+      ports:
         - protocol: TCP
           port: 6443
     # In-cluster services the VM's nftables/egress rules allowed, ports are

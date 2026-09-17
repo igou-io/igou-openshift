@@ -11,7 +11,8 @@ app tokens and the `hermes-dashboard` hostname at cutover.
 - External HTTP/HTTPS from the Hermes agent and its generated sessions uses the
   shared cluster-local Squid proxy. `NO_PROXY` keeps the Kubernetes services,
   model endpoints, broker and other internal dependencies on direct paths.
-  Existing direct egress remains during Phase A as rollback protection.
+  NetworkPolicy denies generic direct Internet access, so HTTP-aware clients
+  must honor the proxy environment.
 - Everything else mirrors `hermes-k8s` (regular Kubernetes sessions, egress, sizes).
 
 See `../hermes-sre/README.md` for the split and the sync-wave notes.

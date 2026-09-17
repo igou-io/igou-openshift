@@ -37,15 +37,19 @@ agents, generated sessions, scale-to-zero `auth-login` pods, GitHub App brokers,
 and SRE docs-sync job. Squid has no Route, LoadBalancer, NodePort, hostPort,
 or hostNetwork exposure.
 
-## Phase A operation
+## Enforced egress architecture
 
-Phase A deploys and wires the proxy while retaining the existing direct Hermes
-external egress rules as rollback protection. This allows proxy behavior and
-application health to be verified before the separate Phase B cutover.
+Hermes-associated workloads may reach DNS, their explicitly approved internal
+services, and Squid on TCP/3128. Their NetworkPolicies deny generic direct
+public traffic on TCP/80, TCP/443, and non-standard ports. Approved internal
+traffic stays direct and is excluded from the proxy by `NO_PROXY`.
 
-Phase B will remove direct external HTTP/HTTPS access only after verification
-proves that external traffic works through Squid, internal `.svc` traffic
-bypasses it successfully, and Squid rejects internal destinations.
+Squid is the public web egress choke point. It alone may initiate public TCP/80
+and TCP/443 connections, while both its NetworkPolicy and destination ACLs deny
+private, cluster-internal, loopback, and special-use networks. Clients that do
+not honor `HTTP_PROXY`/`HTTPS_PROXY` do not have generic Internet access. Squid
+access logs provide visibility into proxied HTTP/HTTPS traffic without TLS
+interception.
 
 ## Failure checks
 
@@ -58,21 +62,23 @@ oc logs deployment/squid-proxy -n squid-proxy
 ```
 
 From an allowed Hermes session or `auth-login` shell, verify both public
-protocols and the denied internal path:
+protocols, direct-egress enforcement, and the denied internal proxy path:
 
 ```bash
 curl --noproxy '' --proxy http://squid-proxy.squid-proxy.svc.cluster.local:3128 http://example.com
 curl --noproxy '' --proxy http://squid-proxy.squid-proxy.svc.cluster.local:3128 https://example.com
+curl --noproxy '*' http://example.com
+curl --noproxy '*' https://example.com
 curl --noproxy '' --proxy http://squid-proxy.squid-proxy.svc.cluster.local:3128 https://127.0.0.1
 ```
 
-The first two requests should reach public destinations; the last should be
-rejected by Squid. Check the access log for the expected request and confirm
-unrelated internal Hermes traffic is absent because it bypasses the proxy.
+The first two requests should reach public destinations. Both direct requests
+and the proxied loopback request must fail. Check the access log for the proxied
+requests and confirm unrelated internal Hermes traffic is absent because it
+bypasses Squid.
 
 ## Rollback
 
-Phase A rollback is a Git revert of the PR. ArgoCD then removes the Squid
-registration and policies while the existing direct Hermes egress remains in
-place. Do not remove those direct rules as part of the Phase A rollback; that
-is the separately verified Phase B cutover.
+If the enforced boundary breaks required traffic, Git-revert the Phase B PR.
+ArgoCD will restore the Phase A direct-egress fallbacks while leaving the
+working Squid deployment and proxy environment in place.

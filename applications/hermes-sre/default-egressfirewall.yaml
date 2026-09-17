@@ -6,12 +6,6 @@ metadata:
   namespace: hermes-sre
 spec:
   egress:
-    # TEMPORARY Phase A rollback path: Hermes HTTP/HTTPS is wired to the shared
-    # Squid proxy, but retain direct external egress until Phase B verification.
-    - type: Allow
-      to:
-        cidrSelector: 0.0.0.0/0
-
     # kube-apiserver — REQUIRED by the kubernetes terminal backend (the VM
     # never talked to the API server, this deployment does constantly). The
     # 172.30.0.1:443 ClusterIP DNATs to the master's node IP:6443, and
@@ -113,7 +107,9 @@ spec:
         - protocol: TCP
           port: 443
 
-    # Cursor Agent / CLI direct fallback (retained during Phase A)
+    # Historical provider allowlists remain as namespace-level defense in
+    # depth; workload NetworkPolicies require external web traffic via Squid.
+    # Cursor Agent / CLI
     - type: Allow
       to:
         dnsName: api.cursor.sh

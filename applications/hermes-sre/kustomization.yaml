@@ -45,6 +45,7 @@ resources:
   - ghbroker-deployment.yaml
   - ghbroker-networkpolicy.yaml
   - docs-sync-cronjob.yaml
+  - docs-sync-networkpolicy.yaml
   - heartbeat-cronjob.yaml
   - am-relay-route.yaml
   - hermesinstance.yaml
