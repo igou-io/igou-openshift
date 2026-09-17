@@ -1,8 +1,8 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - gatewayclass.yaml
-  - guest-dmz-certificate.yaml
+  - openshift-default-gatewayclass.yaml
+  - gateway-guest-dmz-tls-certificate.yaml
   - guest-dmz-gateway.yaml
-  - trusted-lan-certificate.yaml
+  - gateway-trusted-lan-tls-certificate.yaml
   - trusted-lan-gateway.yaml

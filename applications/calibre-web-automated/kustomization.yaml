@@ -7,7 +7,7 @@ resources:
   - allow-calibre-web-automated-networkpolicy.yaml
   - calibre-web-automated-namespace.yaml
   - calibre-web-automated-books-nfs-pv.yaml
-  - calibre-web-automated-books-nfs-pvc.yaml
+  - calibre-web-automated-books-pvc.yaml
   - calibre-web-automated-config-pvc.yaml
   - calibre-web-automated-anyuid-clusterrolebinding.yaml
   - calibre-web-automated-route.yaml

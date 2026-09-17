@@ -6,7 +6,7 @@ commonAnnotations:
   argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 resources:
   - ../../../components/redhat-oadp-operator
-  - velero-cloud-credentials-externalsecret.yaml
+  - cloud-credentials-externalsecret.yaml
   - freenas-nvmeof-ssd-csi-velero-volumesnapshotclass.yaml
   - freenas-nvmeof-fast-csi-velero-volumesnapshotclass.yaml
   - freenas-nvmeof-cold-csi-velero-volumesnapshotclass.yaml
@@ -14,7 +14,8 @@ resources:
   - freenas-nfs-cold-csi-velero-volumesnapshotclass.yaml
   - oadp-dataprotectionapplication.yaml
   - daily-apps-schedule.yaml
-  - velero-storageclass-storageprofiles.yaml
+  - freenas-nvmeof-ssd-csi-velero-storageprofile.yaml
+  - freenas-nfs-ssd-csi-velero-storageprofile.yaml
   - daily-platform-schedule.yaml
   - weekly-heavy-schedule.yaml
   - default-deny-networkpolicy.yaml

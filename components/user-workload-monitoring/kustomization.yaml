@@ -16,11 +16,14 @@ resources:
   - exporters/snmp-exporter
   - rules/externalsecrets-alerts-prometheusrule.yaml
   - rules/cert-manager-alerts-prometheusrule.yaml
-  - rules/cnpg-alerts-forgejo-prometheusrule.yaml
-  - rules/cnpg-alerts-keycloak-prometheusrule.yaml
-  - rules/cnpg-alerts-rhdh-prometheusrule.yaml
-  - rules/cnpg-alerts-quay-enterprise-prometheusrule.yaml
-  - servicemonitors/argocd-servicemonitor.yaml
-  - servicemonitors/cert-manager-servicemonitor.yaml
+  - rules/forgejo/cnpg-alerts-prometheusrule.yaml
+  - rules/keycloak/cnpg-alerts-prometheusrule.yaml
+  - rules/rhdh/cnpg-alerts-prometheusrule.yaml
+  - rules/quay-enterprise/cnpg-alerts-prometheusrule.yaml
+  - servicemonitors/argocd-application-controller-servicemonitor.yaml
+  - servicemonitors/argocd-server-servicemonitor.yaml
+  - servicemonitors/cert-manager-controller-servicemonitor.yaml
+  - servicemonitors/cert-manager-cainjector-servicemonitor.yaml
+  - servicemonitors/cert-manager-webhook-servicemonitor.yaml
   - servicemonitors/external-secrets-podmonitor.yaml
   - servicemonitors/grafana-operator-servicemonitor.yaml

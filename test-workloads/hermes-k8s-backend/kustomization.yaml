@@ -22,13 +22,19 @@ helmCharts:
     includeCRDs: true
 
 resources:
-  - namespace.yaml
-  - operator-namespace.yaml
-  - scc.yaml
-  - scc-rbac.yaml
-  - rbac.yaml
-  - rbac-sandbox.yaml
-  - session-networkpolicy.yaml
-  - agent-egress-networkpolicy.yaml
-  - quay-pull-externalsecret.yaml
-  - hermesinstance.yaml
+  - hermes-k8s-test-namespace.yaml
+  - hermes-agent-serviceaccount.yaml
+  - hermes-operator-namespace.yaml
+  - hermes-agent-root-securitycontextconstraints.yaml
+  - system-openshift-scc-hermes-agent-root-clusterrole.yaml
+  - system-openshift-scc-hermes-agent-root-rolebinding.yaml
+  - hermes-session-noperms-serviceaccount.yaml
+  - hermes-session-exec-role.yaml
+  - hermes-session-exec-rolebinding.yaml
+  - hermes-session-sandbox-role.yaml
+  - hermes-session-sandbox-rolebinding.yaml
+  - hermes-session-default-deny-networkpolicy.yaml
+  - hermes-session-allow-internet-networkpolicy.yaml
+  - hermes-agent-openshift-egress-networkpolicy.yaml
+  - quay-local-pull-externalsecret.yaml
+  - hermes-k8s-hermesinstance.yaml

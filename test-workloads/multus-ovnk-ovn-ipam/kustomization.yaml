@@ -2,6 +2,6 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: multus-ovnk-ovn-ipam
 resources:
-  - namespace.yaml
-  - nad-vlan45.yaml
-  - pod.yaml
+  - multus-ovnk-ovn-ipam-namespace.yaml
+  - vlan45-trunk-networkattachmentdefinition.yaml
+  - multus-ovnk-ovn-ipam-test-pod.yaml

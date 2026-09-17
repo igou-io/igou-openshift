@@ -4,8 +4,8 @@ namespace: temporalio
 resources:
   - temporalio-namespace.yaml
   - cnpg-s3-credentials-externalsecret.yaml
-  - temporalio-pg-objectstore.yaml
-  - temporalio-pg-scheduledbackup.yaml
+  - temporalio-pg-backup-objectstore.yaml
+  - temporalio-pg-daily-scheduledbackup.yaml
   - temporalio-pg-cluster.yaml
   - temporal-visibility-database.yaml
   - temporalio-web-route.yaml

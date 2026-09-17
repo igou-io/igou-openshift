@@ -47,7 +47,17 @@ Components are placed in order of dependencies. Storage and secrets management a
   `worker`, so selecting `worker` would still match the master). Soft
   preference: they still schedule on `ocp` if workers are full or drained.
   GitOps and RHACS have no preferred-affinity knob.
-- **File naming**: YAML files should be named `<metadata.name>-<kind>.yaml` whenever possible (e.g. `my-app-deployment.yaml`, `cluster-read-only-serviceaccount.yaml`)
+- **Object manifest boundaries and naming**: every authored static Kubernetes or
+  OpenShift object manifest contains exactly one object and is named
+  `<metadata.name>-<kind-token>.yaml`. Lowercase the object name for the filename,
+  replace separators such as `:` with `-`, and lowercase the Kind; the approved
+  aliases are `pv` for `PersistentVolume` and `pvc` for
+  `PersistentVolumeClaim`. This applies under `applications/`, `components/`,
+  `clusters/`, `groups/`, and `test-workloads/`. It excludes non-object
+  configuration, vendored chart content, Helm templates, and the templated
+  `test-workloads/windows-vms/examples/` files. The optional
+  `make validate-manifest-files` target audits the convention manually; it is
+  not part of `make test` or CI.
 
 # Agent Workflow
 

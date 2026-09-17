@@ -26,7 +26,7 @@ resources:
   - quay-local-pull-externalsecret.yaml
   - hermes-env-externalsecret.yaml
   - gcp-sa-storescrape-externalsecret.yaml
-  - hermes-workspace-persistentvolumeclaim.yaml
+  - hermes-workspace-pvc.yaml
   - ghbroker-config-externalsecret.yaml
   - ghbroker-policy-configmap.yaml
   - ghbroker-deployment.yaml

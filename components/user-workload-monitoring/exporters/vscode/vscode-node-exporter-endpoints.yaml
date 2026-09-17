@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  # Must match the Service name for endpoint discovery.
+  name: vscode-node-exporter
+  labels:
+    app.kubernetes.io/name: vscode-node-exporter
+    app.kubernetes.io/part-of: vscode
+subsets:
+  - addresses:
+      - ip: 10.10.9.22
+    ports:
+      - name: metrics
+        port: 9100
+        protocol: TCP

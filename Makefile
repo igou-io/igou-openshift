@@ -4,6 +4,10 @@ REPO_ROOT := $(shell git rev-parse --show-toplevel)
 lint: clean ## Lint all YAML files with yamllint
 	yamllint -c .yamllint .
 
+.PHONY: validate-manifest-files
+validate-manifest-files: ## Validate one-object-per-file and manifest filenames
+	python3 scripts/validate_manifest_files.py
+
 .PHONY: validate-kustomize
 validate-kustomize: ## Validate all kustomization.yaml files build successfully
 	@find $(REPO_ROOT) -name kustomization.yaml -print0 | \
@@ -55,7 +59,7 @@ validate-hermes-proxy: ## Ensure Hermes bypasses Squid for the in-cluster API se
 		} END { exit failed }' {} +
 
 .PHONY: test
-test: lint lint-helm validate-hermes-proxy validate-kustomize validate-schemas ## Run all tests
+test: lint lint-helm validate-hermes-proxy validate-kustomize validate-schemas ## Run all standard validation checks
 
 .PHONY: clean
 clean: ## Remove charts/ directories left behind by kustomize build (excludes .helm/charts)

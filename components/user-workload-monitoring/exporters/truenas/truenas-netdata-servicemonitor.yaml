@@ -1,0 +1,48 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: truenas-netdata
+  labels:
+    app.kubernetes.io/name: truenas-netdata
+    app.kubernetes.io/part-of: truenas
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: truenas-netdata
+  endpoints:
+    - port: metrics
+      path: /api/v1/allmetrics
+      params:
+        format:
+          - prometheus
+      interval: 30s
+      scrapeTimeout: 10s
+      relabelings:
+        # The target address is a bare IP; name the real source.
+        # action: replace is the CRD default - set explicitly so the
+        # rendered manifest matches the live object and ArgoCD stays Synced.
+        - action: replace
+          targetLabel: instance
+          replacement: truenas.igou.systems
+      metricRelabelings:
+        # action: replace is the CRD default - set explicitly (as above) so
+        # the rendered manifest matches the live object and ArgoCD stays
+        # Synced instead of perpetually OutOfSync on the defaulted field.
+        - action: replace
+          sourceLabels: [chart]
+          regex: '.*_serial(?:_lunid)?_([^_]+).*'
+          targetLabel: disk
+          replacement: '${1}'
+        # Drop netdata's truenas_pool.usage chart. The TrueNAS collector emits
+        # one instance per pool but does NOT encode the pool name into the
+        # chart/family label, so all pools collapse to an identical label set
+        # (chart="truenas_pool.usage", family="pool.usage", dimension=
+        # available|used|total). With 4 pools that is 12 samples sharing only 3
+        # unique series keys at the same scrape timestamp, so Prometheus keeps
+        # 3 and drops 9 - the source of PrometheusDuplicateTimestamps
+        # (num_dropped=9). No relabeling can recover the lost pool identity, and
+        # per-pool usage already comes from zfs_exporter, so drop the series.
+        - action: drop
+          sourceLabels: [__name__]
+          regex: 'netdata_pool_usage_bytes_average'

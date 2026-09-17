@@ -3,5 +3,5 @@ kind: Kustomization
 resources:
   - openshift-pipelines-operator-subscription.yaml
   - tekton-ci-low-priorityclass.yaml
-  - tektonconfig.yaml
-  - chains-signing-externalsecret.yaml
+  - config-tektonconfig.yaml
+  - signing-secrets-externalsecret.yaml

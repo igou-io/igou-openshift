@@ -11,4 +11,4 @@ kind: Kustomization
 resources:
   - default-deny-networkpolicy.yaml
   - allow-observed-networkpolicy.yaml
-  - namespace.yaml
+  - windows-images-namespace.yaml

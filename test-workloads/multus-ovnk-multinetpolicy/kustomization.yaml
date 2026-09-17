@@ -2,8 +2,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: multus-ovnk-multinetpolicy
 resources:
-  - namespace.yaml
-  - nad-vlan45.yaml
-  - pod.yaml
-  - multinetworkpolicy-ipblock.yaml
-  - multinetworkpolicy-podselector.yaml
+  - multus-ovnk-multinetpolicy-namespace.yaml
+  - vlan45-trunk-networkattachmentdefinition.yaml
+  - multus-ovnk-multinetpolicy-test-pod.yaml
+  - ingress-ipblock-multinetworkpolicy.yaml
+  - allow-same-namespace-multinetworkpolicy.yaml

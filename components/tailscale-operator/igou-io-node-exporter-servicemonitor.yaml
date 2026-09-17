@@ -1,0 +1,19 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: igou-io-node-exporter
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: igou-io-node-exporter-metrics
+  endpoints:
+    - port: metrics
+      interval: 30s
+      relabelings:
+        # The target address is the in-cluster proxy; name the real source.
+        # action:replace is the CRD default — set it explicitly so the rendered
+        # manifest matches the live object and ArgoCD stays Synced.
+        - action: replace
+          targetLabel: instance
+          replacement: igou.io

@@ -1,0 +1,11 @@
+---
+apiVersion: cluster.x-k8s.io/v1beta2
+kind: Cluster
+metadata:
+  name: ocp-hb42r
+  namespace: openshift-cluster-api
+spec:
+  infrastructureRef:
+    apiGroup: infrastructure.cluster.x-k8s.io
+    kind: Metal3Cluster
+    name: ocp-hb42r
