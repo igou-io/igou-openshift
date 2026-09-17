@@ -1,0 +1,13 @@
+---
+# Default-deny ingress and egress for namespace it-tools. The ingress policy
+# opens only the OpenShift router path to the application.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: it-tools
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
