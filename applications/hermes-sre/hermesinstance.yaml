@@ -102,9 +102,9 @@ spec:
     - name: https_proxy
       value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
     - name: NO_PROXY
-      value: localhost,127.0.0.1,::1,.svc,.svc.cluster.local,.cluster.local,kubernetes.default.svc,searxng.searxng.svc.cluster.local,ghbroker.hermes-sre.svc.cluster.local,forgejo-http.forgejo.svc.cluster.local,qwen3-35b-a3b.llmkube-system.svc.cluster.local,qwen38-27b.llmkube-system.svc.cluster.local,sands-of-time.sands-of-time.svc.cluster.local,api.ocp.igou.systems,api.rk8s.igou.systems,10.10.9.10,10.10.9.30,10.10.9.11,10.10.99.1,10.10.99.20,10.10.99.22,10.10.99.23,10.10.9.213
+      value: localhost,127.0.0.1,::1,.cluster.local,api.ocp.igou.systems,10.10.9.10
     - name: no_proxy
-      value: localhost,127.0.0.1,::1,.svc,.svc.cluster.local,.cluster.local,kubernetes.default.svc,searxng.searxng.svc.cluster.local,ghbroker.hermes-sre.svc.cluster.local,forgejo-http.forgejo.svc.cluster.local,qwen3-35b-a3b.llmkube-system.svc.cluster.local,qwen38-27b.llmkube-system.svc.cluster.local,sands-of-time.sands-of-time.svc.cluster.local,api.ocp.igou.systems,api.rk8s.igou.systems,10.10.9.10,10.10.9.30,10.10.9.11,10.10.99.1,10.10.99.20,10.10.99.22,10.10.99.23,10.10.9.213
+      value: localhost,127.0.0.1,::1,.cluster.local,api.ocp.igou.systems,10.10.9.10
     - name: NODE_USE_ENV_PROXY
       value: '1'
   envFrom:
@@ -802,9 +802,9 @@ spec:
                   - name: https_proxy
                     value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
                   - name: NO_PROXY
-                    value: localhost,127.0.0.1,::1,.svc,.svc.cluster.local,.cluster.local,kubernetes.default.svc,searxng.searxng.svc.cluster.local,ghbroker.hermes-sre.svc.cluster.local,forgejo-http.forgejo.svc.cluster.local,qwen3-35b-a3b.llmkube-system.svc.cluster.local,qwen38-27b.llmkube-system.svc.cluster.local,sands-of-time.sands-of-time.svc.cluster.local,api.ocp.igou.systems,api.rk8s.igou.systems,10.10.9.10,10.10.9.30,10.10.9.11,10.10.99.1,10.10.99.20,10.10.99.22,10.10.99.23,10.10.9.213
+                    value: localhost,127.0.0.1,::1,.cluster.local,api.ocp.igou.systems,10.10.9.10
                   - name: no_proxy
-                    value: localhost,127.0.0.1,::1,.svc,.svc.cluster.local,.cluster.local,kubernetes.default.svc,searxng.searxng.svc.cluster.local,ghbroker.hermes-sre.svc.cluster.local,forgejo-http.forgejo.svc.cluster.local,qwen3-35b-a3b.llmkube-system.svc.cluster.local,qwen38-27b.llmkube-system.svc.cluster.local,sands-of-time.sands-of-time.svc.cluster.local,api.ocp.igou.systems,api.rk8s.igou.systems,10.10.9.10,10.10.9.30,10.10.9.11,10.10.99.1,10.10.99.20,10.10.99.22,10.10.99.23,10.10.9.213
+                    value: localhost,127.0.0.1,::1,.cluster.local,api.ocp.igou.systems,10.10.9.10
                   - name: NODE_USE_ENV_PROXY
                     value: '1'
                   # Scope: the igou-devenv read-only bundle (envs/read-only.env),

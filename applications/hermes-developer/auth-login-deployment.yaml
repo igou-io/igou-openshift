@@ -55,9 +55,9 @@ spec:
             - name: https_proxy
               value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
             - name: NO_PROXY
-              value: localhost,127.0.0.1,::1,.svc,.svc.cluster.local,.cluster.local,kubernetes.default.svc
+              value: localhost,127.0.0.1,::1,.cluster.local,api.ocp.igou.systems,10.10.9.10
             - name: no_proxy
-              value: localhost,127.0.0.1,::1,.svc,.svc.cluster.local,.cluster.local,kubernetes.default.svc
+              value: localhost,127.0.0.1,::1,.cluster.local,api.ocp.igou.systems,10.10.9.10
             - name: NODE_USE_ENV_PROXY
               value: '1'
           volumeMounts:

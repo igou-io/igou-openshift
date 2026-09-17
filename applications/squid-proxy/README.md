@@ -10,11 +10,19 @@ HTTP_PROXY=http://squid-proxy.squid-proxy.svc.cluster.local:3128
 HTTPS_PROXY=http://squid-proxy.squid-proxy.svc.cluster.local:3128
 ```
 
-The equivalent lowercase variables are set as well. `NO_PROXY`/`no_proxy`
-keeps localhost, Kubernetes service DNS, the Kubernetes API, and each
-instance's checked-in internal dependencies on their direct NetworkPolicy-
-controlled paths. There is no wrapper or alternate Cursor invocation;
-`cursor-agent` and other HTTP-aware clients use the standard environment.
+The equivalent lowercase variables are set as well. `NO_PROXY`/`no_proxy` is
+the same minimal value everywhere:
+
+```text
+localhost,127.0.0.1,::1,.cluster.local,api.ocp.igou.systems,10.10.9.10
+```
+
+The `.cluster.local` suffix covers Kubernetes service names. The explicit
+`api.ocp.igou.systems` and `10.10.9.10` entries keep the OCP API and the
+checked-in SRE Thanos HTTPS route (`thanos-querier-openshift-monitoring.apps.ocp.igou.systems`), respectively, on their direct paths; the latter is the
+documented OCP/apps-router VIP. There is no wrapper or alternate Cursor
+invocation; `cursor-agent` and other HTTP-aware clients use the standard
+environment.
 
 Squid currently allows arbitrary public HTTP on TCP/80 and HTTPS CONNECT on
 TCP/443. It denies private, cluster-internal, loopback, link-local, CGNAT,
