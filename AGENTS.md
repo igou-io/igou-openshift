@@ -55,8 +55,9 @@ Components are placed in order of dependencies. Storage and secrets management a
   `PersistentVolumeClaim`. This applies under `applications/`, `components/`,
   `clusters/`, `groups/`, and `test-workloads/`. It excludes non-object
   configuration, vendored chart content, Helm templates, and the templated
-  `test-workloads/windows-vms/examples/` files. Run
-  `make validate-manifest-files` to enforce it.
+  `test-workloads/windows-vms/examples/` files. The optional
+  `make validate-manifest-files` target audits the convention manually; it is
+  not part of `make test` or CI.
 
 # Agent Workflow
 

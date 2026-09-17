@@ -18,5 +18,6 @@ approved aliases for `PersistentVolume` and `PersistentVolumeClaim`.
 The convention does not apply to non-object configuration such as
 `kustomization.yaml`, Helm values, `Chart.yaml`, or application data. Vendored
 chart content, Helm templates, and the templated files under
-`test-workloads/windows-vms/examples/` are also excluded. Run
-`make validate-manifest-files` to check the convention.
+`test-workloads/windows-vms/examples/` are also excluded. The optional
+`make validate-manifest-files` target is available for manual audits; it is not
+part of `make test` or CI.

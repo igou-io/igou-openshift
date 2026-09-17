@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate file boundaries and names for authored Kubernetes manifests."""
+"""Manually audit file boundaries and names for authored Kubernetes manifests."""
 
 from __future__ import annotations
 
@@ -23,6 +23,14 @@ EXCLUDED_PARTS = {"charts", "templates"}
 EXCLUDED_PREFIXES = (
     Path("test-workloads/windows-vms/examples"),
 )
+EXCLUDED_FILENAMES = {
+    "Chart.yaml",
+    "Chart.yml",
+    "kustomization.yaml",
+    "kustomization.yml",
+    "values.yaml",
+    "values.yml",
+}
 KIND_ALIASES = {
     "PersistentVolume": "pv",
     "PersistentVolumeClaim": "pvc",
@@ -31,18 +39,23 @@ KIND_ALIASES = {
 
 def is_excluded(path: Path) -> bool:
     relative = path.relative_to(REPO_ROOT)
-    return bool(EXCLUDED_PARTS.intersection(relative.parts)) or any(
-        relative.is_relative_to(prefix) for prefix in EXCLUDED_PREFIXES
+    is_values_file = (
+        path.name.startswith(("values-", "values."))
+        or path.name.endswith(("-values.yaml", "-values.yml"))
+    )
+    return (
+        path.name in EXCLUDED_FILENAMES
+        or is_values_file
+        or bool(EXCLUDED_PARTS.intersection(relative.parts))
+        or any(relative.is_relative_to(prefix) for prefix in EXCLUDED_PREFIXES)
     )
 
 
-def is_object(document: Any) -> bool:
+def is_kubernetes_document(document: Any) -> bool:
     return (
         isinstance(document, dict)
         and isinstance(document.get("apiVersion"), str)
         and isinstance(document.get("kind"), str)
-        and isinstance(document.get("metadata"), dict)
-        and isinstance(document["metadata"].get("name"), str)
     )
 
 
@@ -72,6 +85,9 @@ def manifest_files() -> list[Path]:
 
 
 def validate(path: Path) -> list[str]:
+    if is_excluded(path):
+        return []
+
     relative = path.relative_to(REPO_ROOT)
     try:
         documents = [
@@ -82,7 +98,7 @@ def validate(path: Path) -> list[str]:
     except yaml.YAMLError as error:
         return [f"{relative}: invalid YAML: {error}"]
 
-    objects = [document for document in documents if is_object(document)]
+    objects = [document for document in documents if is_kubernetes_document(document)]
     if not objects:
         return []
 
@@ -94,7 +110,22 @@ def validate(path: Path) -> list[str]:
         )
         return errors
 
-    expected = expected_filename(objects[0])
+    document = objects[0]
+    if document["kind"] == "List":
+        return [
+            f"{relative}: authored kind: List manifests are not allowed; "
+            "place each item in its own object file"
+        ]
+
+    metadata = document.get("metadata")
+    name = metadata.get("name") if isinstance(metadata, dict) else None
+    if not isinstance(name, str) or not name:
+        return [
+            f"{relative}: Kubernetes object {document['apiVersion']}/{document['kind']} "
+            "must set metadata.name for manifest filename validation"
+        ]
+
+    expected = expected_filename(document)
     if path.suffix != ".yaml":
         errors.append(f"{relative}: object manifests must use .yaml (expected {expected})")
     if path.name != expected:

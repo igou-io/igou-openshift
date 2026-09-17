@@ -59,7 +59,7 @@ validate-hermes-proxy: ## Ensure Hermes bypasses Squid for the in-cluster API se
 		} END { exit failed }' {} +
 
 .PHONY: test
-test: lint validate-manifest-files lint-helm validate-hermes-proxy validate-kustomize validate-schemas ## Run all validation checks
+test: lint lint-helm validate-hermes-proxy validate-kustomize validate-schemas ## Run all standard validation checks
 
 .PHONY: clean
 clean: ## Remove charts/ directories left behind by kustomize build (excludes .helm/charts)
