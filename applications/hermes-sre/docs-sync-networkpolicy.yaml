@@ -1,19 +1,17 @@
 ---
-# The login shell uses Squid for device-code OAuth and has no other egress.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: auth-login
-  namespace: hermes-developer
+  name: igou-docs-sync-egress
+  namespace: hermes-sre
 spec:
   podSelector:
     matchLabels:
-      app: auth-login
+      app: igou-docs-sync
   policyTypes:
-    - Ingress
     - Egress
-  ingress: []
   egress:
+    # OpenShift CoreDNS service and post-DNAT pod ports.
     - to:
         - namespaceSelector:
             matchLabels:
@@ -27,8 +25,15 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
-    # All external HTTP-aware login clients use the shared proxy; keep this
-    # explicit rather than broadening the helper's general in-cluster egress.
+    # Mint the read-only clone token from the namespace-local broker.
+    - to:
+        - podSelector:
+            matchLabels:
+              app: ghbroker
+      ports:
+        - protocol: TCP
+          port: 8085
+    # GitHub HTTPS leaves through the shared proxy.
     - to:
         - namespaceSelector:
             matchLabels:

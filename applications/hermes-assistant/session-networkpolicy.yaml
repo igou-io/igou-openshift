@@ -14,7 +14,9 @@ spec:
   podSelector:
     matchLabels:
       app.kubernetes.io/managed-by: hermes-agent
-  policyTypes: ["Ingress", "Egress"]
+  policyTypes:
+    - Ingress
+    - Egress
   ingress: []
   egress:
     # Cluster DNS. OpenShift CoreDNS listens on 5353 behind the :53 Service
@@ -35,32 +37,6 @@ spec:
           port: 53
 
 ---
-# Sessions need the public internet (pip, npm, git, the storescrape targets).
-# Everything RFC1918/link-local stays denied, which on this cluster covers the
-# node, service and pod networks. The EgressFirewall in this directory further
-# retains the existing direct external path as Phase A rollback protection.
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: hermes-session-allow-internet
-  namespace: hermes-assistant
-spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/managed-by: hermes-agent
-  policyTypes: ["Egress"]
-  egress:
-    - to:
-        - ipBlock:
-            cidr: 0.0.0.0/0
-            except:
-              - 10.0.0.0/8
-              - 172.16.0.0/12
-              - 192.168.0.0/16
-              - 169.254.0.0/16   # link-local
-              - 100.64.0.0/10    # carrier-grade NAT
-
----
 # In-cluster services the crons rely on: the sands-of-time tracker (ClusterIP
 # :80 → pod :8000; post-DNAT port again). The VM allowed this from its
 # terminal containers via nftables + a tirith plain-HTTP trust entry.
@@ -73,7 +49,8 @@ spec:
   podSelector:
     matchLabels:
       app.kubernetes.io/managed-by: hermes-agent
-  policyTypes: ["Egress"]
+  policyTypes:
+    - Egress
   egress:
     # In-cluster Forgejo (http/git-over-http): dispatched agents push their
     # work to the sandbox org via forgejo-http.forgejo.svc:3000.
@@ -100,8 +77,7 @@ spec:
       ports:
         - protocol: TCP
           port: 8000
-    # ghapp broker (same namespace): runtime GitHub App tokens. The
-    # allow-internet policy excludes RFC1918, so pod-to-pod needs this.
+    # ghapp broker (same namespace): runtime GitHub App tokens.
     - to:
         - podSelector:
             matchLabels:

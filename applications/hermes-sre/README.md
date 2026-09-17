@@ -18,8 +18,9 @@ inspects**; it cannot change anything:
   to that channel (`deliver: slack`). No Forgejo token, no GCP service accounts.
 - Egress: external HTTP/HTTPS uses the shared Squid proxy; `NO_PROXY` keeps
   SearXNG, the broker, model services, cluster APIs and other internal targets
-  on their explicit direct paths. The existing direct egress remains during
-  Phase A as rollback protection.
+  on their explicit direct paths. NetworkPolicy denies generic direct Internet
+  access from the agent, sessions, ghbroker, `auth-login`, and docs-sync, so a
+  client that ignores the proxy environment cannot silently bypass Squid.
 - Own data PVC and workspace PVC (`repos/` is the shared `/workspace`; `home/`
   subtrees start empty —
   coding-CLI OAuth state is seeded or refreshed per instance with the
@@ -87,7 +88,8 @@ directory, nothing hand-seeded on the PVC):
 - `docs-sync-cronjob.yaml` — read-only mirror of `igou-io/igou-docs` refreshed
   every 30 min into the workspace PVC (`/workspace/igou-docs` in sessions) using
   a broker-minted `contents:read` token (`igou-docs` is in the broker policy and
-  must be on the igou-hermes App installation).
+  must be on the igou-hermes App installation). Its only egress is DNS, the
+  namespace-local broker, and Squid TCP/3128.
 - `max_concurrent_sessions: 4` (alert webhooks are rejected, not queued, at the
   limit), `session_reset: idle 120 min`, and no Firecrawl configuration. Lazy
   installs remain disabled and search stays on SearXNG; issue #859 tracks baking

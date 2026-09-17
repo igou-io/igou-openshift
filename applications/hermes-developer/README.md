@@ -9,6 +9,10 @@ infrastructure repos and personal projects, delivered as PRs.
   `#igoucloud-hermes-developer` (no slash commands, see hermes-sre). No GCP, no cluster credentials — verification of infra changes goes through CI,
   ArgoCD and the read-only `hermes-sre` instance.
 - No cron store; `agent-repos` is the full checkout set copied from hermes-k8s.
+- External HTTP/HTTPS from the agent, generated sessions, `auth-login`, and
+  ghbroker must traverse the shared Squid proxy. NetworkPolicy denies generic
+  direct Internet access; approved cluster and infrastructure destinations
+  remain direct through the explicit rules.
 
 See `../hermes-sre/README.md` for the split and the sync-wave notes.
 

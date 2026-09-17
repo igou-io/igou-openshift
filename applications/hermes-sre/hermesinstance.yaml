@@ -63,9 +63,12 @@ spec:
           - FOWNER
           - SETGID
           - SETUID
+    # The operator baseline allows generic TCP/443 egress. Phase B replaces it
+    # with the checked-in policy so only DNS, approved internal paths, and
+    # Squid TCP/3128 remain. The existing monitoring ingress is preserved in
+    # agent-egress-networkpolicy.yaml.
     networkPolicy:
-      allowedIngressNamespaces:
-        - openshift-user-workload-monitoring
+      enabled: false
   # NOTE: no HERMES_UID/HERMES_GID here — the operator injects them itself,
   # and a duplicate definition makes its server-side apply loop on conflicts.
   env:
