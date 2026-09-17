@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ghbroker
+  namespace: hermes-sre
+  labels:
+    app: ghbroker
+spec:
+  type: ClusterIP
+  selector:
+    app: ghbroker
+  ports:
+    - name: broker
+      protocol: TCP
+      port: 8085
+      targetPort: broker

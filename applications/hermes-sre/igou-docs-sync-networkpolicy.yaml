@@ -1,31 +1,17 @@
 ---
-# The broker listener is unauthenticated, so ingress policy is its client
-# authorization boundary. The broker itself can reach only DNS and Squid.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: ghbroker
-  namespace: hermes-developer
+  name: igou-docs-sync
+  namespace: hermes-sre
 spec:
   podSelector:
     matchLabels:
-      app: ghbroker
+      app: igou-docs-sync
   policyTypes:
-    - Ingress
     - Egress
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/instance: hermes-developer
-              app.kubernetes.io/name: hermes-agent
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/managed-by: hermes-agent
-      ports:
-        - protocol: TCP
-          port: 8085
   egress:
+    # OpenShift CoreDNS service and post-DNAT pod ports.
     - to:
         - namespaceSelector:
             matchLabels:
@@ -39,6 +25,15 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
+    # Mint the read-only clone token from the namespace-local broker.
+    - to:
+        - podSelector:
+            matchLabels:
+              app: ghbroker
+      ports:
+        - protocol: TCP
+          port: 8085
+    # GitHub HTTPS leaves through the shared proxy.
     - to:
         - namespaceSelector:
             matchLabels:

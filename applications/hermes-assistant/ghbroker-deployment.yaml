@@ -1,14 +1,3 @@
----
-# ghapp token broker — the container replacement for the VM's ghbroker system
-# service. Holds the igou-hermes App private key; the agent and its session
-# pods only ever see single-repo, permission-clamped ~1h tokens, requested
-# over plain HTTP (GHAPP_BROKER_URL). The TCP listener is unauthenticated by
-# design — reachability is the client authorization, exactly as socket
-# possession was on the VM — so ghbroker-networkpolicy.yaml is load-bearing:
-# only the agent pod and session pods may reach :8085.
-#
-# Image: built from david-igou/hermes_github_app_plugin main@115e45d
-# (Containerfile.broker now lives in that repo; adds repo_max_permissions).
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -26,10 +15,7 @@ spec:
       labels:
         app: ghbroker
     spec:
-      # The broker does not trap SIGTERM (stdlib serve_forever); it is
-      # stateless, so skip the pointless 30 s wait and let it be killed.
       terminationGracePeriodSeconds: 2
-      # The image lives on the cluster's own Quay (not anonymously pullable).
       imagePullSecrets:
         - name: quay-local-pull
       securityContext:
@@ -107,20 +93,3 @@ spec:
             name: ghbroker-policy
         - name: tmp
           emptyDir: {}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: ghbroker
-  namespace: hermes-assistant
-  labels:
-    app: ghbroker
-spec:
-  type: ClusterIP
-  selector:
-    app: ghbroker
-  ports:
-    - name: broker
-      protocol: TCP
-      port: 8085
-      targetPort: broker
