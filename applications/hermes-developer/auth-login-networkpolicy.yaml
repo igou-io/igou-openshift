@@ -29,6 +29,15 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
+    # Cursor authentication must use cursor-agent-proxy; keep this explicit
+    # rather than broadening the helper's general in-cluster egress.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: squid-proxy
+      ports:
+        - protocol: TCP
+          port: 3128
     - to:
         - ipBlock:
             cidr: 0.0.0.0/0

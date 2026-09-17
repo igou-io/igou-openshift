@@ -38,6 +38,7 @@ resources:
   - skill-triage-domains-configmap.yaml
   - skill-incident-reporting-configmap.yaml
   - hermes-workspace-pvc.yaml
+  - cursor-agent-proxy-configmap.yaml
   - auth-login-deployment.yaml
   - auth-login-networkpolicy.yaml
   - ghbroker-externalsecret.yaml

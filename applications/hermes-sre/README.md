@@ -36,12 +36,13 @@ oc -n "$namespace" rollout status deployment/auth-login --timeout=5m
 oc -n "$namespace" exec -it deployment/auth-login -- bash
 ```
 
-Inside the shell, confirm the image and run the required device login:
+Inside the shell, confirm the image and run the required device login. Cursor
+commands use the mounted `cursor-agent-proxy` wrapper; Codex remains direct:
 
 ```bash
-command -v cursor-agent codex
-NO_OPEN_BROWSER=1 cursor-agent login
-cursor-agent status
+command -v cursor-agent-proxy cursor-agent codex
+NO_OPEN_BROWSER=1 cursor-agent-proxy login
+cursor-agent-proxy status
 codex login --device-auth
 codex login status
 exit
@@ -112,7 +113,7 @@ Alert-path hardening (2026-08-30, second pass):
 Propose-fix (2026-08-31): the broker ceiling is now `contents: write` +
 `pull_requests: write` so the SRE can PROPOSE fixes as PRs (`propose-fix`
 skill: clone, branch, delegate implementation to
-`cursor-agent -p --force --trust --sandbox disabled --model cursor-grok-4.5-medium`
+`cursor-agent-proxy -p --force --trust --sandbox disabled --model cursor-grok-4.5-medium`
 (Grok 4.5 medium, not fast), validate,
 push, PR, link on the incident issue). Never merges — by contract (SOUL +
 skill) AND by ruleset: every writable repo's `protect-default-branch`

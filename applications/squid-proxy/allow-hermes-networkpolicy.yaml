@@ -1,0 +1,89 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-hermes
+  namespace: squid-proxy
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/controller: squid-proxy
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Only Hermes session and scale-to-zero auth pods may use the proxy.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-developer
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/managed-by: hermes-agent
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-developer
+          podSelector:
+            matchLabels:
+              app: auth-login
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-sre
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/managed-by: hermes-agent
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-sre
+          podSelector:
+            matchLabels:
+              app: auth-login
+      ports:
+        - protocol: TCP
+          port: 3128
+  egress:
+    # OpenShift CoreDNS is reached through the Service and its post-DNAT pod
+    # port, so allow both 53 and 5353 over TCP and UDP.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+        - protocol: UDP
+          port: 5353
+        - protocol: TCP
+          port: 5353
+    # HTTPS-only Cursor CONNECT destinations. Internal and special-use IPv4
+    # ranges are excluded independently of Squid's hostname ACLs.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 100.64.0.0/10
+              - 127.0.0.0/8
+              - 169.254.0.0/16
+              - 224.0.0.0/4
+              - 240.0.0.0/4
+      ports:
+        - protocol: TCP
+          port: 443
+    # Keep the same internal-range exclusions when the cluster is dual-stack.
+    - to:
+        - ipBlock:
+            cidr: ::/0
+            except:
+              - ::/128
+              - ::1/128
+              - fc00::/7
+              - fe80::/10
+              - ff00::/8
+      ports:
+        - protocol: TCP
+          port: 443

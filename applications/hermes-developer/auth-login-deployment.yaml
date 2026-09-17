@@ -50,6 +50,10 @@ spec:
             - name: workspace
               subPath: home
               mountPath: /auth-home
+            - name: cursor-agent-proxy
+              mountPath: /usr/local/bin/cursor-agent-proxy
+              subPath: cursor-agent-proxy
+              readOnly: true
           resources:
             requests:
               cpu: 50m
@@ -67,3 +71,7 @@ spec:
         - name: workspace
           persistentVolumeClaim:
             claimName: hermes-workspace
+        - name: cursor-agent-proxy
+          configMap:
+            name: cursor-agent-proxy
+            defaultMode: 0555

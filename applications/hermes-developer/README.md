@@ -25,12 +25,13 @@ oc -n "$namespace" rollout status deployment/auth-login --timeout=5m
 oc -n "$namespace" exec -it deployment/auth-login -- bash
 ```
 
-Inside the shell, confirm the image and run the required device login:
+Inside the shell, confirm the image and run the required device login. Cursor
+commands use the mounted `cursor-agent-proxy` wrapper; Codex remains direct:
 
 ```bash
-command -v cursor-agent codex
-NO_OPEN_BROWSER=1 cursor-agent login
-cursor-agent status
+command -v cursor-agent-proxy cursor-agent codex
+NO_OPEN_BROWSER=1 cursor-agent-proxy login
+cursor-agent-proxy status
 codex login --device-auth
 codex login status
 exit

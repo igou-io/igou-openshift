@@ -109,6 +109,15 @@ spec:
       ports:
         - protocol: TCP
           port: 8085
+    # The Cursor-only wrapper is the sole intended caller of the cluster-local
+    # proxy; direct Cursor traffic remains on the existing Phase A path.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: squid-proxy
+      ports:
+        - protocol: TCP
+          port: 3128
 ---
 # hermes-developer: read-only infrastructure targets reachable from session pods.
 # OVN-K applies the apiserver service DNAT (172.30.0.1:443 -> :6443) before

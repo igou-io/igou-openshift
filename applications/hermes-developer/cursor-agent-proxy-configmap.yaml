@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cursor-agent-proxy
+  namespace: hermes-developer
+data:
+  cursor-agent-proxy: |
+    #!/bin/sh
+    set -eu
+
+    export HTTP_PROXY=http://squid-proxy.squid-proxy.svc.cluster.local:3128
+    export HTTPS_PROXY="$HTTP_PROXY"
+    export NODE_USE_ENV_PROXY=1
+    exec /home/igou/.local/bin/cursor-agent "$@"

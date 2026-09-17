@@ -3,95 +3,107 @@ kind: Kustomization
 namespace: squid-proxy
 resources:
   - squid-proxy-namespace.yaml
+  - default-deny-networkpolicy.yaml
+  - allow-hermes-networkpolicy.yaml
 configMapGenerator:
   - name: squid-proxy-config
     files:
       - squid.conf
-generatorOptions:
-  disableNameSuffixHash: true
+
 helmCharts:
-- name: app-template
-  namespace: squid-proxy
-  version: 4.6.2
-  releaseName: squid-proxy
-  repo: oci://ghcr.io/bjw-s-labs/helm
-  valuesFile: values-dummy.yaml
-  valuesInline:
-    defaultPodOptions:
-      affinity:
-        nodeAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              preference:
-                matchExpressions:
-                  - key: node-role.kubernetes.io/control-plane
-                    operator: DoesNotExist
-    controllers:
-      squid-proxy:
-        type: deployment
-        replicas: 1
-        strategy: RollingUpdate
-        pod:
-          securityContext:
-            seccompProfile:
-              type: RuntimeDefault
-        containers:
-          app:
-            image:
-              repository: ubuntu/squid
-              tag: "6.9-24.04_beta"
-              pullPolicy: IfNotPresent
-            # Run squid directly (foreground, no init script) so OpenShift's
-            # arbitrary non-root UID doesn't hit root-only setup steps.
-            command: ["/usr/sbin/squid"]
-            args: ["-N", "-f", "/etc/squid/squid.conf"]
-            env: {}
-            probes:
-              liveness:
-                enabled: true
-                type: TCP
-                spec:
-                  initialDelaySeconds: 10
-                  periodSeconds: 15
-              readiness:
-                enabled: true
-                type: TCP
-                spec:
-                  initialDelaySeconds: 10
-                  periodSeconds: 15
-              startup:
-                enabled: true
-                type: TCP
-                spec:
-                  failureThreshold: 30
-                  periodSeconds: 5
-            resources: {}
+  - name: app-template
+    namespace: squid-proxy
+    version: 4.6.2
+    releaseName: squid-proxy
+    repo: oci://ghcr.io/bjw-s-labs/helm
+    valuesFile: values-dummy.yaml
+    valuesInline:
+      defaultPodOptions:
+        automountServiceAccountToken: false
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - key: node-role.kubernetes.io/control-plane
+                      operator: DoesNotExist
+      controllers:
+        squid-proxy:
+          type: deployment
+          replicas: 1
+          strategy: RollingUpdate
+          pod:
             securityContext:
-              allowPrivilegeEscalation: false
-              runAsNonRoot: true
-              capabilities:
-                drop:
-                  - ALL
-    persistence:
-      squid-config:
-        type: configMap
-        name: squid-proxy-config
-        globalMounts:
-          - path: /etc/squid/squid.conf
-            subPath: squid.conf
-            readOnly: true
-      spool:
-        type: emptyDir
-        globalMounts:
-          - path: /var/spool/squid
-    service:
-      app:
-        controller: squid-proxy
-        ports:
-          proxy:
-            port: 3128
-            targetPort: 3128
-            protocol: TCP
-    serviceAccount:
-      squid-proxy:
-        enabled: true
+              seccompProfile:
+                type: RuntimeDefault
+          containers:
+            app:
+              image:
+                repository: docker.io/ubuntu/squid
+                tag: "6.6-24.04_beta@sha256:6a097f68bae708cedbabd6188d68c7e2e7a38cedd05a176e1cc0ba29e3bbe029"
+                pullPolicy: IfNotPresent
+              # Run squid directly (foreground, no init script) so OpenShift's
+              # arbitrary non-root UID doesn't hit root-only setup steps.
+              command:
+                - /usr/sbin/squid
+              args:
+                - -N
+                - -f
+                - /etc/squid/squid.conf
+              ports:
+                - name: proxy
+                  containerPort: 3128
+                  protocol: TCP
+              probes:
+                liveness:
+                  enabled: true
+                  type: TCP
+                  spec:
+                    initialDelaySeconds: 10
+                    periodSeconds: 15
+                readiness:
+                  enabled: true
+                  type: TCP
+                  spec:
+                    initialDelaySeconds: 10
+                    periodSeconds: 15
+                startup:
+                  enabled: true
+                  type: TCP
+                  spec:
+                    failureThreshold: 30
+                    periodSeconds: 5
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                capabilities:
+                  drop:
+                    - ALL
+      persistence:
+        squid-config:
+          type: configMap
+          name: squid-proxy-config
+          globalMounts:
+            - path: /etc/squid/squid.conf
+              subPath: squid.conf
+              readOnly: true
+        spool:
+          type: emptyDir
+          globalMounts:
+            - path: /var/spool/squid
+      service:
+        app:
+          controller: squid-proxy
+          ports:
+            proxy:
+              port: 3128
+              targetPort: 3128
+              protocol: TCP
