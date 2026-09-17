@@ -8,6 +8,10 @@ app tokens and the `hermes-dashboard` hostname at cutover.
 - Identity: Slack (after cutover), GCP `storescrape-sheets` SA, opencode-go key,
   ghbroker **read-only** (no repo writes from this instance). No Forgejo, no
   cluster credentials.
+- External HTTP/HTTPS from the Hermes agent and its generated sessions uses the
+  shared cluster-local Squid proxy. `NO_PROXY` keeps the Kubernetes services,
+  model endpoints, broker and other internal dependencies on direct paths.
+  Existing direct egress remains during Phase A as rollback protection.
 - Everything else mirrors `hermes-k8s` (regular Kubernetes sessions, egress, sizes).
 
 See `../hermes-sre/README.md` for the split and the sync-wave notes.

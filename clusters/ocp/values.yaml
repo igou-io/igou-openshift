@@ -434,6 +434,14 @@ applications:
     source:
       path: applications/hermes-operator
 
+  squid-proxy:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '19'
+    source:
+      path: applications/squid-proxy
+
   hermes-sre:
     project: cluster-apps
     annotations:

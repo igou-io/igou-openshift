@@ -44,6 +44,14 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
+    # Shared Hermes HTTP/HTTPS egress proxy.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: squid-proxy
+      ports:
+        - protocol: TCP
+          port: 3128
     # kube-apiserver: needed to create session pods and open exec streams.
     - ports:
         - protocol: TCP

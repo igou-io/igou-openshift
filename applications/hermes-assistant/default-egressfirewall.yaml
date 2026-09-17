@@ -121,7 +121,7 @@ spec:
         - protocol: TCP
           port: 443
 
-    # Cursor Agent / CLI (https://cursor.com/docs/enterprise/network-configuration)
+    # Cursor Agent / CLI direct fallback (retained during Phase A)
     - type: Allow
       to:
         dnsName: api.cursor.sh
