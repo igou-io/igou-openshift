@@ -1,0 +1,103 @@
+---
+# Complete network boundary for the Hermes agent pod. OVN-Kubernetes evaluates
+# egress after Service DNAT, so kube-apiserver uses :6443 and OpenShift DNS
+# needs both the Service ports (:53) and backend ports (:5353).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: hermes-agent
+  namespace: hermes-assistant
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: hermes-assistant
+      app.kubernetes.io/name: hermes-agent
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-assistant
+      ports:
+        - protocol: TCP
+          port: 8443
+        - protocol: TCP
+          port: 9119
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              policy-group.network.openshift.io/ingress: ''
+      ports:
+        - protocol: TCP
+          port: 9119
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: forgejo
+      ports:
+        - protocol: TCP
+          port: 3000
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+      ports:
+        - protocol: UDP
+          port: 5353
+        - protocol: TCP
+          port: 5353
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: squid-proxy
+      ports:
+        - protocol: TCP
+          port: 3128
+    - to:
+        - ipBlock:
+            cidr: 10.10.9.10/32
+      ports:
+        - protocol: TCP
+          port: 6443
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: llmkube-system
+      ports:
+        - protocol: TCP
+          port: 8080
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: searxng
+      ports:
+        - protocol: TCP
+          port: 8080
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: firecrawl
+      ports:
+        - protocol: TCP
+          port: 3002
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: sands-of-time
+      ports:
+        - protocol: TCP
+          port: 8000
+    - to:
+        - podSelector:
+            matchLabels:
+              app: ghbroker
+      ports:
+        - protocol: TCP
+          port: 8085

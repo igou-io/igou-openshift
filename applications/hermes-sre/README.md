@@ -73,7 +73,7 @@ agent-container resources, and quick commands (`contexts`, `whoami`).
 Context the SRE gets on top of the credentials (all delivered from this
 directory, nothing hand-seeded on the PVC):
 
-- `context-configmap.yaml` — `SOUL.md` (environment brief: where it runs, which
+- `hermes-sre-context-configmap.yaml` — `SOUL.md` (environment brief: where it runs, which
   CLI to reach for, the estate, report format) mounted over `/opt/data/SOUL.md`,
   and the same brief as `/workspace/AGENTS.md` for coding CLIs inside sessions.
 - `skill-*-configmap.yaml` — the homelab skills mounted into
@@ -85,7 +85,7 @@ directory, nothing hand-seeded on the PVC):
   `igou-io/igou-docs` — issues survive that repo's `contents: read` cap).
   These operational skills are immutable and GitOps-owned. Agent-created skills
   live separately in the writable, PVC-backed `/opt/data/skills` directory.
-- `docs-sync-cronjob.yaml` — read-only mirror of `igou-io/igou-docs` refreshed
+- `igou-docs-sync-cronjob.yaml` — read-only mirror of `igou-io/igou-docs` refreshed
   every 30 min into the workspace PVC (`/workspace/igou-docs` in sessions) using
   a broker-minted `contents:read` token (`igou-docs` is in the broker policy and
   must be on the igou-hermes App installation). Its only egress is DNS, the
@@ -104,10 +104,10 @@ Alert-path hardening (2026-08-30, second pass):
   alerts queue upstream instead of being rejected. It reads the authoritative
   `active_agents` count that the gateway persists to its PVC-backed state file
   at every turn boundary; it does not rely on cross-container PID visibility.
-- `am-relay-route.yaml` exposes the relay for the **rk8s** Alertmanager
+- `hermes-sre-am-relay-route.yaml` exposes the relay for the **rk8s** Alertmanager
   (igou-kubernetes `components/alertmanager-config`); `/healthz` is probed by
   the blackbox-exporter (`BlackboxProbeFailed` = watcher for the watcher).
-- `heartbeat-cronjob.yaml` fires a synthetic `SREHeartbeat` through the full
+- `sre-heartbeat-cronjob.yaml` fires a synthetic `SREHeartbeat` through the full
   chain every Monday 09:00 America/New_York; no Slack report = the chain is
   broken.
 - Incident memory: the agent reads/comments the EDA-filed issue in

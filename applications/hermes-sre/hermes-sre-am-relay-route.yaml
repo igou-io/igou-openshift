@@ -1,0 +1,22 @@
+---
+# Exposes the token-authenticated relay to the rk8s Alertmanager. /healthz is
+# intentionally unauthenticated for blackbox monitoring.
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: hermes-sre-am-relay
+  namespace: hermes-sre
+  labels:
+    app: hermes-sre
+spec:
+  host: hermes-sre-am-relay.apps.ocp.igou.systems
+  to:
+    kind: Service
+    name: hermes-sre
+    weight: 100
+  port:
+    targetPort: webhook
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None

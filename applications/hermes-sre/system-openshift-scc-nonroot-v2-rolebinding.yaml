@@ -1,0 +1,16 @@
+---
+# Job-controller pods are admitted through their own ServiceAccount. nonroot-v2
+# permits the fixed non-root UID 1000 needed to match shared workspace ownership.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: system:openshift:scc:nonroot-v2
+  namespace: hermes-sre
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:openshift:scc:nonroot-v2
+subjects:
+  - kind: ServiceAccount
+    name: hermes-session-noperms
+    namespace: hermes-sre
