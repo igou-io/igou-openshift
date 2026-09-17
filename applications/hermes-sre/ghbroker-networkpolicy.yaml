@@ -11,7 +11,8 @@ spec:
   podSelector:
     matchLabels:
       app: ghbroker
-  policyTypes: ["Ingress"]
+  policyTypes:
+    - Ingress
   ingress:
     - from:
         - podSelector:
@@ -30,8 +31,7 @@ spec:
           port: 8085
 
 ---
-# The broker itself needs DNS and the shared proxy (which handles public HTTP
-# and HTTPS; the existing direct EgressFirewall path remains for Phase A).
+# The broker itself needs only DNS and the shared public HTTP/HTTPS proxy.
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -41,7 +41,8 @@ spec:
   podSelector:
     matchLabels:
       app: ghbroker
-  policyTypes: ["Egress"]
+  policyTypes:
+    - Egress
   egress:
     - to:
         - namespaceSelector:
@@ -63,7 +64,3 @@ spec:
       ports:
         - protocol: TCP
           port: 3128
-    # Retain the existing direct HTTPS fallback during Phase A.
-    - ports:
-        - protocol: TCP
-          port: 443
