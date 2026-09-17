@@ -2,10 +2,14 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - namespace.yaml
-  - serviceaccounts.yaml
-  - clusterroles.yaml
-  - clusterrolebindings.yaml
-  - externalsecrets.yaml
-  - identities-pvc.yaml
+  - ansible-collection-bench-namespace.yaml
+  - bench-pipeline-serviceaccount.yaml
+  - bench-agent-serviceaccount.yaml
+  - bench-vm-provisioner-clusterrole.yaml
+  - bench-pipeline-clusterrole.yaml
+  - bench-pipeline-clusterrolebinding.yaml
+  - bench-opencode-key-externalsecret.yaml
+  - bench-forgejo-ci-externalsecret.yaml
+  - bench-quay-pull-externalsecret.yaml
+  - bench-identities-pvc.yaml
   - auth-login-deployment.yaml

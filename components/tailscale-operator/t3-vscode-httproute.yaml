@@ -1,0 +1,42 @@
+---
+# LAN clients get a valid *.lan.igou.systems cert without joining the
+# tailnet: https://t3-vscode.lan.igou.systems -> trusted-lan Gateway
+# (10.10.150.3) -> proxy pod -> WireGuard -> vscode:3773. rb5009
+# (igou-inventory) holds the per-hostname A record; auth is t3 pairing
+# tokens. Reachable by every VLAN the tier admits (9/10/99).
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: t3-vscode
+  annotations:
+    # Homepage auto-discovery (see igou-docs "Homepage Lab Landing Page").
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: T3 Code
+    gethomepage.dev/group: Applications
+    gethomepage.dev/icon: mdi-robot
+    gethomepage.dev/description: coding-agent GUI
+spec:
+  # group/kind/weight below are API-server defaults, stated explicitly so
+  # ArgoCD's server-side-apply diff doesn't report the route as forever
+  # OutOfSync (same wart as the Gateway certificateRefs, #369).
+  parentRefs:
+    - name: trusted-lan
+      namespace: openshift-ingress
+      group: gateway.networking.k8s.io
+      kind: Gateway
+  hostnames:
+    - t3-vscode.lan.igou.systems
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: t3-vscode-web
+          port: 3773
+          group: ""
+          kind: Service
+          weight: 1
+      timeouts:
+        # Long-lived WebSocket sessions — never time the request out.
+        request: 0s

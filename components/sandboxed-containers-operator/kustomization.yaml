@@ -5,5 +5,5 @@ resources:
   - openshift-sandboxed-containers-operator-namespace.yaml
   - sandboxed-containers-operator-operatorgroup.yaml
   - sandboxed-containers-operator-subscription.yaml
-  - kataconfig.yaml
+  - cluster-kataconfig-kataconfig.yaml
 namespace: openshift-sandboxed-containers-operator

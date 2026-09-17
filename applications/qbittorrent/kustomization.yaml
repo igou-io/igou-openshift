@@ -12,9 +12,10 @@ resources:
   - qbittorrent-prowlarr-config-iscsi-pv.yaml
   - prowlarr-config-pvc.yaml
   - qbittorrent-serviceaccount.yaml
-  - qbittorrent-vpn-scc.yaml
-  - qbittorrent-vpn-scc-rbac.yaml
-  - mullvad-externalsecret.yaml
+  - qbittorrent-vpn-securitycontextconstraints.yaml
+  - system-openshift-scc-qbittorrent-vpn-clusterrole.yaml
+  - system-openshift-scc-qbittorrent-vpn-rolebinding.yaml
+  - qbittorrent-mullvad-externalsecret.yaml
   - qbittorrent-deployment.yaml
   - qbittorrent-service.yaml
   - prowlarr-service.yaml

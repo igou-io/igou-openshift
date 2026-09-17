@@ -5,5 +5,5 @@ resources:
   - default-deny-networkpolicy.yaml
   - allow-observed-networkpolicy.yaml
   - ../../../components/ansible-automation-platform
-  - aap-admin-password-externalsecret.yml
-  - aap-ansibleautomationplatform.yml
+  - aap-admin-password-externalsecret.yaml
+  - aap-ansibleautomationplatform.yaml

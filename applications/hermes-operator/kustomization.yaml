@@ -19,6 +19,6 @@ helmCharts:
     includeCRDs: true
 
 resources:
-  - operator-namespace.yaml
-  - scc.yaml
-  - scc-clusterrole.yaml
+  - hermes-operator-namespace.yaml
+  - hermes-agent-root-securitycontextconstraints.yaml
+  - system-openshift-scc-hermes-agent-root-clusterrole.yaml

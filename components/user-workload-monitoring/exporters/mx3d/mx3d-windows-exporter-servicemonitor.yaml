@@ -1,0 +1,23 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: mx3d-windows-exporter
+  labels:
+    app.kubernetes.io/name: mx3d-windows-exporter
+    app.kubernetes.io/part-of: mx3d
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mx3d-windows-exporter
+  endpoints:
+    - port: metrics
+      interval: 30s
+      scrapeTimeout: 10s
+      relabelings:
+        # The target address is a bare IP; name the real source.
+        # action: replace is the CRD default - set explicitly so the
+        # rendered manifest matches the live object and ArgoCD stays Synced.
+        - action: replace
+          targetLabel: instance
+          replacement: mx3d.igou.systems

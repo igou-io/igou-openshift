@@ -2,8 +2,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: multus-macvlan-static-ip-nginx
 resources:
-  - namespace.yaml
-  - nad-vlan45.yaml
-  - deployment.yaml
-  - service.yaml
-  - route.yaml
+  - multus-macvlan-static-ip-nginx-namespace.yaml
+  - vlan45-macvlan-networkattachmentdefinition.yaml
+  - nginx-deployment.yaml
+  - nginx-service.yaml
+  - nginx-route.yaml

@@ -1,0 +1,22 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: capi-csr-approver
+rules:
+- apiGroups: ["certificates.k8s.io"]
+  resources: ["certificatesigningrequests"]
+  verbs: ["get", "list"]
+- apiGroups: ["certificates.k8s.io"]
+  resources: ["certificatesigningrequests/approval"]
+  verbs: ["update"]
+# Scoped to only the two signers the machine-approver can't handle for
+# CAPI-provisioned nodes (chicken-and-egg: Machine has no InternalDNS
+# until the Node registers, but the Node can't register without CSR
+# approval).
+- apiGroups: ["certificates.k8s.io"]
+  resources: ["signers"]
+  resourceNames:
+  - kubernetes.io/kube-apiserver-client-kubelet
+  - kubernetes.io/kubelet-serving
+  verbs: ["approve"]

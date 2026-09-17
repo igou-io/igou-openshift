@@ -3,15 +3,28 @@ kind: Kustomization
 
 resources:
   - openshift-cluster-api-namespace.yaml
-  - cluster-config-configmap.yaml
+  - cluster-api-cluster-config-configmap.yaml
   - provisioning-configuration-provisioning.yaml
-  - capi-cluster.yaml
+  - ocp-hb42r-metal3cluster.yaml
+  - ocp-hb42r-cluster.yaml
   - casval-worker-template-metal3machinetemplate.yaml
   - casval-worker-machineset.yaml
   - casval-baremetalhost.yaml
   - casval-bmc-secret-externalsecret.yaml
-  - capi-csr-approver.yaml
-  - capi-node-cleanup.yaml
+  - capi-csr-approver-serviceaccount.yaml
+  - capi-csr-approver-role.yaml
+  - capi-csr-approver-rolebinding.yaml
+  - capi-csr-approver-clusterrole.yaml
+  - capi-csr-approver-clusterrolebinding.yaml
+  - allow-egress-csr-approver-networkpolicy.yaml
+  - capi-csr-approver-cronjob.yaml
+  - capi-node-cleanup-serviceaccount.yaml
+  - capi-node-cleanup-role.yaml
+  - capi-node-cleanup-rolebinding.yaml
+  - capi-node-cleanup-clusterrole.yaml
+  - capi-node-cleanup-clusterrolebinding.yaml
+  - allow-egress-node-cleanup-networkpolicy.yaml
+  - capi-node-cleanup-cronjob.yaml
 
 # Propagate clusterName from the ConfigMap into every field that must match
 # infrastructure.status.infrastructureName. On reprovision, edit the

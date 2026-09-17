@@ -6,7 +6,7 @@ resources:
   - allow-observed-networkpolicy.yaml
   - jellyfin-namespace.yaml
   - jellyfin-media-nfs-pv.yaml
-  - jellyfin-media-nfs-pvc.yaml
+  - jellyfin-media-pvc.yaml
   - jellyfin-config-pvc.yaml
   - jellyfin-probe.yaml
   - jellyfin-httproute.yaml

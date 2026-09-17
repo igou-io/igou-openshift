@@ -1,0 +1,26 @@
+---
+# Prometheus federation of the rk8s lab cluster (k3s + kube-prometheus-stack)
+# into OpenShift User Workload Monitoring. rk8s exposes its Prometheus
+# /federate endpoint at https://federate.lan.igou.systems (MetalLB VIP
+# 10.10.150.129:443, Let's Encrypt prod cert, path-restricted to /federate,
+# no auth). OCP nodes (10.10.9.0/24) route to the rk8s MetalLB range
+# (10.10.150.129-254) directly over the LAN.
+#
+# House pattern for external scrape targets: a selectorless Service + a
+# classic manual Endpoints object (bare IP) + a ServiceMonitor. The Endpoints
+# name MUST match the Service name so endpoint discovery works; the mirroring
+# controller derives the EndpointSlice automatically.
+apiVersion: v1
+kind: Service
+metadata:
+  name: rk8s-federate
+  labels:
+    app.kubernetes.io/name: rk8s-federate
+    app.kubernetes.io/part-of: rk8s-federate
+spec:
+  clusterIP: None
+  ports:
+    - name: metrics
+      port: 443
+      targetPort: 443
+      protocol: TCP

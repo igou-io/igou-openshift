@@ -1,0 +1,22 @@
+---
+# HTTPRoute backend: neither the router nor the managed Gateway can route to
+# an ExternalName Service, so this selector Service targets the proxy pod
+# directly (stable tailscale.com/* labels survive pod restarts). Traffic to
+# the pod on 3773 is DNAT'd to t3 on the vscode host. The port name must be
+# http-prefixed for the Gateway to admit WebSocket upgrades (t3 is
+# WebSocket-heavy).
+apiVersion: v1
+kind: Service
+metadata:
+  name: t3-vscode-web
+  labels:
+    app.kubernetes.io/name: t3-vscode-web
+spec:
+  selector:
+    tailscale.com/managed: "true"
+    tailscale.com/parent-resource: t3-vscode
+  ports:
+    - name: http
+      port: 3773
+      targetPort: 3773
+      protocol: TCP

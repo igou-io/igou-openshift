@@ -1,0 +1,44 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: upsmonitor-nut-exporter
+  labels:
+    app.kubernetes.io/name: upsmonitor-nut-exporter
+    app.kubernetes.io/part-of: upsmonitor
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: upsmonitor-nut-exporter
+  endpoints:
+    # One endpoint per UPS - same exporter, different ?ups= parameter. The
+    # `ups` target label keeps the two series streams (and their `up`
+    # liveness series) distinct.
+    - port: metrics
+      path: /ups_metrics
+      params:
+        ups:
+          - apc1500
+      interval: 30s
+      scrapeTimeout: 10s
+      relabelings:
+        - action: replace
+          targetLabel: instance
+          replacement: upsmonitor.igou.systems
+        - action: replace
+          targetLabel: ups
+          replacement: apc1500
+    - port: metrics
+      path: /ups_metrics
+      params:
+        ups:
+          - cyberpower1500
+      interval: 30s
+      scrapeTimeout: 10s
+      relabelings:
+        - action: replace
+          targetLabel: instance
+          replacement: upsmonitor.igou.systems
+        - action: replace
+          targetLabel: ups
+          replacement: cyberpower1500

@@ -1,0 +1,18 @@
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  # Must match the Service name for endpoint discovery.
+  name: rk8s-federate
+  labels:
+    app.kubernetes.io/name: rk8s-federate
+    app.kubernetes.io/part-of: rk8s-federate
+subsets:
+  - addresses:
+      # rk8s MetalLB VIP for the federation ingress. Bare IP, so the
+      # ServiceMonitor must pin tlsConfig.serverName for cert verification.
+      - ip: 10.10.150.129
+    ports:
+      - name: metrics
+        port: 443
+        protocol: TCP

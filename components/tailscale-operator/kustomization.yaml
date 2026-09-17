@@ -1,11 +1,15 @@
 namespace: tailscale
 resources:
-  - tailscale-namespace.yml
+  - tailscale-namespace.yaml
   - tailscale-operator-anyuid-clusterrolebinding.yaml
   - tailscale-proxies-privileged-clusterrolebinding.yaml
-  - operator-oauth-externalsecret.yml
-  - igou-io-node-exporter-egress.yml
-  - t3-vscode-egress.yml
+  - operator-oauth-externalsecret.yaml
+  - igou-io-node-exporter-service.yaml
+  - igou-io-node-exporter-metrics-service.yaml
+  - igou-io-node-exporter-servicemonitor.yaml
+  - t3-vscode-service.yaml
+  - t3-vscode-web-service.yaml
+  - t3-vscode-httproute.yaml
 helmCharts:
 - name: tailscale-operator
   includeCRDs: true

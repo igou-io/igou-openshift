@@ -1,0 +1,20 @@
+---
+# Scrape plumbing: the operator's own headless Service carries no ports, so
+# this selector Service targets the proxy pod (stable tailscale.com/* labels
+# survive pod restarts) and the ServiceMonitor hands it to user-workload
+# monitoring. Traffic to the pod on 9100 is DNAT'd to the VPS exporter.
+apiVersion: v1
+kind: Service
+metadata:
+  name: igou-io-node-exporter-metrics
+  labels:
+    app.kubernetes.io/name: igou-io-node-exporter-metrics
+spec:
+  selector:
+    tailscale.com/managed: "true"
+    tailscale.com/parent-resource: igou-io-node-exporter
+  ports:
+    - name: metrics
+      port: 9100
+      targetPort: 9100
+      protocol: TCP

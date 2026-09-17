@@ -29,7 +29,7 @@ resources:
   - hermes-session-readonly-rk8s-externalsecret.yaml
   - hermes-session-readonly-routeros-externalsecret.yaml
   - hermes-session-readonly-truenas-externalsecret.yaml
-  - hermes-workspace-persistentvolumeclaim.yaml
+  - hermes-workspace-pvc.yaml
   - auth-login-deployment.yaml
   - auth-login-networkpolicy.yaml
   - ghbroker-config-externalsecret.yaml

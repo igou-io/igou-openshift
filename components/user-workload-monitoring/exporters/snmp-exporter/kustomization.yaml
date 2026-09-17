@@ -5,7 +5,7 @@ resources:
   - default-deny-networkpolicy.yaml
   - allow-observed-networkpolicy.yaml
   - snmp-exporter-namespace.yaml
-  - apc-pdu-snmp-externalsecret.yaml
+  - apc-pdu-snmp-config-externalsecret.yaml
   - snmp-exporter-prometheusrule.yaml
   - probes/apc-pdu-probe.yaml
 helmCharts:

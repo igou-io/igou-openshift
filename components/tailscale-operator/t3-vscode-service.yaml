@@ -1,0 +1,25 @@
+---
+# Cluster egress to T3 Code (t3 serve, port 3773) in the devcontainer on the
+# vscode host. The operator replaces this ExternalName Service with a proxy
+# pod that joins the tailnet tagged tag:openshift — the tag the ACL grant
+# (tag:openshift -> vscode tcp/3773) matches. Traffic rides WireGuard to the
+# host, so the backend hop is encrypted even though t3 itself is plain HTTP.
+apiVersion: v1
+kind: Service
+metadata:
+  name: t3-vscode
+  annotations:
+    # MagicDNS name of the vscode host; tracks the device if its tailnet IP
+    # changes.
+    tailscale.com/tailnet-fqdn: "vscode.weasel-alioth.ts.net"
+    # Override the proxy's device tags (default would be tag:k8s).
+    tailscale.com/tags: "tag:openshift"
+    # Readable tailnet device name (default is the generated ts-<svc>-<hash>).
+    tailscale.com/hostname: "ocp-egress-t3-vscode"
+spec:
+  type: ExternalName
+  externalName: placeholder  # rewritten by the operator
+  ports:
+    - name: http
+      port: 3773
+      protocol: TCP

@@ -6,13 +6,13 @@ resources:
   - allow-shelfmark-networkpolicy.yaml
   - shelfmark-namespace.yaml
   - shelfmark-books-nfs-pv.yaml
-  - shelfmark-books-nfs-pvc.yaml
+  - shelfmark-books-pvc.yaml
   - shelfmark-config-pvc.yaml
   - shelfmark-prowlarr-externalsecret.yaml
   - shelfmark-qbittorrent-externalsecret.yaml
-  - shelfmark-scc.yaml
-  - shelfmark-scc-clusterrole.yaml
-  - shelfmark-scc-rolebinding.yaml
+  - shelfmark-uid1000-securitycontextconstraints.yaml
+  - system-openshift-scc-shelfmark-uid1000-clusterrole.yaml
+  - shelfmark-uid1000-rolebinding.yaml
   - shelfmark-route.yaml
 helmCharts:
   - name: app-template

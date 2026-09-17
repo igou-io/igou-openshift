@@ -4,6 +4,10 @@ kind: Kustomization
 namespace: mx3d
 resources:
   - mx3d-namespace.yaml
-  - mx3d-windows-exporter.yaml
-  - mx3d-ohmgraphite.yaml
-  - mx3d-prometheusrule.yaml
+  - mx3d-windows-exporter-service.yaml
+  - mx3d-windows-exporter-endpoints.yaml
+  - mx3d-windows-exporter-servicemonitor.yaml
+  - mx3d-ohmgraphite-service.yaml
+  - mx3d-ohmgraphite-endpoints.yaml
+  - mx3d-ohmgraphite-servicemonitor.yaml
+  - mx3d-alerts-prometheusrule.yaml

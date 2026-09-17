@@ -6,15 +6,15 @@ resources:
   - allow-observed-networkpolicy.yaml
   - quay-operator-namespace.yaml
   - quay-enterprise-namespace.yaml
-  - quay-operator-group-operator-group.yaml
+  - quay-operator-group-operatorgroup.yaml
   - quay-operator-subscription.yaml
   - quay-pg-credentials-externalsecret.yaml
   - quay-clair-pg-credentials-externalsecret.yaml
   - cnpg-s3-credentials-externalsecret.yaml
-  - quay-pg-objectstore.yaml
-  - quay-pg-scheduledbackup.yaml
+  - quay-pg-backup-objectstore.yaml
+  - quay-pg-daily-scheduledbackup.yaml
   - quay-pg-cluster.yaml
-  - quay-pg-podmonitor.yaml
+  - quay-pg-metrics-podmonitor.yaml
   - clair-database.yaml
   - config-bundle-secret-externalsecret.yaml
   - igou-registry-quayregistry.yaml

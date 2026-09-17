@@ -1,0 +1,18 @@
+---
+# ipmi_exporter on TrueNAS (VLAN9), scraped DIRECTLY over the LAN.
+# Selectorless Service + manual Endpoints point UWM Prometheus at the NAS'
+# static address.
+apiVersion: v1
+kind: Service
+metadata:
+  name: truenas-ipmi
+  labels:
+    app.kubernetes.io/name: truenas-ipmi
+    app.kubernetes.io/part-of: truenas
+spec:
+  clusterIP: None
+  ports:
+    - name: metrics
+      port: 9290
+      targetPort: 9290
+      protocol: TCP

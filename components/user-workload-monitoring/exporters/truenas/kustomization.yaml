@@ -4,9 +4,19 @@ kind: Kustomization
 namespace: truenas
 resources:
   - truenas-namespace.yaml
-  - truenas-netdata.yaml
-  - truenas-smartctl.yaml
-  - truenas-ipmi.yaml
-  - truenas-hwmon.yaml
-  - truenas-zfs.yaml
+  - truenas-netdata-service.yaml
+  - truenas-netdata-endpoints.yaml
+  - truenas-netdata-servicemonitor.yaml
+  - truenas-smartctl-service.yaml
+  - truenas-smartctl-endpoints.yaml
+  - truenas-smartctl-servicemonitor.yaml
+  - truenas-ipmi-service.yaml
+  - truenas-ipmi-endpoints.yaml
+  - truenas-ipmi-servicemonitor.yaml
+  - truenas-hwmon-service.yaml
+  - truenas-hwmon-endpoints.yaml
+  - truenas-hwmon-servicemonitor.yaml
+  - truenas-zfs-service.yaml
+  - truenas-zfs-endpoints.yaml
+  - truenas-zfs-servicemonitor.yaml
   - truenas-prometheusrule.yaml

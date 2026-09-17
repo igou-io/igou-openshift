@@ -1,9 +1,9 @@
 namespace: minecraft-server
 resources:
   - minecraft-networkpolicy.yaml
-  - minecraft-namespace.yaml
+  - minecraft-server-namespace.yaml
   - minecraft-exporter-service.yaml
-  - minecraft-secrets-externalsecret.yml
+  - minecraft-secrets-externalsecret.yaml
 helmCharts:
 - name: minecraft
   namespace: minecraft-server

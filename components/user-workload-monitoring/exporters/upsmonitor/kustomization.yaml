@@ -4,6 +4,10 @@ kind: Kustomization
 namespace: upsmonitor
 resources:
   - upsmonitor-namespace.yaml
-  - upsmonitor-node-exporter.yaml
-  - upsmonitor-nut-exporter.yaml
+  - upsmonitor-node-exporter-service.yaml
+  - upsmonitor-node-exporter-endpoints.yaml
+  - upsmonitor-node-exporter-servicemonitor.yaml
+  - upsmonitor-nut-exporter-service.yaml
+  - upsmonitor-nut-exporter-endpoints.yaml
+  - upsmonitor-nut-exporter-servicemonitor.yaml
   - upsmonitor-prometheusrule.yaml

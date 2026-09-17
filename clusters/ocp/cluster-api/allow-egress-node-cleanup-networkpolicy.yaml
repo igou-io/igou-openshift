@@ -1,0 +1,14 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-egress-node-cleanup
+  namespace: openshift-cluster-api
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: capi-node-cleanup
+  egress:
+  - {}
+  policyTypes:
+  - Egress

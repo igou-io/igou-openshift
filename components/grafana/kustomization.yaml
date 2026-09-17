@@ -8,96 +8,99 @@ resources:
   - grafana-operatorgroup.yaml
   - grafana-subscription.yaml
   - grafana-serviceaccount.yaml
-  - grafana-rbac.yaml
+  - grafana-cluster-monitoring-view-clusterrolebinding.yaml
+  - grafana-auth-delegator-clusterrolebinding.yaml
   - grafana-sa-token-secret.yaml
   - grafana-oauth-cookie-password.yaml
   - grafana-oauth-cookie-externalsecret.yaml
   - grafana-grafana.yaml
-  - grafana-thanos-datasource.yaml
-  - grafana-rk8s-prometheus-datasource.yaml
-  - grafana-loki-rbac.yaml
-  - grafana-loki-infrastructure-datasource.yaml
-  - grafana-loki-application-datasource.yaml
-  - grafana-loki-network-datasource.yaml
-  - grafana-dashboard-20340.yaml
-  - grafana-dashboard-12239.yaml
-  - grafana-dashboard-22515.yaml
-  - grafana-dashboard-14584.yaml
-  - grafana-dashboard-20417.yaml
-  - grafana-dashboard-13679.yaml
-  - grafana-dashboard-1860.yaml
-  - grafana-dashboard-14694.yaml
-  - grafana-dashboard-24390.yaml
-  - grafana-dashboard-23942.yaml
-  - grafana-dashboard-kubevirt-control-plane.yaml
-  - grafana-dashboard-kubevirt-top-consumers.yaml
-  - grafana-dashboard-external-secrets.yaml
-  - grafana-dashboard-apc-pdu.yaml
-  - grafana-dashboard-nut-exporter.yaml
-  - grafana-dashboard-storage-client-io.yaml
-  - grafana-dashboard-truenas.yaml
-  - grafana-dashboard-truenas-zfs.yaml
-  - grafana-dashboard-11055.yaml
-  - grafana-dashboard-13659.yaml
-  - grafana-dashboard-forgejo.yaml
-  - grafana-dashboard-keycloak.yaml
-  - grafana-dashboard-network-metallb.yaml
-  - grafana-dashboard-adb-exporter.yaml
-  - grafana-dashboard-olm-updates.yaml
-  - grafana-dashboard-15765.yaml
+  - thanos-querier-grafanadatasource.yaml
+  - rk8s-prometheus-grafanadatasource.yaml
+  - grafana-loki-tenant-read-clusterrole.yaml
+  - grafana-loki-tenant-read-clusterrolebinding.yaml
+  - grafana-view-clusterrolebinding.yaml
+  - loki-infrastructure-grafanadatasource.yaml
+  - loki-application-grafanadatasource.yaml
+  - loki-network-grafanadatasource.yaml
+  - grafana-dashboard-20340-grafanadashboard.yaml
+  - grafana-dashboard-12239-grafanadashboard.yaml
+  - grafana-dashboard-22515-grafanadashboard.yaml
+  - grafana-dashboard-14584-grafanadashboard.yaml
+  - grafana-dashboard-20417-grafanadashboard.yaml
+  - grafana-dashboard-13679-grafanadashboard.yaml
+  - grafana-dashboard-1860-grafanadashboard.yaml
+  - grafana-dashboard-14694-grafanadashboard.yaml
+  - grafana-dashboard-24390-grafanadashboard.yaml
+  - grafana-dashboard-23942-grafanadashboard.yaml
+  - grafana-dashboard-kubevirt-control-plane-grafanadashboard.yaml
+  - grafana-dashboard-kubevirt-top-consumers-grafanadashboard.yaml
+  - grafana-dashboard-external-secrets-grafanadashboard.yaml
+  - grafana-dashboard-apc-pdu-grafanadashboard.yaml
+  - grafana-dashboard-nut-exporter-grafanadashboard.yaml
+  - grafana-dashboard-storage-client-io-grafanadashboard.yaml
+  - grafana-dashboard-truenas-grafanadashboard.yaml
+  - grafana-dashboard-truenas-zfs-grafanadashboard.yaml
+  - grafana-dashboard-11055-grafanadashboard.yaml
+  - grafana-dashboard-13659-grafanadashboard.yaml
+  - grafana-dashboard-forgejo-grafanadashboard.yaml
+  - grafana-dashboard-keycloak-grafanadashboard.yaml
+  - grafana-dashboard-network-metallb-grafanadashboard.yaml
+  - grafana-dashboard-adb-exporter-grafanadashboard.yaml
+  - grafana-dashboard-olm-updates-grafanadashboard.yaml
+  - grafana-dashboard-15765-grafanadashboard.yaml
   # kube-prometheus-stack dashboard set, cluster-agnostic (grafana
   # "kubernetes" folder): pristine upstream JSON, cluster picked via the
   # $datasource variable (thanos-querier = ocp, rk8s-prometheus = rk8s).
-  - grafana-dashboard-kubernetes-alertmanager-overview.yaml
-  - grafana-dashboard-kubernetes-apiserver.yaml
-  - grafana-dashboard-kubernetes-cluster-total.yaml
-  - grafana-dashboard-kubernetes-k8s-coredns.yaml
-  - grafana-dashboard-kubernetes-k8s-resources-cluster.yaml
-  - grafana-dashboard-kubernetes-k8s-resources-multicluster.yaml
-  - grafana-dashboard-kubernetes-k8s-resources-namespace.yaml
-  - grafana-dashboard-kubernetes-k8s-resources-node.yaml
-  - grafana-dashboard-kubernetes-k8s-resources-pod.yaml
-  - grafana-dashboard-kubernetes-k8s-resources-workload.yaml
-  - grafana-dashboard-kubernetes-k8s-resources-workloads-namespace.yaml
-  - grafana-dashboard-kubernetes-kubelet.yaml
-  - grafana-dashboard-kubernetes-namespace-by-pod.yaml
-  - grafana-dashboard-kubernetes-namespace-by-workload.yaml
-  - grafana-dashboard-kubernetes-node-cluster-rsrc-use.yaml
-  - grafana-dashboard-kubernetes-node-rsrc-use.yaml
-  - grafana-dashboard-kubernetes-nodes.yaml
-  - grafana-dashboard-kubernetes-persistentvolumesusage.yaml
-  - grafana-dashboard-kubernetes-pod-total.yaml
-  - grafana-dashboard-kubernetes-prometheus.yaml
-  - grafana-dashboard-kubernetes-workload-total.yaml
+  - grafana-dashboard-kubernetes-alertmanager-overview-grafanadashboard.yaml
+  - grafana-dashboard-kubernetes-apiserver-grafanadashboard.yaml
+  - grafana-dashboard-kubernetes-cluster-total-grafanadashboard.yaml
+  - grafana-dashboard-kubernetes-k8s-coredns-grafanadashboard.yaml
+  - grafana-dashboard-kubernetes-k8s-resources-cluster-grafanadashboard.yaml
+  - grafana-dashboard-kubernetes-k8s-resources-multicluster-grafanadashboard.yaml
+  - grafana-dashboard-kubernetes-k8s-resources-namespace-grafanadashboard.yaml
+  - grafana-dashboard-kubernetes-k8s-resources-node-grafanadashboard.yaml
+  - grafana-dashboard-kubernetes-k8s-resources-pod-grafanadashboard.yaml
+  - grafana-dashboard-kubernetes-k8s-resources-workload-grafanadashboard.yaml
+  - grafana-dashboard-kubernetes-k8s-resources-workloads-namespace-grafanadashboard.yaml
+  - grafana-dashboard-kubernetes-kubelet-grafanadashboard.yaml
+  - grafana-dashboard-kubernetes-namespace-by-pod-grafanadashboard.yaml
+  - grafana-dashboard-kubernetes-namespace-by-workload-grafanadashboard.yaml
+  - grafana-dashboard-kubernetes-node-cluster-rsrc-use-grafanadashboard.yaml
+  - grafana-dashboard-kubernetes-node-rsrc-use-grafanadashboard.yaml
+  - grafana-dashboard-kubernetes-nodes-grafanadashboard.yaml
+  - grafana-dashboard-kubernetes-persistentvolumesusage-grafanadashboard.yaml
+  - grafana-dashboard-kubernetes-pod-total-grafanadashboard.yaml
+  - grafana-dashboard-kubernetes-prometheus-grafanadashboard.yaml
+  - grafana-dashboard-kubernetes-workload-total-grafanadashboard.yaml
   # Central logging (igou-openshift#382): vendored operator console
   # dashboards + custom log-gateway board, grouped in the "logging" folder.
-  - grafana-dashboard-logging-cluster-logging.yaml
-  - grafana-dashboard-logging-lokistack-writes.yaml
-  - grafana-dashboard-logging-lokistack-reads.yaml
-  - grafana-dashboard-logging-lokistack-chunks.yaml
-  - grafana-dashboard-logging-lokistack-retention.yaml
-  - grafana-dashboard-logging-log-gateway.yaml
-  - grafana-dashboard-logging-fleet-journals.yaml
-  - grafana-dashboard-logging-device-syslog.yaml
-  - grafana-dashboard-logging-rk8s-logs.yaml
-  - grafana-dashboard-logging-ocp-application-logs.yaml
-  - grafana-dashboard-logging-ocp-infrastructure-logs.yaml
-  - grafana-dashboard-logging-mikrotik.yaml
-  - grafana-dashboard-logging-hermes.yaml
-  - grafana-dashboard-logging-kubevirt-vms.yaml
-  - grafana-dashboard-logging-sands-of-time.yaml
-  - grafana-dashboard-sre-golden-signals-services.yaml
-  - grafana-dashboard-sre-use-nodes.yaml
-  - grafana-dashboard-sre-golden-signals-vms.yaml
-  - grafana-dashboard-sre-use-storage.yaml
-  - grafana-dashboard-power-lab-power.yaml
-  - grafana-dashboard-power-consumption.yaml
-  - grafana-dashboard-power-energy-cost.yaml
+  - grafana-dashboard-logging-cluster-logging-grafanadashboard.yaml
+  - grafana-dashboard-logging-lokistack-writes-grafanadashboard.yaml
+  - grafana-dashboard-logging-lokistack-reads-grafanadashboard.yaml
+  - grafana-dashboard-logging-lokistack-chunks-grafanadashboard.yaml
+  - grafana-dashboard-logging-lokistack-retention-grafanadashboard.yaml
+  - grafana-dashboard-logging-log-gateway-grafanadashboard.yaml
+  - grafana-dashboard-logging-fleet-journals-grafanadashboard.yaml
+  - grafana-dashboard-logging-device-syslog-grafanadashboard.yaml
+  - grafana-dashboard-logging-rk8s-logs-grafanadashboard.yaml
+  - grafana-dashboard-logging-ocp-application-logs-grafanadashboard.yaml
+  - grafana-dashboard-logging-ocp-infrastructure-logs-grafanadashboard.yaml
+  - grafana-dashboard-logging-mikrotik-grafanadashboard.yaml
+  - grafana-dashboard-logging-hermes-grafanadashboard.yaml
+  - grafana-dashboard-logging-kubevirt-vms-grafanadashboard.yaml
+  - grafana-dashboard-logging-sands-of-time-grafanadashboard.yaml
+  - grafana-dashboard-sre-golden-signals-services-grafanadashboard.yaml
+  - grafana-dashboard-sre-use-nodes-grafanadashboard.yaml
+  - grafana-dashboard-sre-golden-signals-vms-grafanadashboard.yaml
+  - grafana-dashboard-sre-use-storage-grafanadashboard.yaml
+  - grafana-dashboard-power-lab-power-grafanadashboard.yaml
+  - grafana-dashboard-power-consumption-grafanadashboard.yaml
+  - grafana-dashboard-power-energy-cost-grafanadashboard.yaml
   # Fleet hardware thermals (hardware folder)
-  - grafana-dashboard-hardware-lab-thermal.yaml
-  - grafana-dashboard-mx3d-thermals.yaml
+  - grafana-dashboard-hardware-lab-thermal-grafanadashboard.yaml
+  - grafana-dashboard-mx3d-thermals-grafanadashboard.yaml
   # NetObserv flow analytics (network folder)
-  - grafana-dashboard-network-netobserv-traffic.yaml
+  - grafana-dashboard-network-netobserv-traffic-grafanadashboard.yaml
 # Vendored dashboard JSON (see grafana-dashboard-nut-exporter.yaml for why
 # it cannot come from spec.grafanaCom). Stable name: the GrafanaDashboard
 # CR references the ConfigMap by name.

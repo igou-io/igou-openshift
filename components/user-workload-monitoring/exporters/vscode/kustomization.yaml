@@ -4,5 +4,7 @@ kind: Kustomization
 namespace: vscode
 resources:
   - vscode-namespace.yaml
-  - vscode-node-exporter.yaml
-  - vscode-prometheusrule.yaml
+  - vscode-node-exporter-service.yaml
+  - vscode-node-exporter-endpoints.yaml
+  - vscode-node-exporter-servicemonitor.yaml
+  - vscode-alerts-prometheusrule.yaml

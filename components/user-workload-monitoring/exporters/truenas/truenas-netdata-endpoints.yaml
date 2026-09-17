@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  # Must match the Service name for endpoint discovery.
+  name: truenas-netdata
+  labels:
+    app.kubernetes.io/name: truenas-netdata
+    app.kubernetes.io/part-of: truenas
+subsets:
+  - addresses:
+      - ip: 10.10.9.243
+    ports:
+      - name: metrics
+        port: 9998
+        protocol: TCP
