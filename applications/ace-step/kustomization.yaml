@@ -16,7 +16,7 @@ helmCharts:
       controllers:
         ace-step:
           type: deployment
-          replicas: 1
+          replicas: 0
           # Exclusive nvidia.com/gpu: 2 — a rolling update would deadlock
           # waiting for a second pair of GPUs that casval does not have.
           strategy: Recreate

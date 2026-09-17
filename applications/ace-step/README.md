@@ -16,9 +16,10 @@ pod also carries the burst nodeSelector and `workload=burst` toleration.
 
 Claiming both GPUs means ComfyUI and casval-hosted llmkube models
 (`qwen3-35b`, `qwen38-27b`) cannot run concurrently. Scale those to `0`
-before leaving ACE-Step at `1`.
+before starting ACE-Step.
 
-ArgoCD ignores `/spec/replicas` so a live scale-down is not reverted.
+ArgoCD ignores `/spec/replicas` and uses `RespectIgnoreDifferences=true`, so
+a live scale-down is not reverted during sync.
 
 ## Persistence
 
