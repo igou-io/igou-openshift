@@ -14,15 +14,18 @@ The equivalent lowercase variables are set as well. `NO_PROXY`/`no_proxy` is
 the same minimal value everywhere:
 
 ```text
-localhost,127.0.0.1,::1,.cluster.local,api.ocp.igou.systems,10.10.9.10
+localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,api.ocp.igou.systems,10.10.9.10
 ```
 
 The `.cluster.local` suffix covers Kubernetes service names. The explicit
-`api.ocp.igou.systems` and `10.10.9.10` entries keep the OCP API and the
-checked-in SRE Thanos HTTPS route (`thanos-querier-openshift-monitoring.apps.ocp.igou.systems`), respectively, on their direct paths; the latter is the
-documented OCP/apps-router VIP. There is no wrapper or alternate Cursor
-invocation; `cursor-agent` and other HTTP-aware clients use the standard
-environment.
+`172.30.0.1` entry keeps in-cluster Kubernetes clients on the direct API service
+path; without it, clients try to tunnel the private service IP through Squid and
+receive `403 Forbidden`. The `api.ocp.igou.systems` and `10.10.9.10` entries keep
+the external OCP API name and the checked-in SRE Thanos HTTPS route
+(`thanos-querier-openshift-monitoring.apps.ocp.igou.systems`), respectively, on
+their direct paths; the latter is the documented OCP/apps-router VIP. There is
+no wrapper or alternate Cursor invocation; `cursor-agent` and other HTTP-aware
+clients use the standard environment.
 
 Squid currently allows arbitrary public HTTP on TCP/80 and HTTPS CONNECT on
 TCP/443. It denies private, cluster-internal, loopback, link-local, CGNAT,
