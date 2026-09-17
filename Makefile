@@ -44,8 +44,18 @@ lint-helm: ## Lint all Helm charts under .helm/charts/
 		helm lint "$$chart" || exit 1; \
 	done
 
+.PHONY: validate-hermes-proxy
+validate-hermes-proxy: ## Ensure Hermes bypasses Squid for the in-cluster API service
+	@find $(REPO_ROOT)/applications/hermes-* -name '*.yaml' -type f -exec \
+		awk '/- name: (NO_PROXY|no_proxy)$$/ { \
+			if ((getline value) <= 0 || value !~ /(^|,)172[.]30[.]0[.]1(,|$$)/) { \
+				printf "❌ %s:%d: Kubernetes API service IP missing from proxy bypass\n", FILENAME, FNR - 1; \
+				failed = 1; \
+			} \
+		} END { exit failed }' {} +
+
 .PHONY: test
-test: lint lint-helm validate-kustomize validate-schemas ## Run all tests (lint, lint-helm, validate-kustomize, validate-schemas)
+test: lint lint-helm validate-hermes-proxy validate-kustomize validate-schemas ## Run all tests
 
 .PHONY: clean
 clean: ## Remove charts/ directories left behind by kustomize build (excludes .helm/charts)
