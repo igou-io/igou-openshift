@@ -73,7 +73,10 @@ through `tun0`. DoH avoids the intermittent resolution failures observed with
 Gluetun's DNS-over-TLS path while retaining encrypted DNS and resolver
 redundancy.
 `DNS_KEEP_NAMESERVER=off` is therefore intentional and provides split DNS
-without host aliases or fixed Service addresses.
+without host aliases or fixed Service addresses. The Pod explicitly sets
+`ndots:1`: Alpine/musl clients otherwise expand public names through every
+Kubernetes search suffix before trying the absolute name, and Gluetun's local
+resolver can cause that lookup to terminate as `Name does not resolve`.
 
 The Gluetun firewall is the egress kill switch. Its only direct exception for
 public address space is the selected Mullvad WireGuard server IP, protocol, and
