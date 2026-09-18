@@ -41,6 +41,10 @@
             name: name
             label: status
             limit: 4
+    - AAP Portal:
+        icon: ansible.png
+        href: https://portal.apps.ocp.igou.systems
+        description: automation portal
     - Automation Orchestrator:
         icon: ansible.png
         href: https://orchestrator.apps.ocp.igou.systems
@@ -57,6 +61,10 @@
         icon: quay.png
         href: https://quay.apps.ocp.igou.systems
         description: registry
+    - RHACS Central:
+        icon: mdi-shield-lock
+        href: https://central-stackrox.apps.ocp.igou.systems
+        description: security console
     - Dev Spaces:
         icon: eclipse-che.png
         href: https://devspaces.apps.ocp.igou.systems
@@ -186,14 +194,22 @@
         icon: mdi-timer-sand
         href: https://sands-of-time.apps.ocp.igou.systems
         description: price tracker
-    - ComfyUI:
-        icon: mdi-image-multiple
-        href: https://comfyui.apps.ocp.igou.systems
-        description: image generation (on-demand)
-    - Calibre-Web:
-        icon: mdi-book-open-variant
-        href: https://calibre-web.apps.ocp.igou.systems
+    - IT Tools:
+        icon: mdi-tools
+        href: https://it-tools.apps.ocp.igou.systems
+        description: browser utilities
+    - Calibre-Web Automated:
+        icon: mdi-book-open-page-variant
+        href: https://calibre-web-automated.apps.ocp.igou.systems
         description: ebook library
+    - Shelfmark:
+        icon: mdi-bookshelf
+        href: https://shelfmark.apps.ocp.igou.systems
+        description: book search and downloads
+    - SO-CRATES:
+        icon: mdi-security-network
+        href: https://so-crates.apps.ocp.igou.systems
+        description: file and network analysis
 
 - Servers:
     - ocp master (ms01):
