@@ -97,9 +97,9 @@ spec:
             - name: DNS_KEEP_NAMESERVER
               value: "off"
             - name: DNS_UPSTREAM_RESOLVER_TYPE
-              value: dot
+              value: doh
             - name: DNS_UPSTREAM_RESOLVERS
-              value: cloudflare
+              value: cloudflare,google
             - name: FIREWALL_OUTBOUND_SUBNETS
               value: 172.30.0.0/16
             - name: FIREWALL_INPUT_PORTS

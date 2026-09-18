@@ -68,7 +68,10 @@ Gluetun v3.41.3 captures the private resolver and search domains from the Pod's
 initial `ClusterFirst` resolver configuration before replacing
 `/etc/resolv.conf` with its local DNS listener. Local names such as
 `*.svc.cluster.local` are resolved by OpenShift DNS at `172.30.0.10`; public
-queries are sent to Cloudflare over DNS-over-TLS through `tun0`.
+queries are distributed between Cloudflare and Google over DNS-over-HTTPS
+through `tun0`. DoH avoids the intermittent resolution failures observed with
+Gluetun's DNS-over-TLS path while retaining encrypted DNS and resolver
+redundancy.
 `DNS_KEEP_NAMESERVER=off` is therefore intentional and provides split DNS
 without host aliases or fixed Service addresses.
 
