@@ -1,13 +1,15 @@
 # qBittorrent VPN application
 
-This is a manually deployed Phase 2A migration-validation workload. It is not
-registered in ArgoCD and is not included in `clusters/ocp/values.yaml`.
+This workload is managed by the `qbittorrent` Argo CD application registered
+in `clusters/ocp/values.yaml`. The current deployment mounts the retained
+qBittorrent and Prowlarr configuration volumes plus the shared production data
+PVC. The Phase 2A details below are retained as a historical validation record.
 
-Phase 2A moves only qBittorrent and Prowlarr configuration onto static native
+Phase 2A moved only qBittorrent and Prowlarr configuration onto static native
 iSCSI PVs. It does not connect production media, change the TrueNAS source
 configuration, or perform an application upgrade.
 
-## Architecture
+## Historical Phase 2A architecture
 
 The `Deployment/qbittorrent` Pod contains one restartable native init-sidecar
 and three application containers. All four share one network namespace:
@@ -94,6 +96,16 @@ firewall remains fail closed while the sidecar restarts.
 
 ## Image pins
 
+The current GitOps target uses these application releases:
+
+| Container | Tag | Digest |
+| --- | --- | --- |
+| qBittorrent | `5.2.3` | `sha256:4fcf15b7f265c2c8d7bc2a7e13240a07e0593c326f3cf3b5b9bb69eec5b79299` |
+| Prowlarr | `2.6.5` | `sha256:6152751c3ea2e7751564f5952173d5e83eed0e09f3fabd2cb6bdb58690c39e2f` |
+
+The following table records the historical first migrated OpenShift boot. The
+Gluetun and FlareSolverr pins remain unchanged from that baseline.
+
 The first migrated OpenShift boot used the exact live TrueNAS source image
 references recorded before shutdown:
 
@@ -104,8 +116,8 @@ references recorded before shutdown:
 | Prowlarr | `2.5.0` | `sha256:9c89ef21672a20f4cd4a766b5a085ae5a61de54a79e0841e136330a711b85447` |
 | FlareSolverr | `v3.5.0` | `sha256:139dfee1c6f89249c8d665d1333a42e8ec74ec0a86bc6bb1c8461e10d3a66a47` |
 
-These pins deliberately differ from newer Phase 1 image pins. Do not combine
-the storage migration with an application config or database upgrade.
+The original migration deliberately avoided combining the storage move with an
+application config or database upgrade.
 
 ## External TrueNAS storage
 
