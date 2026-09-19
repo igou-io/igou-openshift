@@ -1,9 +1,12 @@
 # Sonarr migration-validation application
 
-This is a manually deployed migration-validation workload. It is intentionally
-not registered in ArgoCD or included in `clusters/ocp/values.yaml`.
+This workload is managed by the `sonarr` Argo CD application registered in
+`clusters/ocp/values.yaml`. The migration details below are retained as a
+historical validation record. The current deployment runs one replica and
+mounts both the retained configuration PVC and the shared production data PVC.
 
-Sonarr configuration is on a static native-iSCSI RWO filesystem. `/data` is an
+During migration validation, Sonarr configuration was on a static native-iSCSI
+RWO filesystem and `/data` was an
 `EmptyDir` used only to make the expected container paths available during
 validation. Production media at `/mnt/cold/media/data` is not mounted or
 reachable in this phase.
@@ -26,6 +29,9 @@ away from control-plane nodes is normal repository behavior; there is no
 Sonarr-specific storage node affinity.
 
 ## Image and source audit
+
+The current GitOps target is
+`ghcr.io/home-operations/sonarr:4.0.20@sha256:1f19eb5e0f421418c1a956bbe01310a0141423afe28bd9a4b1dcb8629ff2bce2`.
 
 The first OpenShift boot is pinned to the exact source image reference:
 

@@ -54,7 +54,7 @@ spec:
             claimName: sonarr-data
       containers:
         - name: sonarr
-          image: ghcr.io/home-operations/sonarr:4.0.18@sha256:2cd77fb3d81909a734d61bb8f71462044cb9d2f187e626a28a05a5c4e4be8fd2
+          image: ghcr.io/home-operations/sonarr:4.0.20@sha256:1f19eb5e0f421418c1a956bbe01310a0141423afe28bd9a4b1dcb8629ff2bce2
           imagePullPolicy: IfNotPresent
           env:
             - name: TZ

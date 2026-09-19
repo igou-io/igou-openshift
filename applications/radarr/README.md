@@ -1,9 +1,12 @@
 # Radarr migration-validation application
 
-This is a manually deployed migration-validation workload. It is intentionally
-not registered in ArgoCD or included in `clusters/ocp/values.yaml`.
+This workload is managed by the `radarr` Argo CD application registered in
+`clusters/ocp/values.yaml`. The migration details below are retained as a
+historical validation record. The current deployment runs one replica and
+mounts both the retained configuration PVC and the shared production data PVC.
 
-Radarr configuration is on a static native-iSCSI RWO filesystem. `/data` is an
+During migration validation, Radarr configuration was on a static native-iSCSI
+RWO filesystem and `/data` was an
 `EmptyDir` used only to make the expected container paths available during
 validation. Production media at `/mnt/cold/media/data` is not mounted or
 reachable in this phase.
@@ -26,6 +29,9 @@ away from control-plane nodes is normal repository behavior; there is no
 Radarr-specific storage node affinity.
 
 ## Image and source audit
+
+The current GitOps target is
+`ghcr.io/home-operations/radarr:6.4.4@sha256:be53998a2d39cfa3c3315b70c7509a6a1f2a10c3aee9337653efc9f4c970430e`.
 
 The first OpenShift boot is pinned to the exact source image reference:
 
