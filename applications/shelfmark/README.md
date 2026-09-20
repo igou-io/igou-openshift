@@ -75,11 +75,11 @@ Route as an authentication boundary; external authentication is future work.
 ## Prowlarr search
 
 Shelfmark searches the trackers configured in the existing Prowlarr instance
-at `https://prowlarr.biscuit.igou.systems`. The connection is configured with:
+through its in-cluster Service. The connection is configured with:
 
 ```text
 PROWLARR_ENABLED=true
-PROWLARR_URL=https://prowlarr.biscuit.igou.systems
+PROWLARR_URL=http://prowlarr.qbittorrent.svc:9696
 PROWLARR_INDEXER_TIMEOUT=90
 ```
 
@@ -101,7 +101,7 @@ The qBittorrent connection is configured with:
 ```text
 PROWLARR_TORRENT_CLIENT=qbittorrent
 PROWLARR_TORRENT_ACTION=keep
-QBITTORRENT_URL=https://torrent.biscuit.igou.systems
+QBITTORRENT_URL=http://qbittorrent.qbittorrent.svc:8080
 QBITTORRENT_CATEGORY=books
 ```
 

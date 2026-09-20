@@ -1,13 +1,40 @@
 # qBittorrent VPN application
 
 This workload is managed by the `qbittorrent` Argo CD application registered
-in `clusters/ocp/values.yaml`. The current deployment mounts the retained
-qBittorrent and Prowlarr configuration volumes plus the shared production data
-PVC. The Phase 2A details below are retained as a historical validation record.
+in `clusters/ocp/values.yaml`.
 
-Phase 2A moved only qBittorrent and Prowlarr configuration onto static native
-iSCSI PVs. It does not connect production media, change the TrueNAS source
-configuration, or perform an application upgrade.
+## Current production topology
+
+The Deployment runs one Pod with Gluetun as a restartable native init sidecar
+and three application containers. All four share one network namespace:
+
+```text
+Deployment/qbittorrent (replicas: 1)
+├── gluetun
+│   └── /gluetun -> EmptyDir
+├── qbittorrent
+│   ├── /config  -> PVC/qbittorrent-config
+│   └── /data    -> PVC/qbittorrent-data -> NFS /mnt/cold/media/data
+├── prowlarr
+│   └── /config  -> PVC/prowlarr-config
+└── flaresolverr
+    └── /config  -> EmptyDir
+```
+
+The Pod uses supplemental GID `3006` for the production media export.
+Trusted-LAN HTTPRoutes expose `torrent.lan.igou.systems` and
+`prowlarr.lan.igou.systems`; application-to-application traffic uses the
+Kubernetes Services listed below.
+
+qBittorrent, Sonarr, and Radarr all mount the same TrueNAS NFS export at
+`/data`. This common filesystem and path layout allow Sonarr and Radarr to
+hardlink completed downloads into their media libraries when hardlink import
+is enabled. In that case the seeding path and library path are directory
+entries for the same file data, not two full copies.
+
+The remaining Phase 2A material is a historical migration record. During that
+validation, only the qBittorrent and Prowlarr configuration was moved to
+static native-iSCSI PVs; production media was intentionally disconnected.
 
 ## Historical Phase 2A architecture
 
@@ -63,6 +90,20 @@ No external DNS record, host alias, pinned Service IP, or TrueNAS compatibility
 alias is required for these internal relationships. Gluetun's outbound bypass
 is limited to the private OpenShift Service network, `172.30.0.0/16`; public
 destinations are not included.
+
+## Prowlarr IPTorrents policy
+
+IPTorrents remains enabled for Sonarr and Radarr RSS, automatic, and interactive
+searches, but its Prowlarr indexer setting has `freeLeechOnly=true`. Prowlarr
+therefore sends the tracker's freeleech filter with IPTorrents searches. This
+does not turn every result into freeleech; it asks IPTorrents to return only
+results the tracker already designates as freeleech. Tracker ratio and seeding
+rules still apply.
+
+This setting is application state stored on the `prowlarr-config` PVC, not a
+field in the Kubernetes manifests. Verify it after restoring or reseeding the
+Prowlarr database. The expected outbound IPTorrents search request contains
+`free=on`.
 
 ## Egress and DNS fail-closed design
 
@@ -303,7 +344,7 @@ zero for rollback. The live migration test results were:
   active and 162 paused torrents. Existing TrueNAS endpoints responded, and
   source Prowlarr SQLite integrity was `ok`.
 
-## Phase 2B warning
+## Historical Phase 2B warning
 
 The tested destination PVC state is not automatically final production state.
 Booting qBittorrent while all payloads are missing can alter resume and
@@ -328,7 +369,7 @@ Do not delete the source dataset, source snapshots, destination zvols, iSCSI
 targets, extents, LUNs, PVs, or PVCs as part of Phase 2A rollback. The PV
 reclaim policy is `Retain`; external storage remains manually managed.
 
-## Manual deployment and inspection
+## Render and inspect
 
 Run from the repository root with the OpenShift context selected:
 
@@ -340,14 +381,16 @@ oc wait --for=condition=Ready externalsecret/qbittorrent-mullvad \
   -n qbittorrent --timeout=180s
 oc wait --for=condition=available deployment/qbittorrent \
   -n qbittorrent --timeout=600s
-oc get pv qbittorrent-config-iscsi qbittorrent-prowlarr-config-iscsi
-oc get pvc -n qbittorrent qbittorrent-config prowlarr-config
+oc get pv qbittorrent-config-iscsi qbittorrent-prowlarr-config-iscsi \
+  qbittorrent-data-nfs
+oc get pvc -n qbittorrent qbittorrent-config prowlarr-config qbittorrent-data
 oc get pod -n qbittorrent -o wide
 oc get egressfirewall -n qbittorrent default -o yaml
 ```
 
-For disposable UI checks, use ClusterIP port-forwards. Do not expose the
-application publicly in Phase 2A:
+The normal LAN endpoints are `torrent.lan.igou.systems` and
+`prowlarr.lan.igou.systems`. For a direct check that bypasses Gateway API, use
+ClusterIP port-forwards:
 
 ```bash
 oc port-forward -n qbittorrent service/qbittorrent 8080:8080
@@ -382,7 +425,7 @@ chain and confirm that its only public `eth0` allow is UDP `51820` to the
 selected WireGuard server. Repeat the classified fail-closed restart test
 whenever a relay, DNS, firewall, or networking setting changes.
 
-## Rollback
+## Historical Phase 2A rollback
 
 After validation, scale the OpenShift Deployment to zero and confirm no Pod is
 mounting either config PVC and no destination iSCSI session remains. Leave the
@@ -396,7 +439,7 @@ clean-migration checkpoints. They are not final production seeds. After a
 restore or reseed, reapply and verify the OpenShift endpoint values and take a
 new final pre-production-boot snapshot before mounting production `/data`.
 
-## Out of scope
+## Historical Phase 2A out of scope
 
 Phase 2A does not implement production `/data`, NFS media storage,
 supplemental GID `3006`, Gateway API, HTTPRoute, router DNS, NetworkPolicy,
