@@ -14,7 +14,7 @@ spec:
   # Default llamacpp image (ghcr.io/ggml-org/llama.cpp:server) is CPU-only and
   # ignores --n-gpu-layers. Override with the CUDA build so the 2x RTX 4060 Ti
   # on casval are actually used for inference.
-  image: ghcr.io/ggml-org/llama.cpp:server-cuda13@sha256:8da184013434f58355227b6812b47f192caadad0687c3b0898dbd672da1499d6
+  image: ghcr.io/ggml-org/llama.cpp:server-cuda13@sha256:292c0af150ed0a4b53e869573c7720e1a3fcec1a8330744f640afb934341a9e0
   # At rest this model is OFF (replicas: 0) along with the casval burst node.
   # Start an AO casval lease and wait for the node to become Ready before scaling
   # this model to 1. ArgoCD ignores /spec/replicas, so the live scale-up is not
