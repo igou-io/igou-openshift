@@ -210,10 +210,10 @@ spec:
           resources:
             requests:
               cpu: 100m
-              memory: 256Mi
+              memory: 512Mi
             limits:
               cpu: 1
-              memory: 1Gi
+              memory: 2Gi
         - name: prowlarr
           image: ghcr.io/home-operations/prowlarr:2.6.5@sha256:6152751c3ea2e7751564f5952173d5e83eed0e09f3fabd2cb6bdb58690c39e2f
           imagePullPolicy: IfNotPresent
