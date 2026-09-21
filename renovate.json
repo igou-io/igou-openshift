@@ -43,6 +43,12 @@
         "llmkube"
       ],
       "enabled": false
+    },
+    {
+      "description": "Forgejo chart uses nonstandard image.tag + image.digest fields (the chart concatenates them into one image ref). The standard helm-values manager glues pin digests into tag here (incidents 2026-09-13 #937/#942 and 2026-09-21 #972/#988); the regex custom manager owns this pin instead.",
+      "matchManagers": ["helm-values"],
+      "matchFileNames": ["applications/forgejo/kustomization.yaml"],
+      "enabled": false
     }
   ],
   "customManagers": [
@@ -74,13 +80,13 @@
       "currentValueTemplate": "latest"
     },
     {
-      "description": "Forgejo rootless image tag and separate digest field in Helm valuesInline",
+      "description": "Forgejo chart pin: image.tag and image.digest are separate fields the chart concatenates; this regex manager owns the pin (helm-values manager is disabled for this file by packageRule, incidents #937/#942 and #972/#988)",
       "customType": "regex",
       "managerFilePatterns": [
         "/^applications/forgejo/kustomization\\.yaml$/"
       ],
       "matchStrings": [
-        "(?<depName>forgejo\\/forgejo)\\n(?<indentation>\\s+)tag: (?<currentValue>[^@].*?)\\n\\s+digest: (?<currentDigest>sha256:[a-f0-9]+)"
+        "(?<depName>forgejo\\/forgejo)\\n(?<indentation>\\s+)tag: (?<currentValue>[^\\s@]+)\\n\\s+digest: (?<currentDigest>sha256:[a-f0-9]+)"
       ],
       "datasourceTemplate": "docker",
       "packageNameTemplate": "code.forgejo.org/{{depName}}",
