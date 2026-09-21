@@ -166,7 +166,7 @@ spec:
                   echo "backup OK: ${CTR_DIR} (${SNAP_BYTES} bytes, ${VERSION})"
           containers:
             - name: upload
-              image: docker.io/rustfs/rc:v0.1.31@sha256:f3dc331f76b14a852a1dc0bffc80509cc41424eaa9ea0306d9584edc211dcad6
+              image: docker.io/rustfs/rc:v0.1.35@sha256:adb45b56539006120f1d790bcc17ee5f9b4d93c1d7e71ed0a24f10267f9d6914
               securityContext:
                 runAsUser: 0
                 privileged: false
