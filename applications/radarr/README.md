@@ -1,26 +1,20 @@
-# Radarr migration-validation application
+# Radarr application
 
 This workload is managed by the `radarr` Argo CD application registered in
-`clusters/ocp/values.yaml`. The migration details below are retained as a
-historical validation record. The current deployment runs one replica and
-mounts both the retained configuration PVC and the shared production data PVC.
+`clusters/ocp/values.yaml`.
 
-During migration validation, Radarr configuration was on a static native-iSCSI
-RWO filesystem and `/data` was an
-`EmptyDir` used only to make the expected container paths available during
-validation. Production media at `/mnt/cold/media/data` is not mounted or
-reachable in this phase.
-
-## Topology
+## Current production topology
 
 ```text
-Deployment/radarr (replicas: 0)
+Deployment/radarr (replicas: 1)
 ├── /config -> PVC/radarr-config -> PV/radarr-config-iscsi
-└── /data   -> EmptyDir
+└── /data   -> PVC/radarr-data -> NFS /mnt/cold/media/data
 ```
 
-The Service is an internal ClusterIP at `radarr.radarr.svc:7878`. No Route,
-Gateway listener, LoadBalancer, NodePort, or ArgoCD registration is created.
+The Service is available internally at `radarr.radarr.svc:7878`, and a
+trusted-LAN HTTPRoute exposes `radarr.lan.igou.systems`. The shared `/data`
+filesystem is the same TrueNAS export mounted by qBittorrent and Sonarr. This
+allows hardlink imports when enabled and keeps application paths consistent.
 
 The Pod uses the existing `nonroot-v2` SCC through a namespace-scoped Role and
 runs as UID/GID `1000:1000`. It drops all capabilities, disallows privilege
@@ -28,7 +22,14 @@ escalation, and uses `RuntimeDefault` seccomp. The soft scheduling preference
 away from control-plane nodes is normal repository behavior; there is no
 Radarr-specific storage node affinity.
 
-## Image and source audit
+## Historical migration-validation record
+
+The remaining migration sections describe the 2026-09-15 Phase 2A test, not
+the current deployment. During that test, `/data` was an `EmptyDir`, production
+media was unreachable, and the Deployment was returned to zero replicas after
+validation.
+
+## Historical image and source audit
 
 The current GitOps target is
 `ghcr.io/home-operations/radarr:6.4.4@sha256:be53998a2d39cfa3c3315b70c7509a6a1f2a10c3aee9337653efc9f4c970430e`.
@@ -37,8 +38,8 @@ The first OpenShift boot is pinned to the exact source image reference:
 
 `ghcr.io/home-operations/radarr:6.2.1@sha256:a566e7d364b96ce8ffb1b582266e656c69f3a12dec289d72bb0daa647ed4725e`
 
-The live source application reported version `6.2.1.10461`, SQLite, and Docker
-mode. Its source configuration path is
+The pre-migration source application reported version `6.2.1.10461`, SQLite,
+and Docker mode. Its source configuration path is
 `/mnt/ssd/containers/radarr/config`, mounted as `/config` by the TrueNAS
 container. The source `/data` is `/mnt/cold/media/data`; that production mount
 is deliberately absent from this application.
@@ -64,7 +65,7 @@ Pre-migration non-secret baseline:
 The source application uses the `develop` branch value reported by its system
 status API. No application upgrade is combined with this migration.
 
-## External TrueNAS storage
+## Historical external TrueNAS storage
 
 The destination is manually provisioned external infrastructure. It is not
 declared or reconciled by this repository, `igou-inventory`, or `igou-ansible`.
@@ -88,7 +89,7 @@ declared or reconciled by this repository, `igou-inventory`, or `igou-ansible`.
 The 5 GiB size leaves substantial headroom over the observed 83 MiB allocated
 configuration tree while keeping SQLite on SSD-backed block storage.
 
-## Migration procedure
+## Historical migration procedure
 
 1. Keep this Deployment at zero replicas and apply the manifests.
 2. Verify the PVC is Bound to the named PV and that a disposable helper sees
@@ -116,7 +117,7 @@ The imported configuration may report missing media because `/data` is
 deliberately empty. That warning is expected; database, permission, and
 startup errors are not.
 
-## Rollback and persistence validation
+## Historical rollback and persistence validation
 
 After API and application tests, delete and recreate the Pod. The database and
 configuration must remain on `radarr-config`; files written to `/data` must
@@ -124,7 +125,7 @@ disappear with the Pod. Then scale the Deployment back to zero, confirm no
 destination writer or stale iSCSI session remains, leave the destination zvol
 and snapshots intact, and restart the unchanged TrueNAS Radarr container.
 
-## Phase 2B restore and reseed warning
+## Historical Phase 2B restore and reseed warning
 
 The existing `radarr-sonarr-pre-first-boot-20260915T095654Z` destination
 snapshot is a clean migration checkpoint, not production-ready final state.
@@ -174,7 +175,7 @@ their `prowlarrUrl` fields to be reapplied. Connect production `/data` only
 after all three applications report the required values and a new final
 pre-production-boot snapshot has been taken.
 
-## Validation record
+## Historical validation record
 
 The live validation completed on 2026-09-15 and the workload was rolled back to
 the TrueNAS source afterward.
@@ -201,5 +202,7 @@ the two Torznab base URLs use `prowlarr.qbittorrent.svc`. Prowlarr's Radarr
 record uses `http://radarr.radarr.svc:7878`. These values were changed only in
 the destination copy; the rollback source remained unchanged.
 
-The Deployment is left at `replicas: 0`. The destination zvol and snapshot are
-intentionally retained for the later coordinated `/data` cutover.
+At the end of the 2026-09-15 validation, the Deployment was left at
+`replicas: 0`. That statement is part of the historical record; the current
+GitOps deployment runs one replica with production `/data` mounted. The
+destination zvol and snapshot were retained for the coordinated cutover.
