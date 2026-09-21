@@ -96,9 +96,9 @@ spec:
     - name: https_proxy
       value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
     - name: NO_PROXY
-      value: localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,api.ocp.igou.systems,10.10.9.10
+      value: localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,.apps.ocp.igou.systems,api.ocp.igou.systems,10.10.9.10,truenas.igou.systems,prometheus.rk8s.igou.systems
     - name: no_proxy
-      value: localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,api.ocp.igou.systems,10.10.9.10
+      value: localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,.apps.ocp.igou.systems,api.ocp.igou.systems,10.10.9.10,truenas.igou.systems,prometheus.rk8s.igou.systems
     - name: NODE_USE_ENV_PROXY
       value: '1'
     # Slack: this instance holds the shared app's tokens (see hermes-env).
@@ -492,9 +492,9 @@ spec:
                   - name: https_proxy
                     value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
                   - name: NO_PROXY
-                    value: localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,api.ocp.igou.systems,10.10.9.10
+                    value: localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,.apps.ocp.igou.systems,api.ocp.igou.systems,10.10.9.10,truenas.igou.systems,prometheus.rk8s.igou.systems
                   - name: no_proxy
-                    value: localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,api.ocp.igou.systems,10.10.9.10
+                    value: localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,.apps.ocp.igou.systems,api.ocp.igou.systems,10.10.9.10,truenas.igou.systems,prometheus.rk8s.igou.systems
                   - name: NODE_USE_ENV_PROXY
                     value: '1'
                   # opencode's hosted-model key, same forward the VM's
