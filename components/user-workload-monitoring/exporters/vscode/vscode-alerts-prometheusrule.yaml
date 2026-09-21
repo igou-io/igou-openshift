@@ -4,6 +4,10 @@ kind: PrometheusRule
 metadata:
   name: vscode-alerts
   namespace: vscode
+  labels:
+    app.kubernetes.io/name: vscode-node-exporter
+    app.kubernetes.io/part-of: vscode
+    openshift.io/prometheus-rule-evaluation-scope: leaf-prometheus
 spec:
   groups:
     - name: vscode.rules
@@ -39,3 +43,59 @@ spec:
             description: |
               Root filesystem on {{ $labels.instance }} is {{ $value | printf "%.0f" }}% full
               and the host will start failing writes soon.
+        - alert: VscodeHomeFilesystemHigh
+          expr: 100 * (1 - node_filesystem_avail_bytes{job="vscode-node-exporter",mountpoint="/home"} / node_filesystem_size_bytes{job="vscode-node-exporter",mountpoint="/home"}) > 70
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: vscode home filesystem above 70%
+            description: |
+              The /home filesystem on {{ $labels.instance }} is
+              {{ $value | printf "%.0f" }}% full. It backs Docker storage,
+              workspaces, and Armbian build trees; inspect growth before the
+              remaining capacity is consumed.
+        - alert: VscodeHomeFilesystemCritical
+          expr: 100 * (1 - node_filesystem_avail_bytes{job="vscode-node-exporter",mountpoint="/home"} / node_filesystem_size_bytes{job="vscode-node-exporter",mountpoint="/home"}) > 85
+          for: 15m
+          labels:
+            severity: critical
+          annotations:
+            summary: vscode home filesystem above 85%
+            description: |
+              The /home filesystem on {{ $labels.instance }} is
+              {{ $value | printf "%.0f" }}% full and is at risk of exhausting
+              writable space. Check Armbian build trees, Docker storage, and
+              devcontainer-local Podman image data immediately.
+        - alert: VscodeFilesystemFillingFast
+          expr: >-
+            (
+              node_filesystem_avail_bytes{
+                job="vscode-node-exporter",
+                mountpoint=~"/|/home"
+              }
+              /
+              node_filesystem_size_bytes{
+                job="vscode-node-exporter",
+                mountpoint=~"/|/home"
+              }
+              < 0.5
+            )
+            and
+            predict_linear(
+              node_filesystem_avail_bytes{
+                job="vscode-node-exporter",
+                mountpoint=~"/|/home"
+              }[6h],
+              48 * 60 * 60
+            ) < 0
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: vscode {{ $labels.mountpoint }} filesystem is filling rapidly
+            description: |
+              The {{ $labels.mountpoint }} filesystem on {{ $labels.instance }}
+              has less than 50% available and its 6-hour trend predicts
+              exhaustion within 48 hours. Investigate build and container
+              storage growth before the absolute capacity alerts fire.
