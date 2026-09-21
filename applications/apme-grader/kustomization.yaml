@@ -8,7 +8,7 @@ resources:
 helmCharts:
   - name: apme
     namespace: apme-grader
-    version: 0.1.4
+    version: 0.1.5
     releaseName: apme
     repo: https://ansible.github.io/apme
     valuesInline:
