@@ -745,6 +745,14 @@
           url: https://truenas.igou.systems
           key: "{{HOMEPAGE_VAR_TRUENAS_KEY}}"
           enablePools: true
+    - RustFS HOT:
+        icon: mdi-database
+        href: https://rustfs.infra.igou.systems/rustfs/console/
+        description: ssd object storage
+    - RustFS COLD:
+        icon: mdi-database-clock
+        href: https://rustfs-cold.infra.igou.systems/rustfs/console/
+        description: backup object storage
 
 - Media & Legacy:
     # biscuit/igounas services ported from the legacy homepage.biscuit tile
