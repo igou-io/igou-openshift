@@ -10,16 +10,9 @@ re-scoped so every setting lives in `config.yaml`
 Proven end to end 2026-08-06: `terminal_tool` returns exit 0 executing in a
 session pod running `igou-devenv`, with no LLM provider configured.
 
-Sibling workload: [`hermes-nested-podman`](../hermes-nested-podman) solves the
-same problem the other way — nested rootless podman *inside* the agent pod.
-The contrast is the point:
-
-| | nested-podman | this |
-|---|---|---|
-| Sandbox is | a container inside the agent pod | its own pod |
-| Agent pod needs | `SYS_ADMIN`, userns, `procMount: Unmasked`, unconfined seccomp | root start only (s6 requirement) |
-| Sandbox pod SCC | n/a | **`restricted-v2`** — the strictest one |
-| Kata/gVisor | impossible (no nested virt in a pod) | `pod_template.spec.runtimeClassName: kata` |
+This is the retained sandboxing test path. The earlier nested-Podman prototype
+was retired after production standardized on Kubernetes session pods with Kata
+isolation.
 
 ## Layout
 
