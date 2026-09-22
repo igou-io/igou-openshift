@@ -63,3 +63,32 @@ openshell sandbox delete smoke-test
 ```
 
 The resulting sandbox pod must not have `spec.runtimeClassName` set.
+
+## OpenCode Go provider
+
+The `opencode-go` provider supplies Codex credentials without placing the API
+key in the sandbox specification or wrapper command. Its non-secret profile is
+versioned in `provider-profiles/opencode-go-codex.yaml`; the gateway stores the
+credential in its encrypted SQLite database on the persistent volume.
+
+Bootstrap the provider after restoring or replacing the gateway database:
+
+```bash
+openshell --gateway ocp settings set --global --yes \
+  --key providers_v2_enabled \
+  --value true
+openshell provider profile lint \
+  --file applications/openshell/provider-profiles/opencode-go-codex.yaml
+openshell --gateway ocp provider profile import \
+  --file applications/openshell/provider-profiles/opencode-go-codex.yaml
+read -rsp 'OpenCode Go API key: ' OPENAI_API_KEY
+export OPENAI_API_KEY
+openshell --gateway ocp provider create \
+  --name opencode-go \
+  --type opencode-go-codex \
+  --credential OPENAI_API_KEY
+unset OPENAI_API_KEY
+```
+
+Do not commit the API key. The current MVP uses the operator's existing
+OpenCode credential; secret-manager integration remains a follow-up.
