@@ -105,5 +105,8 @@ helmCharts:
           rolesClaim: realm_access.roles
           adminRole: openshell-admin
           userRole: openshell-user
+        tls:
+          # Avoid reusing the legacy certgen Secret when cert-manager is enabled.
+          clientTlsSecretName: openshell-client-cert-manager-tls
         credentialStorage:
           existingSecret: openshell-credential-encryption-key
