@@ -688,6 +688,15 @@ applications:
     source:
       path: applications/openshell
 
+  # Isolated first ACP evaluation: Keycloak-backed UI/API, CNPG, and native
+  # (non-OpenShell) runner. See the app README before creating a project.
+  agent-control-plane:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/agent-control-plane
+
   forgejo:
     project: cluster-apps
     annotations:
