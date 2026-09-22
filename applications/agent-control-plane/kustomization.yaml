@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: agent-control-plane
+resources:
+  - agent-control-plane-namespace.yaml
+  - agent-control-plane-db-cluster.yaml
+  - agent-control-plane-config-configmap.yaml
+  - agent-control-plane-credentials-externalsecret.yaml
+  - agent-control-plane-api-deployment.yaml
+  - agent-control-plane-api-service.yaml
+  - agent-control-plane-ui-deployment.yaml
+  - agent-control-plane-ui-service.yaml
+  - agent-control-plane-ui-route.yaml
+  - agent-control-plane-control-plane-deployment.yaml
+  - agent-control-plane-control-plane-service.yaml
+  - agent-control-plane-control-plane-rbac.yaml

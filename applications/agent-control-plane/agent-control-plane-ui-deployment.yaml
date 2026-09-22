@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-control-plane-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent-control-plane-ui
+  template:
+    metadata:
+      labels:
+        app: agent-control-plane-ui
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: ui
+          image: quay.io/ambient_code/acp_ambient_ui@sha256:f2b895939a3abe0ea88c773fc66989fb10b3ed50bfc9fef6f2e5b9d21f44652a
+          ports:
+            - name: http
+              containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: API_SERVER_URL
+              value: http://agent-control-plane-api.agent-control-plane.svc:8000
+            - name: CONTROL_PLANE_URL
+              value: http://agent-control-plane-control-plane.agent-control-plane.svc:8080
+            - name: SSO_ISSUER_URL
+              value: https://keycloak.apps.ocp.igou.systems/realms/igou
+            - name: SSO_CLIENT_ID
+              value: agent-control-plane
+            - name: SSO_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: agent-control-plane-credentials
+                  key: CLIENT_SECRET
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: agent-control-plane-credentials
+                  key: SESSION_SECRET
+            - name: SSO_REDIRECT_URI
+              value: https://agent-control-plane.apps.ocp.igou.systems/api/auth/sso/callback
+          volumeMounts:
+            - name: cache
+              mountPath: /app/.next/cache
+            - name: tmp
+              mountPath: /tmp
+          readinessProbe:
+            httpGet:
+              path: /api/healthz
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /api/healthz
+              port: http
+            initialDelaySeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: cache
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
