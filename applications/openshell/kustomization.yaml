@@ -40,6 +40,8 @@ patches:
           - metadata:
               name: openshell-data
             spec:
+              accessModes:
+                - ReadWriteOnce
               storageClassName: freenas-nvmeof-ssd-csi
               resources:
                 requests:
