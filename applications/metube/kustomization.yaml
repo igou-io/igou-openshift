@@ -1,0 +1,139 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: metube
+resources:
+  - default-deny-networkpolicy.yaml
+  - allow-metube-networkpolicy.yaml
+  - metube-namespace.yaml
+  - metube-config-pvc.yaml
+  - metube-downloads-nfs-pv.yaml
+  - metube-downloads-pvc.yaml
+  - use-scc-nonroot-v2-role.yaml
+  - metube-nonroot-v2-rolebinding.yaml
+  - metube-httproute.yaml
+helmCharts:
+  - name: app-template
+    namespace: metube
+    version: 4.6.2
+    releaseName: metube
+    repo: oci://ghcr.io/bjw-s-labs/helm
+    valuesFile: values-dummy.yaml
+    valuesInline:
+      defaultPodOptions:
+        automountServiceAccountToken: false
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - key: node-role.kubernetes.io/control-plane
+                      operator: DoesNotExist
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          fsGroup: 1000
+          fsGroupChangePolicy: OnRootMismatch
+          supplementalGroups:
+            - 3006
+          seccompProfile:
+            type: RuntimeDefault
+      controllers:
+        metube:
+          type: deployment
+          replicas: 1
+          strategy: Recreate
+          serviceAccount:
+            identifier: metube
+          containers:
+            app:
+              image:
+                repository: ghcr.io/alexta69/metube
+                tag: 2026.09.20@sha256:36ebbfdcdfe6ee286e2b231d91c78759bb629cd283c6f75b75e1657fda2134f4
+                pullPolicy: IfNotPresent
+              env:
+                PUID: "1000"
+                PGID: "1000"
+                UMASK: "002"
+                CHOWN_DIRS: "false"
+                DOWNLOAD_DIR: /downloads/inbox
+                AUDIO_DOWNLOAD_DIR: /downloads/inbox
+                STATE_DIR: /config
+                TEMP_DIR: /downloads/.tmp
+                CUSTOM_DIRS: "true"
+                CREATE_CUSTOM_DIRS: "false"
+                DEFAULT_FOLDER: other
+                DOWNLOAD_DIRS_INDEXABLE: "false"
+                DELETE_FILE_ON_TRASHCAN: "false"
+                ALLOW_YTDL_OPTIONS_OVERRIDES: "false"
+                ALLOW_PRIVATE_ADDRESSES: "false"
+                MAX_CONCURRENT_DOWNLOADS: "2"
+                TZ: America/New_York
+              probes:
+                startup:
+                  enabled: true
+                  type: HTTP
+                  path: /
+                  port: 8081
+                  spec:
+                    failureThreshold: 30
+                    periodSeconds: 10
+                    timeoutSeconds: 5
+                readiness:
+                  enabled: true
+                  type: HTTP
+                  path: /
+                  port: 8081
+                  spec:
+                    periodSeconds: 10
+                    timeoutSeconds: 5
+                liveness:
+                  enabled: true
+                  type: HTTP
+                  path: /
+                  port: 8081
+                  spec:
+                    periodSeconds: 30
+                    timeoutSeconds: 5
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: "2"
+                  memory: 2Gi
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                runAsUser: 1000
+                runAsGroup: 1000
+                capabilities:
+                  drop:
+                    - ALL
+      persistence:
+        config:
+          type: persistentVolumeClaim
+          existingClaim: metube-config
+          advancedMounts:
+            metube:
+              app:
+                - path: /config
+        downloads:
+          type: persistentVolumeClaim
+          existingClaim: metube-downloads
+          advancedMounts:
+            metube:
+              app:
+                - path: /downloads
+                  readOnly: false
+      service:
+        app:
+          controller: metube
+          ports:
+            http:
+              port: 8081
+              targetPort: 8081
+      serviceAccount:
+        metube:
+          enabled: true

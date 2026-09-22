@@ -41,12 +41,13 @@ see `docs/runbooks/oadp-restore.md`.
 
 | Schedule | When | Namespaces | TTL |
 |---|---|---|---|
-| `daily-apps` | 08:00 (04:00 ET) | forgejo, gitea-mirror, grafana, hermes-sre, hermes-assistant, hermes-developer, sands-of-time, gotify, searxng, jellyfin, calibre-web, shelfmark | 30d |
+| `daily-apps` | 08:00 (04:00 ET) | forgejo, gitea-mirror, grafana, hermes-sre, hermes-assistant, hermes-developer, sands-of-time, gotify, searxng, jellyfin, metube, calibre-web, shelfmark | 30d |
 | `daily-platform` | 08:30 | ansible-automation-platform (Fernet key!), stackrox | 30d |
 | `weekly-heavy` | Sat 06:00 | comfyui, openshift-virtualization-os-images | 90d |
 
-`jellyfin-media` (1Ti static NFS PV) and `comfyui-models` (200Gi of
-re-downloadable weights) carry `velero.io/exclude-from-backup: "true"`.
+`jellyfin-media` (1Ti static NFS PV), `metube-downloads` (8Ti static NFS
+staging), and `comfyui-models` (200Gi of re-downloadable weights) carry
+`velero.io/exclude-from-backup: "true"`.
 The static NFS `books` export is intentionally included once through the
 running Shelfmark pod's `backup.velero.io/backup-volumes` annotation. The
 scaled-to-zero Calibre-Web Deployment mounts the same export but carries no

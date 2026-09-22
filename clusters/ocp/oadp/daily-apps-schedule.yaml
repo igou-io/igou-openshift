@@ -26,6 +26,7 @@ spec:
       - gotify
       - searxng
       - jellyfin
+      - metube
       - calibre-web
       - shelfmark
     snapshotMoveData: true
