@@ -1,0 +1,28 @@
+id: opencode-go-codex
+display_name: OpenCode Go for Codex
+description: OpenAI-compatible OpenCode Go inference endpoint used by Codex
+category: inference
+credentials:
+  - name: api_key
+    description: OpenCode Go API key
+    env_vars:
+      - OPENAI_API_KEY
+    required: true
+    auth_style: bearer
+    header_name: authorization
+    query_param: ''
+endpoints:
+  - host: opencode.ai
+    port: 443
+    protocol: rest
+    access: read-write
+    enforcement: enforce
+binaries:
+  - /usr/bin/codex
+  - /usr/local/bin/codex
+  - /usr/bin/node
+  - /usr/lib/node_modules/@openai/**
+inference_capable: true
+discovery:
+  credentials:
+    - api_key
