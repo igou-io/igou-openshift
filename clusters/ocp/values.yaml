@@ -676,6 +676,17 @@ applications:
     source:
       path: applications/it-tools
 
+  # NVIDIA OpenShell evaluation gateway. Sandboxes intentionally use the
+  # standard CRI-O runtime; see the application README for the alpha-release
+  # privileged-SCC boundary and port-forward-only access model.
+  openshell:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/openshell
+
   forgejo:
     project: cluster-apps
     annotations:
