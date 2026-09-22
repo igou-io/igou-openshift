@@ -45,6 +45,17 @@ rules:
       - pods/log
     verbs:
       - get
+  # Required to create ACP's project-manager Role without RBAC escalation.
+  - apiGroups:
+      - ''
+    resources:
+      - configmaps
+      - pods
+      - secrets
+      - serviceaccounts
+      - services
+    verbs:
+      - deletecollection
   - apiGroups:
       - rbac.authorization.k8s.io
     resources:
