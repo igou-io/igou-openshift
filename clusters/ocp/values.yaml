@@ -697,6 +697,17 @@ applications:
     source:
       path: applications/agent-control-plane
 
+  # Dedicated in-namespace gateway for the disposable ACP project.
+  acp-poc-gateway:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous,ServerSideDiff=true
+      argocd.argoproj.io/sync-wave: '21'
+    destination:
+      namespace: acp-poc
+    source:
+      path: applications/acp-poc-gateway
+
   forgejo:
     project: cluster-apps
     annotations:

@@ -51,7 +51,19 @@ spec:
             - name: MCP_IMAGE
               value: quay.io/ambient_code/acp_mcp@sha256:0586b7d7ac104c08791faecb76c3914205b87e528b328c937d03eaf0d6787ee4
             - name: OPENSHELL_ENABLED
-              value: 'false'
+              value: 'true'
+            - name: OPENSHELL_GATEWAY_SERVICE_NAME
+              value: openshell-gateway
+            - name: OPENSHELL_GATEWAY_GRPC_PORT
+              value: '8080'
+            - name: OPENSHELL_GATEWAY_TLS
+              value: 'true'
+            - name: OPENSHELL_GATEWAY_TLS_SERVER_NAME
+              value: openshell-gateway.acp-poc.svc.cluster.local
+            - name: OPENSHELL_GATEWAY_CLIENT_TLS_SECRET
+              value: openshell-client-tls
+            - name: OPENSHELL_RUNNER_IMAGE
+              value: quay.io/ambient_code/acp_runner_openshell@sha256:e06ff48b93d4ac47793a80d1be8502a42346ff2cd37f1b2d318738740c7c470f
           ports:
             - name: token
               containerPort: 8080
