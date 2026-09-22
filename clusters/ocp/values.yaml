@@ -538,6 +538,14 @@ applications:
     source:
       path: applications/jellyfin
 
+  metube:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/metube
+
   calibre-web:
     project: cluster-apps
     annotations:
