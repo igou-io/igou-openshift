@@ -1,7 +1,7 @@
 ---
-# One-shot declarative import of the `igou` realm: the rhdh OIDC client, its
-# service account (realm-management read roles for the keycloakOrg catalog
-# provider), the human user, and an admins group.
+# One-shot declarative import of the `igou` realm: OIDC clients for RHDH and
+# OpenShell, the RHDH service account (realm-management read roles for the
+# keycloakOrg catalog provider), human and agent users, groups, and realm roles.
 #
 # NOTE: KeycloakRealmImport is import-only — it runs once and does NOT
 # reconcile an existing realm. Later realm changes made here require either a
@@ -41,6 +41,12 @@ spec:
     registrationAllowed: false
     resetPasswordAllowed: false
     bruteForceProtected: true
+    roles:
+      realm:
+        - name: openshell-admin
+          description: OpenShell platform administrator
+        - name: openshell-user
+          description: OpenShell workspace user
     clients:
       - clientId: rhdh
         name: Red Hat Developer Hub
@@ -57,6 +63,26 @@ spec:
           - https://rhdh.apps.ocp.igou.systems/api/auth/oidc/handler/frame
         webOrigins:
           - https://rhdh.apps.ocp.igou.systems
+      - clientId: openshell-cli
+        name: OpenShell CLI
+        enabled: true
+        protocol: openid-connect
+        publicClient: true
+        standardFlowEnabled: true
+        directAccessGrantsEnabled: false
+        serviceAccountsEnabled: false
+        redirectUris:
+          - http://127.0.0.1:*/callback
+        attributes:
+          pkce.code.challenge.method: S256
+          oauth2.device.authorization.grant.enabled: 'true'
+        protocolMappers:
+          - name: openshell-audience
+            protocol: openid-connect
+            protocolMapper: oidc-audience-mapper
+            config:
+              included.client.audience: openshell-cli
+              access.token.claim: 'true'
     groups:
       - name: admins
       # RHDH RBAC binds group:default/developers to role:default/developer
@@ -82,6 +108,8 @@ spec:
         emailVerified: true
         groups:
           - /admins
+        realmRoles:
+          - openshell-admin
         credentials:
           - type: password
             value: "${IGOU_TEMP_PASSWORD}"
