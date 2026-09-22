@@ -1,24 +1,27 @@
 # OpenShell
 
-OpenShell 0.0.116 runs as an evaluation-only gateway backed by the existing Red
-Hat Agent Sandbox operator. The gateway and dynamically created sandboxes share
-the `openshell` namespace.
+OpenShell 0.0.116 runs as a lab gateway backed by the existing Red Hat Agent
+Sandbox operator. The gateway and dynamically created sandboxes share the
+`openshell` namespace.
 
 ## Security posture
 
 - The gateway is a single SQLite-backed StatefulSet and is not highly
   available.
-- The Service is cluster-internal. There is no Route, OIDC client, or public
-  endpoint; connect through `oc port-forward` only.
-- TLS is disabled in accordance with NVIDIA's OpenShift evaluation procedure.
+- The gateway terminates TLS with a public certificate issued by `cluster-acme`
+  for `openshell.apps.ocp.igou.systems`. An OpenShift passthrough Route preserves
+  end-to-end TLS.
+- CLI users authenticate against the existing Keycloak `igou` realm. Anonymous
+  access is disabled; `openshell-admin` and `openshell-user` realm roles control
+  API authorization.
 - Sandbox pods use the ordinary CRI-O runtime. No `RuntimeClass` is configured.
 - OpenShell 0.0.116 requires its sandbox ServiceAccount to use the OpenShift
   `privileged` SCC. The grant is scoped to `system:serviceaccount:openshell:openshell-sandbox`.
 - Anonymous OpenShell telemetry is disabled.
 
 Do not treat this release as a production security boundary. Reassess the SCC,
-TLS/OIDC, ingress, database, workspace isolation, and chart values when upgrading
-to OpenShell 0.1.x.
+database, workspace isolation, and chart values when upgrading to OpenShell
+0.1.x.
 
 ## Dependencies
 
@@ -37,15 +40,19 @@ run during the first sync.
 
 ```bash
 oc -n openshell rollout status statefulset/openshell
-oc -n openshell port-forward service/openshell 8080:8080
-```
-
-In another terminal:
-
-```bash
-openshell gateway add http://127.0.0.1:8080 --local --name openshift
+openshell gateway add https://openshell.apps.ocp.igou.systems \
+  --name ocp \
+  --oidc-issuer https://keycloak.apps.ocp.igou.systems/realms/igou \
+  --oidc-client-id openshell-cli \
+  --oidc-audience openshell-cli
+openshell gateway login ocp
 openshell status
+openshell whoami
 ```
+
+Set `OPENSHELL_NO_BROWSER=1` for device authorization from a headless shell.
+The Keycloak client enforces S256 PKCE for browser login and enables the device
+authorization grant.
 
 ## Verify a sandbox
 
