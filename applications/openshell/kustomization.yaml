@@ -62,6 +62,16 @@ helmCharts:
         # Kustomize renders offline. The live v1beta1 API was verified on ocp.
         preflight:
           enabled: false
+      certManager:
+        enabled: true
+        serverIssuerRef:
+          name: cluster-acme
+          kind: ClusterIssuer
+        serverDnsNames:
+          - openshell.apps.ocp.igou.systems
+      openshiftRoute:
+        enabled: true
+        host: openshell.apps.ocp.igou.systems
       resources:
         requests:
           cpu: 100m
@@ -86,7 +96,14 @@ helmCharts:
         defaultRuntimeClassName: ''
         # OpenShift uses SELinux/SCC rather than node-local AppArmor profiles.
         appArmorProfile: ''
-        # Evaluation access is private and reached only through oc port-forward.
-        disableTls: true
+        disableTls: false
+        auth:
+          allowUnauthenticatedUsers: false
+        oidc:
+          issuer: https://keycloak.apps.ocp.igou.systems/realms/igou
+          audience: openshell-cli
+          rolesClaim: realm_access.roles
+          adminRole: openshell-admin
+          userRole: openshell-user
         credentialStorage:
           existingSecret: openshell-credential-encryption-key
