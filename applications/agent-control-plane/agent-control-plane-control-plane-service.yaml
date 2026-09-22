@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: agent-control-plane-control-plane
+spec:
+  selector:
+    app: agent-control-plane-control-plane
+  ports:
+    - name: token
+      port: 8080
+      targetPort: token

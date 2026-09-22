@@ -33,6 +33,10 @@ spec:
       secret:
         name: keycloak-realm-secrets
         key: AGENTS_TEMP_PASSWORD
+    ACP_CLIENT_SECRET:
+      secret:
+        name: keycloak-realm-secrets
+        key: ACP_CLIENT_SECRET
   realm:
     id: igou
     realm: igou
@@ -83,6 +87,19 @@ spec:
             config:
               included.client.audience: openshell-cli
               access.token.claim: 'true'
+      - clientId: agent-control-plane
+        name: Agent Control Plane POC
+        enabled: true
+        protocol: openid-connect
+        publicClient: false
+        secret: "${ACP_CLIENT_SECRET}"
+        standardFlowEnabled: true
+        directAccessGrantsEnabled: false
+        serviceAccountsEnabled: true
+        redirectUris:
+          - https://agent-control-plane.apps.ocp.igou.systems/api/auth/sso/callback
+        webOrigins:
+          - https://agent-control-plane.apps.ocp.igou.systems
     groups:
       - name: admins
       # RHDH RBAC binds group:default/developers to role:default/developer

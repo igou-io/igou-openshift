@@ -1,0 +1,14 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: agent-control-plane
+spec:
+  host: agent-control-plane.apps.ocp.igou.systems
+  to:
+    kind: Service
+    name: agent-control-plane-ui
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

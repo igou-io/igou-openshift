@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-control-plane-control-plane
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agent-control-plane-control-plane
+  template:
+    metadata:
+      labels:
+        app: agent-control-plane-control-plane
+    spec:
+      serviceAccountName: agent-control-plane-control-plane
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: control-plane
+          image: quay.io/ambient_code/acp_control_plane@sha256:bb4819e8a249522546018f0783f7bc1a7f56c5a5b930a9c1c38dedc1dda8170a
+          env:
+            - name: MODE
+              value: kube
+            - name: PLATFORM_MODE
+              value: standard
+            - name: NAMESPACE
+              value: agent-control-plane
+            - name: CP_RUNTIME_NAMESPACE
+              value: agent-control-plane
+            - name: AMBIENT_API_SERVER_URL
+              value: http://agent-control-plane-api.agent-control-plane.svc:8000
+            - name: AMBIENT_GRPC_SERVER_ADDR
+              value: agent-control-plane-api.agent-control-plane.svc:9000
+            - name: AMBIENT_GRPC_USE_TLS
+              value: 'false'
+            - name: OIDC_TOKEN_URL
+              value: https://keycloak.apps.ocp.igou.systems/realms/igou/protocol/openid-connect/token
+            - name: OIDC_CLIENT_ID
+              value: agent-control-plane
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: agent-control-plane-credentials
+                  key: CLIENT_SECRET
+            - name: CP_TOKEN_URL
+              value: http://agent-control-plane-control-plane.agent-control-plane.svc:8080/token
+            - name: RUNNER_IMAGE
+              value: quay.io/ambient_code/acp_claude_runner@sha256:c4e2797b8cb8443e13e93dce3ed0a4a7d7ab39ccc62a285d74447d20c3bc3c4a
+            - name: MCP_IMAGE
+              value: quay.io/ambient_code/acp_mcp@sha256:0586b7d7ac104c08791faecb76c3914205b87e528b328c937d03eaf0d6787ee4
+            - name: OPENSHELL_ENABLED
+              value: 'false'
+          ports:
+            - name: token
+              containerPort: 8080
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
