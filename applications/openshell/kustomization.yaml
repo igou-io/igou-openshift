@@ -2,11 +2,11 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: openshell
 resources:
-  - openshell-namespace.yaml
   - openshell-credential-encryption-key-externalsecret.yaml
   - openshell-sandbox-privileged-clusterrolebinding.yaml
 patches:
-  # OpenShift assigns a namespace-specific UID and fsGroup to the gateway.
+  # NVIDIA's OpenShift install procedure clears the chart's fixed UID and
+  # fsGroup so SCC admission can assign namespace-valid values.
   - target:
       kind: StatefulSet
       name: openshell
@@ -24,6 +24,18 @@ patches:
               - name: openshell-gateway
                 securityContext:
                   runAsUser: null
+
+  # OpenShell 0.0.116 does not expose values for its gateway PVC. Pin it to
+  # this cluster's storage class and evaluation capacity after Helm renders.
+  - target:
+      kind: StatefulSet
+      name: openshell
+    patch: |
+      apiVersion: apps/v1
+      kind: StatefulSet
+      metadata:
+        name: openshell
+      spec:
         volumeClaimTemplates:
           - metadata:
               name: openshell-data
@@ -32,68 +44,6 @@ patches:
               resources:
                 requests:
                   storage: 10Gi
-
-  # Helm pre-install hooks have no lifecycle under Kustomize-rendered Helm.
-  # Convert the idempotent certificate/JWT bootstrap resources into normal
-  # sync-wave resources. Keep the completed Job so Argo does not recreate it
-  # continuously; Replace handles immutable Job fields on chart upgrades.
-  - target:
-      kind: ServiceAccount
-      name: openshell-certgen
-    patch: |
-      - op: remove
-        path: /metadata/annotations/helm.sh~1hook
-      - op: remove
-        path: /metadata/annotations/helm.sh~1hook-delete-policy
-      - op: remove
-        path: /metadata/annotations/helm.sh~1hook-weight
-      - op: add
-        path: /metadata/annotations/argocd.argoproj.io~1sync-wave
-        value: '-2'
-  - target:
-      kind: Role
-      name: openshell-certgen
-    patch: |
-      - op: remove
-        path: /metadata/annotations/helm.sh~1hook
-      - op: remove
-        path: /metadata/annotations/helm.sh~1hook-delete-policy
-      - op: remove
-        path: /metadata/annotations/helm.sh~1hook-weight
-      - op: add
-        path: /metadata/annotations/argocd.argoproj.io~1sync-wave
-        value: '-2'
-  - target:
-      kind: RoleBinding
-      name: openshell-certgen
-    patch: |
-      - op: remove
-        path: /metadata/annotations/helm.sh~1hook
-      - op: remove
-        path: /metadata/annotations/helm.sh~1hook-delete-policy
-      - op: remove
-        path: /metadata/annotations/helm.sh~1hook-weight
-      - op: add
-        path: /metadata/annotations/argocd.argoproj.io~1sync-wave
-        value: '-2'
-  - target:
-      kind: Job
-      name: openshell-certgen
-    patch: |
-      - op: remove
-        path: /metadata/annotations/helm.sh~1hook
-      - op: remove
-        path: /metadata/annotations/helm.sh~1hook-delete-policy
-      - op: remove
-        path: /metadata/annotations/helm.sh~1hook-weight
-      - op: add
-        path: /metadata/annotations/argocd.argoproj.io~1sync-options
-        value: Replace=true
-      - op: add
-        path: /metadata/annotations/argocd.argoproj.io~1sync-wave
-        value: '-1'
-      - op: remove
-        path: /spec/ttlSecondsAfterFinished
 helmCharts:
   - name: helm-chart
     namespace: openshell

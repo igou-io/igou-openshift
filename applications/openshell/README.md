@@ -29,6 +29,9 @@ to OpenShell 0.1.x.
 
 The chart's Agent Sandbox preflight is disabled only because Kustomize inflates
 Helm without live API discovery. The API was verified on the target cluster.
+The parent `clusters/ocp` application creates the `openshell` namespace before
+the child application so the chart's native PreSync certificate/JWT hook can
+run during the first sync.
 
 ## Connect
 
