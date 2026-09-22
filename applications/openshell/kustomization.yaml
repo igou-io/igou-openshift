@@ -1,0 +1,90 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: openshell
+resources:
+  - openshell-credential-encryption-key-externalsecret.yaml
+  - openshell-sandbox-privileged-clusterrolebinding.yaml
+patches:
+  # NVIDIA's OpenShift install procedure clears the chart's fixed UID and
+  # fsGroup so SCC admission can assign namespace-valid values.
+  - target:
+      kind: StatefulSet
+      name: openshell
+    patch: |
+      apiVersion: apps/v1
+      kind: StatefulSet
+      metadata:
+        name: openshell
+      spec:
+        template:
+          spec:
+            securityContext:
+              fsGroup: null
+            containers:
+              - name: openshell-gateway
+                securityContext:
+                  runAsUser: null
+
+  # OpenShell 0.0.116 does not expose values for its gateway PVC. Pin it to
+  # this cluster's storage class and evaluation capacity after Helm renders.
+  - target:
+      kind: StatefulSet
+      name: openshell
+    patch: |
+      apiVersion: apps/v1
+      kind: StatefulSet
+      metadata:
+        name: openshell
+      spec:
+        volumeClaimTemplates:
+          - metadata:
+              name: openshell-data
+            spec:
+              storageClassName: freenas-nvmeof-ssd-csi
+              resources:
+                requests:
+                  storage: 10Gi
+helmCharts:
+  - name: helm-chart
+    namespace: openshell
+    version: 0.0.116
+    releaseName: openshell
+    repo: oci://ghcr.io/nvidia/openshell
+    valuesInline:
+      image:
+        tag: 0.0.116@sha256:05cf77bbb022a739aed6f22daa0e7e164415f4ab273b5f84319e46d91eb8f645
+      supervisor:
+        image:
+          tag: 0.0.116@sha256:c8c42aef16c200063e32cbf72e553e4ead027085427b555efafd95063ecead42
+      agentSandbox:
+        # Kustomize renders offline. The live v1beta1 API was verified on ocp.
+        preflight:
+          enabled: false
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: '1'
+          memory: 1Gi
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+      server:
+        telemetryEnabled: false
+        sandboxImage: ghcr.io/nvidia/openshell-community/sandboxes/base:latest@sha256:aeef1c63f00e2913ea002ccb3aaf925f338b5c5d70e63576f0d95c16a138044e
+        workspaceDefaultStorageSize: 10Gi
+        workspaceStorageClass: freenas-nvmeof-ssd-csi
+        # Intentionally use the cluster's normal CRI-O runtime for now.
+        defaultRuntimeClassName: ''
+        # OpenShift uses SELinux/SCC rather than node-local AppArmor profiles.
+        appArmorProfile: ''
+        # Evaluation access is private and reached only through oc port-forward.
+        disableTls: true
+        credentialStorage:
+          existingSecret: openshell-credential-encryption-key
