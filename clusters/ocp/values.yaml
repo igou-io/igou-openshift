@@ -682,7 +682,8 @@ applications:
   openshell:
     project: cluster-apps
     annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      # Work around Argo CD's SSA diff bug for StatefulSet volumeClaimTemplates.
+      argocd.argoproj.io/compare-options: IgnoreExtraneous,ServerSideDiff=true
       argocd.argoproj.io/sync-wave: '20'
     source:
       path: applications/openshell
