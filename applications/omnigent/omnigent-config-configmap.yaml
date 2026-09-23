@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: omnigent-config
+  namespace: omnigent
+data:
+  HOST: 0.0.0.0
+  PORT: '8000'
+  ARTIFACT_DIR: /data/artifacts
+  OMNIGENT_AUTH_ENABLED: '1'
+  OMNIGENT_AUTH_PROVIDER: accounts
+  OMNIGENT_ACCOUNTS_BASE_URL: https://omnigent.apps.ocp.igou.systems
+  OMNIGENT_ACCOUNTS_INIT_ADMIN_USERNAME: igou
+  OMNIGENT_ACCOUNTS_AUTO_OPEN: '0'
+  OMNIGENT_BUILTIN_AGENT_DIRS: /etc/omnigent/agents/opencode-go-test.yaml
