@@ -4,6 +4,7 @@ namespace: acp-poc
 resources:
   - acp-poc-namespace.yaml
   - acp-poc-openshell-credential-encryption-key-externalsecret.yaml
+  - opencode-go-externalsecret.yaml
   - acp-poc-openshell-sandbox-privileged-clusterrolebinding.yaml
 patches:
   # Let OpenShift SCC admission allocate a valid UID and fsGroup.
