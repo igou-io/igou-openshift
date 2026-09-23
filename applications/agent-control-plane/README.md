@@ -24,13 +24,13 @@ The POC provider was bootstrapped with the OpenShell CLI over a local `oc port-f
 
 For the Codex smoke test, create a disposable sandbox with `--provider opencode-go`, then remove its overlapping default L4 network rule with `openshell policy update <sandbox> --remove-rule opencode --wait` before calling Codex. The custom profile supplies the inspected OpenCode endpoint rule. A one-prompt test returned `OK` using `gpt-5.6-luna`; the sandbox was deleted afterward. Client-credentials CLI login has no refresh token, so re-run `openshell gateway login acp-poc` when its access token expires.
 
-This enables OpenShell/Codex sandboxes on the dedicated gateway. It does **not** make ACP sessions use OpenCode Go: this ACP revision maps custom provider types to `generic`, does not mark them inference-capable, and its shipped runner does not provide an active Codex bridge. An ACP model-response POC needs upstream provider and runner integration.
+ACP uses the custom `ghcr.io/igou-io/acp-codex-runner` image, pinned by digest in the control-plane Deployment. It extends the pinned upstream runner with Codex and an AG-UI bridge while reusing the upstream gRPC session listener. The ACP `acp-poc` project has an `opencode-go` provider declaration (`type: opencode-go-codex`, `secret: opencode-go`), a `codex-opencode` policy allowing `opencode.ai:443` for Codex, and a `codex-opencode-poc` agent bound to both. ACP still maps the custom provider type to `generic`, so the Codex runner calls the configured OpenCode endpoint directly; there is no `inference.local` route for it. These ACP API records are manually bootstrapped POC state, not reconciled from GitOps.
 
 ## Limitations
 
 - The gateway uses ordinary CRI-O containers, not Kata. OpenShell 0.0.116 still requires the sandbox ServiceAccount to use the privileged SCC, so this is not a production security boundary.
 - Only `acp-poc` has a gateway. The upstream control plane assumes one gateway per project namespace; creating another project without deploying its gateway leaves sessions Pending.
-- The `opencode-go` provider is manually bootstrapped in this gateway's database, not reconciled from GitOps. ACP cannot yet use it for model responses.
+- The original gateway `opencode-go` provider and the ACP provider/policy/agent records are manually bootstrapped, not reconciled from GitOps. The ACP runner image and Kubernetes Secret are declarative.
 - No database backup policy or HA yet. Do not keep important sessions or credentials here.
 - The cluster-wide ACP service account is a deliberate POC-only trust grant. Review upstream's namespace provisioner and narrow it before granting anyone else access.
 - The realm client is bootstrapped through the Keycloak admin API because `KeycloakRealmImport` does not reconcile existing realms. Keep the realm bootstrap record aligned separately.
