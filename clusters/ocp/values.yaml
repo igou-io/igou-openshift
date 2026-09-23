@@ -688,6 +688,16 @@ applications:
     source:
       path: applications/openshell
 
+  swarmer:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '21'
+    destination:
+      namespace: openshell
+    source:
+      path: applications/swarmer
+
   forgejo:
     project: cluster-apps
     annotations:

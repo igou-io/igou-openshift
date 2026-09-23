@@ -9,6 +9,7 @@ resources:
   - rhbk-operator-subscription.yaml
   - keycloak-pg-credentials-externalsecret.yaml
   - keycloak-realm-secrets-externalsecret.yaml
+  - keycloak-swarmer-secret-externalsecret.yaml
   - cnpg-s3-credentials-externalsecret.yaml
   - keycloak-pg-backup-objectstore.yaml
   - keycloak-pg-cluster.yaml

@@ -1,0 +1,6 @@
+FROM quay.io/jpacker/swarmer:1.4.7@sha256:4ab1c8c998ad1da43e8cfb84455ad9044117eb7af0563b0fa151d010f6b212cd
+
+USER 0
+COPY patch_workspace_list.py /tmp/patch_workspace_list.py
+RUN python3 /tmp/patch_workspace_list.py && rm /tmp/patch_workspace_list.py
+USER 1001

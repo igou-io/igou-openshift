@@ -1,0 +1,17 @@
+id: opencode-go-for-swarmer
+display_name: OpenCode Go for Agent Swarm
+credentials:
+  - name: OPENAI_API_KEY
+    description: OpenCode Go subscription key
+    env_vars:
+      - OPENAI_API_KEY
+    required: true
+    auth_style: bearer
+    header_name: authorization
+endpoints:
+  - host: opencode.ai
+    port: 443
+    protocol: rest
+    access: read-write
+    enforcement: enforce
+inference_capable: true
