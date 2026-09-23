@@ -37,6 +37,10 @@ spec:
       secret:
         name: keycloak-realm-secrets
         key: ACP_CLIENT_SECRET
+    SWARMER_OPENSHELL_CLIENT_SECRET:
+      secret:
+        name: keycloak-swarmer-secret
+        key: SWARMER_OPENSHELL_CLIENT_SECRET
   realm:
     id: igou
     realm: igou
@@ -87,6 +91,22 @@ spec:
             config:
               included.client.audience: openshell-cli
               access.token.claim: 'true'
+      - clientId: swarmer-openshell
+        name: Agent Swarm OpenShell service
+        enabled: true
+        protocol: openid-connect
+        publicClient: false
+        secret: "${SWARMER_OPENSHELL_CLIENT_SECRET}"
+        standardFlowEnabled: false
+        directAccessGrantsEnabled: false
+        serviceAccountsEnabled: true
+        protocolMappers:
+          - name: openshell-audience
+            protocol: openid-connect
+            protocolMapper: oidc-audience-mapper
+            config:
+              included.client.audience: openshell-cli
+              access.token.claim: 'true'
     groups:
       - name: admins
       # RHDH RBAC binds group:default/developers to role:default/developer
@@ -104,6 +124,12 @@ spec:
             - view-users
             - query-users
             - query-groups
+      - username: service-account-swarmer-openshell
+        enabled: true
+        serviceAccountClientId: swarmer-openshell
+        realmRoles:
+          - openshell-admin
+          - openshell-user
       - username: igou
         enabled: true
         firstName: David
