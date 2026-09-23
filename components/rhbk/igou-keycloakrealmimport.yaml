@@ -87,26 +87,6 @@ spec:
             config:
               included.client.audience: openshell-cli
               access.token.claim: 'true'
-      - clientId: agent-control-plane
-        name: Agent Control Plane POC
-        enabled: true
-        protocol: openid-connect
-        publicClient: false
-        secret: "${ACP_CLIENT_SECRET}"
-        standardFlowEnabled: true
-        directAccessGrantsEnabled: false
-        serviceAccountsEnabled: true
-        redirectUris:
-          - https://agent-control-plane.apps.ocp.igou.systems/api/auth/sso/callback
-        webOrigins:
-          - https://agent-control-plane.apps.ocp.igou.systems
-        protocolMappers:
-          - name: acp-audience
-            protocol: openid-connect
-            protocolMapper: oidc-audience-mapper
-            config:
-              included.client.audience: agent-control-plane
-              access.token.claim: 'true'
     groups:
       - name: admins
       # RHDH RBAC binds group:default/developers to role:default/developer
@@ -124,11 +104,6 @@ spec:
             - view-users
             - query-users
             - query-groups
-      - username: service-account-agent-control-plane
-        enabled: true
-        serviceAccountClientId: agent-control-plane
-        realmRoles:
-          - openshell-admin
       - username: igou
         enabled: true
         firstName: David

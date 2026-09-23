@@ -55,7 +55,6 @@ spec:
               - key: kubernetes.io/metadata.name
                 operator: In
                 values:
-                  - agent-control-plane
                   - automation-orchestrator
                   - forgejo
                   - quay-enterprise
@@ -95,7 +94,6 @@ spec:
               - key: kubernetes.io/metadata.name
                 operator: In
                 values:
-                  - agent-control-plane
                   - automation-orchestrator
                   - forgejo
                   - quay-enterprise
