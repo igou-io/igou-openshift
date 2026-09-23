@@ -63,7 +63,7 @@ spec:
             - name: OPENSHELL_GATEWAY_CLIENT_TLS_SECRET
               value: openshell-client-tls
             - name: OPENSHELL_RUNNER_IMAGE
-              value: quay.io/ambient_code/acp_runner_openshell@sha256:e06ff48b93d4ac47793a80d1be8502a42346ff2cd37f1b2d318738740c7c470f
+              value: ghcr.io/igou-io/acp-codex-runner@sha256:0c52fdcf9955968fd2c587035134710f5c8e49d76617d3994c17077f5d146e61
           ports:
             - name: token
               containerPort: 8080
