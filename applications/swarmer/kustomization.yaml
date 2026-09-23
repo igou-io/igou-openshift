@@ -1,0 +1,131 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - swarmer-imagestream.yaml
+  - swarmer-data-pvc.yaml
+  - swarmer-admin-serviceaccount.yaml
+  - swarmer-tokenreview-clusterrole.yaml
+  - swarmer-tokenreview-clusterrolebinding.yaml
+  - swarmer-oauthclient.yaml
+  - swarmer-secret-externalsecret.yaml
+helmCharts:
+  - name: app-template
+    namespace: openshell
+    version: 4.6.2
+    releaseName: swarmer
+    repo: oci://ghcr.io/bjw-s-labs/helm
+    valuesFile: values-dummy.yaml
+    valuesInline:
+      controllers:
+        swarmer:
+          type: deployment
+          replicas: 1
+          strategy: Recreate
+          serviceAccount:
+            identifier: swarmer
+          pod:
+            securityContext:
+              fsGroup: 1001600000
+              seccompProfile:
+                type: RuntimeDefault
+          containers:
+            app:
+              image:
+                repository: image-registry.openshift-image-registry.svc:5000/openshell/swarmer
+                tag: 1.4.7-igou.1@sha256:28d72fdab3d325be3acb8f406ff2431529c8a745bd9ed2cb04f5db41ab24fb5b
+                pullPolicy: IfNotPresent
+              env:
+                K8S_IN_CLUSTER: 'true'
+                DATABASE_URL: sqlite+aiosqlite:////data/swarmer.db
+                SWARMER_SECRET_KEY:
+                  valueFrom:
+                    secretKeyRef:
+                      name: swarmer-secret
+                      key: SWARMER_SECRET_KEY
+                OPENSHIFT_OAUTH_URL: https://oauth-openshift.apps.ocp.igou.systems
+                REDIRECT_BASE_URL: https://swarmer.apps.ocp.igou.systems
+                AGENT_IMAGE_OPENCODE: quay.io/jpacker/opencode:0.3.9@sha256:5ce0f4acefc8e6916d1043ab685f8b726d19b7ba6ce3490a39a3aadf90a7d16b
+                OPENSHELL_GATEWAY_URL: https://openshell.openshell.svc:8080
+                OPENSHELL_TLS_CA: /auth/openshell/ca.crt
+                OPENSHELL_TLS_CERT: /auth/openshell/tls.crt
+                OPENSHELL_TLS_KEY: /auth/openshell/tls.key
+                WORKSPACE_ADMIN_USERS: igou,system:serviceaccount:openshell:swarmer-admin
+                WORKSPACE_CREATE_POLICY: admins
+                MAX_CONCURRENT_AGENTS: '1'
+                PR_WATCHER_ENABLED: 'false'
+                OPENAI_PRESET_PLAN_MODEL: openai/gpt-5.6-luna
+                OPENAI_PRESET_BUILD_MODEL: openai/gpt-5.6-luna
+                OPENAI_PRESET_SMALL_MODEL: openai/gpt-5.6-luna
+                OPENCODE_EXPERIMENTAL_PLAN_MODE: 'false'
+              probes:
+                startup:
+                  enabled: true
+                  type: HTTP
+                  path: /login
+                  port: 8080
+                  spec:
+                    failureThreshold: 30
+                    periodSeconds: 2
+                readiness:
+                  enabled: true
+                  type: HTTP
+                  path: /login
+                  port: 8080
+                liveness:
+                  enabled: true
+                  type: HTTP
+                  path: /login
+                  port: 8080
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: '1'
+                  memory: 1Gi
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                capabilities:
+                  drop:
+                    - ALL
+      persistence:
+        data:
+          type: persistentVolumeClaim
+          existingClaim: swarmer-data
+          advancedMounts:
+            swarmer:
+              app:
+                - path: /data
+        openshell-tls:
+          type: secret
+          name: openshell-client-cert-manager-tls
+          advancedMounts:
+            swarmer:
+              app:
+                - path: /auth/openshell
+                  readOnly: true
+      service:
+        app:
+          controller: swarmer
+          ports:
+            http:
+              port: 80
+              targetPort: 8080
+      ingress:
+        app:
+          className: openshift-default
+          annotations:
+            route.openshift.io/termination: edge
+            haproxy.router.openshift.io/timeout: 600s
+          hosts:
+            - host: swarmer.apps.ocp.igou.systems
+              paths:
+                - path: /
+                  pathType: Prefix
+                  service:
+                    identifier: app
+                    port: http
+      serviceAccount:
+        swarmer:
+          enabled: true

@@ -1,0 +1,8 @@
+---
+apiVersion: oauth.openshift.io/v1
+kind: OAuthClient
+metadata:
+  name: swarmer
+redirectURIs:
+  - https://swarmer.apps.ocp.igou.systems/auth/callback
+grantMethod: auto
