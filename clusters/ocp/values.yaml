@@ -688,26 +688,6 @@ applications:
     source:
       path: applications/openshell
 
-  # Isolated first ACP evaluation: Keycloak-backed UI/API, CNPG, and native
-  # (non-OpenShell) runner. See the app README before creating a project.
-  agent-control-plane:
-    project: cluster-apps
-    annotations:
-      argocd.argoproj.io/sync-wave: '20'
-    source:
-      path: applications/agent-control-plane
-
-  # Dedicated in-namespace gateway for the disposable ACP project.
-  acp-poc-gateway:
-    project: cluster-apps
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous,ServerSideDiff=true
-      argocd.argoproj.io/sync-wave: '21'
-    destination:
-      namespace: acp-poc
-    source:
-      path: applications/acp-poc-gateway
-
   forgejo:
     project: cluster-apps
     annotations:
