@@ -8,9 +8,11 @@ resources:
   - agent-control-plane-credentials-externalsecret.yaml
   - agent-control-plane-api-deployment.yaml
   - agent-control-plane-api-service.yaml
+  - ambient-api-server-service.yaml
   - agent-control-plane-ui-deployment.yaml
   - agent-control-plane-ui-service.yaml
   - agent-control-plane-ui-route.yaml
   - agent-control-plane-control-plane-deployment.yaml
   - agent-control-plane-control-plane-service.yaml
+  - ambient-control-plane-service.yaml
   - agent-control-plane-control-plane-rbac.yaml
