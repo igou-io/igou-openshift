@@ -30,9 +30,9 @@ spec:
             - name: CP_RUNTIME_NAMESPACE
               value: agent-control-plane
             - name: AMBIENT_API_SERVER_URL
-              value: http://agent-control-plane-api.agent-control-plane.svc:8000
+              value: http://ambient-api-server.agent-control-plane.svc:8000
             - name: AMBIENT_GRPC_SERVER_ADDR
-              value: agent-control-plane-api.agent-control-plane.svc:9000
+              value: ambient-api-server.agent-control-plane.svc:9000
             - name: AMBIENT_GRPC_USE_TLS
               value: 'false'
             - name: OIDC_TOKEN_URL
@@ -45,7 +45,7 @@ spec:
                   name: agent-control-plane-credentials
                   key: CLIENT_SECRET
             - name: CP_TOKEN_URL
-              value: http://agent-control-plane-control-plane.agent-control-plane.svc:8080/token
+              value: http://ambient-control-plane.agent-control-plane.svc:8080/token
             - name: RUNNER_IMAGE
               value: quay.io/ambient_code/acp_claude_runner@sha256:c4e2797b8cb8443e13e93dce3ed0a4a7d7ab39ccc62a285d74447d20c3bc3c4a
             - name: MCP_IMAGE

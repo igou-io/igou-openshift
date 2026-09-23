@@ -4,6 +4,8 @@ This deploys the [Agent Control Plane](https://github.com/openshift-online/agent
 
 This ACP revision always provisions sessions through an OpenShell gateway. The `acp-poc` project has a dedicated, internal-only gateway in `applications/acp-poc-gateway`; it does not reuse or alter the existing user-facing OpenShell gateway. The ACP service account can create and delete project namespaces and manage runner resources cluster-wide, matching upstream's standard provisioner. Treat ACP administrators and any ability to create ACP projects as cluster-privileged until this is replaced by a constrained provisioner. This is not a multi-tenant production deployment.
 
+The pinned ACP revision injects sandbox network rules for the upstream Service names `ambient-control-plane` and `ambient-api-server`. The matching ClusterIP aliases in this directory point at the same pods as the existing `agent-control-plane-*` Services. Runner-facing token and gRPC URLs must use those aliases; otherwise OpenShell denies the runner's internal requests even though the policy injection reports success.
+
 ## Bootstrap
 
 1. Create a confidential `agent-control-plane` client in the `igou` Keycloak realm. Enable Authorization Code flow, client-credentials service accounts, and the redirect URI `https://agent-control-plane.apps.ocp.igou.systems/api/auth/sso/callback`; set the web origin to the UI origin. Add an access-token audience mapper for `agent-control-plane` and grant the client's service account the `openshell-admin` realm role, so it can authenticate to the project gateway. The realm's `KeycloakRealmImport` is import-only and will not apply new clients to the existing realm.
