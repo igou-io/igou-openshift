@@ -4,7 +4,7 @@ This deploys the [Agent Control Plane](https://github.com/openshift-online/agent
 
 This ACP revision always provisions sessions through an OpenShell gateway. The `acp-poc` project has a dedicated, internal-only gateway in `applications/acp-poc-gateway`; it does not reuse or alter the existing user-facing OpenShell gateway. The ACP service account can create and delete project namespaces and manage runner resources cluster-wide, matching upstream's standard provisioner. Treat ACP administrators and any ability to create ACP projects as cluster-privileged until this is replaced by a constrained provisioner. This is not a multi-tenant production deployment.
 
-The pinned ACP revision injects sandbox network rules for the upstream Service names `ambient-control-plane` and `ambient-api-server`. The matching ClusterIP aliases in this directory point at the same pods as the existing `agent-control-plane-*` Services. Runner-facing token and gRPC URLs must use those aliases; otherwise OpenShell denies the runner's internal requests even though the policy injection reports success.
+The pinned ACP revision injects sandbox network rules for the upstream Service names `ambient-control-plane` and `ambient-api-server`. The matching ClusterIP aliases in this directory point at the same pods as the existing `agent-control-plane-*` Services. Runner-facing token and gRPC URLs must use the full `.svc.cluster.local` aliases: the sandbox's OpenShell network proxy could match a short `.svc` alias to the policy but could not resolve it. Other Service names are denied even though policy injection reports success.
 
 ## Bootstrap
 
