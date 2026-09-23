@@ -1,0 +1,15 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: omnigent
+  namespace: omnigent
+spec:
+  host: omnigent.apps.ocp.igou.systems
+  to:
+    kind: Service
+    name: omnigent
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

@@ -1,0 +1,42 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: omnigent-sandbox-manager
+  namespace: omnigent-sandboxes
+rules:
+  - apiGroups:
+      - batch
+    resources:
+      - jobs
+    verbs:
+      - create
+      - get
+      - delete
+  - apiGroups:
+      - ''
+    resources:
+      - pods
+    verbs:
+      - create
+      - list
+      - get
+      - delete
+  - apiGroups:
+      - ''
+    resources:
+      - pods/log
+    verbs:
+      - get
+  - apiGroups:
+      - ''
+    resources:
+      - secrets
+    verbs:
+      - create
+      - delete
+  - apiGroups:
+      - ''
+    resources:
+      - events
+    verbs:
+      - list

@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - default-deny-networkpolicy.yaml
   - allow-observed-networkpolicy.yaml
+  - allow-omnigent-networkpolicy.yaml
   - cloudnative-pg-namespace.yaml
   - ../../../components/cloudnative-pg
   - ../../../components/cloudnative-pg-barman-plugin

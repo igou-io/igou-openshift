@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: omnigent-sandbox-config
+  namespace: omnigent
+data:
+  config.yaml: |
+    sandbox:
+      provider: kubernetes
+      server_url: http://omnigent.omnigent.svc.cluster.local
+      host_config:
+        providers:
+          opencode-go:
+            kind: gateway
+            default:
+              - pi
+            openai:
+              base_url: https://opencode.ai/zen/go/v1
+              api_key_ref: env:OPENCODE_GO_API_KEY
+              wire_api: chat
+      kubernetes:
+        namespace: omnigent-sandboxes
+        secret_name: omnigent-creds
+        service_account: omnigent-runner
+        image: ghcr.io/omnigent-ai/omnigent-host@sha256:f3dee09609ccecbebd6841c30b33f0160eaf3d2758d535b2e3993c1a3df5664a
+        node_selector:
+          kata-runtime: enabled
+        pod_ready_timeout_s: 300
+        in_cluster: true
+        home_size_limit: 4Gi
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+            ephemeral-storage: 2Gi
+          limits:
+            cpu: '2'
+            memory: 4Gi
+            ephemeral-storage: 6Gi
