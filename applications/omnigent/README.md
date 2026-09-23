@@ -1,5 +1,18 @@
 # Omnigent
 
+## Deployment path
+
+This application is a Kustomize adaptation of Omnigent's documented
+[`sandbox-runners` Kubernetes overlay](https://github.com/omnigent-ai/omnigent/tree/f33d43262b8ab963e6edac4913bae46353c32b10/deploy/kubernetes/overlays/sandbox-runners)
+and [OpenShift overlay](https://github.com/omnigent-ai/omnigent/tree/f33d43262b8ab963e6edac4913bae46353c32b10/deploy/kubernetes/overlays/openshift)
+(upstream revision `f33d43262b8ab963e6edac4913bae46353c32b10`). The local
+manifests preserve the upstream server image variant, `kubernetes` sandbox
+provider, dedicated runner namespace, namespaced Job permissions, and
+entrypoint-based runner Jobs. They replace upstream's placeholder Secret,
+Ingress, and bundled Postgres with External Secrets, an OpenShift Route, and
+CNPG. `kustomize build applications/omnigent` renders the application for
+ArgoCD; no Helm chart or Kata RuntimeClass is involved.
+
 Omnigent runs as a single server in `omnigent`. A managed session creates one
 runner Job in `omnigent-sandboxes`. Runners use the normal CRI-O runtime; this
 evaluation does not request Kata or the Agent Sandbox controller. The existing
@@ -18,6 +31,13 @@ OpenCode Go subscription key through `omnigent-creds`; the key is sourced from
 `op://lab_agents/opencode-go-subscription-key/password`. The server's account
 cookie secret and initial admin password come from `op://lab_agents/omnigent`.
 The initial admin username is `igou`.
+
+Upstream currently documents `header` or OIDC auth for managed runners and
+warns that its built-in `accounts` mode can reject the runner WebSocket with
+`403`. This proof uses `accounts` and completed an OpenCode Go API smoke test,
+but that result does not establish long-term support for this combination.
+Before broader use, move the server to a trusted OIDC or identity-injecting
+proxy configuration and repeat the managed-session test.
 
 The test agent is seeded from `omnigent-test-agent` at server startup and uses
 Pi with OpenCode Go's OpenAI-compatible endpoint. Both upstream images are
