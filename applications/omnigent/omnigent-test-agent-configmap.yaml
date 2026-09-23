@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: omnigent-test-agent
+  namespace: omnigent
+data:
+  opencode-go-test.yaml: |
+    name: opencode-go-test
+    prompt: |
+      You are a concise test assistant. Answer the user's question directly.
+    executor:
+      harness: pi
+      model: kimi-k3
+      auth:
+        type: provider
+        name: opencode-go

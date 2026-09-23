@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: omnigent-runner-nonroot
+  namespace: omnigent-sandboxes
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: omnigent-runner-nonroot
+subjects:
+  - kind: ServiceAccount
+    name: omnigent-runner
+    namespace: omnigent-sandboxes

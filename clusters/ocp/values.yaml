@@ -698,6 +698,14 @@ applications:
     source:
       path: applications/swarmer
 
+  omnigent:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/omnigent
+
   forgejo:
     project: cluster-apps
     annotations:
