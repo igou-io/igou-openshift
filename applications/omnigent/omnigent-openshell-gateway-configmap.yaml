@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: omnigent-openshell-gateway
+  namespace: omnigent
+data:
+  metadata.json: |
+    {
+      "gateway_endpoint": "https://openshell.apps.ocp.igou.systems",
+      "auth_mode": "oidc",
+      "oidc_issuer": "https://keycloak.apps.ocp.igou.systems/realms/igou",
+      "oidc_client_id": "openshell-cli",
+      "oidc_audience": "openshell-cli"
+    }

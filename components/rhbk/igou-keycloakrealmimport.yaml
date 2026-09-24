@@ -41,6 +41,10 @@ spec:
       secret:
         name: keycloak-swarmer-secret
         key: SWARMER_OPENSHELL_CLIENT_SECRET
+    OMNIGENT_OPENSHELL_CLIENT_SECRET:
+      secret:
+        name: keycloak-omnigent-secret
+        key: OMNIGENT_OPENSHELL_CLIENT_SECRET
   realm:
     id: igou
     realm: igou
@@ -107,6 +111,22 @@ spec:
             config:
               included.client.audience: openshell-cli
               access.token.claim: 'true'
+      - clientId: omnigent-openshell
+        name: Omnigent OpenShell service
+        enabled: true
+        protocol: openid-connect
+        publicClient: false
+        secret: "${OMNIGENT_OPENSHELL_CLIENT_SECRET}"
+        standardFlowEnabled: false
+        directAccessGrantsEnabled: false
+        serviceAccountsEnabled: true
+        protocolMappers:
+          - name: openshell-audience
+            protocol: openid-connect
+            protocolMapper: oidc-audience-mapper
+            config:
+              included.client.audience: openshell-cli
+              access.token.claim: 'true'
     groups:
       - name: admins
       # RHDH RBAC binds group:default/developers to role:default/developer
@@ -129,6 +149,11 @@ spec:
         serviceAccountClientId: swarmer-openshell
         realmRoles:
           - openshell-admin
+          - openshell-user
+      - username: service-account-omnigent-openshell
+        enabled: true
+        serviceAccountClientId: omnigent-openshell
+        realmRoles:
           - openshell-user
       - username: igou
         enabled: true

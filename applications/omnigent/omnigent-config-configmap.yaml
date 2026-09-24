@@ -15,3 +15,7 @@ data:
   OMNIGENT_BUILTIN_AGENT_DIRS: /etc/omnigent/agents/opencode-go-test.yaml
   OMNIGENT_MACHINE_SUB: automation-orchestrator
   OMNIGENT_MACHINE_TOKEN_TTL: '300'
+  OPENSHELL_GATEWAY: ocp
+  XDG_CONFIG_HOME: /etc
+  OMNIGENT_OPENSHELL_OIDC_CLIENT_ID: omnigent-openshell
+  OMNIGENT_RUNNER_ENV_PASSTHROUGH: OPENCODE_GO_API_KEY,https_proxy,http_proxy,HTTPS_PROXY,HTTP_PROXY,NO_PROXY,no_proxy

@@ -2,6 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: openshell
 resources:
+  - quay-local-pull-externalsecret.yaml
   - openshell-credential-encryption-key-externalsecret.yaml
   - openshell-sandbox-privileged-clusterrolebinding.yaml
 patches:
@@ -90,6 +91,8 @@ helmCharts:
       server:
         telemetryEnabled: false
         sandboxImage: ghcr.io/nvidia/openshell-community/sandboxes/base:latest@sha256:aeef1c63f00e2913ea002ccb3aaf925f338b5c5d70e63576f0d95c16a138044e
+        sandboxImagePullSecrets:
+          - name: quay-local-pull
         workspaceDefaultStorageSize: 10Gi
         workspaceStorageClass: freenas-nvmeof-ssd-csi
         # Intentionally use the cluster's normal CRI-O runtime for now.
