@@ -116,6 +116,11 @@ helmCharts:
         app:
           className: openshift-default
           annotations:
+            gethomepage.dev/enabled: "true"
+            gethomepage.dev/name: Swarmer
+            gethomepage.dev/group: Applications
+            gethomepage.dev/icon: mdi-robot-industrial
+            gethomepage.dev/description: multi-agent workspaces
             route.openshift.io/termination: edge
             haproxy.router.openshift.io/timeout: 600s
           hosts:
