@@ -1,124 +1,94 @@
 # Omnigent
 
-## Deployment path
+Use <https://omnigent.apps.ocp.igou.systems> for interactive sessions and its
+REST API for pipeline launches. In **New Chat**, choose `opencode-go-test`
+and a new sandbox in the host picker. Kubernetes is the default; OpenShell
+is also configured. Admin login manages application access, but does not
+provide a backend configuration editor.
 
-This application is a Kustomize adaptation of Omnigent's documented
-[`sandbox-runners` Kubernetes overlay](https://github.com/omnigent-ai/omnigent/tree/f33d43262b8ab963e6edac4913bae46353c32b10/deploy/kubernetes/overlays/sandbox-runners)
-and [OpenShift overlay](https://github.com/omnigent-ai/omnigent/tree/f33d43262b8ab963e6edac4913bae46353c32b10/deploy/kubernetes/overlays/openshift)
-(upstream revision `f33d43262b8ab963e6edac4913bae46353c32b10`). The local
-manifests preserve the upstream server image variant, `kubernetes` sandbox
-provider, dedicated runner namespace, namespaced Job permissions, and
-entrypoint-based runner Jobs. They replace upstream's placeholder Secret,
-Ingress, and bundled Postgres with External Secrets, an OpenShift Route, and
-CNPG. `kustomize build applications/omnigent` renders the application for
-ArgoCD; no Helm chart or Kata RuntimeClass is involved.
+The operator runbook is
+[Omnigent Managed Sandboxes and API Workflows](https://github.com/igou-io/igou-docs/blob/main/openshift/Omnigent%20Managed%20Sandboxes%20and%20API%20Workflows.md).
+It covers new backends, harnesses, both sandbox configurations, OpenShell
+service authentication, and autonomous REST launches.
 
-Omnigent runs as a single server in `omnigent`. A managed session creates one
-runner Job in `omnigent-sandboxes`. Runners use the normal CRI-O runtime; this
-evaluation does not request Kata or the Agent Sandbox controller. The existing
-`kata-runtime=enabled` node label selects `hpg5` or `p330` as worker hosts;
-`runtimeClassName` remains unset.
+## Where to change settings
 
-The server uses `omnigent-pg` (CNPG) for sessions and a 10 Gi PVC for artifacts.
-CNPG archives WAL and takes nightly full backups through the existing Barman
-Cloud Plugin and `cnpg-backups` bucket. The `cloudnative-pg` namespace has an
-additive `allow-omnigent` NetworkPolicy so the operator can read the instance's
-status endpoint and the instance can reach the Barman plugin.
-Only the server ServiceAccount can create runner Jobs and launch-token Secrets.
-The runner ServiceAccount has no Kubernetes API rights and uses the `nonroot-v2`
-SCC for the upstream image's fixed non-root UID. The runner receives only the
-OpenCode Go subscription key through `omnigent-creds`; the key is sourced from
-`op://lab_agents/opencode-go-subscription-key/password`. The server also
-receives that key through `omnigent-opencode-go` for OpenShell sandbox injection.
-The server's account
-cookie secret and initial admin password come from `op://lab_agents/omnigent`.
-The initial admin username is `igou`.
+| Setting | Source in this directory |
+|---|---|
+| Backend list, default, runner sizes, images, placement, callback URL | `omnigent-sandbox-config-configmap.yaml` |
+| Agent prompt, harness, model, model-provider name | `omnigent-test-agent-configmap.yaml` |
+| Server auth, machine-token lifetime, environment forwarding | `omnigent-config-configmap.yaml` |
+| OpenShell gateway endpoint and OIDC metadata | `omnigent-openshell-gateway-configmap.yaml` |
+| OpenShell host filesystem and network access | `openshell-host-policy.yaml`, baked by `Containerfile.openshell-host` |
+| OpenShell SDK and renewable service authentication | `Containerfile.openshell`, `patch_openshell_service_auth.py` |
+| Secret references | `*-externalsecret.yaml` |
+| Server mounts, image, restart trigger | `omnigent-deployment.yaml` |
 
-Upstream currently documents `header` or OIDC auth for managed runners and
-warns that its built-in `accounts` mode can reject the runner WebSocket with
-`403`. This proof uses `accounts` and completed an OpenCode Go API smoke test,
-but that result does not establish long-term support for this combination.
-Before broader use, move the server to a trusted OIDC or identity-injecting
-proxy configuration and repeat the managed-session test.
+The OpenShell gateway's own settings live in
+[`../openshell/kustomization.yaml`](../openshell/kustomization.yaml).
+Changing its default sandbox image does not change Omnigent's explicit host
+image. Omnigent's model provider `opencode-go` is separate from OpenShell's
+stored inference providers.
 
-The test agent is seeded from `omnigent-test-agent` at server startup and uses
-Pi with OpenCode Go's OpenAI-compatible endpoint. All images are
-pinned to the digests tested here. The server stays at one replica because the
-runner registry is in memory. The Deployment uses `Recreate` because its
-artifact PVC is ReadWriteOnce; a rolling surge on a different node cannot
-attach the same volume until the old Pod stops.
+## Runtime
 
-## OpenShell provider
+One server in `omnigent` stores conversations in CNPG and artifacts on a
+10 Gi PVC. Keep one replica because the runner registry is in memory.
+`Recreate` avoids overlapping Pods trying to attach the ReadWriteOnce volume.
+CNPG uses Barman for WAL archiving and nightly backups.
 
-The `sandbox.providers` list offers both backends. Kubernetes stays first and
-is the default. A managed session requesting `sandbox_provider: openshell`
-asks the existing OpenShell gateway to create an Agent Sandbox in its `default`
-workspace. The gateway uses the Agent Sandbox operator and normal CRI-O on
-this cluster. This provider does not create Omnigent Jobs in
-`omnigent-sandboxes`; the gateway owns the `AgentSandbox` object and Pod.
+The Kubernetes backend creates Jobs in `omnigent-sandboxes`. Runners use
+`nonroot-v2`, no mounted ServiceAccount token, and ephemeral home storage.
+The `kata-runtime=enabled` node selector chooses eligible workers; it does
+not select Kata. No runtime class is set. Jobs have a seven-day deadline.
 
-`Containerfile.openshell` adds the OpenShell 0.0.116 SDK to the pinned
-Kubernetes server image. The small source patch passes a renewable OAuth
-client-credentials provider to the SDK because upstream's launcher only reads
-a CLI user's login state. The `omnigent-openshell` Keycloak client has the
-`openshell-user` realm role and a `user` membership in OpenShell's `default`
-workspace. Its client secret lives in
-`op://lab_agents/omnigent-openshell/OPENSHELL_CLIENT_SECRET`; External Secrets
-project it into the server. The gateway's non-secret endpoint and OIDC metadata
-are mounted at `/etc/openshell/gateways/ocp/metadata.json`.
+The OpenShell backend creates sandboxes through the existing gateway in
+`openshell`. It uses the Agent Sandbox operator, ordinary CRI-O, and the
+`openshell-sandbox` ServiceAccount's privileged SCC. The custom host image
+carries the egress policy, writable `/opt/venv`, and proxy-aware
+`websockets==15.0.1`. Preserve those when rebuilding.
 
-`Containerfile.openshell-host` extends the pinned Omnigent host with
-`/etc/openshell/policy.yaml`. The policy allows the Omnigent Route for the
-managed host WebSocket and `opencode.ai` for the test agent. OpenShell injects
-proxy settings into the host; `OMNIGENT_RUNNER_ENV_PASSTHROUGH` forwards them
-to the runner subprocess. The OpenCode Go key is injected by name from the
-server environment; it is never written into an image or ConfigMap. Both
-custom images are pushed to the in-cluster Quay and pinned by digest.
-The host image makes `/opt/venv` writable by group `0`: OpenShift SCC assigns
-the sandbox process a namespace UID but retains group `0`, and managed startup
-overlays the current Omnigent wheels with pip as that non-root process.
-The OpenShell policy also grants `/opt/venv` read-write access; its Landlock
-filesystem rules otherwise deny Python access regardless of Unix permissions.
-It includes `/dev/null` for the host launch redirection and `/proc` plus
-`/dev/urandom` for the standard runtime filesystem policy.
-The host image installs `websockets==15.0.1` for proxy-aware tunnel connections.
-Upstream Omnigent pins version 14 for a macOS regression, but the Linux
-OpenShell sandbox cannot resolve the Omnigent Route directly. Managed startup
-overlays Omnigent wheels with `--no-deps`, preserving the image's WebSocket version.
-When changing `omnigent-sandbox-config-configmap.yaml`, update the Deployment's
-`omnigent.io/sandbox-config-sha256` annotation with the file's SHA-256. The
-ConfigMap is mounted with `subPath`, so a new Pod must start to read it.
+The server patch supplies renewable OAuth client credentials to the
+OpenShell 0.0.116 SDK. `omnigent-openshell` needs the Keycloak
+`openshell-user` role and `user` membership in the gateway's `default`
+workspace. Gateway membership is persistent OpenShell state, not a ConfigMap.
 
-### Change the sandbox image
+The seeded agent uses Pi, `kimi-k3`, and the OpenCode Go key from External
+Secrets. It has no Git or cluster credentials. Built-in `accounts` auth has
+passed the recorded smoke tests; upstream still warns about managed-runner
+WebSocket compatibility. Recheck it after auth or image upgrades.
 
-For Kubernetes, edit `sandbox.providers[0].kubernetes.image` in
-`omnigent-sandbox-config-configmap.yaml`. The image must contain the Omnigent
-host entrypoint and run under the `nonroot-v2` SCC as `omnigent-runner`.
+## Apply configuration changes
 
-For OpenShell, edit `Containerfile.openshell-host` and
-`openshell-host-policy.yaml`, build and push the image, then change
-`sandbox.providers[1].openshell.image` to its digest. Preserve the `sandbox`
-user, `ip`/`nft`, Omnigent host entrypoint, and policy path. The gateway's
-`server.sandboxImage` is its default for direct OpenShell clients; Omnigent
-supplies its own image per session. Existing sessions keep their original
-image. Build and publish commands are in the Omnigent runbook in `igou-docs`.
+Edit the files in Git and render with `kustomize build applications/omnigent`.
+For sandbox-config changes, put the output of this command into the Deployment
+Pod annotation `omnigent.io/sandbox-config-sha256` in the same change:
+
+```bash
+sha256sum applications/omnigent/omnigent-sandbox-config-configmap.yaml
+```
+
+The config uses a `subPath` mount and requires a new server Pod. Other
+startup configuration and Secret rotations also require a server rollout;
+ConfigMap reconciliation alone does not reload the process. Keep that rollout
+in the GitOps change. New sandboxes use changed images and settings; existing
+sandboxes keep their launch configuration.
 
 ## Verify
 
 ```bash
-oc get externalsecret -n omnigent
-oc get externalsecret -n omnigent-sandboxes
-oc get cluster.postgresql.cnpg.io -n omnigent
-oc rollout status deployment/omnigent -n omnigent
+use ocp-cluster-reader
+oc whoami --show-server
+oc whoami
+oc get applications.argoproj.io omnigent openshell -n openshift-gitops
+oc get deployment,route,cluster.postgresql.cnpg.io,externalsecret -n omnigent
 oc get jobs,pods -n omnigent-sandboxes
-oc get route omnigent -n omnigent
+oc get sandboxes.agents.x-k8s.io,pods -n openshell
+curl -fsS https://omnigent.apps.ocp.igou.systems/v1/info |
+  jq '{managed_sandboxes_enabled, sandbox_provider, sandbox_providers}'
 ```
 
-Use the account credentials in `op://lab_agents/omnigent` at
-`https://omnigent.apps.ocp.igou.systems`. The REST API creates managed sessions
-with `POST /v1/sessions` and `host_type: managed`. The `opencode-go-test` agent
-is for the first API smoke test; it has no cluster or Git credentials.
-
-Deleting a session through the API removes its Kubernetes runner Job or
-OpenShell sandbox. Kubernetes runners have a seven-day Job deadline if
-abandoned.
+Expect `kubernetes` as the default and both backends in `sandbox_providers`.
+A successful session-create response or HTTP 202 prompt acknowledgement does
+not prove agent completion. Read the assistant output and check task-specific
+results. Delete disposable sessions through Omnigent to reclaim their backend.
