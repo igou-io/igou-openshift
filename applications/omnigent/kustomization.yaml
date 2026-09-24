@@ -1,6 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+  - quay-local-pull-externalsecret.yaml
   - omnigent-namespace.yaml
   - omnigent-sandboxes-namespace.yaml
   - omnigent-pg-cluster.yaml
@@ -9,9 +10,12 @@ resources:
   - cnpg-s3-credentials-externalsecret.yaml
   - omnigent-auth-externalsecret.yaml
   - omnigent-machine-client-externalsecret.yaml
+  - omnigent-opencode-go-externalsecret.yaml
+  - omnigent-openshell-client-externalsecret.yaml
   - omnigent-creds-externalsecret.yaml
   - omnigent-config-configmap.yaml
   - omnigent-sandbox-config-configmap.yaml
+  - omnigent-openshell-gateway-configmap.yaml
   - omnigent-test-agent-configmap.yaml
   - omnigent-server-serviceaccount.yaml
   - omnigent-runner-serviceaccount.yaml

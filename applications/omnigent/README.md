@@ -28,7 +28,9 @@ Only the server ServiceAccount can create runner Jobs and launch-token Secrets.
 The runner ServiceAccount has no Kubernetes API rights and uses the `nonroot-v2`
 SCC for the upstream image's fixed non-root UID. The runner receives only the
 OpenCode Go subscription key through `omnigent-creds`; the key is sourced from
-`op://lab_agents/opencode-go-subscription-key/password`. The server's account
+`op://lab_agents/opencode-go-subscription-key/password`. The server also
+receives that key through `omnigent-opencode-go` for OpenShell sandbox injection.
+The server's account
 cookie secret and initial admin password come from `op://lab_agents/omnigent`.
 The initial admin username is `igou`.
 
@@ -40,9 +42,50 @@ Before broader use, move the server to a trusted OIDC or identity-injecting
 proxy configuration and repeat the managed-session test.
 
 The test agent is seeded from `omnigent-test-agent` at server startup and uses
-Pi with OpenCode Go's OpenAI-compatible endpoint. Both upstream images are
+Pi with OpenCode Go's OpenAI-compatible endpoint. All images are
 pinned to the digests tested here. The server stays at one replica because the
 runner registry is in memory.
+
+## OpenShell provider
+
+The `sandbox.providers` list offers both backends. Kubernetes stays first and
+is the default. A managed session requesting `sandbox_provider: openshell`
+asks the existing OpenShell gateway to create an Agent Sandbox in its `default`
+workspace. The gateway uses the Agent Sandbox operator and normal CRI-O on
+this cluster. This provider does not create Omnigent Jobs in
+`omnigent-sandboxes`; the gateway owns the `AgentSandbox` object and Pod.
+
+`Containerfile.openshell` adds the OpenShell 0.0.116 SDK to the pinned
+Kubernetes server image. The small source patch passes a renewable OAuth
+client-credentials provider to the SDK because upstream's launcher only reads
+a CLI user's login state. The `omnigent-openshell` Keycloak client has the
+`openshell-user` realm role and a `user` membership in OpenShell's `default`
+workspace. Its client secret lives in
+`op://lab_agents/omnigent-openshell/OPENSHELL_CLIENT_SECRET`; External Secrets
+project it into the server. The gateway's non-secret endpoint and OIDC metadata
+are mounted at `/etc/openshell/gateways/ocp/metadata.json`.
+
+`Containerfile.openshell-host` extends the pinned Omnigent host with
+`/etc/openshell/policy.yaml`. The policy allows the Omnigent Route for the
+managed host WebSocket and `opencode.ai` for the test agent. OpenShell injects
+proxy settings into the host; `OMNIGENT_RUNNER_ENV_PASSTHROUGH` forwards them
+to the runner subprocess. The OpenCode Go key is injected by name from the
+server environment; it is never written into an image or ConfigMap. Both
+custom images are pushed to the in-cluster Quay and pinned by digest.
+
+### Change the sandbox image
+
+For Kubernetes, edit `sandbox.providers[0].kubernetes.image` in
+`omnigent-sandbox-config-configmap.yaml`. The image must contain the Omnigent
+host entrypoint and run under the `nonroot-v2` SCC as `omnigent-runner`.
+
+For OpenShell, edit `Containerfile.openshell-host` and
+`openshell-host-policy.yaml`, build and push the image, then change
+`sandbox.providers[1].openshell.image` to its digest. Preserve the `sandbox`
+user, `ip`/`nft`, Omnigent host entrypoint, and policy path. The gateway's
+`server.sandboxImage` is its default for direct OpenShell clients; Omnigent
+supplies its own image per session. Existing sessions keep their original
+image. Build and publish commands are in the Omnigent runbook in `igou-docs`.
 
 ## Verify
 
@@ -60,6 +103,6 @@ Use the account credentials in `op://lab_agents/omnigent` at
 with `POST /v1/sessions` and `host_type: managed`. The `opencode-go-test` agent
 is for the first API smoke test; it has no cluster or Git credentials.
 
-Deleting a session through the API removes its runner Job. Runners have a
-seven-day Job deadline if abandoned. The `agent_sandbox` provider is a possible
-follow-up after the Job-based path is proven.
+Deleting a session through the API removes its Kubernetes runner Job or
+OpenShell sandbox. Kubernetes runners have a seven-day Job deadline if
+abandoned.

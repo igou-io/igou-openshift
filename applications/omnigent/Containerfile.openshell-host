@@ -1,0 +1,4 @@
+FROM ghcr.io/omnigent-ai/omnigent-host@sha256:f3dee09609ccecbebd6841c30b33f0160eaf3d2758d535b2e3993c1a3df5664a
+
+# OpenShell reads the default sandbox policy from this path.
+COPY openshell-host-policy.yaml /etc/openshell/policy.yaml
