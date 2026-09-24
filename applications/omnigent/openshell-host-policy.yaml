@@ -1,4 +1,8 @@
 version: 1
+filesystem_policy:
+  include_workdir: true
+  read_write:
+    - /opt/venv
 network_policies:
   omnigent_server:
     endpoints:

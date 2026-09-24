@@ -12,6 +12,8 @@ spec:
       app: omnigent
   template:
     metadata:
+      annotations:
+        omnigent.io/sandbox-config-sha256: 3c819cfb255b8b43007b1f2cd597435967ff7d0e1ba18e4f0f7945fe0e8499e7
       labels:
         app: omnigent
     spec:
