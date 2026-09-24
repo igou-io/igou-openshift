@@ -92,3 +92,33 @@ unset OPENAI_API_KEY
 
 Do not commit the API key. The current MVP uses the operator's existing
 OpenCode credential; secret-manager integration remains a follow-up.
+
+## Configuration ownership
+
+| Setting | Where to configure it |
+|---|---|
+| Gateway image, TLS, Route, OIDC roles, storage, sandbox defaults | `kustomization.yaml` under `helmCharts[].valuesInline` |
+| Sandbox SCC grant | `openshell-sandbox-privileged-clusterrolebinding.yaml` |
+| Private sandbox image pulls | `server.sandboxImagePullSecrets` and the referenced ExternalSecret |
+| Workspace membership | OpenShell workspace CLI/API; persisted in the gateway database |
+| Stored inference providers and credentials | OpenShell provider CLI/API; persisted in the gateway database |
+| Effective sandbox policy | Image policy, plus any gateway-global or live sandbox policy |
+| Omnigent host image and policy | `../omnigent/omnigent-sandbox-config-configmap.yaml` and `../omnigent/openshell-host-policy.yaml` |
+
+`server.defaultRuntimeClassName` is empty and `server.appArmorProfile` is
+empty for this OpenShift deployment. Gateway `resources` size the gateway
+Pod, not each agent sandbox. Workspace defaults are 10 Gi on
+`freenas-nvmeof-ssd-csi`. Do not change the runtime class solely because a
+worker has the `kata-runtime=enabled` label; validate the supervisor, SCC,
+and runtime combination first.
+
+Omnigent talks to OpenShell through its gRPC SDK. Pipelines use Omnigent's
+REST API and select `sandbox_provider: openshell`; they do not need to call
+the gateway directly. Omnigent's service client is `omnigent-openshell`,
+with the `openshell-user` realm role and `user` membership in `default`.
+The endpoint metadata mounted into Omnigent is not an authentication token.
+Its custom server image obtains and renews tokens with client credentials.
+
+See the [Omnigent runbook](https://github.com/igou-io/igou-docs/blob/main/openshift/Omnigent%20Managed%20Sandboxes%20and%20API%20Workflows.md)
+for adding backends and configuring the two sides together. Swarmer is a
+separate UI client of this gateway, documented in `../swarmer/README.md`.
