@@ -77,6 +77,11 @@ custom images are pushed to the in-cluster Quay and pinned by digest.
 The host image makes `/opt/venv` writable by group `0`: OpenShift SCC assigns
 the sandbox process a namespace UID but retains group `0`, and managed startup
 overlays the current Omnigent wheels with pip as that non-root process.
+The OpenShell policy also grants `/opt/venv` read-write access; its Landlock
+filesystem rules otherwise deny Python access regardless of Unix permissions.
+When changing `omnigent-sandbox-config-configmap.yaml`, update the Deployment's
+`omnigent.io/sandbox-config-sha256` annotation with the file's SHA-256. The
+ConfigMap is mounted with `subPath`, so a new Pod must start to read it.
 
 ### Change the sandbox image
 
