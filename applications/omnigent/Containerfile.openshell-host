@@ -4,6 +4,8 @@ FROM ghcr.io/omnigent-ai/omnigent-host@sha256:f3dee09609ccecbebd6841c30b33f0160e
 COPY openshell-host-policy.yaml /etc/openshell/policy.yaml
 
 # OpenShift assigns a namespace UID to the sandbox process but keeps group 0.
-# Managed startup overlays Omnigent wheels with pip as that non-root process.
-RUN chown -R sandbox:0 /opt/venv \
+# websockets 15 uses HTTPS_PROXY for the host tunnel; 14 tries direct DNS.
+# The managed wheel overlay uses --no-deps, so it preserves this version.
+RUN /opt/venv/bin/pip install --no-deps 'websockets==15.0.1' \
+ && chown -R sandbox:0 /opt/venv \
  && chmod -R g+rwX /opt/venv
