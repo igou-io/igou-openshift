@@ -44,7 +44,9 @@ proxy configuration and repeat the managed-session test.
 The test agent is seeded from `omnigent-test-agent` at server startup and uses
 Pi with OpenCode Go's OpenAI-compatible endpoint. All images are
 pinned to the digests tested here. The server stays at one replica because the
-runner registry is in memory.
+runner registry is in memory. The Deployment uses `Recreate` because its
+artifact PVC is ReadWriteOnce; a rolling surge on a different node cannot
+attach the same volume until the old Pod stops.
 
 ## OpenShell provider
 
@@ -72,6 +74,9 @@ proxy settings into the host; `OMNIGENT_RUNNER_ENV_PASSTHROUGH` forwards them
 to the runner subprocess. The OpenCode Go key is injected by name from the
 server environment; it is never written into an image or ConfigMap. Both
 custom images are pushed to the in-cluster Quay and pinned by digest.
+The host image makes `/opt/venv` writable by group `0`: OpenShift SCC assigns
+the sandbox process a namespace UID but retains group `0`, and managed startup
+overlays the current Omnigent wheels with pip as that non-root process.
 
 ### Change the sandbox image
 
