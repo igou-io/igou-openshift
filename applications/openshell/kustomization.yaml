@@ -90,7 +90,7 @@ helmCharts:
                     operator: DoesNotExist
       server:
         telemetryEnabled: false
-        sandboxImage: ghcr.io/nvidia/openshell-community/sandboxes/base:latest@sha256:aeef1c63f00e2913ea002ccb3aaf925f338b5c5d70e63576f0d95c16a138044e
+        sandboxImage: quay.apps.ocp.igou.systems/igou-io/openshell-devenv:20260924-glm@sha256:e479553b1f806c39f67ef43502e98295d62f1658d13e1700822ea99fa98d0150
         sandboxImagePullSecrets:
           - name: quay-local-pull
         workspaceDefaultStorageSize: 10Gi
