@@ -74,6 +74,9 @@ proxy settings into the host; `OMNIGENT_RUNNER_ENV_PASSTHROUGH` forwards them
 to the runner subprocess. The OpenCode Go key is injected by name from the
 server environment; it is never written into an image or ConfigMap. Both
 custom images are pushed to the in-cluster Quay and pinned by digest.
+The host image makes `/opt/venv` writable by group `0`: OpenShift SCC assigns
+the sandbox process a namespace UID but retains group `0`, and managed startup
+overlays the current Omnigent wheels with pip as that non-root process.
 
 ### Change the sandbox image
 
