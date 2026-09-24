@@ -66,6 +66,16 @@ The resulting sandbox pod must not have `spec.runtimeClassName` set.
 
 ## OpenCode Go provider
 
+For Codex and Claude Code using **GLM-5.3-Flash**, follow
+[Devenv sandboxes with GLM Flash](devenv/README.md). The gateway's default
+sandbox image is derived from `igou-devenv`; attach `opencode-go-devenv` and
+run `codex-glm` or `claude-glm`. The local adapter translates the clients'
+protocols into OpenCode Go Chat Completions. Omnigent's explicit host image
+override continues to take precedence over this gateway default.
+
+The older `opencode-go` profile below is for models served directly through
+the Codex Responses protocol, not GLM Flash.
+
 The `opencode-go` provider supplies Codex credentials without placing the API
 key in the sandbox specification or wrapper command. Its non-secret profile is
 versioned in `provider-profiles/opencode-go-codex.yaml`; the gateway stores the

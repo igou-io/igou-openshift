@@ -1,0 +1,17 @@
+model_list:
+  - model_name: glm-5.3-flash
+    litellm_params:
+      model: openai/glm-5.3-flash
+      api_base: https://opencode.ai/zen/go/v1
+      api_key: os.environ/OPENAI_API_KEY
+      use_chat_completions_api: true
+      # The bridge forwards Responses reasoning as an object; Go expects a string.
+      additional_drop_params:
+        - reasoning_effort
+      extra_headers:
+        User-Agent: openshell-devenv/1.0
+        x-opencode-session: os.environ/OPENCODE_SESSION_ID
+litellm_settings:
+  drop_params: true
+  set_verbose: false
+  turn_off_message_logging: true
