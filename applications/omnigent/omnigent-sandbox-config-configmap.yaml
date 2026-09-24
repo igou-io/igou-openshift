@@ -42,7 +42,7 @@ data:
           openshell:
             cluster: ocp
             workspace: default
-            image: quay.apps.ocp.igou.systems/igou-io/omnigent-host-openshell@sha256:e28fc7c2aecda5941a4a4c8d374fa2b69100ec6d4dbbd98be7ddd4b0a4860f12
+            image: quay.apps.ocp.igou.systems/igou-io/omnigent-host-openshell@sha256:1447b2602a533fff01c780ec3cd3ec8b5ff547ba9ff5d90b00546e1863fdf15a
             env:
               - OPENCODE_GO_API_KEY
               - OMNIGENT_RUNNER_ENV_PASSTHROUGH
