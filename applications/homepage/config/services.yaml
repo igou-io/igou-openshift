@@ -2,7 +2,8 @@
 # Static tiles for apps exposed via raw Routes (no annotation-based discovery
 # for the openshift Route kind). Apps exposed via Ingress or HTTPRoute are
 # auto-discovered from gethomepage.dev/* annotations instead — do not
-# duplicate them here (currently: ntfy, gitea-mirror, jellyfin).
+# duplicate them here (currently: gitea-mirror, jellyfin, MeTube, T3 Code,
+# and Swarmer).
 #
 # Alerts + Servers widgets query thanos-querier (bearer token from the
 # homepage SA via HOMEPAGE_VAR_THANOS_TOKEN) and the open rk8s Prometheus
@@ -210,6 +211,10 @@
         icon: mdi-security-network
         href: https://so-crates.apps.ocp.igou.systems
         description: file and network analysis
+    - Omnigent:
+        icon: mdi-robot
+        href: https://omnigent.apps.ocp.igou.systems
+        description: managed agent sessions
 
 - Servers:
     - ocp master (ms01):
