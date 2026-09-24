@@ -81,6 +81,10 @@ The OpenShell policy also grants `/opt/venv` read-write access; its Landlock
 filesystem rules otherwise deny Python access regardless of Unix permissions.
 It includes `/dev/null` for the host launch redirection and `/proc` plus
 `/dev/urandom` for the standard runtime filesystem policy.
+The host image installs `websockets==15.0.1` for proxy-aware tunnel connections.
+Upstream Omnigent pins version 14 for a macOS regression, but the Linux
+OpenShell sandbox cannot resolve the Omnigent Route directly. Managed startup
+overlays Omnigent wheels with `--no-deps`, preserving the image's WebSocket version.
 When changing `omnigent-sandbox-config-configmap.yaml`, update the Deployment's
 `omnigent.io/sandbox-config-sha256` annotation with the file's SHA-256. The
 ConfigMap is mounted with `subPath`, so a new Pod must start to read it.
