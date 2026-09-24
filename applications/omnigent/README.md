@@ -44,7 +44,9 @@ proxy configuration and repeat the managed-session test.
 The test agent is seeded from `omnigent-test-agent` at server startup and uses
 Pi with OpenCode Go's OpenAI-compatible endpoint. All images are
 pinned to the digests tested here. The server stays at one replica because the
-runner registry is in memory.
+runner registry is in memory. The Deployment uses `Recreate` because its
+artifact PVC is ReadWriteOnce; a rolling surge on a different node cannot
+attach the same volume until the old Pod stops.
 
 ## OpenShell provider
 
