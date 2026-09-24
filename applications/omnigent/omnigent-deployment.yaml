@@ -14,11 +14,13 @@ spec:
         app: omnigent
     spec:
       serviceAccountName: omnigent-server
+      imagePullSecrets:
+        - name: quay-local-pull
       securityContext:
         runAsNonRoot: true
       containers:
         - name: omnigent
-          image: ghcr.io/omnigent-ai/omnigent-server-kubernetes@sha256:ed3ae35d30572dcd929ba4e1edefdcec53ef178ab2f8147d11a8f2f33dded123
+          image: quay.apps.ocp.igou.systems/igou-io/omnigent-server-openshell@sha256:b50a83b843b0bd2c4b7aa6a05128e7b42cfaf91ee1f1f0168217ce9b555753ad
           ports:
             - name: http
               containerPort: 8000
@@ -29,6 +31,10 @@ spec:
                 name: omnigent-auth
             - secretRef:
                 name: omnigent-machine-client
+            - secretRef:
+                name: omnigent-opencode-go
+            - secretRef:
+                name: omnigent-openshell-client
           env:
             - name: DATABASE_URL
               valueFrom:
@@ -53,6 +59,10 @@ spec:
               readOnly: true
             - name: test-agent
               mountPath: /etc/omnigent/agents
+              readOnly: true
+            - name: openshell-gateway
+              mountPath: /etc/openshell/gateways/ocp/metadata.json
+              subPath: metadata.json
               readOnly: true
           resources:
             requests:
@@ -85,3 +95,6 @@ spec:
         - name: test-agent
           configMap:
             name: omnigent-test-agent
+        - name: openshell-gateway
+          configMap:
+            name: omnigent-openshell-gateway

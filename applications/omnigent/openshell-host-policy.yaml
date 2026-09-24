@@ -1,0 +1,19 @@
+version: 1
+network_policies:
+  omnigent_server:
+    endpoints:
+      - host: omnigent.apps.ocp.igou.systems
+        port: 443
+        tls: skip
+    binaries:
+      - path: /usr/local/bin/python*
+      - path: /opt/venv/bin/python*
+  opencode_go:
+    endpoints:
+      - host: opencode.ai
+        port: 443
+        tls: skip
+    binaries:
+      - path: /usr/local/bin/node
+      - path: /usr/local/bin/python*
+      - path: /opt/venv/bin/python*
