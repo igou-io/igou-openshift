@@ -8,6 +8,7 @@ resources:
   - omnigent-pg-daily-scheduledbackup.yaml
   - cnpg-s3-credentials-externalsecret.yaml
   - omnigent-auth-externalsecret.yaml
+  - omnigent-machine-client-externalsecret.yaml
   - omnigent-creds-externalsecret.yaml
   - omnigent-config-configmap.yaml
   - omnigent-sandbox-config-configmap.yaml
