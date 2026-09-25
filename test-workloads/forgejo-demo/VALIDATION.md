@@ -15,7 +15,7 @@ namespace, with the pinned Forgejo 16.0.5 image and default NVMe-oF SSD storage.
 - Reset: the old PVC was deleted and a new UID provisioned; all test issues, PRs
   and feature branches disappeared; only `main` remained; webhook configuration
   was restored. Tokens rotated and the old agent token returned HTTP 401.
-- Static checks: full repository `make test`, ShellCheck, nginx Molecule tests,
+- Static checks at initial validation: full repository `make test`, ShellCheck,
   and Galaxy collection build passed.
 
 The test receiver and its hook were removed after validation at the user's request.
@@ -40,12 +40,11 @@ are closed; the test hook and receiver are no longer deployed.
 
 ## nginx role and UID feature request
 
-Added `demo.greetings.nginx`, scaffolded with ansible-creator, plus a Molecule
-scenario using pinned `david_igou.molecule_provisioners:0.0.4-alpha` and a pinned
-Rocky Linux 9 Docker image. The full scenario passed: package/service convergence,
-second-run idempotence (zero changes), HTTP 200 with nginx response headers, worker
-processes owned by the nginx account, and cleanup. Ansible lint passed its production
-profile and the collection build passed.
+Added `demo.greetings.nginx`, scaffolded with ansible-creator. During development,
+the role passed package/service convergence, second-run idempotence, HTTP 200,
+worker identity, and cleanup checks in a Rocky Linux 9 container. The disposable
+test harness was subsequently removed from the demo collection. Ansible lint and
+the collection build passed.
 
 On a separate disposable Forgejo, seeding included the role and
 `scripts/create-nginx-uid-issue.sh` created the expected feature request, including

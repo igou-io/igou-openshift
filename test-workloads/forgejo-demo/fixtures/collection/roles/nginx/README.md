@@ -23,6 +23,3 @@ a service manager, and root privileges. No firewall or TLS configuration is incl
 Repeated convergence is idempotent. Check mode works for an existing installation;
 on a fresh host the service task may fail because package installation is simulated.
 Rollback/uninstall is outside this role's scope. License: MIT. Author: Demo Maintainer.
-
-Run `PROVISIONER=docker make test` from the collection root for the Rocky 9 HTTP and
-worker-identity checks. Requires a Docker daemon capable of systemd containers.

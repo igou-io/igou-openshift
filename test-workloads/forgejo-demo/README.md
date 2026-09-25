@@ -130,24 +130,16 @@ response bodies or credentials. Don't run these scripts with shell tracing.
 ## Verification
 
 ```bash
-(cd scripts && shellcheck -x *.sh ../tests/*.sh)
+(cd scripts && shellcheck -x *.sh)
 kustomize build manifests | kubeconform -strict -summary -skip Route
 ```
 
-`tests/integration.sh CONTAINER_NAME` targets a fresh disposable Docker Forgejo
-container with the same image and install-lock/SQLite settings. Set `FORGEJO_URL`
-to its local HTTP endpoint and optionally `COLLECTION_SOURCE` to a real collection checkout (defaults to the fixture).
-It creates an admin, seeds twice, checks users/repos/permissions, creates an issue,
-then uses the agent's scoped token to commit and open a PR.
-It intentionally creates demo state; never point it at a real instance.
-
 Verified locally with Forgejo 16.0.5: repeated seed and scoped agent PR.
-The nginx role passed its Molecule scenario and the collection build passed.
+The collection build passed.
 
 Live OpenShift deployment, HTTPS Route, storage, signed webhook delivery, agent Git
 push/PR permissions, and PVC reset were verified on 2026-09-25. See [VALIDATION.md](VALIDATION.md).
-For repeatable API tests, use `tests/integration.sh --existing` against a freshly
-seeded demo. Connect your agent endpoint with `scripts/webhook.sh` when ready.
+Connect your agent endpoint with `scripts/webhook.sh` when ready.
 
 Keep the deploying checkout's `.state/` when moving this bundle to another checkout:
 it holds the generated API tokens and webhook secret.
@@ -159,8 +151,7 @@ References: [Forgejo Docker installation](https://forgejo.org/docs/v16.0/admin/i
 ## nginx UID feature-request demo
 
 The seeded collection contains `demo.greetings.nginx`, a Rocky Linux 9 role
-that installs and starts nginx with its package-provided worker account. Its
-Molecule scenario checks HTTP 200, worker ownership, and idempotence.
+that installs and starts nginx with its package-provided worker account.
 
 After configuring your agent webhook, open the UID feature request with:
 
@@ -172,5 +163,5 @@ The script defaults to the demo URL and reads `.state/admin-token` unless
 `FORGEJO_URL`/`FORGEJO_TOKEN` are exported. Optionally pass another `owner/repo`.
 Each invocation creates a new issue, so it can trigger the connected agent. The
 request in `fixtures/nginx-uid-issue.md` covers default behavior, custom UID, UID
-changes/conflicts, writable paths, worker identity, HTTP availability and tests.
+changes/conflicts, writable paths, worker identity, and HTTP availability.
 UID configuration is intentionally left for the agent to implement.
