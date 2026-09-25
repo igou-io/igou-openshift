@@ -24,10 +24,3 @@ ansible-galaxy collection install demo-greetings-1.0.0.tar.gz
 `demo.greetings.nginx` installs, enables, and starts nginx on Rocky Linux 9 using
 the package-provided worker account. See [role documentation](roles/nginx/README.md).
 The demo feature request asks an agent to add a configurable worker UID.
-
-Test with `PROVISIONER=docker make test` (Molecule, ansible-core, Docker, and
-controller Python package `docker` required). The dependency step installs the
-pinned `david_igou.molecule_provisioners` collection. The test container needs
-privileged/systemd support and a writable cgroup mount.
-
-Run `make lint` for the role and scenario lint checks.

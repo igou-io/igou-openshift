@@ -13,10 +13,7 @@ Acceptance criteria:
   nginx-owned writable paths, restart when needed, and keep HTTP service functional.
 - A second run with the same UID reports no changes.
 - Add/update role defaults, argument specs, and README examples.
-- Extend the Molecule tests to cover default behavior, a custom UID, UID changes,
+- Report how you verified default behavior, a custom UID, UID changes,
   invalid/conflicting UIDs, HTTP 200, and the actual worker process UID.
-- Keep changes scoped to this role and its tests/docs; open a feature-branch PR
+- Keep changes scoped to this role and its docs; open a feature-branch PR
   against `main` with `Closes #<this issue number>`. Do not merge it.
-
-Run `PROVISIONER=docker make test` from the collection root. The baseline scenario
-uses a disposable Rocky Linux 9 container; no production hosts are needed.

@@ -1,3 +1,0 @@
----
-- name: Destroy test instances
-  ansible.builtin.import_playbook: david_igou.molecule_provisioners.destroy
