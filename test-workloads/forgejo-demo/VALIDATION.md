@@ -15,8 +15,8 @@ namespace, with the pinned Forgejo 16.0.5 image and default NVMe-oF SSD storage.
 - Reset: the old PVC was deleted and a new UID provisioned; all test issues, PRs
   and feature branches disappeared; only `main` remained; webhook configuration
   was restored. Tokens rotated and the old agent token returned HTTP 401.
-- Static checks: full repository `make test`, ShellCheck, fixture unit tests and
-  Galaxy collection build passed.
+- Static checks: full repository `make test`, ShellCheck, nginx Molecule tests,
+  and Galaxy collection build passed.
 
 The test receiver and its hook were removed after validation at the user's request.
 Configure your real agent receiver before opening a feature request. Credentials stay in the deploying checkout's ignored `.state/`.
@@ -31,7 +31,7 @@ creation, repeated seed, password authentication, hooks, issues and an agent PR.
 ## Galaxy scaffold and past webhook validation
 
 Regenerated `demo.greetings` with `ansible-galaxy collection init demo.greetings`
-using ansible-core 2.21.4. Collection build and three unit tests passed.
+using ansible-core 2.21.4. Collection build passed.
 
 Before removing the optional test receiver, issues #1–#3 produced signed
 `issues/opened` deliveries matching their repository and issue numbers. The
