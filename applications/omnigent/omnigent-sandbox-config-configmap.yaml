@@ -11,8 +11,6 @@ data:
         providers:
           opencode-go:
             kind: gateway
-            default:
-              - opencode
             openai:
               base_url: https://opencode.ai/zen/go/v1
               api_key_ref: env:OPENCODE_GO_API_KEY
