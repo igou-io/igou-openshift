@@ -6,3 +6,7 @@ RUN /opt/venv/bin/pip install --no-cache-dir 'openshell==0.0.116'
 COPY patch_openshell_service_auth.py /tmp/patch_openshell_service_auth.py
 RUN /opt/venv/bin/python /tmp/patch_openshell_service_auth.py \
  && rm /tmp/patch_openshell_service_auth.py
+
+COPY patch_openshell_policy.py /tmp/patch_openshell_policy.py
+RUN /opt/venv/bin/python /tmp/patch_openshell_policy.py \
+ && rm /tmp/patch_openshell_policy.py
