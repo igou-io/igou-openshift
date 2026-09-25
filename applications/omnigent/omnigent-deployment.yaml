@@ -13,7 +13,7 @@ spec:
   template:
     metadata:
       annotations:
-        omnigent.io/sandbox-config-sha256: 1dd9fcb66adf8d235e44bcaa94f9a1e7603d67de62e4aa785965d7307cf265a9
+        omnigent.io/sandbox-config-sha256: 96acd57daf398e9c6b9bb096813205eada028d5b41affd360994daa466caef7d
       labels:
         app: omnigent
     spec:
@@ -24,7 +24,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: omnigent
-          image: quay.apps.ocp.igou.systems/igou-io/omnigent-server-openshell@sha256:4dc70f7a0661622ac016f72309b7381e5c38772f2fab6fc761e3023bba5ee366
+          image: quay.apps.ocp.igou.systems/igou-io/omnigent-server-openshell@sha256:8ada0a0f00e40ec032284ce13eef2c3b6efad1ede58d973186b7a78697a7e9a3
           ports:
             - name: http
               containerPort: 8000

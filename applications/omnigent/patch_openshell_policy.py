@@ -1,4 +1,4 @@
-"""Supply creation-time policy and harness setup for the devenv host image."""
+"""Supply creation-time policy and executable paths for the devenv host image."""
 
 from pathlib import Path
 
@@ -18,20 +18,7 @@ changes = [
         ref = self._guard(
             "OpenShell sandbox creation failed",''',
     ),
-    (
-        '        return sandbox_name\n\n    def attach(',
-        '''        from pathlib import Path
 
-        self.put(sandbox_name, Path("/etc/omnigent/openshell/setup.sh"), "/sandbox/setup.sh")
-        try:
-            self.run(sandbox_name, "sh /sandbox/setup.sh")
-        except Exception:
-            self.terminate(sandbox_name)
-            raise
-        return sandbox_name
-
-    def attach(''',
-    ),
 ]
 for old, new in changes:
     if text.count(old) != 1:
@@ -41,5 +28,5 @@ old = 'env={"HOME": _SANDBOX_HOME},'
 if text.count(old) != 3:
     raise SystemExit('Pinned OpenShell exec environment changed; review PATH patch')
 text = text.replace(old, '''env={"HOME": _SANDBOX_HOME,
-                         "PATH": "/sandbox/.local/bin:/home/igou/.local/bin:/usr/local/bin:/usr/bin:/bin"},''')
+                         "PATH": "/home/igou/.opencode/bin:/home/igou/.local/bin:/usr/local/bin:/usr/bin:/bin"},''')
 source.write_text(text)
