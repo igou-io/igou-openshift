@@ -1,0 +1,13 @@
+---
+argument_specs:
+  main:
+    short_description: Install and start nginx
+    description:
+      - Install the distribution nginx package and start its service.
+      - Use the package-provided nginx worker account and UID.
+    options:
+      nginx_service_enabled:
+        type: bool
+        default: true
+        description:
+          - Enable nginx at boot.

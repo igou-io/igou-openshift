@@ -64,7 +64,7 @@ while IFS= read -r repo; do
     if [[ -n $source ]]; then
       # Snapshot tracked HEAD only; omit .git, untracked secrets, and old history.
       if [[ $source == "$root/fixtures/collection" ]]; then
-        tar -C "$source" --exclude=.git --exclude=.venv --exclude=__pycache__ --exclude='*.pyc' --exclude='*.tar.gz' -cf - . | tar -xf - -C "$work"
+        tar -C "$source" --exclude=.git --exclude=.venv --exclude=.ansible --exclude=.cache --exclude=__pycache__ --exclude='*.pyc' --exclude='*.tar.gz' -cf - . | tar -xf - -C "$work"
       else
         git -C "$source" archive HEAD | tar -x -C "$work"
       fi

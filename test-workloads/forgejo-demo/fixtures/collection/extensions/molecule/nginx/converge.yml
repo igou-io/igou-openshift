@@ -1,0 +1,6 @@
+---
+- name: Install nginx on test instances
+  hosts: molecule
+  become: true
+  roles:
+    - role: demo.greetings.nginx

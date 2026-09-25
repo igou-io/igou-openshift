@@ -62,6 +62,8 @@ issues: https://forgejo-demo.apps.ocp.igou.systems/demo-owner/ansible-collection
 build_ignore:
   - .git
   - .venv
+  - .ansible
+  - .cache
   - __pycache__
   - '*.tar.gz'
 
