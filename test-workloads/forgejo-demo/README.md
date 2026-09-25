@@ -19,9 +19,10 @@ cd /workspace/igou-openshift/test-workloads/forgejo-demo
 ./scripts/demo.sh seed
 ```
 
-By default, `fixtures/collection` supplies `demo.greetings`, generated with `ansible-galaxy collection init` (ansible-core
-2.21.4), with a small greeting filter and standard-library unit tests added. `fixtures/issue.md` contains a small
-feature request for the agent. No external checkout is required.
+By default, `fixtures/collection` supplies `demo.greetings`, generated with
+`ansible-galaxy collection init` (ansible-core 2.21.4). Its `nginx` role installs
+and starts nginx on Rocky Linux 9. The UID request in `fixtures/nginx-uid-issue.md`
+is the agent task. No external checkout is required.
 
 To use a real collection, export `COLLECTION_SOURCE=/path/to/collection-checkout`.
 Choose a collection with no tracked secrets. For a remote collection, clone
@@ -73,8 +74,7 @@ export WEBHOOK_URL=https://your-agent-receiver.example/events
 export WEBHOOK_SECRET="$(cat .state/webhook-secret)"
 ./scripts/webhook.sh demo-owner/ansible-collection-demo "$WEBHOOK_URL"
 
-./scripts/issue.sh demo-owner/ansible-collection-demo \
-  'Support a configurable greeting prefix' fixtures/issue.md
+./scripts/create-nginx-uid-issue.sh
 ```
 
 The webhook subscribes to every repository event supported by the pinned Forgejo
@@ -142,8 +142,7 @@ then uses the agent's scoped token to commit and open a PR.
 It intentionally creates demo state; never point it at a real instance.
 
 Verified locally with Forgejo 16.0.5: repeated seed and scoped agent PR.
-The fixture tests (3) and Galaxy build passed. The fixture tests need only
-Python's standard library.
+The nginx role passed its Molecule scenario and the collection build passed.
 
 Live OpenShift deployment, HTTPS Route, storage, signed webhook delivery, agent Git
 push/PR permissions, and PVC reset were verified on 2026-09-25. See [VALIDATION.md](VALIDATION.md).
@@ -159,7 +158,7 @@ References: [Forgejo Docker installation](https://forgejo.org/docs/v16.0/admin/i
 
 ## nginx UID feature-request demo
 
-The seeded collection also contains `demo.greetings.nginx`, a Rocky Linux 9 role
+The seeded collection contains `demo.greetings.nginx`, a Rocky Linux 9 role
 that installs and starts nginx with its package-provided worker account. Its
 Molecule scenario checks HTTP 200, worker ownership, and idempotence.
 
