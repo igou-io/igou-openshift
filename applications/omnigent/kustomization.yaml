@@ -5,7 +5,6 @@ configMapGenerator:
     namespace: omnigent
     files:
       - policy.yaml=openshell-host-policy.yaml
-      - setup.sh=openshell-host-setup.sh
 resources:
   - quay-local-pull-externalsecret.yaml
   - omnigent-namespace.yaml

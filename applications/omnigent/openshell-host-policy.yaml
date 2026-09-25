@@ -32,15 +32,8 @@ network_policies:
         port: 443
         tls: skip
     binaries:
+      - path: /home/igou/.opencode/bin/opencode
       - path: /usr/local/bin/node
       - path: /opt/mise/installs/node/*/node-*/bin/node
       - path: /usr/bin/python3.12
       - path: /opt/omnigent/bin/python*
-  pi_install:
-    endpoints:
-      - host: registry.npmjs.org
-        port: 443
-        tls: skip
-    binaries:
-      - path: /usr/local/bin/node
-      - path: /opt/mise/installs/node/*/node-*/bin/node
