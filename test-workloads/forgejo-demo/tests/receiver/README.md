@@ -1,6 +1,6 @@
 # Signed webhook receiver for OpenShift smoke tests
 
-This optional test endpoint verifies HMAC signatures and logs event/action names.
+This optional test endpoint verifies HMAC signatures and logs JSON correlation metadata (event, action, repository, issue, delivery ID).
 It does not launch an agent. Deploy the Forgejo demo and seed it first. From the
 `forgejo-demo` directory, with cluster credentials active:
 
@@ -26,9 +26,22 @@ oc -n forgejo-demo logs deploy/demo-receiver
 
 Create `.state/webhook-secret` with `openssl rand -hex 32` first if needed, as in
 README. Run the integration test on a fresh seed: it creates an issue and PR and
-expects no preexisting ones. Wait for `issues opened` and `pull_request opened`
-in receiver logs; an unsigned or incorrectly signed request returns HTTP 401.
+expects no preexisting ones. Look for JSON records with `event: issues` / `action: opened` and
+`event: pull_request` / `action: opened` in receiver logs; an unsigned or incorrectly signed request returns HTTP 401.
 After changing the Secret, restart the receiver deployment to reload its env.
+
+For an automatic issue-opened check on an already seeded instance (no reset needed):
+
+```bash
+./tests/issue-webhook.sh
+```
+
+This configures the test receiver hook, opens a real issue, and waits up to 60 seconds
+for a signature-verified event matching that exact repository and issue number, with
+`event=issues`, `action=opened`, and a nonempty delivery ID. It prints the matching
+record and closes the test issue on success; a failed check leaves the issue open
+for investigation. It preserves other webhook destinations. It requires the same
+`FORGEJO_URL`, `FORGEJO_TOKEN`, and `WEBHOOK_SECRET` exports shown above.
 
 To test reset with integration restoration, export `WEBHOOK_URL=$WEBHOOK_TEST_URL`
 and run `scripts/demo.sh reset --confirm-forgejo-demo`, then reload the token files.
