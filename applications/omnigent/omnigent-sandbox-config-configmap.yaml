@@ -8,6 +8,11 @@ data:
     sandbox:
       server_url: https://omnigent.apps.ocp.igou.systems
       host_config:
+        inference:
+          harnesses:
+            opencode:
+              provider: opencode-go
+              default_model: glm-5.3-flash
         providers:
           opencode-go:
             kind: gateway
