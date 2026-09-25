@@ -2,20 +2,20 @@
 
 Use <https://omnigent.apps.ocp.igou.systems> for interactive sessions and its
 REST API for pipeline launches. In **New Chat**, choose `opencode-go-test`
-and a new sandbox in the host picker. Kubernetes is the default; OpenShell
-is also configured. Admin login manages application access, but does not
+and a new OpenShell sandbox in the host picker. OpenShell is the only backend
+for new sessions. Admin login manages application access, but does not
 provide a backend configuration editor.
 
 The operator runbook is
 [Omnigent Managed Sandboxes and API Workflows](https://github.com/igou-io/igou-docs/blob/main/openshift/Omnigent%20Managed%20Sandboxes%20and%20API%20Workflows.md).
-It covers new backends, harnesses, both sandbox configurations, OpenShell
+It covers new backends, harnesses, OpenShell configuration, OpenShell
 service authentication, and autonomous REST launches.
 
 ## Where to change settings
 
 | Setting | Source in this directory |
 |---|---|
-| Backend list, default, runner sizes, images, placement, callback URL | `omnigent-sandbox-config-configmap.yaml` |
+| Backend list, image, model binding, callback URL | `omnigent-sandbox-config-configmap.yaml` |
 | Agent prompt, harness, model, model-provider name | `omnigent-test-agent-configmap.yaml` |
 | Server auth, machine-token lifetime, environment forwarding | `omnigent-config-configmap.yaml` |
 | OpenShell gateway endpoint and OIDC metadata | `omnigent-openshell-gateway-configmap.yaml` |
@@ -36,11 +36,6 @@ One server in `omnigent` stores conversations in CNPG and artifacts on a
 10 Gi PVC. Keep one replica because the runner registry is in memory.
 `Recreate` avoids overlapping Pods trying to attach the ReadWriteOnce volume.
 CNPG uses Barman for WAL archiving and nightly backups.
-
-The Kubernetes backend creates Jobs in `omnigent-sandboxes`. Runners use
-`nonroot-v2`, no mounted ServiceAccount token, and ephemeral home storage.
-The `kata-runtime=enabled` node selector chooses eligible workers; it does
-not select Kata. No runtime class is set. Jobs have a seven-day deadline.
 
 The OpenShell backend creates sandboxes through the existing gateway in
 `openshell`. It uses the Agent Sandbox operator, ordinary CRI-O, and the
@@ -89,6 +84,8 @@ startup configuration and Secret rotations also require a server rollout;
 ConfigMap reconciliation alone does not reload the process. Keep that rollout
 in the GitOps change. New sandboxes use changed images and settings; existing
 sandboxes keep their launch configuration.
+The former Kubernetes runner Jobs and their support resources remain until
+their existing sessions are retired; they are no longer offered for new ones.
 
 ## Verify
 
@@ -104,7 +101,7 @@ curl -fsS https://omnigent.apps.ocp.igou.systems/v1/info |
   jq '{managed_sandboxes_enabled, sandbox_provider, sandbox_providers}'
 ```
 
-Expect `kubernetes` as the default and both backends in `sandbox_providers`.
+Expect `openshell` as the default and sole entry in `sandbox_providers`.
 A successful session-create response or HTTP 202 prompt acknowledgement does
 not prove agent completion. Read the assistant output and check task-specific
 results. Delete disposable sessions through Omnigent to reclaim their backend.
