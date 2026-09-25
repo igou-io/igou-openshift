@@ -159,3 +159,22 @@ it holds the generated API tokens and webhook secret.
 References: [Forgejo Docker installation](https://forgejo.org/docs/v16.0/admin/installation/docker/),
 [API schema](https://code.forgejo.org/swagger.v1.json),
 [pinned webhook implementation](https://code.forgejo.org/forgejo/forgejo/src/tag/v16.0.5/routers/api/v1/utils/hook.go).
+
+## nginx UID feature-request demo
+
+The seeded collection also contains `demo.greetings.nginx`, a Rocky Linux 9 role
+that installs and starts nginx with its package-provided worker account. Its
+Molecule scenario checks HTTP 200, worker ownership, and idempotence.
+
+After configuring your agent webhook, open the UID feature request with:
+
+```bash
+./scripts/create-nginx-uid-issue.sh
+```
+
+The script defaults to the demo URL and reads `.state/admin-token` unless
+`FORGEJO_URL`/`FORGEJO_TOKEN` are exported. Optionally pass another `owner/repo`.
+Each invocation creates a new issue, so it can trigger the connected agent. The
+request in `fixtures/nginx-uid-issue.md` covers default behavior, custom UID, UID
+changes/conflicts, writable paths, worker identity, HTTP availability and tests.
+UID configuration is intentionally left for the agent to implement.

@@ -54,3 +54,19 @@ checker run missed its event because `oc logs --all-pods` prefixes log lines; th
 checker now reads the single-replica deployment's JSON logs and passed on rerun.
 Verification issues #1–#3 are closed and retained as evidence; the repository was
 updated by a normal commit, with no reset or token rotation in this change.
+
+## nginx role and UID feature request
+
+Added `demo.greetings.nginx`, scaffolded with ansible-creator, plus a Molecule
+scenario using pinned `david_igou.molecule_provisioners:0.0.4-alpha` and a pinned
+Rocky Linux 9 Docker image. The full scenario passed: package/service convergence,
+second-run idempotence (zero changes), HTTP 200 with nginx response headers, worker
+processes owned by the nginx account, and cleanup. Ansible lint passed its production
+profile and the collection build passed.
+
+On a separate disposable Forgejo, seeding included the role and
+`scripts/create-nginx-uid-issue.sh` created the expected feature request, including
+custom UID 1500, migration to 1501, conflict handling and functional acceptance
+criteria. This feature request was not opened on the live demo; run the script when
+the real agent webhook is ready. The role is updated in the live collection; UID
+configuration remains the task for the agent.

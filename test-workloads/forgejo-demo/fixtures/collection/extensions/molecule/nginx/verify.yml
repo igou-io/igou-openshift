@@ -1,0 +1,30 @@
+---
+- name: Verify nginx serves HTTP using its package account
+  hosts: molecule
+  gather_facts: false
+  tasks:
+    - name: Request nginx default page
+      ansible.builtin.uri:
+        url: http://127.0.0.1/
+        status_code: 200
+        return_content: true
+      register: nginx_http
+      until: nginx_http.status == 200
+      retries: 10
+      delay: 2
+
+    - name: Verify the response is from nginx
+      ansible.builtin.assert:
+        that:
+          - "'nginx' in nginx_http.server"
+        fail_msg: Expected an HTTP response served by nginx.
+
+    - name: Find nginx workers running as the nginx account
+      ansible.builtin.command:
+        argv:
+          - pgrep
+          - -u
+          - nginx
+          - -f
+          - 'nginx: worker process'
+      changed_when: false

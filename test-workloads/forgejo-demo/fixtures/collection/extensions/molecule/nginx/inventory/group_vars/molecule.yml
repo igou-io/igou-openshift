@@ -1,0 +1,9 @@
+---
+mp_backend: "{{ lookup('ansible.builtin.env', 'PROVISIONER') | default('docker', true) }}"
+mp_defaults:
+  docker:
+    command: /usr/sbin/init
+    privileged: true
+    cgroupns_mode: host
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw

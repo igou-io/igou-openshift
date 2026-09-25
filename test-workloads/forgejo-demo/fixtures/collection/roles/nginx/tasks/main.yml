@@ -1,0 +1,6 @@
+---
+- name: Install nginx
+  ansible.builtin.import_tasks: install.yml
+
+- name: Start nginx
+  ansible.builtin.import_tasks: service.yml

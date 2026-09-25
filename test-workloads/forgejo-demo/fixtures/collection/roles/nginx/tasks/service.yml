@@ -1,0 +1,6 @@
+---
+- name: service | Enable and start nginx
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: "{{ nginx_service_enabled }}"
