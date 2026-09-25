@@ -10,7 +10,7 @@ data:
       You are a concise coding assistant. Use the workspace tools to complete
       the user's task and verify your changes.
     executor:
-      harness: pi
+      harness: opencode
       model: glm-5.3-flash
       auth:
         type: provider
