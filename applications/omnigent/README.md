@@ -68,6 +68,12 @@ second nested sandbox. It has no Git or cluster credentials. Built-in `accounts`
 passed the recorded smoke tests; upstream still warns about managed-runner
 WebSocket compatibility. Recheck it after auth or image upgrades.
 
+OpenCode's provider/model binding is in `sandbox.host_config.inference.harnesses`.
+Its native integration requires that profile in addition to the agent's
+`executor.auth`. Provider `default` entries name protocol families, not harnesses.
+Codex and Claude Code require their own compatible model credentials and egress
+settings; the OpenCode Go binding does not configure those clients.
+
 ## Apply configuration changes
 
 Edit the files in Git and render with `kustomize build applications/omnigent`.
