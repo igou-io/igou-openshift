@@ -1,0 +1,11 @@
+{
+  "users": [
+    {"username": "demo-owner", "email": "owner@example.test", "full_name": "Demo Maintainer"},
+    {"username": "demo-agent", "email": "agent@example.test", "full_name": "Coding Agent"},
+    {"username": "demo-reviewer", "email": "reviewer@example.test", "full_name": "Demo Reviewer"}
+  ],
+  "repositories": [
+    {"owner": "demo-owner", "name": "ansible-collection-demo", "description": "Issue-to-PR Ansible collection demo", "source": "", "collaborators": ["demo-agent", "demo-reviewer"]},
+    {"owner": "demo-owner", "name": "demo-notes", "description": "Demo planning and notes", "collaborators": ["demo-reviewer"]}
+  ]
+}

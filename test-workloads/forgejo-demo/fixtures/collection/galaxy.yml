@@ -1,0 +1,17 @@
+namespace: demo
+name: greetings
+version: 1.0.0
+readme: README.md
+authors:
+  - Demo Maintainer
+description: Minimal filter collection for the Forgejo issue-to-PR demo.
+license:
+  - MIT
+tags:
+  - demo
+dependencies: {}
+build_ignore:
+  - .git
+  - .venv
+  - __pycache__
+  - '*.tar.gz'

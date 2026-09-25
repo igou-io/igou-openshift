@@ -1,0 +1,14 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: forgejo-demo
+spec:
+  host: forgejo-demo.apps.ocp.igou.systems
+  to:
+    kind: Service
+    name: forgejo-demo
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

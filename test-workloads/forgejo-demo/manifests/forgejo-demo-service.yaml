@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: forgejo-demo
+spec:
+  selector:
+    app: forgejo-demo
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
