@@ -58,9 +58,10 @@ OpenShell 0.0.116 SDK. `omnigent-openshell` needs the Keycloak
 workspace. Gateway membership is persistent OpenShell state, not a ConfigMap.
 
 The `opencode-go-test` agent uses OpenCode, `glm-5.3-flash`, and the OpenCode Go key from External
-Secrets. The `codex-chatgpt` agent uses Codex and the ChatGPT account cached
-on the separate `omnigent-codex-auth` PVC in `openshell`. Their caller-process
-tools run inside the outer sandbox, without a second nested sandbox. Neither
+Secrets. The `codex-chatgpt` agent selects a Codex subscription provider and
+uses the ChatGPT account cached on the separate `omnigent-codex-auth` PVC in
+`openshell`. Their caller-process tools run inside the outer sandbox, without
+a second nested sandbox. Neither
 agent has Git or cluster credentials. Built-in `accounts` auth has
 passed the recorded smoke tests; upstream still warns about managed-runner
 WebSocket compatibility. Recheck it after auth or image upgrades.
