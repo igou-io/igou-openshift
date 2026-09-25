@@ -678,7 +678,7 @@ applications:
 
   # NVIDIA OpenShell evaluation gateway. Sandboxes intentionally use the
   # standard CRI-O runtime; see the application README for the alpha-release
-  # privileged-SCC boundary and port-forward-only access model.
+  # privileged-SCC boundary and authenticated passthrough Route.
   openshell:
     project: cluster-apps
     annotations:
