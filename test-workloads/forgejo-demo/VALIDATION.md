@@ -33,3 +33,24 @@ No existing lab Forgejo resources were changed, and no ArgoCD application was ad
 Password simplification: all four username/password logins passed against the live
 instance after two seed runs. A fresh-container integration run also passed new-user
 creation, repeated seed, password authentication, hooks, issues and an agent PR.
+
+## Galaxy scaffold and issue-opened webhook check
+
+Regenerated `demo.greetings` with `ansible-galaxy collection init demo.greetings`
+using ansible-core 2.21.4. Kept the generated metadata/runtime templates and plugin
+guide; filled in demo metadata and retained the greeting filter/tests as sample
+content. The fixture and live repository now share that scaffold. Collection build
+and all three unit tests passed, as did repository `make test` and ShellCheck.
+
+`tests/issue-webhook.sh` opened real issues and correlated signed deliveries by
+repository, issue number, event and action. The final run matched issue #3:
+
+```json
+{"event":"issues","action":"opened","repository":"demo-owner/ansible-collection-demo","issue":3,"delivery":"0809ea53-9d49-460d-a9b6-27cc0b915b2e","signature_verified":true}
+```
+
+The receiver returned HTTP 401 for a deliberately invalid signature. An initial
+checker run missed its event because `oc logs --all-pods` prefixes log lines; the
+checker now reads the single-replica deployment's JSON logs and passed on rerun.
+Verification issues #1–#3 are closed and retained as evidence; the repository was
+updated by a normal commit, with no reset or token rotation in this change.

@@ -19,8 +19,8 @@ cd /workspace/igou-openshift/test-workloads/forgejo-demo
 ./scripts/demo.sh seed
 ```
 
-By default, `fixtures/collection` supplies `demo.greetings`, a minimal filter
-collection with standard-library unit tests. `fixtures/issue.md` contains a small
+By default, `fixtures/collection` supplies `demo.greetings`, generated with `ansible-galaxy collection init` (ansible-core
+2.21.4), with a small greeting filter and standard-library unit tests added. `fixtures/issue.md` contains a small
 feature request for the agent. No external checkout is required.
 
 To use a real collection, export `COLLECTION_SOURCE=/path/to/collection-checkout`.
@@ -148,7 +148,9 @@ Galaxy build passed. The fixture tests need only Python's standard library.
 Live OpenShift deployment, HTTPS Route, storage, signed webhook delivery, agent Git
 push/PR permissions, and PVC reset were verified on 2026-09-25. See [VALIDATION.md](VALIDATION.md).
 For repeatable cluster API tests, use [the test receiver runbook](tests/receiver/README.md)
-and `tests/integration.sh --existing` against a freshly seeded demo. The test receiver
+and `tests/integration.sh --existing` against a freshly seeded demo.
+`tests/issue-webhook.sh` verifies a real signed issue-opened event automatically
+and closes its test issue; it also works without resetting existing demo data. The test receiver
 logs events; it does not launch an external agent.
 
 Keep the deploying checkout's `.state/` when moving this bundle to another checkout:

@@ -1,4 +1,4 @@
-// Test receiver: log only event names/actions after verifying the raw body signature.
+// Test receiver: log correlation metadata only after verifying the raw body signature.
 const http = require('node:http');
 const crypto = require('node:crypto');
 if (!process.env.WEBHOOK_SECRET) throw new Error('Set WEBHOOK_SECRET');
@@ -13,8 +13,16 @@ http.createServer((req, res) => {
       res.writeHead(401).end();
       return;
     }
-    const event = JSON.parse(body);
-    console.log(req.headers['x-forgejo-event'], event.action || '');
+    let event;
+    try { event = JSON.parse(body); } catch { res.writeHead(400).end(); return; }
+    console.log(JSON.stringify({
+      event: req.headers['x-forgejo-event'],
+      action: event.action || '',
+      repository: event.repository?.full_name,
+      issue: event.issue?.number,
+      delivery: req.headers['x-forgejo-delivery'],
+      signature_verified: true
+    }));
     res.writeHead(204).end();
   });
 }).listen(Number(process.env.PORT || 39991), '0.0.0.0');
