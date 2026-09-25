@@ -6,6 +6,7 @@ metadata:
 data:
   config.yaml: |
     sandbox:
+      provider: openshell
       server_url: https://omnigent.apps.ocp.igou.systems
       host_config:
         inference:
@@ -25,12 +26,8 @@ data:
               base_url: https://opencode.ai/zen/go/v1
               api_key_ref: env:OPENCODE_GO_API_KEY
               wire_api: chat
-      providers:
-        - provider: openshell
-          openshell:
-            cluster: ocp
-            workspace: default
-            image: ghcr.io/igou-io/igou-devenv@sha256:f1203aeaf1fa3fcafbc21b10bce45e1454ab4cfdac2a6aadf92c2e0fd12bb457
-            env:
-              - OPENCODE_GO_API_KEY
-              - OMNIGENT_RUNNER_ENV_PASSTHROUGH
+      openshell:
+        image: ghcr.io/igou-io/igou-devenv@sha256:f1203aeaf1fa3fcafbc21b10bce45e1454ab4cfdac2a6aadf92c2e0fd12bb457
+        env:
+          - OPENCODE_GO_API_KEY
+          - OMNIGENT_RUNNER_ENV_PASSTHROUGH
