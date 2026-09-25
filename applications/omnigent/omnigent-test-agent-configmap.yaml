@@ -11,6 +11,9 @@ data:
       the user's task and verify your changes.
     executor:
       harness: codex
+      auth:
+        type: provider
+        name: codex-chatgpt
     os_env:
       type: caller_process
       cwd: .
