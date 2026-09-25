@@ -137,21 +137,18 @@ kustomize build manifests | kubeconform -strict -summary -skip Route
 `tests/integration.sh CONTAINER_NAME` targets a fresh disposable Docker Forgejo
 container with the same image and install-lock/SQLite settings. Set `FORGEJO_URL`
 to its local HTTP endpoint and optionally `COLLECTION_SOURCE` to a real collection checkout (defaults to the fixture).
-It creates an admin, seeds twice, checks users/repos/permissions, configures a hook
-twice, creates an issue, then uses the agent's scoped token to commit and open a PR.
+It creates an admin, seeds twice, checks users/repos/permissions, creates an issue,
+then uses the agent's scoped token to commit and open a PR.
 It intentionally creates demo state; never point it at a real instance.
 
-Verified locally with Forgejo 16.0.5: repeated seed/hook setup, scoped agent PR,
-and signed issue/PR/push delivery to `tests/receiver/receiver.cjs`. Fixture tests (3) and
-Galaxy build passed. The fixture tests need only Python's standard library.
+Verified locally with Forgejo 16.0.5: repeated seed and scoped agent PR.
+The fixture tests (3) and Galaxy build passed. The fixture tests need only
+Python's standard library.
 
 Live OpenShift deployment, HTTPS Route, storage, signed webhook delivery, agent Git
 push/PR permissions, and PVC reset were verified on 2026-09-25. See [VALIDATION.md](VALIDATION.md).
-For repeatable cluster API tests, use [the test receiver runbook](tests/receiver/README.md)
-and `tests/integration.sh --existing` against a freshly seeded demo.
-`tests/issue-webhook.sh` verifies a real signed issue-opened event automatically
-and closes its test issue; it also works without resetting existing demo data. The test receiver
-logs events; it does not launch an external agent.
+For repeatable API tests, use `tests/integration.sh --existing` against a freshly
+seeded demo. Connect your agent endpoint with `scripts/webhook.sh` when ready.
 
 Keep the deploying checkout's `.state/` when moving this bundle to another checkout:
 it holds the generated API tokens and webhook secret.
