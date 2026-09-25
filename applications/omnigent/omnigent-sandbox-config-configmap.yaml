@@ -16,6 +16,9 @@ data:
               model_allowlist:
                 - glm-5.3-flash
         providers:
+          codex-chatgpt:
+            kind: subscription
+            cli: codex
           opencode-go:
             kind: gateway
             openai:
