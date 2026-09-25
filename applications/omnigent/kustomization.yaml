@@ -29,6 +29,7 @@ resources:
   - omnigent-runner-nonroot-role.yaml
   - omnigent-runner-nonroot-rolebinding.yaml
   - omnigent-artifacts-pvc.yaml
+  - omnigent-codex-auth-pvc.yaml
   - omnigent-deployment.yaml
   - omnigent-service.yaml
   - omnigent-route.yaml

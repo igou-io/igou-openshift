@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: omnigent-codex-auth
+  namespace: openshell
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: freenas-nfs-ssd-csi
+  resources:
+    requests:
+      storage: 1Gi
