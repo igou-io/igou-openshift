@@ -13,7 +13,7 @@ spec:
   template:
     metadata:
       annotations:
-        omnigent.io/sandbox-config-sha256: 02c61c9135eed3120b51910e38f0265c6185485183071b5dbcfc65361a13a656
+        omnigent.io/sandbox-config-sha256: 1dd9fcb66adf8d235e44bcaa94f9a1e7603d67de62e4aa785965d7307cf265a9
       labels:
         app: omnigent
     spec:
@@ -24,7 +24,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: omnigent
-          image: quay.apps.ocp.igou.systems/igou-io/omnigent-server-openshell@sha256:b50a83b843b0bd2c4b7aa6a05128e7b42cfaf91ee1f1f0168217ce9b555753ad
+          image: quay.apps.ocp.igou.systems/igou-io/omnigent-server-openshell@sha256:4dc70f7a0661622ac016f72309b7381e5c38772f2fab6fc761e3023bba5ee366
           ports:
             - name: http
               containerPort: 8000
@@ -55,6 +55,9 @@ spec:
             seccompProfile:
               type: RuntimeDefault
           volumeMounts:
+            - name: openshell-policy
+              mountPath: /etc/omnigent/openshell
+              readOnly: true
             - name: artifacts
               mountPath: /data/artifacts
             - name: sandbox-config
@@ -90,6 +93,9 @@ spec:
             periodSeconds: 30
             timeoutSeconds: 5
       volumes:
+        - name: openshell-policy
+          configMap:
+            name: omnigent-openshell-policy
         - name: artifacts
           persistentVolumeClaim:
             claimName: omnigent-artifacts

@@ -19,7 +19,8 @@ service authentication, and autonomous REST launches.
 | Agent prompt, harness, model, model-provider name | `omnigent-test-agent-configmap.yaml` |
 | Server auth, machine-token lifetime, environment forwarding | `omnigent-config-configmap.yaml` |
 | OpenShell gateway endpoint and OIDC metadata | `omnigent-openshell-gateway-configmap.yaml` |
-| OpenShell host filesystem and network access | `openshell-host-policy.yaml`, baked by `Containerfile.openshell-host` |
+| OpenShell host filesystem and network access | `openshell-host-policy.yaml`, mounted on the server and sent at sandbox creation |
+| Pi installation in each new OpenShell sandbox | `openshell-host-setup.sh` |
 | OpenShell SDK and renewable service authentication | `Containerfile.openshell`, `patch_openshell_service_auth.py` |
 | Secret references | `*-externalsecret.yaml` |
 | Server mounts, image, restart trigger | `omnigent-deployment.yaml` |
@@ -44,17 +45,26 @@ not select Kata. No runtime class is set. Jobs have a seven-day deadline.
 
 The OpenShell backend creates sandboxes through the existing gateway in
 `openshell`. It uses the Agent Sandbox operator, ordinary CRI-O, and the
-`openshell-sandbox` ServiceAccount's privileged SCC. The custom host image
-carries the egress policy, writable `/opt/venv`, and proxy-aware
-`websockets==15.0.1`. Preserve those when rebuilding.
+`openshell-sandbox` ServiceAccount's privileged SCC. It runs the published
+devenv image directly, with Omnigent and proxy-aware WebSockets baked into
+read-only `/opt/omnigent`. The server sends the policy when creating each
+sandbox, then installs pinned Pi under writable `/sandbox/.local`. No Python
+runtime bootstrap is needed. The policy allows Node under `/opt/mise`, the
+Omnigent callback, OpenCode Go, and npm registry access.
+
+The existing server image patch also supplies creation-time policy and the
+sandbox executable PATH (`patch_openshell_policy.py`). Policy/setup files are
+in a generated ConfigMap; its content hash triggers a server rollout. A failed
+Pi setup deletes the newly provisioned sandbox.
 
 The server patch supplies renewable OAuth client credentials to the
 OpenShell 0.0.116 SDK. `omnigent-openshell` needs the Keycloak
 `openshell-user` role and `user` membership in the gateway's `default`
 workspace. Gateway membership is persistent OpenShell state, not a ConfigMap.
 
-The seeded agent uses Pi, `kimi-k3`, and the OpenCode Go key from External
-Secrets. It has no Git or cluster credentials. Built-in `accounts` auth has
+The seeded agent uses Pi, `glm-5.3-flash`, and the OpenCode Go key from External
+Secrets. Its caller-process tools run inside the outer sandbox, without a
+second nested sandbox. It has no Git or cluster credentials. Built-in `accounts` auth has
 passed the recorded smoke tests; upstream still warns about managed-runner
 WebSocket compatibility. Recheck it after auth or image upgrades.
 

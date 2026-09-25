@@ -7,10 +7,16 @@ data:
   opencode-go-test.yaml: |
     name: opencode-go-test
     prompt: |
-      You are a concise test assistant. Answer the user's question directly.
+      You are a concise coding assistant. Use the workspace tools to complete
+      the user's task and verify your changes.
     executor:
       harness: pi
-      model: kimi-k3
+      model: glm-5.3-flash
       auth:
         type: provider
         name: opencode-go
+    os_env:
+      type: caller_process
+      cwd: .
+      sandbox:
+        type: none
