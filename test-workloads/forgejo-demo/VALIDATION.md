@@ -26,6 +26,10 @@ completion.
 The final reset leaves users/repos seeded, no issues or PRs, and the test receiver
 connected. It logs events only; configure your real agent receiver before opening
 `fixtures/issue.md`. Credentials stay in the deploying checkout's ignored `.state/`.
-When moving to another checkout, securely move that state directory too; do not
-regenerate password files for existing users (seed intentionally preserves passwords).
+When moving to another checkout, securely move that state directory too; it holds the generated API tokens and webhook secret.
+All four demo account passwords equal their usernames; seed restores these defaults.
 No existing lab Forgejo resources were changed, and no ArgoCD application was added.
+
+Password simplification: all four username/password logins passed against the live
+instance after two seed runs. A fresh-container integration run also passed new-user
+creation, repeated seed, password authentication, hooks, issues and an agent PR.

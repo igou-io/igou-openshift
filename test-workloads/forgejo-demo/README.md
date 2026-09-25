@@ -27,7 +27,7 @@ To use a real collection, export `COLLECTION_SOURCE=/path/to/collection-checkout
 Choose a collection with no tracked secrets. For a remote collection, clone
 it locally first using that host's normal authentication. The snapshot excludes Git
 history and untracked files, but includes all tracked files. The source checkout is
-never modified. Seed does not overwrite existing populated repositories or passwords.
+never modified. Seed preserves populated repositories and restores each demo password to its username.
 Use reset when you need to remove demo changes and reproduce the baseline. Keep the
 source checkout at the same commit for repeatable resets.
 
@@ -43,9 +43,12 @@ collection uses `COLLECTION_SOURCE`; other repos without a source get a README.
 The default lifecycle token and webhook commands assume these default user/repo names.
 If changing them, adjust those commands too.
 
-Generated credentials are stored in ignored, private `.state/` files:
-`admin-password`, `admin-token`, `user-password` (shared by the three demo users),
-and `agent-token`. Give the agent only `agent-token`, the instance URL, and
+For this private demo, every password equals the username: `demo-admin`,
+`demo-owner`, `demo-agent`, and `demo-reviewer`. Deploy/seed restores these defaults.
+No password files or password environment variables are needed.
+
+Generated API credentials are stored in ignored, private `.state/` files:
+`admin-token` and `agent-token`. Give the agent only `agent-token`, the instance URL, and
 `demo-owner/ansible-collection-demo`. Its scopes are `write:repository`, `write:issue`,
 and `read:user`, constrained by the user's collaborator permissions. These are
 standalone demo identities, not lab identities.
@@ -108,7 +111,7 @@ export FORGEJO_TOKEN="$(cat .state/admin-token)"
 ```
 
 All demo repositories, issues, PRs, users, tokens, hooks and app configuration are
-recreated. Generated passwords are retained locally; admin and agent tokens rotate.
+recreated. Passwords return to the usernames; admin and agent tokens rotate.
 Update the external agent's token after reset. The webhook secret stays the same.
 This touches only `forgejo-demo`, not the lab's `forgejo` namespace. The script checks
 cluster URL and the demo namespace label before deleting anything. A storage class
@@ -119,7 +122,7 @@ is coordinated with that controller.
 ## Using the scripts with another Forgejo
 
 `seed.sh`, `webhook.sh` and `issue.sh` use `FORGEJO_URL` and `FORGEJO_TOKEN` directly.
-Seed needs an admin token and `DEMO_PASSWORD`; `COLLECTION_SOURCE` is optional. The lifecycle
+Seed needs an admin token; `COLLECTION_SOURCE` is optional. The lifecycle
 wrapper is the only part that invokes `oc`. User/repo seed is additive, not full
 configuration reconciliation. All failures return nonzero without printing API
 response bodies or credentials. Don't run these scripts with shell tracing.
@@ -149,7 +152,7 @@ and `tests/integration.sh --existing` against a freshly seeded demo. The test re
 logs events; it does not launch an external agent.
 
 Keep the deploying checkout's `.state/` when moving this bundle to another checkout:
-seed does not reset existing passwords.
+it holds the generated API tokens and webhook secret.
 
 References: [Forgejo Docker installation](https://forgejo.org/docs/v16.0/admin/installation/docker/),
 [API schema](https://code.forgejo.org/swagger.v1.json),
