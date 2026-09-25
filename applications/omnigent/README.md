@@ -15,7 +15,7 @@ service authentication, and autonomous REST launches.
 
 | Setting | Source in this directory |
 |---|---|
-| Backend list, image, model binding, callback URL | `omnigent-sandbox-config-configmap.yaml` |
+| OpenShell backend, image, model binding, callback URL | `omnigent-sandbox-config-configmap.yaml` |
 | Agent prompt, harness, model, model-provider name | `omnigent-test-agent-configmap.yaml` |
 | Server auth, machine-token lifetime, environment forwarding | `omnigent-config-configmap.yaml` |
 | OpenShell gateway endpoint and OIDC metadata | `omnigent-openshell-gateway-configmap.yaml` |
@@ -26,9 +26,11 @@ service authentication, and autonomous REST launches.
 
 The OpenShell gateway's own settings live in
 [`../openshell/kustomization.yaml`](../openshell/kustomization.yaml).
-Changing its default sandbox image does not change Omnigent's explicit host
-image. Omnigent's model provider `opencode-go` is separate from OpenShell's
-stored inference providers.
+Omnigent pins the same devenv digest explicitly because its current launcher
+always supplies an image; omitting this field selects Omnigent's own host
+image, not the gateway default. `OPENSHELL_GATEWAY=ocp` selects the gateway,
+and the launcher defaults to the `default` workspace. Omnigent's model
+provider `opencode-go` is separate from OpenShell's stored inference providers.
 
 ## Runtime
 
@@ -95,8 +97,9 @@ startup configuration and Secret rotations also require a server rollout;
 ConfigMap reconciliation alone does not reload the process. Keep that rollout
 in the GitOps change. New sandboxes use changed images and settings; existing
 sandboxes keep their launch configuration.
-The former Kubernetes runner Jobs and their support resources remain until
-their existing sessions are retired; they are no longer offered for new ones.
+Existing Kubernetes runner Jobs still use the `omnigent-sandboxes` namespace,
+runner credentials, service account, and RBAC. Keep those resources until the
+Jobs and their sessions are retired; new sessions use OpenShell only.
 
 ## Verify
 
