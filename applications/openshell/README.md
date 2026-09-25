@@ -57,51 +57,25 @@ authorization grant.
 ## Verify a sandbox
 
 ```bash
-openshell sandbox create --name smoke-test -- bash
-openshell sandbox exec --name smoke-test -- uname -a
-openshell sandbox delete smoke-test
+openshell --gateway ocp sandbox create --name smoke-test -- sleep infinity
+openshell --gateway ocp sandbox exec --name smoke-test -- sh -lc 'command -v codex; command -v claude; command -v opencode'
+openshell --gateway ocp sandbox exec --name smoke-test -- uname -a
+openshell --gateway ocp sandbox delete smoke-test
 ```
 
-The resulting sandbox pod must not have `spec.runtimeClassName` set.
+This uses the pinned `ghcr.io/igou-io/igou-devenv` image directly. The
+resulting sandbox pod must not have `spec.runtimeClassName` set. Creating a
+sandbox without `--policy` uses OpenShell's built-in restrictive policy;
+agent network access requires an explicit policy for the selected provider,
+endpoints, and executable paths. Omnigent sends its own policy when it creates
+managed sandboxes.
 
-## OpenCode Go provider
-
-For Codex and Claude Code using **GLM-5.3-Flash**, follow
-[Devenv sandboxes with GLM Flash](devenv/README.md). The gateway's default
-sandbox image is derived from `igou-devenv`; attach `opencode-go-devenv` and
-run `codex-glm` or `claude-glm`. The local adapter translates the clients'
-protocols into OpenCode Go Chat Completions. Omnigent's explicit host image
-override continues to take precedence over this gateway default.
-
-The older `opencode-go` profile below is for models served directly through
-the Codex Responses protocol, not GLM Flash.
-
-The `opencode-go` provider supplies Codex credentials without placing the API
-key in the sandbox specification or wrapper command. Its non-secret profile is
-versioned in `provider-profiles/opencode-go-codex.yaml`; the gateway stores the
-credential in its encrypted SQLite database on the persistent volume.
-
-Bootstrap the provider after restoring or replacing the gateway database:
-
-```bash
-openshell --gateway ocp settings set --global --yes \
-  --key providers_v2_enabled \
-  --value true
-openshell provider profile lint \
-  --file applications/openshell/provider-profiles/opencode-go-codex.yaml
-openshell --gateway ocp provider profile import \
-  --file applications/openshell/provider-profiles/opencode-go-codex.yaml
-read -rsp 'OpenCode Go API key: ' OPENAI_API_KEY
-export OPENAI_API_KEY
-openshell --gateway ocp provider create \
-  --name opencode-go \
-  --type opencode-go-codex \
-  --credential OPENAI_API_KEY
-unset OPENAI_API_KEY
-```
-
-Do not commit the API key. The current MVP uses the operator's existing
-OpenCode credential; secret-manager integration remains a follow-up.
+The former `openshell-devenv` image, GLM protocol adapter, and
+`opencode-go-devenv` provider are no longer part of this GitOps deployment.
+OpenCode Go serves GLM Flash through Chat Completions; the installed Codex and
+Claude Code clients require different protocols. Omnigent uses OpenCode for
+GLM Flash and Codex with its persistent ChatGPT login. Existing gateway
+provider records are stored in SQLite and are not removed by GitOps.
 
 ## Configuration ownership
 
@@ -109,10 +83,10 @@ OpenCode credential; secret-manager integration remains a follow-up.
 |---|---|
 | Gateway image, TLS, Route, OIDC roles, storage, sandbox defaults | `kustomization.yaml` under `helmCharts[].valuesInline` |
 | Sandbox SCC grant | `openshell-sandbox-privileged-clusterrolebinding.yaml` |
-| Private sandbox image pulls | `server.sandboxImagePullSecrets` and the referenced ExternalSecret |
+| Default sandbox image | `server.sandboxImage`; Omnigent currently pins the same devenv digest in its own backend configuration |
 | Workspace membership | OpenShell workspace CLI/API; persisted in the gateway database |
 | Stored inference providers and credentials | OpenShell provider CLI/API; persisted in the gateway database |
-| Effective sandbox policy | Image policy, plus any gateway-global or live sandbox policy |
+| Effective sandbox policy | OpenShell's built-in restrictive policy, plus any creation-time or live sandbox policy |
 | Omnigent host image and policy | `../omnigent/omnigent-sandbox-config-configmap.yaml` and `../omnigent/openshell-host-policy.yaml` |
 
 `server.defaultRuntimeClassName` is empty and `server.appArmorProfile` is

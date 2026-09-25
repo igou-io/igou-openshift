@@ -2,7 +2,6 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: openshell
 resources:
-  - quay-local-pull-externalsecret.yaml
   - openshell-credential-encryption-key-externalsecret.yaml
   - openshell-sandbox-privileged-clusterrolebinding.yaml
 patches:
@@ -90,9 +89,7 @@ helmCharts:
                     operator: DoesNotExist
       server:
         telemetryEnabled: false
-        sandboxImage: quay.apps.ocp.igou.systems/igou-io/openshell-devenv:20260924-glm@sha256:e479553b1f806c39f67ef43502e98295d62f1658d13e1700822ea99fa98d0150
-        sandboxImagePullSecrets:
-          - name: quay-local-pull
+        sandboxImage: ghcr.io/igou-io/igou-devenv@sha256:f1203aeaf1fa3fcafbc21b10bce45e1454ab4cfdac2a6aadf92c2e0fd12bb457
         workspaceDefaultStorageSize: 10Gi
         workspaceStorageClass: freenas-nvmeof-ssd-csi
         # Intentionally use the cluster's normal CRI-O runtime for now.
