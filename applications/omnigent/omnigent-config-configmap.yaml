@@ -12,11 +12,12 @@ data:
   OMNIGENT_ACCOUNTS_BASE_URL: https://omnigent.apps.ocp.igou.systems
   OMNIGENT_ACCOUNTS_INIT_ADMIN_USERNAME: igou
   OMNIGENT_ACCOUNTS_AUTO_OPEN: '0'
-  OMNIGENT_BUILTIN_AGENT_DIRS: /etc/omnigent/agents/opencode-go-test.yaml
+  OMNIGENT_BUILTIN_AGENT_DIRS: /etc/omnigent/agents/opencode-go-test.yaml:/etc/omnigent/agents/codex-chatgpt.yaml
   OMNIGENT_MACHINE_SUB: automation-orchestrator
   OMNIGENT_MACHINE_TOKEN_TTL: '300'
   OPENSHELL_GATEWAY: ocp
   OMNIGENT_OPENSHELL_POLICY: /etc/omnigent/openshell/policy.yaml
+  OMNIGENT_OPENSHELL_CODEX_AUTH_PVC: omnigent-codex-auth
   XDG_CONFIG_HOME: /etc
   OMNIGENT_OPENSHELL_OIDC_CLIENT_ID: omnigent-openshell
   OMNIGENT_RUNNER_ENV_PASSTHROUGH: OPENCODE_GO_API_KEY,https_proxy,http_proxy,HTTPS_PROXY,HTTP_PROXY,NO_PROXY,no_proxy

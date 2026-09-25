@@ -57,17 +57,27 @@ OpenShell 0.0.116 SDK. `omnigent-openshell` needs the Keycloak
 `openshell-user` role and `user` membership in the gateway's `default`
 workspace. Gateway membership is persistent OpenShell state, not a ConfigMap.
 
-The seeded agent uses OpenCode, `glm-5.3-flash`, and the OpenCode Go key from External
-Secrets. Its caller-process tools run inside the outer sandbox, without a
-second nested sandbox. It has no Git or cluster credentials. Built-in `accounts` auth has
+The `opencode-go-test` agent uses OpenCode, `glm-5.3-flash`, and the OpenCode Go key from External
+Secrets. The `codex-chatgpt` agent uses Codex and the ChatGPT account cached
+on the separate `omnigent-codex-auth` PVC in `openshell`. Their caller-process
+tools run inside the outer sandbox, without a second nested sandbox. Neither
+agent has Git or cluster credentials. Built-in `accounts` auth has
 passed the recorded smoke tests; upstream still warns about managed-runner
 WebSocket compatibility. Recheck it after auth or image upgrades.
 
 OpenCode's provider/model binding is in `sandbox.host_config.inference.harnesses`.
 Its native integration requires that profile in addition to the agent's
 `executor.auth`. Provider `default` entries name protocol families, not harnesses.
-Codex and Claude Code require their own compatible model credentials and egress
-settings; the OpenCode Go binding does not configure those clients.
+The OpenCode Go binding does not configure Codex or Claude Code. Codex uses
+`CODEX_HOME=/codex-auth`; the server mounts the RWX auth claim outside
+`/sandbox` so OpenShell keeps its per-sandbox workspace PVC. The launcher
+creates `config.toml` with file-backed credentials if missing, then Omnigent
+links `auth.json` into each Codex session's private home. OpenShell policy
+allows Codex's login and model endpoints. This claim is mounted into every
+Omnigent OpenShell sandbox, so only trusted users and agents should be given
+these sandboxes. Serialize Codex jobs using this account to avoid concurrent
+token refreshes. Initial ChatGPT device authorization is an interactive step;
+see the operator runbook. Claude Code still needs separate credentials.
 
 ## Apply configuration changes
 
