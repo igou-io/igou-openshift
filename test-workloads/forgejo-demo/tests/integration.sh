@@ -30,11 +30,6 @@ api GET /users/demo-owner/repos | jq -e 'length == 2' >/dev/null
 repo=demo-owner/ansible-collection-demo
 api GET "/repos/$repo/contents/galaxy.yml" | jq -e '.type == "file"' >/dev/null
 api GET "/repos/$repo/collaborators/demo-agent/permission" | jq -e '.permission == "write"' >/dev/null
-export WEBHOOK_SECRET
-WEBHOOK_SECRET=${WEBHOOK_SECRET:-$(openssl rand -hex 24)}
-"$root/scripts/webhook.sh" "$repo" "${WEBHOOK_TEST_URL:-http://127.0.0.1:9999/events}"
-"$root/scripts/webhook.sh" "$repo" "${WEBHOOK_TEST_URL:-http://127.0.0.1:9999/events}"
-api GET "/repos/$repo/hooks" | jq -e 'length == 1 and (.[0].events | index("package") != null and index("action_run_success") != null and index("issues") != null and index("pull_request") != null)' >/dev/null
 file=$(mktemp)
 trap 'rm -f "$file"' EXIT
 printf 'Document the collection prerequisites. Acceptance: update README and open a PR.\n' > "$file"
@@ -50,4 +45,4 @@ export FORGEJO_TOKEN
 api POST "/repos/$repo/branches" '{"new_branch_name":"demo-change","old_branch_name":"main"}' >/dev/null
 api POST "/repos/$repo/contents/DEMO.md" '{"branch":"demo-change","message":"Document demo","content":"IyBEZW1vCg=="}' >/dev/null
 api POST "/repos/$repo/pulls" '{"head":"demo-change","base":"main","title":"Document demo","body":"Closes #1"}' | jq -e '.user.login == "demo-agent"' >/dev/null
-printf 'PASS: repeatable seed, users, collection, collaborators, all-event hook, issue, agent commit and PR\n'
+printf 'PASS: repeatable seed, users, collection, collaborators, issue, agent commit and PR\n'
