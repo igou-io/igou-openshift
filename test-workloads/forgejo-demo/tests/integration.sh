@@ -7,11 +7,9 @@ container=${1:?Pass test container name or --existing}
 export FORGEJO_URL=${FORGEJO_URL:?Set local test URL}
 export COLLECTION_SOURCE=${COLLECTION_SOURCE:-$root/fixtures/collection}
 if [[ $container == --existing ]]; then
-  : "${FORGEJO_TOKEN:?Set admin token}" "${AGENT_TOKEN:?Set agent token}" "${DEMO_PASSWORD:?Set demo password}"
+  : "${FORGEJO_TOKEN:?Set admin token}" "${AGENT_TOKEN:?Set agent token}"
 else
-export DEMO_PASSWORD
-DEMO_PASSWORD=$(openssl rand -hex 24)
-printf '%s\n' "$DEMO_PASSWORD" | docker exec -i "$container" sh -c '
+printf '%s\n' demo-admin | docker exec -i "$container" sh -c '
   read -r password
   forgejo --config /var/lib/gitea/custom/conf/app.ini admin user create --username demo-admin --email admin@example.test --password "$password" --admin --must-change-password=false
 ' >/dev/null
@@ -20,6 +18,11 @@ fi
 export FORGEJO_TOKEN
 "$root/scripts/seed.sh"
 "$root/scripts/seed.sh"
+# Assert the documented demo passwords work after repeated seeding.
+for name in demo-admin demo-owner demo-agent demo-reviewer; do
+  curl --fail --silent --show-error --config <(printf 'user = "%s:%s"\n' "$name" "$name") \
+    "$FORGEJO_URL/api/v1/user" | jq -e --arg name "$name" '.login == $name' >/dev/null
+done
 # shellcheck source=../scripts/api.sh
 source "$root/scripts/api.sh"
 api GET /admin/users | jq -e 'length == 4' >/dev/null

@@ -17,16 +17,13 @@ cluster() {
   }
 }
 bootstrap() {
-  if [[ ! -s $state/admin-password ]]; then openssl rand -hex 24 > "$state/admin-password"; fi
   # Inspect usernames only; never read Kubernetes Secrets.
   local users
   users=$(oc -n "$namespace" exec deploy/forgejo-demo -- forgejo --config /var/lib/gitea/custom/conf/app.ini admin user list)
   if ! printf '%s\n' "$users" | awk '{print $2}' | grep -qx demo-admin; then
-    # shellcheck disable=SC2016
-    oc -n "$namespace" exec -i deploy/forgejo-demo -- sh -c '
-      read -r password
-      forgejo --config /var/lib/gitea/custom/conf/app.ini admin user create --username demo-admin --email admin@example.test --password "$password" --admin --must-change-password=false
-    ' < "$state/admin-password" >/dev/null
+    oc -n "$namespace" exec deploy/forgejo-demo -- forgejo --config /var/lib/gitea/custom/conf/app.ini admin user create --username demo-admin --email admin@example.test --password demo-admin --admin --must-change-password=false >/dev/null
+  else
+    oc -n "$namespace" exec deploy/forgejo-demo -- forgejo --config /var/lib/gitea/custom/conf/app.ini admin user change-password --username demo-admin --password demo-admin --must-change-password=false >/dev/null
   fi
   if [[ ! -s $state/admin-token ]]; then
     oc -n "$namespace" exec deploy/forgejo-demo -- forgejo --config /var/lib/gitea/custom/conf/app.ini admin user generate-access-token --username demo-admin --token-name "demo-bootstrap-$(date +%s)" --scopes all --raw > "$state/admin-token.tmp"
@@ -37,9 +34,6 @@ seed() {
   bootstrap
   FORGEJO_TOKEN=$(cat "$state/admin-token")
   export FORGEJO_TOKEN
-  if [[ ! -s $state/user-password ]]; then openssl rand -hex 24 > "$state/user-password"; fi
-  DEMO_PASSWORD=$(cat "$state/user-password")
-  export DEMO_PASSWORD
   "$root/scripts/seed.sh"
   if [[ ! -s $state/agent-token ]]; then
     oc -n "$namespace" exec deploy/forgejo-demo -- forgejo --config /var/lib/gitea/custom/conf/app.ini admin user generate-access-token --username demo-agent --token-name demo-agent --scopes write:repository,write:issue,read:user --raw > "$state/agent-token.tmp"

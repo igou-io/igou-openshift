@@ -18,7 +18,6 @@ oc -n forgejo-demo rollout status deploy/demo-receiver --timeout=180s
 export FORGEJO_URL=https://forgejo-demo.apps.ocp.igou.systems
 export FORGEJO_TOKEN="$(cat .state/admin-token)"
 export AGENT_TOKEN="$(cat .state/agent-token)"
-export DEMO_PASSWORD="$(cat .state/user-password)"
 export WEBHOOK_SECRET="$(cat .state/webhook-secret)"
 export WEBHOOK_TEST_URL=http://demo-receiver.forgejo-demo.svc:39991/events
 ./tests/integration.sh --existing

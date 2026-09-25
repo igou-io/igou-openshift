@@ -4,7 +4,6 @@ set -euo pipefail
 source "$(dirname "$0")/api.sh"
 root=$(cd "$(dirname "$0")/.." && pwd)
 config=${SEED_CONFIG:-$root/seed.json}
-: "${DEMO_PASSWORD:?Set a strong DEMO_PASSWORD for demo users}"
 COLLECTION_SOURCE=${COLLECTION_SOURCE:-$root/fixtures/collection}
 [[ -f $COLLECTION_SOURCE/galaxy.yml ]] || { echo 'Source must contain galaxy.yml' >&2; exit 2; }
 if [[ $COLLECTION_SOURCE != "$root/fixtures/collection" ]]; then
@@ -22,8 +21,11 @@ done
 while IFS= read -r user; do
   name=$(jq -r .username <<< "$user")
   if ! jq -e --arg name "$name" 'any(.[]; .login == $name)' <<< "$users" >/dev/null; then
-    body=$(jq --arg password "$DEMO_PASSWORD" '. + {password:$password,must_change_password:false,send_notify:false}' <<< "$user")
+    body=$(jq --arg password "$name" '. + {password:$password,must_change_password:false,send_notify:false}' <<< "$user")
     api POST /admin/users "$body" >/dev/null
+  else
+    body=$(jq -n --arg name "$name" '{password:$name,must_change_password:false}')
+    api PATCH "/admin/users/$name" "$body" >/dev/null
   fi
 done < <(jq -c '.users[]' "$config")
 # Git uses an askpass helper: no credentials in clone URLs or persistent remotes.
