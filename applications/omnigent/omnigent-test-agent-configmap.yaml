@@ -4,6 +4,18 @@ metadata:
   name: omnigent-test-agent
   namespace: omnigent
 data:
+  codex-chatgpt.yaml: |
+    name: codex-chatgpt
+    prompt: |
+      You are a concise coding assistant. Use the workspace tools to complete
+      the user's task and verify your changes.
+    executor:
+      harness: codex
+    os_env:
+      type: caller_process
+      cwd: .
+      sandbox:
+        type: none
   opencode-go-test.yaml: |
     name: opencode-go-test
     prompt: |

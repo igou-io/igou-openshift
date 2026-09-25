@@ -24,7 +24,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: omnigent
-          image: quay.apps.ocp.igou.systems/igou-io/omnigent-server-openshell@sha256:8ada0a0f00e40ec032284ce13eef2c3b6efad1ede58d973186b7a78697a7e9a3
+          image: quay.apps.ocp.igou.systems/igou-io/omnigent-server-openshell@sha256:d8b9e93de7d5c3919d48f1357dc478b00c0bc7253b020e4b035948638c6f72ad
           ports:
             - name: http
               containerPort: 8000

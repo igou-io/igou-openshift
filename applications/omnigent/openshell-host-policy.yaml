@@ -13,6 +13,7 @@ filesystem_policy:
     - /home/igou
   read_write:
     - /sandbox
+    - /codex-auth
     - /tmp
     - /dev/null
     - /dev/pts
@@ -37,3 +38,17 @@ network_policies:
       - path: /opt/mise/installs/node/*/node-*/bin/node
       - path: /usr/bin/python3.12
       - path: /opt/omnigent/bin/python*
+  codex_chatgpt:
+    endpoints:
+      - host: auth.openai.com
+        port: 443
+        tls: skip
+      - host: chatgpt.com
+        port: 443
+        tls: skip
+      - host: api.openai.com
+        port: 443
+        tls: skip
+    binaries:
+      - path: /home/igou/.local/bin/codex
+      - path: /home/igou/.local/share/codex/*/bin/codex
