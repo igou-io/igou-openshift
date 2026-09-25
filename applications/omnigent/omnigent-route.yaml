@@ -3,6 +3,9 @@ kind: Route
 metadata:
   name: omnigent
   namespace: omnigent
+  annotations:
+    haproxy.router.openshift.io/timeout: 300s
+    haproxy.router.openshift.io/timeout-tunnel: 1h
 spec:
   host: omnigent.apps.ocp.igou.systems
   to:
