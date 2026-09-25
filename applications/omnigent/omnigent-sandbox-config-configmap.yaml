@@ -13,6 +13,8 @@ data:
             opencode:
               provider: opencode-go
               default_model: glm-5.3-flash
+              model_allowlist:
+                - glm-5.3-flash
         providers:
           opencode-go:
             kind: gateway
