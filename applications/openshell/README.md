@@ -1,107 +1,100 @@
 # OpenShell
 
-OpenShell 0.0.116 runs as a lab gateway backed by the existing Red Hat Agent
-Sandbox operator. The gateway and dynamically created sandboxes share the
-`openshell` namespace.
+OpenShell 0.1.1 runs as a single SQLite-backed gateway in `openshell`, using
+this cluster's Red Hat Agent Sandbox operator (`agents.x-k8s.io/v1beta1`).
 
-## Security posture
+## Security and deployment
 
-- The gateway is a single SQLite-backed StatefulSet and is not highly
-  available.
-- The gateway terminates TLS with a public certificate issued by `cluster-acme`
-  for `openshell.apps.ocp.igou.systems`. An OpenShift passthrough Route preserves
-  end-to-end TLS.
-- CLI users authenticate against the existing Keycloak `igou` realm. Anonymous
-  access is disabled; `openshell-admin` and `openshell-user` realm roles control
-  API authorization.
-- Sandbox pods use the ordinary CRI-O runtime. No `RuntimeClass` is configured.
-- OpenShell 0.0.116 requires its sandbox ServiceAccount to use the OpenShift
-  `privileged` SCC. The grant is scoped to `system:serviceaccount:openshell:openshell-sandbox`.
-- Anonymous OpenShell telemetry is disabled.
+- Keycloak's `igou` realm authenticates users; `openshell-admin` and
+  `openshell-user` roles authorize access. Anonymous access is disabled.
+- A cert-manager certificate from `cluster-acme` and an OpenShift passthrough
+  Route serve `https://openshell.apps.ocp.igou.systems` with end-to-end TLS.
+- Sandboxes and separate supervisors use non-root namespace identities with
+  no added capabilities. No privileged SCC grant is configured.
+- The ordinary CRI-O runtime must support nested seccomp user notification
+  and Landlock. OVN-Kubernetes must enforce ingress and egress NetworkPolicies.
+  Fix failed runtime probes at the runtime; do not bypass them with privileged SCC.
+- The default workload is minimal NVIDIA Ubuntu 24.04. Select an explicit,
+  prebuilt agent image with `--from` when agent tools are needed.
+- Gateway, supervisor, sandbox runtime and default workload images are pinned
+  by digest. Upgrade CLI/SDK clients together with the runtime.
+- Telemetry is disabled. The gateway is not highly available; all workspaces
+  currently share one namespace.
 
-Do not treat this release as a production security boundary. Reassess the SCC,
-database, workspace isolation, and chart values when upgrading to OpenShell
-0.1.x.
+The gateway PVC and workspace defaults use 10 Gi `freenas-nvmeof-ssd-csi`
+block storage. Provider credentials use encrypted SQLite storage; External
+Secrets supplies the encryption key from `lab_agents/openshell`, field
+`key-encryption-key`, through `onepassword-lab-agents`.
 
-## Dependencies
+Kustomize renders offline, so only the chart's live Agent Sandbox API preflight
+is disabled. The parent application creates the namespace before chart PreSync
+certificate/JWT hooks. Post-render patches clear fixed gateway UID/GID values
+(Kustomize drops null Helm overrides) and preserve the gateway PVC size/class.
+The published 0.1.1 chart still uses `server` values to generate schema-v2 TOML;
+it does not implement the upgrade guide's `gatewayConfig` mapping.
 
-- Red Hat Agent Sandbox operator serving `agents.x-k8s.io/v1beta1`
-- External Secrets Operator and `onepassword-lab-agents`
-- 1Password item `lab_agents/openshell`, field `key-encryption-key`
-- `freenas-nvmeof-ssd-csi`
+## Connect and verify
 
-The chart's Agent Sandbox preflight is disabled only because Kustomize inflates
-Helm without live API discovery. The API was verified on the target cluster.
-The parent `clusters/ocp` application creates the `openshell` namespace before
-the child application so the chart's native PreSync certificate/JWT hook can
-run during the first sync.
-
-## Connect
+Use the matching 0.1.1 CLI:
 
 ```bash
-oc -n openshell rollout status statefulset/openshell
 openshell gateway add https://openshell.apps.ocp.igou.systems \
   --name ocp \
   --oidc-issuer https://keycloak.apps.ocp.igou.systems/realms/igou \
   --oidc-client-id openshell-cli \
   --oidc-audience openshell-cli
 openshell gateway login ocp
-openshell status
-openshell whoami
-```
-
-Set `OPENSHELL_NO_BROWSER=1` for device authorization from a headless shell.
-The Keycloak client enforces S256 PKCE for browser login and enables the device
-authorization grant.
-
-## Verify a sandbox
-
-```bash
-openshell --gateway ocp sandbox create --name smoke-test -- sleep infinity
-openshell --gateway ocp sandbox exec --name smoke-test -- sh -lc 'command -v codex; command -v claude; command -v opencode'
+openshell --gateway ocp status
+openshell --gateway ocp whoami
+openshell --gateway ocp sandbox create --name smoke-test --detach -- sleep infinity
 openshell --gateway ocp sandbox exec --name smoke-test -- uname -a
 openshell --gateway ocp sandbox delete smoke-test
 ```
 
-This uses the pinned `ghcr.io/igou-io/igou-devenv` image directly. The
-resulting sandbox pod must not have `spec.runtimeClassName` set. Creating a
-sandbox without `--policy` uses OpenShell's built-in restrictive policy;
-agent network access requires an explicit policy for the selected provider,
-endpoints, and executable paths. Omnigent sends its own policy when it creates
-managed sandboxes.
+Check sandbox and supervisor `openshift.io/scc` annotations, non-root security
+contexts, and effective ingress/egress isolation. Readiness alone does not prove
+policy enforcement. No RuntimeClass is selected. Import provider profiles with
+`openshell profile import --file <file>` and explicitly attach providers with
+`--provider <name>`; the gateway no longer bundles provider profiles.
+The optional OpenCode Go profile is in `provider-profiles/opencode-go-codex.yaml`.
+Keep credential values in the provider store, never in manifests or commands.
 
-The former `openshell-devenv` image, GLM protocol adapter, and
-`opencode-go-devenv` provider are no longer part of this GitOps deployment.
-OpenCode Go serves GLM Flash through Chat Completions; the installed Codex and
-Claude Code clients require different protocols. Omnigent uses OpenCode for
-GLM Flash and Codex with its persistent ChatGPT login. Existing gateway
-provider records are stored in SQLite and are not removed by GitOps.
+## Upgrade and recovery
 
-## Configuration ownership
+Follow the [upstream migration guide](https://docs.nvidia.com/openshell/upgrade/0-1-0)
+and the templates from the exact chart release. For 0.0.x upgrades:
 
-| Setting | Where to configure it |
-|---|---|
-| Gateway image, TLS, Route, OIDC roles, storage, sandbox defaults | `kustomization.yaml` under `helmCharts[].valuesInline` |
-| Sandbox SCC grant | `openshell-sandbox-privileged-clusterrolebinding.yaml` |
-| Default sandbox image | `server.sandboxImage`; Omnigent currently pins the same devenv digest in its own backend configuration |
-| Workspace membership | OpenShell workspace CLI/API; persisted in the gateway database |
-| Stored inference providers and credentials | OpenShell provider CLI/API; persisted in the gateway database |
-| Effective sandbox policy | OpenShell's built-in restrictive policy, plus any creation-time or live sandbox policy |
-| Omnigent host image and policy | `../omnigent/omnigent-sandbox-config-configmap.yaml` and `../omnigent/openshell-host-policy.yaml` |
+1. Export provider profiles using the old CLI, preserving workspace/global scope.
+2. Preserve workspace data and remove all legacy sandboxes.
+3. Stop the gateway with ArgoCD reconciliation controlled, and snapshot its PVC.
+   Preserve the credential-encryption key through the existing secret store.
+   The chart changes StatefulSet `serviceName` to `openshell-peer`; replace
+   the controller while retaining its PVC before syncing the new chart.
+4. Upgrade the chart and all runtime/client versions together; import profiles
+   and recreate sandboxes. Legacy persisted runtime descriptors are incompatible.
+5. Verify TLS/OIDC, restricted SCC admission, execution, storage and network isolation.
 
-`server.defaultRuntimeClassName` is empty and `server.appArmorProfile` is
-empty for this OpenShift deployment. Gateway `resources` size the gateway
-Pod, not each agent sandbox. Workspace defaults are 10 Gi on
-`freenas-nvmeof-ssd-csi`. Do not change the runtime class solely because a
-worker has the `kata-runtime=enabled` label; validate the supervisor, SCC,
-and runtime combination first.
+ArgoCD does not auto-prune this application. Explicitly remove the obsolete
+`openshell-sandbox-privileged` ClusterRoleBinding and old `openshell-node-reader`
+ClusterRole/ClusterRoleBinding when upgrading an existing installation.
+Rollback requires the old database snapshot and matching runtime/client versions;
+an image downgrade alone is not a supported database rollback.
 
-Omnigent talks to OpenShell through its gRPC SDK. Pipelines use Omnigent's
-REST API and select `sandbox_provider: openshell`; they do not need to call
-the gateway directly. Omnigent's service client is `omnigent-openshell`,
-with the `openshell-user` realm role and `user` membership in `default`.
-The endpoint metadata mounted into Omnigent is not an authentication token.
-Its custom server image obtains and renews tokens with client credentials.
+The September 26 migration encountered incompatible stored provider protobufs
+(`NetworkEndpoint.enforcement` wire-type mismatch). The unused evaluation
+database was archived under `/var/openshell/pre-0.1.1` while the gateway was
+stopped, then a fresh database initialized. The `openshell-before-0-1-1`
+VolumeSnapshot also retains the old state. All 16 exported provider profiles
+were imported after removing obsolete `tls: terminate` fields; old provider
+credentials and workspace records remain archived, not active.
 
-See the [Omnigent runbook](https://github.com/igou-io/igou-docs/blob/main/openshift/Omnigent%20Managed%20Sandboxes%20and%20API%20Workflows.md)
-for adding backends and configuring the two sides together.
+Verified on CRI-O with the 0.1.1 CLI: OIDC authentication; sandbox create,
+exec, stop/start with persistent files, and deletion; workload and supervisor
+admission under `restricted-v2`; zero effective capabilities, seccomp filters,
+denied writes to `/var/tmp`, denied direct egress even via `oc exec`, and
+blocked boundary-port ingress from an unrelated pod. The gateway is
+`Synced/Healthy`. No inference-provider credential was provisioned by this upgrade.
+
+External integrations must adopt the 0.1.x SDK/API contract before reconnecting.
+The platform does not retain legacy images, privileges or policy exceptions for
+old clients. Gateway resources and workload resource limits are separate settings.
