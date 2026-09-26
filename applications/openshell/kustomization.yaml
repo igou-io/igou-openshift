@@ -3,10 +3,9 @@ kind: Kustomization
 namespace: openshell
 resources:
   - openshell-credential-encryption-key-externalsecret.yaml
-  - openshell-sandbox-privileged-clusterrolebinding.yaml
 patches:
-  # NVIDIA's OpenShift install procedure clears the chart's fixed UID and
-  # fsGroup so SCC admission can assign namespace-valid values.
+  # Kustomize drops null Helm overrides while merging values. Clear the fixed
+  # identities after rendering so restricted SCC admission can assign them.
   - target:
       kind: StatefulSet
       name: openshell
@@ -24,8 +23,7 @@ patches:
               - name: openshell-gateway
                 securityContext:
                   runAsUser: null
-
-  # OpenShell 0.0.116 does not expose values for its gateway PVC. Pin it to
+  # OpenShell 0.1.1 does not expose values for its gateway PVC. Pin it to
   # this cluster's storage class and evaluation capacity after Helm renders.
   - target:
       kind: StatefulSet
@@ -49,15 +47,27 @@ patches:
 helmCharts:
   - name: helm-chart
     namespace: openshell
-    version: 0.0.116
+    version: 0.1.1
     releaseName: openshell
     repo: oci://ghcr.io/nvidia/openshell
     valuesInline:
-      image:
-        tag: 0.0.116@sha256:05cf77bbb022a739aed6f22daa0e7e164415f4ab273b5f84319e46d91eb8f645
+      gateway:
+        image:
+          tag: 0.1.1
+          digest: sha256:09ce3db99430e973743f94adf032d79089f41f2c3fe571e3670d8ba7c92c6313
       supervisor:
         image:
-          tag: 0.0.116@sha256:c8c42aef16c200063e32cbf72e553e4ead027085427b555efafd95063ecead42
+          tag: 0.1.1
+          digest: sha256:297b4b681e13a4dccda4b4796e155e2231134aae1f9e3c94aba5bb981c0e1240
+      sandboxRuntime:
+        image:
+          tag: 0.1.1
+          digest: sha256:48bb1deb5c0cd9f7c5c123a9559e469ce046e700e1099f5f4362178108306c0b
+      sandbox:
+        image:
+          repository: nvcr.io/nvidia/base/ubuntu
+          tag: '24.04'
+          digest: sha256:c280ee89f8bfcbdaba6179ad4347f60c509e841cbe63eb93002f01bf70e0819c
       agentSandbox:
         # Kustomize renders offline. The live v1beta1 API was verified on ocp.
         preflight:
@@ -89,13 +99,10 @@ helmCharts:
                     operator: DoesNotExist
       server:
         telemetryEnabled: false
-        sandboxImage: ghcr.io/igou-io/igou-devenv@sha256:f1203aeaf1fa3fcafbc21b10bce45e1454ab4cfdac2a6aadf92c2e0fd12bb457
         workspaceDefaultStorageSize: 10Gi
         workspaceStorageClass: freenas-nvmeof-ssd-csi
-        # Intentionally use the cluster's normal CRI-O runtime for now.
+        # Use capability-free workloads on the standard CRI-O runtime.
         defaultRuntimeClassName: ''
-        # OpenShift uses SELinux/SCC rather than node-local AppArmor profiles.
-        appArmorProfile: ''
         disableTls: false
         auth:
           allowUnauthenticatedUsers: false

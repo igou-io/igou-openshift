@@ -676,9 +676,8 @@ applications:
     source:
       path: applications/it-tools
 
-  # NVIDIA OpenShell evaluation gateway. Sandboxes intentionally use the
-  # standard CRI-O runtime; see the application README for the alpha-release
-  # privileged-SCC boundary and authenticated passthrough Route.
+  # NVIDIA OpenShell gateway with OIDC and a TLS passthrough Route.
+  # Capability-free sandboxes use the standard CRI-O runtime and restricted SCC.
   openshell:
     project: cluster-apps
     annotations:
