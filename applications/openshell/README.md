@@ -104,5 +104,4 @@ The endpoint metadata mounted into Omnigent is not an authentication token.
 Its custom server image obtains and renews tokens with client credentials.
 
 See the [Omnigent runbook](https://github.com/igou-io/igou-docs/blob/main/openshift/Omnigent%20Managed%20Sandboxes%20and%20API%20Workflows.md)
-for adding backends and configuring the two sides together. Swarmer is a
-separate UI client of this gateway, documented in `../swarmer/README.md`.
+for adding backends and configuring the two sides together.
