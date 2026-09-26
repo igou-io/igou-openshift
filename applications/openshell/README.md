@@ -54,7 +54,7 @@ openshell --gateway ocp sandbox delete smoke-test
 Check sandbox and supervisor `openshift.io/scc` annotations, non-root security
 contexts, and effective ingress/egress isolation. Readiness alone does not prove
 policy enforcement. No RuntimeClass is selected. Import provider profiles with
-`openshell profile import --from <file>` and explicitly attach providers with
+`openshell profile import --file <file>` and explicitly attach providers with
 `--provider <name>`; the gateway no longer bundles provider profiles.
 The optional OpenCode Go profile is in `provider-profiles/opencode-go-codex.yaml`.
 Keep credential values in the provider store, never in manifests or commands.
@@ -68,6 +68,8 @@ and the templates from the exact chart release. For 0.0.x upgrades:
 2. Preserve workspace data and remove all legacy sandboxes.
 3. Stop the gateway with ArgoCD reconciliation controlled, and snapshot its PVC.
    Preserve the credential-encryption key through the existing secret store.
+   The chart changes StatefulSet `serviceName` to `openshell-peer`; replace
+   the controller while retaining its PVC before syncing the new chart.
 4. Upgrade the chart and all runtime/client versions together; import profiles
    and recreate sandboxes. Legacy persisted runtime descriptors are incompatible.
 5. Verify TLS/OIDC, restricted SCC admission, execution, storage and network isolation.
@@ -77,6 +79,21 @@ ArgoCD does not auto-prune this application. Explicitly remove the obsolete
 ClusterRole/ClusterRoleBinding when upgrading an existing installation.
 Rollback requires the old database snapshot and matching runtime/client versions;
 an image downgrade alone is not a supported database rollback.
+
+The September 26 migration encountered incompatible stored provider protobufs
+(`NetworkEndpoint.enforcement` wire-type mismatch). The unused evaluation
+database was archived under `/var/openshell/pre-0.1.1` while the gateway was
+stopped, then a fresh database initialized. The `openshell-before-0-1-1`
+VolumeSnapshot also retains the old state. All 16 exported provider profiles
+were imported after removing obsolete `tls: terminate` fields; old provider
+credentials and workspace records remain archived, not active.
+
+Verified on CRI-O with the 0.1.1 CLI: OIDC authentication; sandbox create,
+exec, stop/start with persistent files, and deletion; workload and supervisor
+admission under `restricted-v2`; zero effective capabilities, seccomp filters,
+denied writes to `/var/tmp`, denied direct egress even via `oc exec`, and
+blocked boundary-port ingress from an unrelated pod. The gateway is
+`Synced/Healthy`. No inference-provider credential was provisioned by this upgrade.
 
 External integrations must adopt the 0.1.x SDK/API contract before reconnecting.
 The platform does not retain legacy images, privileges or policy exceptions for
