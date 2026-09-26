@@ -37,10 +37,6 @@ spec:
       secret:
         name: keycloak-realm-secrets
         key: ACP_CLIENT_SECRET
-    SWARMER_OPENSHELL_CLIENT_SECRET:
-      secret:
-        name: keycloak-swarmer-secret
-        key: SWARMER_OPENSHELL_CLIENT_SECRET
     OMNIGENT_OPENSHELL_CLIENT_SECRET:
       secret:
         name: keycloak-omnigent-secret
@@ -95,22 +91,6 @@ spec:
             config:
               included.client.audience: openshell-cli
               access.token.claim: 'true'
-      - clientId: swarmer-openshell
-        name: Agent Swarm OpenShell service
-        enabled: true
-        protocol: openid-connect
-        publicClient: false
-        secret: "${SWARMER_OPENSHELL_CLIENT_SECRET}"
-        standardFlowEnabled: false
-        directAccessGrantsEnabled: false
-        serviceAccountsEnabled: true
-        protocolMappers:
-          - name: openshell-audience
-            protocol: openid-connect
-            protocolMapper: oidc-audience-mapper
-            config:
-              included.client.audience: openshell-cli
-              access.token.claim: 'true'
       - clientId: omnigent-openshell
         name: Omnigent OpenShell service
         enabled: true
@@ -144,12 +124,6 @@ spec:
             - view-users
             - query-users
             - query-groups
-      - username: service-account-swarmer-openshell
-        enabled: true
-        serviceAccountClientId: swarmer-openshell
-        realmRoles:
-          - openshell-admin
-          - openshell-user
       - username: service-account-omnigent-openshell
         enabled: true
         serviceAccountClientId: omnigent-openshell

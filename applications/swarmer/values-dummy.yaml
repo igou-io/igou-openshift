@@ -1,3 +1,0 @@
----
-# Kustomize requires a values file for app-template's empty upstream values.
-foo: bar
