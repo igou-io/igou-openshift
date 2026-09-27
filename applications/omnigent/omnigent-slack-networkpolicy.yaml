@@ -36,9 +36,8 @@ spec:
         - protocol: TCP
           port: 3128
     - to:
-        - podSelector:
-            matchLabels:
-              app: omnigent
+        - ipBlock:
+            cidr: 10.10.9.10/32
       ports:
         - protocol: TCP
-          port: 8000
+          port: 443

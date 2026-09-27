@@ -17,9 +17,9 @@ value is:
 localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,api.ocp.igou.systems,10.10.9.10
 ```
 
-The Omnigent bot uses `NO_PROXY=localhost,127.0.0.1,.svc.cluster.local` for
-its internal server API and sends Slack traffic through Squid. The Hermes
-`.cluster.local` suffix covers Kubernetes service names. The explicit
+The Omnigent bot bypasses Squid only for its exact HTTPS Route hostname,
+`omnigent.apps.ocp.igou.systems`, and sends Slack traffic through Squid. The
+Hermes `.cluster.local` suffix covers Kubernetes service names. The explicit
 `172.30.0.1` entry keeps in-cluster Kubernetes clients on the direct API service
 path; without it, clients try to tunnel the private service IP through Squid and
 receive `403 Forbidden`. The `api.ocp.igou.systems` and `10.10.9.10` entries keep

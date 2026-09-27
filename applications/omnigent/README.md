@@ -28,13 +28,16 @@ The separate `omnigent-slack` Deployment runs `omni integration slack` in the
 foreground, one replica with `Recreate` strategy. It has no Kubernetes API
 token, infrastructure credentials, public Route or inbound listener. Its only
 network paths are DNS, Squid for Slack HTTPS/WebSocket traffic, and the
-Omnigent service. The pinned bot image adds the unmodified v0.15.0 upstream
-Slack package to the pinned server image; the server image itself lacks that
+existing Omnigent HTTPS Route at `10.10.9.10:443`. The pinned bot image adds
+the unmodified v0.15.0 upstream Slack package to the pinned server image; the
+server image itself lacks that
 optional package. A 1 Gi RWO PVC holds the upstream SQLite store and encrypted
 per-user delegated tokens. Preserve the PVC and encryption key across restarts.
-The bot connects to the internal Omnigent service; the server's
-`OMNIGENT_ACCOUNTS_BASE_URL` advertises the browser-usable public device
-verification link. `OMNIGENT_DEVICE_GRANT_ENABLED=1` is set on the accounts
+The bot's `OMNIGENT_SERVER_URL` uses the browser-accessible HTTPS Route for
+both API calls and conversation links. The exact Route hostname bypasses
+Squid through `NO_PROXY`/`no_proxy`; the bot's NetworkPolicy permits only
+the verified router VIP on TCP 443 for that path. TLS verification stays on.
+`OMNIGENT_DEVICE_GRANT_ENABLED=1` is set on the accounts
 server, and both server and bot read the same device-client secret through
 separate ESO targets. Slack bot/app tokens and the encryption key are consumed
 only by the bot Pod. No Slack credential is mounted into a runner.
@@ -77,10 +80,11 @@ channel. In a DM or channel `@mention`, follow **Set up Omnigent** or run
 `/omnigent`: authenticate with your own Omnigent account through the browser,
 select `igou-sre`, and choose **Managed sandbox (agent_sandbox)**. The pinned
 bot reads server managed-host support from `/v1/info`, so no permanent host is
-needed. Each thread belongs to its initiating user. DMs and mentions start
-sessions; an idle thread can continue through replies when the corresponding
-channel-history scope and event are enabled. An `@mention` is the reliable
-entry point for a new channel thread. The bot streams replies and supports
+needed. Each thread belongs to its initiating user. In a channel, `@mention`
+the bot for both a new request and every follow-up in the thread. In a DM,
+reply in the existing thread to continue its session; a new top-level DM
+starts a separate session. Channel history scopes do not enable plain
+unmentioned channel replies. The bot streams replies and supports
 approval cards and multiple-choice questions; free-form questions open in the
 web UI. `/omnigent logout` revokes delegated auth and clears setup. Account
 permissions and Slack app/channel membership constrain participation; this
@@ -136,8 +140,9 @@ full effective policy set because allow policies are additive. Verify ESO
 readiness, SCC admission, bot startup, Socket Mode connection, writable state
 and state persistence across restart without plaintext delegated tokens.
 Check that the upstream Slack SDK sends both HTTPS and WebSocket traffic via
-Squid, and that the bot reaches the internal Omnigent service. Exercise
-`/omnigent` enrollment, login, logout/re-enrollment, an `igou-sre` DM and
+Squid, and that the bot reaches the HTTPS Omnigent Route with valid TLS and
+browser conversation links. Exercise `/omnigent` enrollment, login,
+logout/re-enrollment, an `igou-sre` DM and
 channel mention, thread continuation, streaming and approval/question cards.
 Confirm the bot creates a real authenticated managed Sandbox and that runner
 Pods have no Slack credentials.

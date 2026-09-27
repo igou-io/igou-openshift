@@ -38,7 +38,7 @@ spec:
                   name: omnigent-device-auth
                   key: OMNIGENT_DEVICE_CLIENT_SECRET
             - name: OMNIGENT_SERVER_URL
-              value: http://omnigent.omnigent.svc.cluster.local
+              value: https://omnigent.apps.ocp.igou.systems
             - name: OMNIGENT_SLACK_DATABASE_PATH
               value: /data/omnigent_slack.sqlite3
             - name: OMNIGENT_DATA_DIR
@@ -50,7 +50,9 @@ spec:
             - name: HTTPS_PROXY
               value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
             - name: NO_PROXY
-              value: localhost,127.0.0.1,.svc.cluster.local
+              value: localhost,127.0.0.1,.svc.cluster.local,omnigent.apps.ocp.igou.systems
+            - name: no_proxy
+              value: localhost,127.0.0.1,.svc.cluster.local,omnigent.apps.ocp.igou.systems
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
