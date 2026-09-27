@@ -36,7 +36,7 @@ spec:
               type: RuntimeDefault
           containers:
             - name: sync
-              image: ghcr.io/igou-io/igou-devenv:latest@sha256:aa2f9196446749353e1719fa3eb489d3bfd49b2e23d564842e057cd829c0520d
+              image: ghcr.io/igou-io/igou-devenv:latest@sha256:0e22e3ffccdea6fa1412fc97149cf7794cedcdf779bd7d9f227e552d8de989d4
               env:
                 - name: HOME
                   value: /tmp
