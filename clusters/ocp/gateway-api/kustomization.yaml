@@ -6,3 +6,4 @@ resources:
   - guest-dmz-gateway.yaml
   - gateway-trusted-lan-tls-certificate.yaml
   - trusted-lan-gateway.yaml
+  - trusted-lan-http-redirect-httproute.yaml
