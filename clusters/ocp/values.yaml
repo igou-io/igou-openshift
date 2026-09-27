@@ -694,16 +694,6 @@ applications:
       argocd.argoproj.io/sync-wave: '20'
     source:
       path: applications/omnigent
-    syncOptions:
-      - RespectIgnoreDifferences=true
-    ignoreDifferences:
-      - group: coordination.k8s.io
-        kind: Lease
-        name: omnigent-sre-sweeps
-        namespace: omnigent
-        jsonPointers:
-          - /metadata/annotations
-          - /spec
 
   forgejo:
     project: cluster-apps

@@ -4,6 +4,7 @@ description: Read-only infrastructure investigations and scheduled SRE sweeps.
 instructions: AGENTS.md
 executor:
   type: omnigent
+  max_iterations: 80
   config:
     harness: opencode
   model: glm-5.3-flash

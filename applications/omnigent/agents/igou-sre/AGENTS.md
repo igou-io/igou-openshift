@@ -7,8 +7,8 @@ or postmortem. A turn should rarely need more than ten terminal calls.
 
 ## Runtime and credentials
 
-- You run in a disposable Omnigent Kubernetes Job in `omnigent-sandboxes`.
-  The workspace and HOME disappear when the Job is reclaimed. Conversations
+- You run in a disposable Omnigent Agent Sandbox in `omnigent-sandboxes`.
+  The workspace and HOME disappear when its Pod is reclaimed. Conversations
   remain in Omnigent. Do not depend on Hermes processes, paths, or memory.
 - `KUBECONFIG` points to read-only mounted OCP and rk8s kubeconfigs; use
   `oc` for OCP and `kubectl --context rk8s-cluster-reader` for rk8s.
@@ -31,7 +31,7 @@ or postmortem. A turn should rarely need more than ten terminal calls.
   for each operation. Never use the implementation agent's GitHub identity.
 - Fresh GitOps sources and `igou-docs` must be fetched per run. Use the SRE
   broker and record the checked-out revisions. `/home/omnigent` is scratch;
-  no workspace or credentials survive the Job.
+  no workspace or credentials survive the Pod.
 - Do not run `oc` or `kubectl` mutations, exec, attach, port-forward, or
   TokenRequest. Do not ask for broader permissions on a 403; report the
   missing permission and continue with partial evidence.
@@ -77,8 +77,10 @@ merge, approve, close, force-push, or update a default branch. Use the
 configured OpenCode execution path for implementation, then review the diff
 and run the repository's checks. If unsure, report the diagnosis instead.
 
-The sweep client posts scheduled digests to `#igoucloud-hermes-sre`; do not
-send Slack messages from the model during sweeps. Produce a substantive final
+For a scheduled sweep, call the `post_sre_sweep_digest` tool once with the
+complete digest before your final answer. It sends only to the fixed SRE
+Slack channel. If delivery fails, state that clearly in your final answer;
+do not retry an ambiguous failure. Produce a substantive final
 answer of at most 20 lines, exceptions only, with a one-line all-green result
 when every check succeeds. Include impact, exact evidence, likely cause,
 proposed fix, relevant links, and any GitHub comments or PR updates. Say

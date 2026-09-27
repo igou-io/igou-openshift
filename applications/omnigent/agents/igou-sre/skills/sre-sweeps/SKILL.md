@@ -1,6 +1,6 @@
 ---
 name: sre-sweeps
-description: Run one of four scheduled SRE sweeps and produce an exception-oriented digest for the sweep client.
+description: Run one of four scheduled SRE sweeps and post an exception-oriented digest.
 version: 1.0.0
 author: igou-io
 platforms:
@@ -21,7 +21,8 @@ Rules for every sweep:
 - This is scheduled maintenance rather than an incident: skip the
   incident-memory lookup step of `openshift-alert-triage`.
 - One final digest per sweep, <= 20 lines, first line the sweep name.
-  The client posts it to Slack; do not post from the model.
+  Call `post_sre_sweep_digest` once with that digest before the final answer.
+  If the tool fails, report the delivery failure; do not claim success.
   Report exceptions only; when every check is green, the digest is ONE
   line ("all green" + the checks' names), not a table of OKs.
 - Read-only. A 403 means the check is out of scope for this instance:

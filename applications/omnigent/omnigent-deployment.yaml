@@ -13,9 +13,9 @@ spec:
   template:
     metadata:
       annotations:
-        omnigent.io/sandbox-config-sha256: 40d16080e0d9d72f413e5f46fa171302ff1b9aba9d2e9d01134fafa9810f3bf4
+        omnigent.io/sandbox-config-sha256: b6d9dce337a38fa73d9d71f526dfca09d1c3b79a6cc2f9dbdbc283335eaa1550
         omnigent.io/server-config-sha256: c4fa1f9d6bf25084a0b1978a43c6b501c5a4433d312a3331932f9e29a01a4faa
-        omnigent.io/sre-bundle-sha256: aebf12bdfb0650ccbc5e2ee53987da04e89471b19585c479e8057ddc2f0774d5
+        omnigent.io/sre-bundle-sha256: 772538ace39b9bb13d9a1b4001d88d56d427a830aaaae9e6cb29b1315ff40f51
       labels:
         app: omnigent
     spec:
@@ -150,3 +150,5 @@ spec:
                       path: skills/triage-domains/rk8s.md
                     - key: change-correlation.md
                       path: skills/triage-domains/change-correlation.md
+                    - key: sre_slack.py
+                      path: tools/python/sre_slack.py

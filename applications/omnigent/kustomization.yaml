@@ -17,16 +17,7 @@ configMapGenerator:
       - network.md=agents/igou-sre/skills/triage-domains/network.md
       - rk8s.md=agents/igou-sre/skills/triage-domains/rk8s.md
       - change-correlation.md=agents/igou-sre/skills/triage-domains/change-correlation.md
-  - name: omnigent-sre-client-code
-    namespace: omnigent
-    options:
-      disableNameSuffixHash: true
-    files:
-      - sweep_client.py=scripts/sweep_client.py
-      - daily-health.md=sweeps/daily-health.md
-      - hygiene.md=sweeps/hygiene.md
-      - capacity.md=sweeps/capacity.md
-      - pr-followup.md=sweeps/pr-followup.md
+      - sre_slack.py=agents/igou-sre/tools/python/sre_slack.py
 resources:
   - quay-local-pull-externalsecret.yaml
   - omnigent-namespace.yaml
@@ -37,7 +28,6 @@ resources:
   - cnpg-s3-credentials-externalsecret.yaml
   - omnigent-auth-externalsecret.yaml
   - omnigent-machine-client-externalsecret.yaml
-  - omnigent-sre-client-externalsecret.yaml
   - omnigent-sre-slack-externalsecret.yaml
   - omnigent-sre-ocp-externalsecret.yaml
   - omnigent-sre-rk8s-externalsecret.yaml
@@ -53,20 +43,7 @@ resources:
   - omnigent-sandbox-manager-rolebinding.yaml
   - omnigent-runner-nonroot-role.yaml
   - omnigent-runner-nonroot-rolebinding.yaml
-  - omnigent-sre-sweep-serviceaccount.yaml
-  - omnigent-sre-cleanup-serviceaccount.yaml
-  - omnigent-sre-sweeps-lease.yaml
-  - omnigent-sre-sweep-lease-role.yaml
-  - omnigent-sre-sweep-lease-rolebinding.yaml
-  - omnigent-sre-cleanup-role.yaml
-  - omnigent-sre-cleanup-rolebinding.yaml
   - omnigent-sre-runner-networkpolicy.yaml
-  - omnigent-sre-client-networkpolicy.yaml
-  - omnigent-sre-sweep-daily-health-cronjob.yaml
-  - omnigent-sre-sweep-hygiene-cronjob.yaml
-  - omnigent-sre-sweep-capacity-cronjob.yaml
-  - omnigent-sre-sweep-pr-followup-cronjob.yaml
-  - omnigent-sre-cleanup-cronjob.yaml
   - omnigent-artifacts-pvc.yaml
   - omnigent-deployment.yaml
   - omnigent-service.yaml

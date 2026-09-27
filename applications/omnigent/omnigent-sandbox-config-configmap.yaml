@@ -6,8 +6,13 @@ metadata:
 data:
   config.yaml: |
     sandbox:
-      provider: kubernetes
+      provider: agent_sandbox
       server_url: http://omnigent.omnigent.svc.cluster.local
+      keep_warm_s: 300
+      reaper:
+        enabled: true
+        terminate_after_offline_days: 7
+        sweep_interval_s: 3600
       host_config:
         inference:
           harnesses:
@@ -48,6 +53,8 @@ data:
             mount_path: /mnt/credentials/routeros
           - secret_name: omnigent-sre-truenas
             mount_path: /mnt/credentials/truenas
+          - secret_name: omnigent-sre-slack
+            mount_path: /mnt/credentials/slack
         env:
           - PATH
           - USER
