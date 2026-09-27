@@ -467,7 +467,7 @@ spec:
               - name: workspace
                 # :latest is digest-pinned (Renovate moves it); carries the
                 # coding-agent CLIs and ghapp >= 0.3.0 (GHAPP_BROKER_URL client).
-                image: ghcr.io/igou-io/igou-devenv:latest@sha256:aa2f9196446749353e1719fa3eb489d3bfd49b2e23d564842e057cd829c0520d
+                image: ghcr.io/igou-io/igou-devenv:latest@sha256:0e22e3ffccdea6fa1412fc97149cf7794cedcdf779bd7d9f227e552d8de989d4
                 command:
                   - sleep
                   - infinity
