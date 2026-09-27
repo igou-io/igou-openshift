@@ -2,15 +2,14 @@
 
 Issue [#1040](https://github.com/igou-io/igou-openshift/issues/1040) stages the
 `igou-sre` agent, its four sweep prompts, and Omnigent v0.15.0's upstream
-interactive Slack bot. No live cluster resources or Hermes schedules were
-changed during implementation. The live
+interactive Slack bot. The three disposable legacy `opencode-go-test` Jobs
+and their Pods were removed from `omnigent-sandboxes` on 2026-09-27 with
+operator authorization; Hermes schedules remain unchanged. The live
 `omnigent` ArgoCD Application has automated sync: merging this PR can deploy
 server, Secret, PVC, bot and NetworkPolicy changes. Before merging with
-auto-sync active, complete the dedicated Slack app and 1Password item setup,
-inventory and obtain approval to drain legacy sessions, then authorize GitOps
-reconciliation. Otherwise establish and verify a deployment hold. Hermes keeps
-its four production schedules, Slack app, alert relay, EDA and `SREHeartbeat` until a separately
-approved cutover.
+auto-sync active, authorize GitOps reconciliation or establish and verify a
+deployment hold. Hermes keeps its four production schedules, Slack app, alert
+relay, EDA and `SREHeartbeat` until a separately approved cutover.
 
 ## Platform and credentials
 
@@ -49,10 +48,10 @@ Generate a `connections:write` app token, install the app and obtain its bot
 token. Check `/omnigent` command ownership first; do not reuse the live Hermes
 app or its Socket Mode tokens. Store the new tokens in the `lab_agents` item
 `omnigent-slack` as `app-token` and `bot-token`; add a stable Fernet
-`encryption-key` and a random `device-client-secret`. The item did not exist at
-the 2026-09-27 read-only check; the ESO resources cannot become Ready until
-these operator prerequisites are complete. Never put their values in Git,
-commands, logs or PR text. The `onepassword-lab-agents` ClusterSecretStore uses
+`encryption-key` and a random `device-client-secret`. The item and all four
+fields were verified on 2026-09-27; both Slack tokens passed direct API checks.
+Never put their values in Git, commands, logs or PR text. The
+`onepassword-lab-agents` ClusterSecretStore uses
 1Password Connect, and both ESO targets extract only their named fields.
 Retire the old runner-namespace `omnigent-sre-slack` ExternalSecret from
 desired state. Neither it nor its generated Secret existed at the 2026-09-27
@@ -134,10 +133,11 @@ oc -n omnigent-sandboxes get sandbox,pod,externalsecret,networkpolicy
 oc -n squid-proxy get networkpolicy
 ```
 
-The 2026-09-27 read-only check found three running legacy `opencode-go-test`
-Job Pods in `omnigent-sandboxes` and no NetworkPolicy there. Reconfirm before
-acting; the new default deny would remove their network access. Inspect the
-full effective policy set because allow policies are additive. Verify ESO
+The three legacy `opencode-go-test` Jobs and their Pods were deleted on
+2026-09-27. A follow-up check found no Jobs, Pods or PVCs in
+`omnigent-sandboxes`. Reconfirm before rollout; the new default deny applies
+to any unclassified Pods. Inspect the full effective policy set because allow
+policies are additive. Verify ESO
 readiness, SCC admission, bot startup, Socket Mode connection, writable state
 and state persistence across restart without plaintext delegated tokens.
 Check that the upstream Slack SDK sends both HTTPS and WebSocket traffic via
