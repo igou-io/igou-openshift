@@ -38,6 +38,18 @@ clusterRoles:
           - get
           - list
           - watch
+  # The Barman Cloud plugin publishes recovery windows on ObjectStore rather
+  # than Cluster status; the SRE reader needs only these read verbs.
+  - name: barman-objectstore-read
+    rules:
+      - apiGroups:
+          - barmancloud.cnpg.io
+        resources:
+          - objectstores
+        verbs:
+          - get
+          - list
+          - watch
   - name: molecule-kubernetes
     rules:
       - apiGroups:
@@ -310,6 +322,8 @@ serviceAccounts:
         clusterRole: loki-logs-read
       - name: cluster-read-only-hermes-read
         clusterRole: hermes-read
+      - name: cluster-read-only-barman-objectstore-read
+        clusterRole: barman-objectstore-read
     # Alertmanager API (silences, receivers, /api/v2/alerts) — cluster-reader +
     # cluster-monitoring-view cover Thanos/Prometheus but not alertmanagers/api.
     # Read-only agent sessions (hermes-sre, t3 read-only bundle) need it.
