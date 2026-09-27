@@ -14,7 +14,7 @@ helmCharts:
   valuesInline:
     image:
       repository: itzg/minecraft-server
-      tag: latest@sha256:77280d10744fd0482b7c510cd6b7ba7a5a609be5ef91cd593374e7df36de826b
+      tag: latest@sha256:83c076bb24c87e5a5cf5d884d180c7be8896a4c1d5963d74a39a4325401cc2ba
       pullPolicy: IfNotPresent
       pullSecret: ""
 
