@@ -120,9 +120,9 @@ from the `omnigent-creds` ExternalSecret at `OPENCODE_CONFIG_DIR`.
 Omnigent's native OpenCode launcher discards `OPENCODE_CONFIG_CONTENT`, while
 the custom config directory survives its environment filter. The key itself
 stays in the existing `OPENCODE_GO_API_KEY` Secret-backed environment variable.
-Native tasks live
-in the Omnigent database, are user-owned and are managed manually in this
-phase.
+The mounted Secret also supplies `.gitignore`; OpenCode needs that file already
+present because the mount is read-only. Native tasks live in the Omnigent
+database, are user-owned and are managed manually in this phase.
 Scheduled results stay in Omnigent; losing automatic Slack digests after a
 future Omnigent-only cutover is an explicit limitation to accept separately.
 The native scheduler does not replay missed fires and skips overlapping runs.
