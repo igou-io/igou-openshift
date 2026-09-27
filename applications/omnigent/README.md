@@ -115,9 +115,12 @@ They remain paused while Hermes schedules are active. The v0.15.0
 scheduled-task create API creates tasks **active by default**; verify the
 stored `paused` state after editing them. Set each task's model override to
 `opencode-go/glm-5.3-flash`. Scheduled sessions do not retain a managed
-inference selection, so the sandbox receives an OpenCode provider definition
-through `OPENCODE_CONFIG_CONTENT`; the key itself stays in the existing
-`OPENCODE_GO_API_KEY` Secret-backed environment variable. Native tasks live
+inference selection, so the sandbox mounts an OpenCode provider definition
+from the `omnigent-creds` ExternalSecret at `OPENCODE_CONFIG_DIR`.
+Omnigent's native OpenCode launcher discards `OPENCODE_CONFIG_CONTENT`, while
+the custom config directory survives its environment filter. The key itself
+stays in the existing `OPENCODE_GO_API_KEY` Secret-backed environment variable.
+Native tasks live
 in the Omnigent database, are user-owned and are managed manually in this
 phase.
 Scheduled results stay in Omnigent; losing automatic Slack digests after a
