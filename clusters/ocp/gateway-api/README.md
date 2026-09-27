@@ -13,7 +13,8 @@ onboard with a single HTTPRoute in their own namespace.
 | `GatewayClass openshift-default` | Binds to `openshift.io/gateway-controller/v1`; on first reconcile the Ingress Operator installs the managed OSSM 3 / Istio control plane in `openshift-ingress` |
 | `Gateway guest-dmz` | Tier entry point. Managed Envoy Deployment + LoadBalancer Service, pinned to `10.10.152.3` in the MetalLB `guest-dmz` pool via `spec.infrastructure.annotations` |
 | `Certificate gateway-guest-dmz-tls` | Wildcard `*.dmz.igou.systems` via the `cluster-acme` ClusterIssuer (LE production, Cloudflare DNS-01). Envoy hot-reloads the renewed secret via SDS — no restart choreography |
-| `Gateway trusted-lan` | Same shape for the trusted-lan tier ([#490](https://github.com/igou-io/igou-openshift/issues/490)), pinned to `10.10.150.3` in the `trusted-lan` pool. rk8s serves the same tier domain from its half of the pool (`10.10.150.129`); per-hostname DNS on the rb5009 decides which cluster serves a name |
+| `Gateway trusted-lan` | Tier gateway pinned to `10.10.150.3` in the `trusted-lan` pool ([#490](https://github.com/igou-io/igou-openshift/issues/490)). rk8s serves the same tier domain from `10.10.150.129`; per-hostname DNS on the rb5009 decides which cluster serves a name |
+| `HTTPRoute trusted-lan-http-redirect` | Redirects port 80 requests for `*.lan.igou.systems` to HTTPS. Radarr, Sonarr, and Prowlarr currently emit HTTP login URLs behind TLS termination, so browsers need this redirect to reach their login pages |
 | `Certificate gateway-trusted-lan-tls` | Wildcard `*.lan.igou.systems`, same issuer. Tier domains are cluster-agnostic — both clusters hold this wildcard |
 
 ## Onboarding an app onto a tier
@@ -30,7 +31,8 @@ onboard with a single HTTPRoute in their own namespace.
    trusted-lan) — explicit per-hostname records only, no tier-domain
    wildcards. For guest-dmz, add a per-VLAN pinhole to
    `10.10.152.3 tcp/443` if a new VLAN needs access; trusted-lan admits
-   VLAN 9/10/99 tier-wide already.
+   VLAN 9/10/20/99 tier-wide. Rachel slapchop on VLAN 25 has a host-specific
+   pinhole to `10.10.150.3 tcp/80,443` for the media stack and HTTP redirect.
 
 ## Constraints (verified against the OCP 4.21 docs — see #367)
 
