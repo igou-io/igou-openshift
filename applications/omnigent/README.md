@@ -1,121 +1,155 @@
-# Omnigent
+# Omnigent SRE runners
 
-Use <https://omnigent.apps.ocp.igou.systems> for interactive sessions and its
-REST API for pipeline launches. In **New Chat**, choose `opencode-go-test`
-and a new OpenShell sandbox in the host picker. OpenShell is the only backend
-for new sessions. Admin login manages application access, but does not
-provide a backend configuration editor.
+Omnigent at <https://omnigent.apps.ocp.igou.systems> hosts the GitOps-owned
+`igou-sre` agent. New managed SRE sessions use the direct `kubernetes` provider:
+Omnigent creates one Job in `omnigent-sandboxes` per session. The server image
+is the upstream Kubernetes build at the digest in `omnigent-deployment.yaml`;
+the Job uses the pinned `igou-devenv` image in
+`omnigent-sandbox-config-configmap.yaml`. The server keeps its one replica,
+CNPG history, artifact PVC, account authentication and Route.
 
-The operator runbook is
-[Omnigent Managed Sandboxes and API Workflows](https://github.com/igou-io/igou-docs/blob/main/openshift/Omnigent%20Managed%20Sandboxes%20and%20API%20Workflows.md).
-It covers new backends, harnesses, OpenShell configuration, OpenShell
-service authentication, and autonomous REST launches.
+The five operational skills and four triage reference files live in
+`agents/igou-sre/`. Kustomize generates `omnigent-sre-bundle`; the server
+projects it at `/etc/omnigent/igou-sre` and seeds the built-in agent. The
+pinned Omnigent `materialize_bundle` path packages those skills into the
+runner session. `executor` pins OpenCode, `opencode-go`, and
+`glm-5.3-flash`. The four sweep prompts live in `sweeps/` and the shared
+finite client in `scripts/sweep_client.py`.
 
-## Where to change settings
+The devenv image contains Omnigent 0.15.0 and OpenCode 1.18.31. The runner
+passes an explicit `PATH` to reach the real OpenCode binary and read-only
+helper CLIs. Omnigent fixes its Job UID/GID at `1000660000`, which has no
+passwd entry in this image; Git author, committer and login names are
+supplied as nonsecret environment values so proposal commits work.
 
-| Setting | Source in this directory |
-|---|---|
-| OpenShell backend, image, model binding, callback URL | `omnigent-sandbox-config-configmap.yaml` |
-| Agent prompt, harness, model, model-provider name | `omnigent-test-agent-configmap.yaml` |
-| Server auth, machine-token lifetime, environment forwarding | `omnigent-config-configmap.yaml` |
-| OpenShell gateway endpoint and OIDC metadata | `omnigent-openshell-gateway-configmap.yaml` |
-| OpenShell host filesystem and network access | `openshell-host-policy.yaml`, mounted on the server and sent at sandbox creation |
-| OpenShell SDK and renewable service authentication | `Containerfile.openshell`, `patch_openshell_service_auth.py` |
-| Secret references | `*-externalsecret.yaml` |
-| Server mounts, image, restart trigger | `omnigent-deployment.yaml` |
+## Credentials and boundaries
 
-The OpenShell gateway's own settings live in
-[`../openshell/kustomization.yaml`](../openshell/kustomization.yaml).
-Omnigent pins the same devenv digest explicitly because its current launcher
-always supplies an image; omitting this field selects Omnigent's own host
-image, not the gateway default. `OPENSHELL_GATEWAY=ocp` selects the gateway,
-and the launcher defaults to the `default` workspace. Omnigent's model
-provider `opencode-go` is separate from OpenShell's stored inference providers.
+ESO reads existing 1Password items into `omnigent-sandboxes` Secrets. The
+runner mounts OCP and rk8s kubeconfigs, RouterOS and TrueNAS read-only
+profiles as read-only Secret volumes under `/mnt/credentials`. Its
+ServiceAccount token is not mounted. OCP's API uses a publicly trusted
+certificate; the rk8s kubeconfig embeds the verified `k3s-server-ca` from
+the cluster's `kube-root-ca.crt`. The endpoints and context names are pinned
+in the ExternalSecret templates. The OpenCode Go key comes from the existing
+`omnigent-creds` Secret as environment data.
 
-## Runtime
+ESO refreshes the Kubernetes Secret from 1Password hourly. Mounted files
+update eventually and each use must reread them; the mount uses no
+`subPath`. Environment credentials update only when a new Pod starts. ESO
+does not renew the source service-account token in 1Password; retain the
+existing publisher and verify its renewal separately. The sweep client gets
+only its Omnigent OAuth secret and the existing SRE Slack bot token in
+`omnigent`, not estate kubeconfigs. Machine tokens last 300 seconds; the
+client mints a fresh token before expiry.
 
-One server in `omnigent` stores conversations in CNPG and artifacts on a
-10 Gi PVC. Keep one replica because the runner registry is in memory.
-`Recreate` avoids overlapping Pods trying to attach the ReadWriteOnce volume.
-CNPG uses Barman for WAL archiving and nightly backups.
+The SRE GitHub broker remains in `hermes-sre`. Its ingress policy admits only
+`igou-sre` runner Pods from `omnigent-sandboxes`; no GitHub private key is
+mounted. Runner/client NetworkPolicies deny inbound traffic and allow only
+DNS, the required internal endpoints, and Squid for public HTTP/HTTPS.
+The existing read-only service-account roles are the infrastructure authority
+boundary. Logs and readable objects may still contain sensitive data; keep
+investigation output bounded and never print mounted credential files.
 
-The OpenShell backend creates sandboxes through the existing gateway in
-`openshell`. It uses the Agent Sandbox operator, ordinary CRI-O, and the
-`openshell-sandbox` ServiceAccount's privileged SCC. It runs the published
-devenv image directly, with Omnigent and proxy-aware WebSockets baked into
-read-only `/opt/omnigent`. The server sends the policy when creating each
-sandbox. Harnesses come from devenv: OpenCode, Codex, and Claude Code are
-exposed on PATH. The launcher performs no harness installation. The policy
-allows the Omnigent callback and OpenCode Go for the installed OpenCode binary.
+The Kubernetes provider's `secret_mounts` setting applies to every Job it
+launches. This Omnigent deployment should be treated as an SRE-only runner
+until upstream provides agent-scoped mounts; do not offer generic or
+untrusted agents on this backend. The old `opencode-go-test` and
+`codex-chatgpt` bundles are no longer seeded. Historical conversations remain
+in the database. Do not register generic or untrusted agents on this backend
+while mounts are provider-wide.
 
-The existing server image patch also supplies creation-time policy and the
-sandbox executable PATH (`patch_openshell_policy.py`). The policy is in a
-generated ConfigMap; its content hash triggers a server rollout. OpenCode's
-real binary precedes the local workstation launcher shim on PATH; OpenShell
-provides the outer sandbox.
+## Schedules and reporting
 
-The server patch supplies renewable OAuth client credentials to the
-OpenShell 0.0.116 SDK. `omnigent-openshell` needs the Keycloak
-`openshell-user` role and `user` membership in the gateway's `default`
-workspace. Gateway membership is persistent OpenShell state, not a ConfigMap.
+All four new CronJobs start **suspended**. They use `America/New_York`,
+`concurrencyPolicy: Forbid`, a 900-second starting deadline, a 3600-second
+client deadline, no Job retries, and bounded history. The shared Lease
+`omnigent-sre-sweeps` serializes different CronJobs and manual launches.
+An expired Lease never lets a second run start until cleanup verifies the
+old session and host.
 
-The `opencode-go-test` agent uses OpenCode, `glm-5.3-flash`, and the OpenCode Go key from External
-Secrets. The `codex-chatgpt` agent selects a Codex subscription provider and
-uses the ChatGPT account cached on the separate `omnigent-codex-auth` PVC in
-`openshell`. Their caller-process tools run inside the outer sandbox, without
-a second nested sandbox. Neither
-agent has Git or cluster credentials. Built-in `accounts` auth has
-passed the recorded smoke tests; upstream still warns about managed-runner
-WebSocket compatibility. Recheck it after auth or image upgrades.
+| Hermes name | Omnigent CronJob | Local schedule | Procedure |
+| --- | --- | --- | --- |
+| `sre-sweep-daily-health` | `omnigent-sre-sweep-daily-health` | daily 07:00 | `SRESweepDailyHealth` |
+| `sre-sweep-hygiene` | `omnigent-sre-sweep-hygiene` | Monday 09:30 | `SRESweepHygiene` |
+| `sre-sweep-capacity` | `omnigent-sre-sweep-capacity` | Tuesday 09:00 | `SRESweepCapacity` |
+| `sre-sweep-pr-followup` | `omnigent-sre-sweep-pr-followup` | Monday and Thursday 10:30 | `SRESweepPRFollowup` |
 
-OpenCode's provider/model binding is in `sandbox.host_config.inference.harnesses`.
-Its native integration requires that profile in addition to the agent's
-`executor.auth`. Provider `default` entries name protocol families, not harnesses.
-The OpenCode Go binding does not configure Codex or Claude Code. Codex uses
-`CODEX_HOME=/codex-auth`; the server mounts the RWX auth claim outside
-`/sandbox` so OpenShell keeps its per-sandbox workspace PVC. The launcher
-creates `config.toml` with file-backed credentials if missing, then Omnigent
-links `auth.json` into each Codex session's private home. OpenShell policy
-allows Codex's login and model endpoints. This claim is mounted into every
-Omnigent OpenShell sandbox, so only trusted users and agents should be given
-these sandboxes. Serialize Codex jobs using this account to avoid concurrent
-token refreshes. Initial ChatGPT device authorization is an interactive step;
-see the operator runbook. Claude Code still needs separate credentials.
+The client creates a run-keyed session, waits for runner readiness, submits
+one named prompt, and waits for a committed final assistant item and idle
+status. It reports exceptions only to the existing SRE channel
+`#igoucloud-hermes-sre` (`C0BTMS7AV34`) with the existing bot. An empty
+response, 403 that prevents a check, blocked approval, model error, or
+missing credential cannot become an all-green result. It records delivery
+state and Slack message timestamp on the session before archiving the
+conversation. An ambiguous Slack failure is reported without an automatic
+repost.
 
-## Apply configuration changes
+The cleanup-only CronJob runs every five minutes. It reads only the
+machine-owned, run-keyed session recorded in the Lease, archives an expired
+run, checks the retained transcript, then deletes only the matching host Job
+and its launch-token Secret. A separate ServiceAccount has those narrowly
+scoped deletion rights. The client releases the Lease after cleanup
+acknowledges. If the client dies, the 120-second Lease expiry plus the
+five-minute cleanup cadence target recovery within 30 minutes of the run
+deadline. The upstream seven-day Job limit remains a last-resort backstop.
+A failure of cleanup leaves the Lease held and the next sweep fails closed.
 
-Edit the files in Git and render with `kustomize build applications/omnigent`.
-For sandbox-config changes, put the output of this command into the Deployment
-Pod annotation `omnigent.io/sandbox-config-sha256` in the same change:
+## Run now and inspect
 
-```bash
-sha256sum applications/omnigent/omnigent-sandbox-config-configmap.yaml
-```
-
-The config uses a `subPath` mount and requires a new server Pod. Other
-startup configuration and Secret rotations also require a server rollout;
-ConfigMap reconciliation alone does not reload the process. Keep that rollout
-in the GitOps change. New sandboxes use changed images and settings; existing
-sandboxes keep their launch configuration.
-Existing Kubernetes runner Jobs still use the `omnigent-sandboxes` namespace,
-runner credentials, service account, and RBAC. Keep those resources until the
-Jobs and their sessions are retired; new sessions use OpenShell only.
-
-## Verify
+Before running a sweep, verify the cluster and identity. A manual run uses
+the existing CronJob template while its schedule remains suspended:
 
 ```bash
-use ocp-cluster-reader
+use ocp
 oc whoami --show-server
 oc whoami
-oc get applications.argoproj.io omnigent openshell -n openshift-gitops
-oc get deployment,route,cluster.postgresql.cnpg.io,externalsecret -n omnigent
-oc get jobs,pods -n omnigent-sandboxes
-oc get sandboxes.agents.x-k8s.io,pods -n openshell
-curl -fsS https://omnigent.apps.ocp.igou.systems/v1/info |
-  jq '{managed_sandboxes_enabled, sandbox_provider, sandbox_providers}'
+run_id="$(date -u +%Y%m%dT%H%M%SZ)"
+oc -n omnigent create job --from=cronjob/omnigent-sre-sweep-daily-health \
+  "omnigent-sre-sweep-daily-health-manual-${run_id,,}" \
+  --dry-run=client -o json |
+  jq --arg id "$run_id" '.spec.template.spec.containers[0].command += ["--manual-id", $id]' |
+  oc -n omnigent apply -f -
+oc -n omnigent get jobs,pods -l app=omnigent-sre-sweep-client
+oc -n omnigent-sandboxes get jobs,pods -l omnigent.ai/agent=igou-sre
 ```
 
-Expect `openshell` as the default and sole entry in `sandbox_providers`.
-A successful session-create response or HTTP 202 prompt acknowledgement does
-not prove agent completion. Read the assistant output and check task-specific
-results. Delete disposable sessions through Omnigent to reclaim their backend.
+The manual ID keeps an out-of-band run distinct from a scheduled occurrence.
+Check client
+Job logs for a session ID and Slack timestamp, then open that session from
+the human `igou` account under **Shared with me / Archived**. A successful
+HTTP 202 or runner connection alone is not completion. For a failed Job,
+read its bounded logs, the session status/items, the cleanup Job, and the
+Lease; never delete a host Job by label alone. The cleanup job may need a
+manual rerun through its CronJob template after the cause is repaired.
+
+## Cutover and rollback
+
+The draft PR does not authorize deployment, production activation or Hermes
+teardown. Before merging, inventory and drain old OpenShell sessions and
+their credential PVCs. Removing old OpenShell manifests from Kustomize does
+not delete live resources because automatic pruning is disabled; any later
+retirement is a separate, narrowly scoped operation. Shared OpenShell and
+all legacy PVCs remain untouched.
+
+After approved deployment, verify ESO Ready, SCC admission for both Job
+containers, credential reads, blocked writes and network paths. Test one
+manual run of each sweep and its Slack report and transcript. Check native
+Hermes cron metadata read-only to confirm schedules and destination. At an
+approved cutover, disable only the four Hermes-native jobs through its CLI
+or API and record their IDs; then change these four CronJobs to
+`suspend: false` in Git. Never run both schedulers concurrently.
+
+To roll back, suspend the four Omnigent schedules first, stop and verify
+their in-flight managed runs, then re-enable the four original Hermes jobs.
+Leave Omnigent transcripts, all legacy PVCs, Hermes alert relay, heartbeat,
+operator and other personas intact. `SREHeartbeat` continues to test the
+separate Hermes alert path throughout this migration.
+
+## Validation
+
+```bash
+make test
+make validate-manifest-files
+kustomize build --enable-helm applications/omnigent
+.venv/bin/python -m unittest discover -s applications/omnigent/tests -v
+```

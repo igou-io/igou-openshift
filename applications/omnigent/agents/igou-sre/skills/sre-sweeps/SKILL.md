@@ -1,0 +1,139 @@
+---
+name: sre-sweeps
+description: Run one of four scheduled SRE sweeps and produce an exception-oriented digest for the sweep client.
+version: 1.0.0
+author: igou-io
+platforms:
+  - linux
+metadata:
+  igou:
+    tags:
+      - sre
+      - sweep
+      - scheduled
+      - backups
+      - capacity
+---
+
+# Scheduled sweeps (read-only)
+
+Rules for every sweep:
+- This is scheduled maintenance rather than an incident: skip the
+  incident-memory lookup step of `openshift-alert-triage`.
+- One final digest per sweep, <= 20 lines, first line the sweep name.
+  The client posts it to Slack; do not post from the model.
+  Report exceptions only; when every check is green, the digest is ONE
+  line ("all green" + the checks' names), not a table of OKs.
+- Read-only. A 403 means the check is out of scope for this instance:
+  name the missing permission in the digest and move on.
+- End with `No live infrastructure changes occurred.` and disclose any
+  GitHub comments or PR updates. When a finding has an obvious declarative
+  fix, link the GitOps file to change; open a PR only via the
+  `propose-fix` skill and only when confident in the diagnosis.
+
+## SRESweepDailyHealth
+
+1. OADP/Velero backups (the alert-free failure mode this sweep exists for):
+   ```bash
+   oc get backup -n openshift-adp --sort-by=.metadata.creationTimestamp \
+     -o jsonpath='{range .items[*]}{.metadata.name} {.status.phase} {.status.startTimestamp} errors={.status.errors}{"\n"}{end}' | tail -6
+   oc get schedule -n openshift-adp
+   ```
+   Flag: newest daily backup older than 26 h or not `Completed`, any
+   `Failed`/`PartiallyFailed` in the last 6, a paused Schedule.
+2. CNPG continuous archiving:
+   ```bash
+   oc get cluster.postgresql.cnpg.io -A -o jsonpath='{range .items[*]}{.metadata.namespace}/{.metadata.name} \
+     archiving={.status.conditions[?(@.type=="ContinuousArchiving")].status} \
+     lastBackup={.status.lastSuccessfulBackup} firstRecoverability={.status.firstRecoverabilityPoint}{"\n"}{end}'
+   ```
+   Flag: `archiving` not `True`, or `firstRecoverabilityPoint` empty.
+3. ArgoCD drift:
+   ```bash
+   oc get applications.argoproj.io -n openshift-gitops \
+     -o jsonpath='{range .items[*]}{.metadata.name} {.status.sync.status} {.status.health.status}{"\n"}{end}' | grep -v 'Synced Healthy'
+   ```
+   For each hit, add since-when from `.status.operationState.finishedAt`
+   and the first message in `.status.conditions`. Auto-sync retries
+   forever with backoff, so "still retrying" is a finding, not noise.
+4. Certificates and CSRs:
+   ```bash
+   oc get certificate.cert-manager.io -A -o json | jq -r '.items[]
+     | select(([.status.conditions[]? | select(.type=="Ready").status] != ["True"])
+         or (.status.notAfter < (now + 14*86400 | todate)))
+     | "\(.metadata.namespace)/\(.metadata.name) notAfter=\(.status.notAfter)"'
+   oc get csr | grep -c Pending || true
+   ```
+   Any Pending CSR is a finding (the casval join flow relies on the
+   approver cronjob; a stuck CSR means it is broken).
+5. rk8s nodes, one call: `kubectl --context rk8s-cluster-reader get nodes | grep -v ' Ready' || true`
+
+## SRESweepHygiene
+
+1. Long-firing alerts (they stopped being signals):
+   ```bash
+   ocp-alerts --json | jq -r '.[] | select(.labels.alertname != "Watchdog") | select(.startsAt < (now - 86400 | todate)) | "\(.labels.severity) \(.labels.alertname) \(.labels.namespace // .labels.instance // "") since \(.startsAt[:16])"'
+   ```
+2. Silences: `ocp-alerts --silences`. Flag: expiring within 7 days
+   (renewal decision due) and active for more than 30 days (a permanent
+   silence deserves a rule change instead — say which rule).
+3. Flappiest alerts of the week (top 5):
+   ```bash
+   TOK=$(oc whoami -t)
+   curl -fsS -H "Authorization: Bearer $TOK" https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems/api/v1/query \
+     --data-urlencode 'query=topk(5, sum by (alertname) (changes(ALERTS{alertstate="firing"}[7d])))' | jq -r '.data.result[] | "\(.metric.alertname) \(.value[1])"'
+   ```
+4. Incident-memory grooming — the triage skill answers repeat firings
+   from these issues, so stale ones poison future triage:
+   ```bash
+   export GH_TOKEN=$(ghapp token --repo igou-io/igou-inventory --permission issues=write)
+   gh issue list -R igou-io/igou-inventory --state open --json number,title,updatedAt
+   ```
+   For each open issue whose alert no longer fires (check against
+   `ocp-alerts`) and with no update in 7 days: if you have not already
+   proposed closure on it, comment "<alert> not firing since <t>;
+   proposing close." Never close or create issues — EDA and the human
+   own their lifecycle.
+
+## SRESweepCapacity
+
+1. TrueNAS pools: `truenas-ro pool.query` (name, allocated vs size) and
+   `truenas-ro alert.list`. Flag pools over 75 % (over 85 % is the
+   headline finding; remember `cold` is RAIDZ2 and degrades earlier).
+2. Fullest PVCs (>80 %):
+   ```bash
+   TOK=$(oc whoami -t)
+   curl -fsS -H "Authorization: Bearer $TOK" https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems/api/v1/query \
+     --data-urlencode 'query=topk(10, kubelet_volume_stats_used_bytes/kubelet_volume_stats_capacity_bytes > 0.8)' | jq -r '.data.result[] | "\(.metric.namespace)/\(.metric.persistentvolumeclaim) \(.value[1][:5])"'
+   ```
+3. Node pressure: `oc adm top nodes` and
+   `kubectl --context rk8s-cluster-reader top nodes 2>/dev/null || true`.
+   The single always-on master is the one that matters; sustained >85 %
+   memory there is a finding.
+4. OLM pending updates (nothing else surfaces these):
+   ```bash
+   oc get subscription.operators.coreos.com -A -o jsonpath='{range .items[*]}{.metadata.namespace}/{.metadata.name} {.status.state}{"\n"}{end}' | grep -v AtLatestKnown || true
+   oc get installplan -A -o json | jq -r '.items[] | select(.spec.approved==false) | "\(.metadata.namespace) \(.metadata.name) \(.spec.clusterServiceVersionNames)"'
+   ```
+
+## SRESweepPRFollowup
+
+Your open proposals go stale silently; this sweep is the nudge loop. The
+broker still authors proposals as `app/igou-hermes`, so include those older
+PRs even though this agent's display name changed.
+```bash
+export GH_TOKEN=$(ghapp token --repo igou-io/igou-openshift --permission pull_requests=read)
+gh search prs --author "app/igou-hermes" --state open --json repository,number,title,updatedAt,url
+```
+For each open PR, mint for ITS repo and read CI:
+```bash
+export GH_TOKEN=$(ghapp token --repo OWNER/REPO --permission pull_requests=read --permission checks=read --permission statuses=read)
+gh pr checks N -R OWNER/REPO || true
+```
+Classify each into one digest line (repo#N, age, CI, next step):
+- CI green, awaiting review -> nudge: "ready for review since <date>".
+- CI red -> read the failing check briefly; you may push fixes to your
+  own `sre/*` branch (never to main, never force-push).
+- No activity for 14 days -> propose closing it in the digest; never
+  close, approve or merge yourself.
+No open PRs -> one line and done.

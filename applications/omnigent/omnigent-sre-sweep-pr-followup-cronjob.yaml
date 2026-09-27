@@ -1,0 +1,81 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: omnigent-sre-sweep-pr-followup
+  namespace: omnigent
+spec:
+  schedule: '30 10 * * 1,4'
+  timeZone: America/New_York
+  suspend: true
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 900
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 3600
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            app: omnigent-sre-sweep-client
+        spec:
+          serviceAccountName: omnigent-sre-sweep
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: client
+              image: ghcr.io/igou-io/igou-devenv@sha256:f1203aeaf1fa3fcafbc21b10bce45e1454ab4cfdac2a6aadf92c2e0fd12bb457
+              command:
+                - python3
+                - /opt/igou-sre/sweep_client.py
+                - --sweep
+                - pr-followup
+              envFrom:
+                - secretRef:
+                    name: omnigent-sre-client
+                - secretRef:
+                    name: omnigent-sre-slack
+              env:
+                - name: OMNI_URL
+                  value: http://omnigent.omnigent.svc.cluster.local
+                - name: HTTP_PROXY
+                  value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+                - name: HTTPS_PROXY
+                  value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+                - name: NO_PROXY
+                  value: localhost,127.0.0.1,.svc,.cluster.local
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: 500m
+                  memory: 512Mi
+              volumeMounts:
+                - name: client-code
+                  mountPath: /opt/igou-sre
+                  readOnly: true
+          volumes:
+            - name: client-code
+              configMap:
+                name: omnigent-sre-client-code
+                items:
+                  - key: sweep_client.py
+                    path: sweep_client.py
+                  - key: daily-health.md
+                    path: sweeps/daily-health.md
+                  - key: hygiene.md
+                    path: sweeps/hygiene.md
+                  - key: capacity.md
+                    path: sweeps/capacity.md
+                  - key: pr-followup.md
+                    path: sweeps/pr-followup.md

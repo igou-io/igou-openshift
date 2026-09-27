@@ -6,8 +6,8 @@ metadata:
 data:
   config.yaml: |
     sandbox:
-      provider: openshell
-      server_url: https://omnigent.apps.ocp.igou.systems
+      provider: kubernetes
+      server_url: http://omnigent.omnigent.svc.cluster.local
       host_config:
         inference:
           harnesses:
@@ -17,17 +17,50 @@ data:
               model_allowlist:
                 - glm-5.3-flash
         providers:
-          codex-chatgpt:
-            kind: subscription
-            cli: codex
           opencode-go:
             kind: gateway
             openai:
               base_url: https://opencode.ai/zen/go/v1
               api_key_ref: env:OPENCODE_GO_API_KEY
               wire_api: chat
-      openshell:
+      kubernetes:
+        namespace: omnigent-sandboxes
+        service_account: omnigent-runner
+        secret_name: omnigent-creds
         image: ghcr.io/igou-io/igou-devenv@sha256:f1203aeaf1fa3fcafbc21b10bce45e1454ab4cfdac2a6aadf92c2e0fd12bb457
+        home_size_limit: 8Gi
+        pod_ready_timeout_s: 300
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+            ephemeral-storage: 2Gi
+          limits:
+            cpu: '2'
+            memory: 4Gi
+            ephemeral-storage: 10Gi
+        secret_mounts:
+          - secret_name: omnigent-sre-ocp
+            mount_path: /mnt/credentials/ocp
+          - secret_name: sre-rk8s
+            mount_path: /mnt/credentials/rk8s
+          - secret_name: omnigent-sre-routeros
+            mount_path: /mnt/credentials/routeros
+          - secret_name: omnigent-sre-truenas
+            mount_path: /mnt/credentials/truenas
         env:
-          - OPENCODE_GO_API_KEY
-          - OMNIGENT_RUNNER_ENV_PASSTHROUGH
+          - PATH
+          - USER
+          - LOGNAME
+          - GIT_AUTHOR_NAME
+          - GIT_AUTHOR_EMAIL
+          - GIT_COMMITTER_NAME
+          - GIT_COMMITTER_EMAIL
+          - GHAPP_BROKER_URL
+          - KUBECONFIG
+          - HTTP_PROXY
+          - HTTPS_PROXY
+          - http_proxy
+          - https_proxy
+          - NO_PROXY
+          - no_proxy

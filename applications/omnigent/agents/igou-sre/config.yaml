@@ -1,0 +1,17 @@
+spec_version: 1
+name: igou-sre
+description: Read-only infrastructure investigations and scheduled SRE sweeps.
+instructions: AGENTS.md
+executor:
+  type: omnigent
+  config:
+    harness: opencode
+  model: glm-5.3-flash
+  auth:
+    type: provider
+    name: opencode-go
+os_env:
+  type: caller_process
+  cwd: .
+  sandbox:
+    type: none
