@@ -62,16 +62,17 @@ Hermes backing item intact.
 The bot package is built from the upstream v0.15.0 source archive pinned by
 SHA-256 in `igou-containers/apps/omnigent-slack/Containerfile`. The
 `igou-containers` workflow builds both supported architectures and publishes
-to GHCR after merge. Reproduce the build from that repository's root with:
+the image to GHCR. Reproduce the build from that repository's root with:
 
 ```bash
 podman build -t localhost/omnigent-slack:v0.15.0 apps/omnigent-slack
 ```
 
-The Deployment retains its published Quay digest until the new GHCR image is
-published. Inspect the GHCR multi-architecture manifest digest, then update
-the Deployment to pin `ghcr.io/igou-io/omnigent-slack@sha256:<digest>` before
-merging this GitOps PR. Do not deploy a tag-only or unpublished reference.
+The Deployment pins the published GHCR multi-architecture manifest digest as
+`ghcr.io/igou-io/omnigent-slack:latest@sha256:<digest>`. The `latest` tag lets
+Renovate track digest updates while the digest fixes the deployed content.
+The image is publicly pullable, so the bot does not need the Quay pull secret;
+the Omnigent server still uses that secret for its own Quay image.
 
 ## Interactive setup
 

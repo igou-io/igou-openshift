@@ -16,13 +16,11 @@ spec:
         app: omnigent-slack
     spec:
       automountServiceAccountToken: false
-      imagePullSecrets:
-        - name: quay-local-pull
       securityContext:
         runAsNonRoot: true
       containers:
         - name: slack
-          image: quay.apps.ocp.igou.systems/igou-io/omnigent-slack@sha256:2e4a411774521f4690fa7cd0b0d72eac0f4adb0480cfb69a8044cb25903db479
+          image: ghcr.io/igou-io/omnigent-slack:latest@sha256:84c6fc55b659a12b9a73a0a6ac517bb1742429721adef7559e7c54d632f330d7
           command:
             - /opt/venv/bin/omni
           args:
