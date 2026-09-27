@@ -1,9 +1,14 @@
 # Omnigent SRE Automations
 
 Issue [#1040](https://github.com/igou-io/igou-openshift/issues/1040) stages the
-`igou-sre` agent and four native Omnigent Automations. This PR does not deploy
-or enable the sweeps. Hermes retains all four production schedules, alert
-relay, EDA, and `SREHeartbeat` until a separately approved cutover.
+`igou-sre` agent and four native Omnigent Automations. No live change has been
+made during implementation. The live `omnigent` ArgoCD Application has
+automated sync enabled: merging this PR can immediately
+reconcile its server, Secrets and NetworkPolicies even while the four native
+Automations remain paused. Before merge, choose an approved path: inventory
+and drain legacy sessions, then authorize GitOps reconciliation; or establish
+and verify a deployment hold. Hermes retains all four production schedules,
+alert relay, EDA, and `SREHeartbeat` until a separately approved cutover.
 
 ## Runner and credentials
 
@@ -98,12 +103,13 @@ oc -n omnigent-sandboxes get sandbox,pod,externalsecret
 oc -n omnigent-sandboxes get networkpolicy
 ```
 
-Before deploying the default deny, inventory and drain the three old
-`opencode-go-test` Job Pods currently in `omnigent-sandboxes`; they will lose
-network access under the new policy. Existing network policies are additive,
-so inspect the namespace's complete effective set. An unclassified forked
-runner should have no ingress or egress while a classified SRE runner receives
-only the listed allowances.
+Before deploying the default deny, reconfirm the current legacy sessions and
+drain them under the approved rollout plan. The read-only check on 2026-09-27
+found three running `opencode-go-test` Job Pods in `omnigent-sandboxes`; they
+will lose network access under the new policy. Existing network policies are
+additive, so inspect the namespace's complete effective set. An unclassified
+forked runner should have no ingress or egress while a classified SRE runner
+receives only the listed allowances.
 
 Verify ESO readiness, the v1beta1 CRD and operator, SCC admission, and the
 real authenticated runner callback. With the tasks still paused, use each
