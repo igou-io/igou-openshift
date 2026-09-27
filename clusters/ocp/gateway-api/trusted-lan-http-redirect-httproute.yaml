@@ -9,11 +9,17 @@ metadata:
 spec:
   parentRefs:
     - name: trusted-lan
+      group: gateway.networking.k8s.io
+      kind: Gateway
       sectionName: http
   hostnames:
     - '*.lan.igou.systems'
   rules:
-    - filters:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
         - type: RequestRedirect
           requestRedirect:
             scheme: https
