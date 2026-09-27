@@ -13,7 +13,9 @@ spec:
   template:
     metadata:
       annotations:
-        omnigent.io/sandbox-config-sha256: 76934d8b7d6bb1774f230aec8d5fc34ea950ade7edc86f0adcd737eb7e6d4fce
+        omnigent.io/sandbox-config-sha256: ccd8cdff6406d7ca53021ce1f931051a9037d5474158853d487d3d6174e9c966
+        omnigent.io/server-config-sha256: 3e6b2b530cb9ce970e3f0df8ce7e363dfdbe05c60683c3b2b7ec5b5a21af53d2
+        omnigent.io/sre-bundle-sha256: 329eaa35077b064523075b0fdc2aaae42c5d7138105bd2ff949f101551e90ef0
       labels:
         app: omnigent
     spec:
@@ -24,7 +26,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: omnigent
-          image: quay.apps.ocp.igou.systems/igou-io/omnigent-server-openshell@sha256:d8b9e93de7d5c3919d48f1357dc478b00c0bc7253b020e4b035948638c6f72ad
+          image: ghcr.io/omnigent-ai/omnigent-server-kubernetes@sha256:ed3ae35d30572dcd929ba4e1edefdcec53ef178ab2f8147d11a8f2f33dded123
           ports:
             - name: http
               containerPort: 8000
@@ -37,9 +39,26 @@ spec:
                 name: omnigent-machine-client
             - secretRef:
                 name: omnigent-opencode-go
-            - secretRef:
-                name: omnigent-openshell-client
           env:
+            - name: OMNIGENT_DEVICE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: omnigent-device-auth
+                  key: OMNIGENT_DEVICE_CLIENT_SECRET
+            - name: PATH
+              value: /opt/venv/bin:/home/igou/.opencode/bin:/home/igou/.local/bin:/opt/mise/shims:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+            - name: USER
+              value: igou-sre
+            - name: LOGNAME
+              value: igou-sre
+            - name: GIT_AUTHOR_NAME
+              value: igou-sre
+            - name: GIT_AUTHOR_EMAIL
+              value: igou-sre@users.noreply.github.com
+            - name: GIT_COMMITTER_NAME
+              value: igou-sre
+            - name: GIT_COMMITTER_EMAIL
+              value: igou-sre@users.noreply.github.com
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
@@ -47,6 +66,22 @@ spec:
                   key: uri
             - name: OMNIGENT_CONFIG
               value: /etc/omnigent/config.yaml
+            - name: KUBECONFIG
+              value: /mnt/credentials/ocp/kubeconfig:/mnt/credentials/rk8s/kubeconfig
+            - name: GHAPP_BROKER_URL
+              value: http://ghbroker.hermes-sre.svc.cluster.local:8085
+            - name: HTTP_PROXY
+              value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+            - name: HTTPS_PROXY
+              value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+            - name: http_proxy
+              value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+            - name: https_proxy
+              value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+            - name: NO_PROXY
+              value: localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,.apps.ocp.igou.systems,api.ocp.igou.systems,10.10.9.10,truenas.igou.systems,prometheus.rk8s.igou.systems,cm3588-nas-01.igou.systems,10.10.9.30
+            - name: no_proxy
+              value: localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,.apps.ocp.igou.systems,api.ocp.igou.systems,10.10.9.10,truenas.igou.systems,prometheus.rk8s.igou.systems,cm3588-nas-01.igou.systems,10.10.9.30
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -55,21 +90,14 @@ spec:
             seccompProfile:
               type: RuntimeDefault
           volumeMounts:
-            - name: openshell-policy
-              mountPath: /etc/omnigent/openshell
-              readOnly: true
             - name: artifacts
               mountPath: /data/artifacts
             - name: sandbox-config
               mountPath: /etc/omnigent/config.yaml
               subPath: config.yaml
               readOnly: true
-            - name: test-agent
-              mountPath: /etc/omnigent/agents
-              readOnly: true
-            - name: openshell-gateway
-              mountPath: /etc/openshell/gateways/ocp/metadata.json
-              subPath: metadata.json
+            - name: sre-bundle
+              mountPath: /etc/omnigent/igou-sre
               readOnly: true
           resources:
             requests:
@@ -93,18 +121,37 @@ spec:
             periodSeconds: 30
             timeoutSeconds: 5
       volumes:
-        - name: openshell-policy
-          configMap:
-            name: omnigent-openshell-policy
         - name: artifacts
           persistentVolumeClaim:
             claimName: omnigent-artifacts
         - name: sandbox-config
           configMap:
             name: omnigent-sandbox-config
-        - name: test-agent
-          configMap:
-            name: omnigent-test-agent
-        - name: openshell-gateway
-          configMap:
-            name: omnigent-openshell-gateway
+        - name: sre-bundle
+          projected:
+            sources:
+              - configMap:
+                  name: omnigent-sre-bundle
+                  items:
+                    - key: config.yaml
+                      path: config.yaml
+                    - key: AGENTS.md
+                      path: AGENTS.md
+                    - key: openshift-alert-triage.SKILL.md
+                      path: skills/openshift-alert-triage/SKILL.md
+                    - key: propose-fix.SKILL.md
+                      path: skills/propose-fix/SKILL.md
+                    - key: sre-sweeps.SKILL.md
+                      path: skills/sre-sweeps/SKILL.md
+                    - key: triage-domains.SKILL.md
+                      path: skills/triage-domains/SKILL.md
+                    - key: incident-reporting.SKILL.md
+                      path: skills/incident-reporting/SKILL.md
+                    - key: storage.md
+                      path: skills/triage-domains/storage.md
+                    - key: network.md
+                      path: skills/triage-domains/network.md
+                    - key: rk8s.md
+                      path: skills/triage-domains/rk8s.md
+                    - key: change-correlation.md
+                      path: skills/triage-domains/change-correlation.md

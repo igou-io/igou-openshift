@@ -1,10 +1,22 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 configMapGenerator:
-  - name: omnigent-openshell-policy
+  - name: omnigent-sre-bundle
     namespace: omnigent
+    options:
+      disableNameSuffixHash: true
     files:
-      - policy.yaml=openshell-host-policy.yaml
+      - config.yaml=agents/igou-sre/config.yaml
+      - AGENTS.md=agents/igou-sre/AGENTS.md
+      - openshift-alert-triage.SKILL.md=agents/igou-sre/skills/openshift-alert-triage/SKILL.md
+      - propose-fix.SKILL.md=agents/igou-sre/skills/propose-fix/SKILL.md
+      - sre-sweeps.SKILL.md=agents/igou-sre/skills/sre-sweeps/SKILL.md
+      - triage-domains.SKILL.md=agents/igou-sre/skills/triage-domains/SKILL.md
+      - incident-reporting.SKILL.md=agents/igou-sre/skills/incident-reporting/SKILL.md
+      - storage.md=agents/igou-sre/skills/triage-domains/storage.md
+      - network.md=agents/igou-sre/skills/triage-domains/network.md
+      - rk8s.md=agents/igou-sre/skills/triage-domains/rk8s.md
+      - change-correlation.md=agents/igou-sre/skills/triage-domains/change-correlation.md
 resources:
   - quay-local-pull-externalsecret.yaml
   - omnigent-namespace.yaml
@@ -15,21 +27,28 @@ resources:
   - cnpg-s3-credentials-externalsecret.yaml
   - omnigent-auth-externalsecret.yaml
   - omnigent-machine-client-externalsecret.yaml
+  - omnigent-slack-externalsecret.yaml
+  - omnigent-device-auth-externalsecret.yaml
+  - omnigent-sre-ocp-externalsecret.yaml
+  - omnigent-sre-rk8s-externalsecret.yaml
+  - omnigent-sre-routeros-externalsecret.yaml
+  - omnigent-sre-truenas-externalsecret.yaml
   - omnigent-opencode-go-externalsecret.yaml
-  - omnigent-openshell-client-externalsecret.yaml
   - omnigent-creds-externalsecret.yaml
   - omnigent-config-configmap.yaml
   - omnigent-sandbox-config-configmap.yaml
-  - omnigent-openshell-gateway-configmap.yaml
-  - omnigent-test-agent-configmap.yaml
   - omnigent-server-serviceaccount.yaml
   - omnigent-runner-serviceaccount.yaml
   - omnigent-sandbox-manager-role.yaml
   - omnigent-sandbox-manager-rolebinding.yaml
   - omnigent-runner-nonroot-role.yaml
   - omnigent-runner-nonroot-rolebinding.yaml
+  - omnigent-sandboxes-default-deny-networkpolicy.yaml
+  - omnigent-sre-runner-networkpolicy.yaml
   - omnigent-artifacts-pvc.yaml
-  - omnigent-codex-auth-pvc.yaml
+  - omnigent-slack-state-pvc.yaml
   - omnigent-deployment.yaml
+  - omnigent-slack-deployment.yaml
+  - omnigent-slack-networkpolicy.yaml
   - omnigent-service.yaml
   - omnigent-route.yaml
