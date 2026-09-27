@@ -11,6 +11,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+import yaml
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -63,7 +65,7 @@ class SlackToolTests(unittest.TestCase):
         sys.modules["omnigent_client"] = types.SimpleNamespace(tool=lambda function: function)
         self.module = load_module("sre_slack", ROOT / "agents/igou-sre/tools/python/sre_slack.py")
 
-    def test_only_fixed_channel_and_known_sweep_are_sent(self):
+    def test_one_line_and_multiline_digests_use_fixed_channel(self):
         class Response:
             def __enter__(self):
                 return io.BytesIO(b'{"ok": true, "ts": "123.4"}')
@@ -74,11 +76,47 @@ class SlackToolTests(unittest.TestCase):
         with mock.patch.object(self.module.TOKEN_FILE.__class__, "read_text", return_value="secret"), mock.patch.object(
             self.module.urllib.request, "urlopen", return_value=Response()
         ) as send:
-            result = self.module.post_sre_sweep_digest("SRESweepDailyHealth", "SRESweepDailyHealth\nFinding")
-            self.assertIn("123.4", result)
-            self.assertEqual(json.loads(send.call_args.args[0].data)["channel"], "C0BTMS7AV34")
+            for digest in (
+                "SRESweepDailyHealth — all green: backups, CNPG, ArgoCD, certificates, rk8s.",
+                "SRESweepDailyHealth\nFinding: backup age exceeds 26 hours.",
+            ):
+                result = self.module.post_sre_sweep_digest("SRESweepDailyHealth", digest)
+                self.assertIn("123.4", result)
+                self.assertEqual(json.loads(send.call_args.args[0].data)["channel"], "C0BTMS7AV34")
+                self.assertEqual(json.loads(send.call_args.args[0].data)["text"], digest)
             self.assertIn("no message sent", self.module.post_sre_sweep_digest("other", "other"))
-            self.assertEqual(send.call_count, 1)
+            self.assertIn("3000 characters", self.module.post_sre_sweep_digest("SRESweepDailyHealth", "SRESweepDailyHealth — " + "x" * 3000))
+            self.assertIn("3000 characters", self.module.post_sre_sweep_digest("SRESweepDailyHealth", "SRESweepDailyHealth\n" + "finding\n" * 20))
+            self.assertEqual(send.call_count, 2)
+
+
+class RuntimeWiringTests(unittest.TestCase):
+    def test_server_host_runner_env_chain(self):
+        deployment = yaml.safe_load((ROOT / "omnigent-deployment.yaml").read_text())
+        server_env = deployment["spec"]["template"]["spec"]["containers"][0]["env"]
+        server_path = next(entry["value"] for entry in server_env if entry["name"] == "PATH")
+        self.assertTrue(server_path.startswith("/opt/venv/bin:"))
+        config = yaml.safe_load((ROOT / "omnigent-config-configmap.yaml").read_text())["data"]
+        passthrough = set(config["OMNIGENT_RUNNER_ENV_PASSTHROUGH"].split(","))
+        sandbox_config = yaml.safe_load((ROOT / "omnigent-sandbox-config-configmap.yaml").read_text())
+        host_env = set(yaml.safe_load(sandbox_config["data"]["config.yaml"])["sandbox"]["kubernetes"]["env"])
+        required = {
+            "HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy", "NO_PROXY", "no_proxy",
+            "GHAPP_BROKER_URL", "GIT_AUTHOR_NAME", "GIT_AUTHOR_EMAIL",
+            "GIT_COMMITTER_NAME", "GIT_COMMITTER_EMAIL",
+        }
+        self.assertIn("OMNIGENT_RUNNER_ENV_PASSTHROUGH", host_env)
+        self.assertLessEqual(required, passthrough & host_env)
+
+    def test_unclassified_runner_still_gets_default_deny(self):
+        deny = yaml.safe_load((ROOT / "omnigent-sandboxes-default-deny-networkpolicy.yaml").read_text())
+        allow = yaml.safe_load((ROOT / "omnigent-sre-runner-networkpolicy.yaml").read_text())
+        self.assertEqual(deny["metadata"]["namespace"], "omnigent-sandboxes")
+        self.assertEqual(deny["spec"]["podSelector"], {})
+        self.assertEqual(set(deny["spec"]["policyTypes"]), {"Ingress", "Egress"})
+        self.assertEqual(deny["spec"]["ingress"], [])
+        self.assertEqual(deny["spec"]["egress"], [])
+        self.assertEqual(allow["spec"]["podSelector"]["matchLabels"]["omnigent.ai/agent"], "igou-sre")
 
 
 if __name__ == "__main__":

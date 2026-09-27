@@ -13,9 +13,9 @@ spec:
   template:
     metadata:
       annotations:
-        omnigent.io/sandbox-config-sha256: b6d9dce337a38fa73d9d71f526dfca09d1c3b79a6cc2f9dbdbc283335eaa1550
-        omnigent.io/server-config-sha256: c4fa1f9d6bf25084a0b1978a43c6b501c5a4433d312a3331932f9e29a01a4faa
-        omnigent.io/sre-bundle-sha256: 772538ace39b9bb13d9a1b4001d88d56d427a830aaaae9e6cb29b1315ff40f51
+        omnigent.io/sandbox-config-sha256: 47a77f2cae61237f0ef7060837bd2ea1ed28d2cfceed4ff1395745255bf78262
+        omnigent.io/server-config-sha256: 9776d8a99dc4ff8066d9c6723fa1363b82d8baad254277db3fa46afe9e15120c
+        omnigent.io/sre-bundle-sha256: e37081f90b643b03cded173127416a880a71457c61de0bc99be22cdba922281d
       labels:
         app: omnigent
     spec:
@@ -41,7 +41,7 @@ spec:
                 name: omnigent-opencode-go
           env:
             - name: PATH
-              value: /home/igou/.opencode/bin:/home/igou/.local/bin:/opt/mise/shims:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+              value: /opt/venv/bin:/home/igou/.opencode/bin:/home/igou/.local/bin:/opt/mise/shims:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
             - name: USER
               value: igou-sre
             - name: LOGNAME

@@ -43,6 +43,7 @@ resources:
   - omnigent-sandbox-manager-rolebinding.yaml
   - omnigent-runner-nonroot-role.yaml
   - omnigent-runner-nonroot-rolebinding.yaml
+  - omnigent-sandboxes-default-deny-networkpolicy.yaml
   - omnigent-sre-runner-networkpolicy.yaml
   - omnigent-artifacts-pvc.yaml
   - omnigent-deployment.yaml

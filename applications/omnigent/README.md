@@ -14,6 +14,9 @@ pre-change check. The provider creates a Sandbox in `omnigent-sandboxes`
 using the pinned `igou-devenv` runner image. The existing nonroot SCC permits
 the runner UID. The server has namespaced Sandbox create/get/patch/delete
 rights. The runner ServiceAccount token remains disabled.
+The server container keeps `/opt/venv/bin` first on PATH for its Python
+entrypoint. The runner image uses its own `omnigent` launcher and OpenCode
+binary; its login-shell startup resolves those paths separately.
 
 Kustomize projects `agents/igou-sre/` into the server. Its five skills, four
 triage references, and fixed-destination Slack tool travel in the agent
@@ -23,7 +26,11 @@ read-only profiles, and the existing SRE Slack bot token as read-only files.
 The provider's Secret mounts apply to every managed agent on this server,
 so only trusted SRE agents may be seeded. No GitHub private key or runner
 ServiceAccount token is mounted. The existing SRE `ghbroker`, Squid, and
-NetworkPolicies constrain external access. ESO refreshes Secrets hourly;
+NetworkPolicies constrain external access. A namespace-wide default-deny
+covers classified and unclassified runner Pods; the `igou-sre` policy adds
+only its needed destinations. The server passes selected proxy, broker and
+Git identity variable names to the host, which forwards them to the runner
+through `OMNIGENT_RUNNER_ENV_PASSTHROUGH`. ESO refreshes Secrets hourly;
 mounted files update eventually, while the source OCP token still needs its
 existing renewal publisher.
 
@@ -33,6 +40,8 @@ that tool sends only to `#igoucloud-hermes-sre` (`C0BTMS7AV34`). The tool
 returns Slack's timestamp on confirmed delivery. If the agent fails before
 calling the tool, Omnigent records a failed run but Slack has no independent
 failure notification. An ambiguous Slack transport failure is not retried.
+The digest may be a single line beginning `SRESweepName — all green:` or a
+multiline report with the sweep name alone on its first line.
 
 ## Schedules and registration
 
@@ -86,15 +95,25 @@ oc whoami --show-server
 oc whoami
 oc -n omnigent get deployment,externalsecret
 oc -n omnigent-sandboxes get sandbox,pod,externalsecret
+oc -n omnigent-sandboxes get networkpolicy
 ```
+
+Before deploying the default deny, inventory and drain the three old
+`opencode-go-test` Job Pods currently in `omnigent-sandboxes`; they will lose
+network access under the new policy. Existing network policies are additive,
+so inspect the namespace's complete effective set. An unclassified forked
+runner should have no ingress or egress while a classified SRE runner receives
+only the listed allowances.
 
 Verify ESO readiness, the v1beta1 CRD and operator, SCC admission, and the
 real authenticated runner callback. With the tasks still paused, use each
 task's **Run now** action in Omnigent. A 202 means accepted, not completed:
 check the task's run history, linked conversation, final digest and Slack
 timestamp. Confirm allowed read-only queries and denied mutations, proxy
-bypass resistance, mounted credential refresh, server restart behavior and
-missed-fire behavior. Observe a busy run remain active, then an idle Pod
+and broker access from the actual runner, Slack delivery from the tool
+subprocess, proxy bypass resistance, mounted credential refresh, server
+restart behavior and missed-fire behavior. Observe a busy run remain active,
+then an idle Pod
 suspend after the warm period; verify retained Sandbox cleanup later and
 conversation readability. No test may relax server authentication.
 
@@ -107,9 +126,14 @@ legacy PVCs and historical conversations intact.
 
 ## Repository checks
 
+Run from the repository root. The image smoke check needs Podman and the
+pinned images; it does not contact the cluster.
+
 ```bash
 make test
 make validate-manifest-files
 kustomize build --enable-helm applications/omnigent
-python3 scripts/register_automations.py
+python3 -m unittest discover -s applications/omnigent/tests -v
+python3 applications/omnigent/tests/smoke_runtime_images.py
+python3 applications/omnigent/scripts/register_automations.py
 ```

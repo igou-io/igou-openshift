@@ -23,8 +23,13 @@ def post_sre_sweep_digest(sweep: str, digest: str) -> str:
     if sweep not in SWEEPS:
         return "Invalid sweep name; no message sent."
     lines = digest.strip().splitlines()
-    if not lines or lines[0] != sweep or len(lines) > 20 or len(digest) > 3000:
-        return "Digest must start with the sweep name and fit within 20 lines / 3000 characters."
+    if (
+        not lines
+        or not (lines[0] == sweep or lines[0].startswith(sweep + " — "))
+        or len(lines) > 20
+        or len(digest) > 3000
+    ):
+        return "Digest must start with the sweep name (or name — summary) and fit within 20 lines / 3000 characters."
     try:
         token = TOKEN_FILE.read_text(encoding="utf-8").strip()
         if not token:

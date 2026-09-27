@@ -63,6 +63,7 @@ data:
           - GIT_AUTHOR_EMAIL
           - GIT_COMMITTER_NAME
           - GIT_COMMITTER_EMAIL
+          - OMNIGENT_RUNNER_ENV_PASSTHROUGH
           - GHAPP_BROKER_URL
           - KUBECONFIG
           - HTTP_PROXY
