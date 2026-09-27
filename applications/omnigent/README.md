@@ -5,10 +5,11 @@ Issue [#1040](https://github.com/igou-io/igou-openshift/issues/1040) stages the
 interactive Slack bot. No live cluster resources or Hermes schedules were
 changed during implementation. The live
 `omnigent` ArgoCD Application has automated sync: merging this PR can deploy
-server, Secret, PVC, bot and NetworkPolicy changes. Before merge, inventory and
-obtain approval to drain legacy sessions before intended GitOps reconciliation,
-or establish and verify a deployment hold. Hermes keeps its four production
-schedules, Slack app, alert relay, EDA and `SREHeartbeat` until a separately
+server, Secret, PVC, bot and NetworkPolicy changes. Before merging with
+auto-sync active, complete the dedicated Slack app and 1Password item setup,
+inventory and obtain approval to drain legacy sessions, then authorize GitOps
+reconciliation. Otherwise establish and verify a deployment hold. Hermes keeps
+its four production schedules, Slack app, alert relay, EDA and `SREHeartbeat` until a separately
 approved cutover.
 
 ## Platform and credentials
