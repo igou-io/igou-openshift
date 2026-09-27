@@ -49,6 +49,12 @@
       "matchManagers": ["helm-values"],
       "matchFileNames": ["applications/forgejo/kustomization.yaml"],
       "enabled": false
+    },
+    {
+      "description": "The Omnigent Slack Deployment is a Kubernetes manifest; the kubernetes manager owns its image digest",
+      "matchManagers": ["helm-values"],
+      "matchFileNames": ["applications/omnigent/omnigent-slack-deployment.yaml"],
+      "enabled": false
     }
   ],
   "customManagers": [

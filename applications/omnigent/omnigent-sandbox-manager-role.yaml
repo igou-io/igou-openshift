@@ -5,6 +5,15 @@ metadata:
   namespace: omnigent-sandboxes
 rules:
   - apiGroups:
+      - agents.x-k8s.io
+    resources:
+      - sandboxes
+    verbs:
+      - create
+      - get
+      - patch
+      - delete
+  - apiGroups:
       - batch
     resources:
       - jobs

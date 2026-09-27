@@ -1,121 +1,170 @@
-# Omnigent
+# Omnigent SRE and first-party Slack integration
 
-Use <https://omnigent.apps.ocp.igou.systems> for interactive sessions and its
-REST API for pipeline launches. In **New Chat**, choose `opencode-go-test`
-and a new OpenShell sandbox in the host picker. OpenShell is the only backend
-for new sessions. Admin login manages application access, but does not
-provide a backend configuration editor.
+Issue [#1040](https://github.com/igou-io/igou-openshift/issues/1040) stages the
+`igou-sre` agent, its four sweep prompts, and Omnigent v0.15.0's upstream
+interactive Slack bot. The three disposable legacy `opencode-go-test` Jobs
+and their Pods were removed from `omnigent-sandboxes` on 2026-09-27 with
+operator authorization; Hermes schedules remain unchanged. The live
+`omnigent` ArgoCD Application has automated sync: merging this PR can deploy
+server, Secret, PVC, bot and NetworkPolicy changes. Before merging with
+auto-sync active, authorize GitOps reconciliation or establish and verify a
+deployment hold. Hermes keeps its four production schedules, Slack app, alert
+relay, EDA and `SREHeartbeat` until a separately approved cutover.
 
-The operator runbook is
-[Omnigent Managed Sandboxes and API Workflows](https://github.com/igou-io/igou-docs/blob/main/openshift/Omnigent%20Managed%20Sandboxes%20and%20API%20Workflows.md).
-It covers new backends, harnesses, OpenShell configuration, OpenShell
-service authentication, and autonomous REST launches.
+## Platform and credentials
 
-## Where to change settings
+The server keeps accounts authentication, `/opt/venv/bin` first on PATH, and
+the direct `agent_sandbox` provider. Managed sessions use the pinned
+`igou-devenv` host image, `opencode-go`, and the native idle/reaper lifecycle.
+The `igou-sre` bundle has five skills and four domain references. ESO mounts
+read-only OCP/rk8s, RouterOS and TrueNAS credentials into managed hosts, not
+the Slack bot. The runner ServiceAccount token is disabled. The existing SRE
+`ghbroker`, Squid and namespace-wide default-deny restrict classified and
+unclassified runner Pods. The server-to-host and host-to-runner environment
+allowlists preserve the proxy, broker and Git identity settings.
 
-| Setting | Source in this directory |
-|---|---|
-| OpenShell backend, image, model binding, callback URL | `omnigent-sandbox-config-configmap.yaml` |
-| Agent prompt, harness, model, model-provider name | `omnigent-test-agent-configmap.yaml` |
-| Server auth, machine-token lifetime, environment forwarding | `omnigent-config-configmap.yaml` |
-| OpenShell gateway endpoint and OIDC metadata | `omnigent-openshell-gateway-configmap.yaml` |
-| OpenShell host filesystem and network access | `openshell-host-policy.yaml`, mounted on the server and sent at sandbox creation |
-| OpenShell SDK and renewable service authentication | `Containerfile.openshell`, `patch_openshell_service_auth.py` |
-| Secret references | `*-externalsecret.yaml` |
-| Server mounts, image, restart trigger | `omnigent-deployment.yaml` |
+The separate `omnigent-slack` Deployment runs `omni integration slack` in the
+foreground, one replica with `Recreate` strategy. It has no Kubernetes API
+token, infrastructure credentials, public Route or inbound listener. Its only
+network paths are DNS, Squid for Slack HTTPS/WebSocket traffic, and the
+existing Omnigent HTTPS Route at `10.10.9.10:443`. The pinned bot image adds
+the unmodified v0.15.0 upstream Slack package to the pinned server image; the
+server image itself lacks that
+optional package. A 1 Gi RWO PVC holds the upstream SQLite store and encrypted
+per-user delegated tokens. Preserve the PVC and encryption key across restarts.
+The bot's `OMNIGENT_SERVER_URL` uses the browser-accessible HTTPS Route for
+both API calls and conversation links. The exact Route hostname bypasses
+Squid through `NO_PROXY`/`no_proxy`; the bot's NetworkPolicy permits only
+the verified router VIP on TCP 443 for that path. TLS verification stays on.
+`OMNIGENT_DEVICE_GRANT_ENABLED=1` is set on the accounts
+server, and both server and bot read the same device-client secret through
+separate ESO targets. Slack bot/app tokens and the encryption key are consumed
+only by the bot Pod. No Slack credential is mounted into a runner.
 
-The OpenShell gateway's own settings live in
-[`../openshell/kustomization.yaml`](../openshell/kustomization.yaml).
-Omnigent pins the same devenv digest explicitly because its current launcher
-always supplies an image; omitting this field selects Omnigent's own host
-image, not the gateway default. `OPENSHELL_GATEWAY=ocp` selects the gateway,
-and the launcher defaults to the `default` workspace. Omnigent's model
-provider `opencode-go` is separate from OpenShell's stored inference providers.
+Before any deployment, create a **dedicated Omnigent Slack app** from upstream
+[`slack-app-manifest.yaml`](https://github.com/omnigent-ai/omnigent/blob/v0.15.0/integrations/slack/deploy/slack-app-manifest.yaml).
+It enables Socket Mode, interactivity, `/omnigent`, DMs and channel events.
+Generate a `connections:write` app token, install the app and obtain its bot
+token. Check `/omnigent` command ownership first; do not reuse the live Hermes
+app or its Socket Mode tokens. Store the new tokens in the `lab_agents` item
+`omnigent-slack` as `app-token` and `bot-token`; add a stable Fernet
+`encryption-key` and a random `device-client-secret`. The item and all four
+fields were verified on 2026-09-27; both Slack tokens passed direct API checks.
+Never put their values in Git, commands, logs or PR text. The
+`onepassword-lab-agents` ClusterSecretStore uses
+1Password Connect, and both ESO targets extract only their named fields.
+Retire the old runner-namespace `omnigent-sre-slack` ExternalSecret from
+desired state. Neither it nor its generated Secret existed at the 2026-09-27
+read-only check. Reconfirm before any separately approved cleanup; leave the
+Hermes backing item intact.
 
-## Runtime
-
-One server in `omnigent` stores conversations in CNPG and artifacts on a
-10 Gi PVC. Keep one replica because the runner registry is in memory.
-`Recreate` avoids overlapping Pods trying to attach the ReadWriteOnce volume.
-CNPG uses Barman for WAL archiving and nightly backups.
-
-The OpenShell backend creates sandboxes through the existing gateway in
-`openshell`. It uses the Agent Sandbox operator, ordinary CRI-O, and the
-`openshell-sandbox` ServiceAccount's privileged SCC. It runs the published
-devenv image directly, with Omnigent and proxy-aware WebSockets baked into
-read-only `/opt/omnigent`. The server sends the policy when creating each
-sandbox. Harnesses come from devenv: OpenCode, Codex, and Claude Code are
-exposed on PATH. The launcher performs no harness installation. The policy
-allows the Omnigent callback and OpenCode Go for the installed OpenCode binary.
-
-The existing server image patch also supplies creation-time policy and the
-sandbox executable PATH (`patch_openshell_policy.py`). The policy is in a
-generated ConfigMap; its content hash triggers a server rollout. OpenCode's
-real binary precedes the local workstation launcher shim on PATH; OpenShell
-provides the outer sandbox.
-
-The server patch supplies renewable OAuth client credentials to the
-OpenShell 0.0.116 SDK. `omnigent-openshell` needs the Keycloak
-`openshell-user` role and `user` membership in the gateway's `default`
-workspace. Gateway membership is persistent OpenShell state, not a ConfigMap.
-
-The `opencode-go-test` agent uses OpenCode, `glm-5.3-flash`, and the OpenCode Go key from External
-Secrets. The `codex-chatgpt` agent selects a Codex subscription provider and
-uses the ChatGPT account cached on the separate `omnigent-codex-auth` PVC in
-`openshell`. Their caller-process tools run inside the outer sandbox, without
-a second nested sandbox. Neither
-agent has Git or cluster credentials. Built-in `accounts` auth has
-passed the recorded smoke tests; upstream still warns about managed-runner
-WebSocket compatibility. Recheck it after auth or image upgrades.
-
-OpenCode's provider/model binding is in `sandbox.host_config.inference.harnesses`.
-Its native integration requires that profile in addition to the agent's
-`executor.auth`. Provider `default` entries name protocol families, not harnesses.
-The OpenCode Go binding does not configure Codex or Claude Code. Codex uses
-`CODEX_HOME=/codex-auth`; the server mounts the RWX auth claim outside
-`/sandbox` so OpenShell keeps its per-sandbox workspace PVC. The launcher
-creates `config.toml` with file-backed credentials if missing, then Omnigent
-links `auth.json` into each Codex session's private home. OpenShell policy
-allows Codex's login and model endpoints. This claim is mounted into every
-Omnigent OpenShell sandbox, so only trusted users and agents should be given
-these sandboxes. Serialize Codex jobs using this account to avoid concurrent
-token refreshes. Initial ChatGPT device authorization is an interactive step;
-see the operator runbook. Claude Code still needs separate credentials.
-
-## Apply configuration changes
-
-Edit the files in Git and render with `kustomize build applications/omnigent`.
-For sandbox-config changes, put the output of this command into the Deployment
-Pod annotation `omnigent.io/sandbox-config-sha256` in the same change:
+The bot package is built from the upstream v0.15.0 source archive pinned by
+SHA-256 in `igou-containers/apps/omnigent-slack/Containerfile`. The
+`igou-containers` workflow builds both supported architectures and publishes
+the image to GHCR. Reproduce the build from that repository's root with:
 
 ```bash
-sha256sum applications/omnigent/omnigent-sandbox-config-configmap.yaml
+podman build -t localhost/omnigent-slack:v0.15.0 apps/omnigent-slack
 ```
 
-The config uses a `subPath` mount and requires a new server Pod. Other
-startup configuration and Secret rotations also require a server rollout;
-ConfigMap reconciliation alone does not reload the process. Keep that rollout
-in the GitOps change. New sandboxes use changed images and settings; existing
-sandboxes keep their launch configuration.
-Existing Kubernetes runner Jobs still use the `omnigent-sandboxes` namespace,
-runner credentials, service account, and RBAC. Keep those resources until the
-Jobs and their sessions are retired; new sessions use OpenShell only.
+The Deployment pins the published GHCR multi-architecture manifest digest as
+`ghcr.io/igou-io/omnigent-slack:latest@sha256:<digest>`. The `latest` tag lets
+Renovate track digest updates while the digest fixes the deployed content.
+The image is publicly pullable, so the bot does not need the Quay pull secret;
+the Omnigent server still uses that secret for its own Quay image.
 
-## Verify
+## Interactive setup
+
+After approved deployment, invite the new Omnigent bot to the intended SRE
+channel. In a DM or channel `@mention`, follow **Set up Omnigent** or run
+`/omnigent`: authenticate with your own Omnigent account through the browser,
+select `igou-sre`, and choose **Managed sandbox (agent_sandbox)**. The pinned
+bot reads server managed-host support from `/v1/info`, so no permanent host is
+needed. Each thread belongs to its initiating user. In a channel, `@mention`
+the bot for both a new request and every follow-up in the thread. In a DM,
+reply in the existing thread to continue its session; a new top-level DM
+starts a separate session. Channel history scopes do not enable plain
+unmentioned channel replies. The bot streams replies and supports
+approval cards and multiple-choice questions; free-form questions open in the
+web UI. `/omnigent logout` revokes delegated auth and clears setup. Account
+permissions and Slack app/channel membership constrain participation; this
+release has no dedicated bot allowlist to configure.
+
+The bot is for interactive conversations only. It does **not** forward native
+Automation results to Slack. Sweep findings remain in Omnigent conversations
+and run history, and the agent must not recreate the removed Slack sender via
+shell. Preserve Hermes reporting while its schedules remain active.
+
+## Native sweep schedules
+
+The Markdown files in `sweeps/` are prompt references. They are not
+Kubernetes resources and ArgoCD/Omnigent does not import them. Under the
+intended Omnigent user, use the native **Automations UI** to create and edit
+the four tasks with agent `igou-sre`, `managed_sandbox` execution target and
+`America/New_York` timezone:
+
+| Task | Schedule | RRULE | Hermes predecessor |
+| --- | --- | --- | --- |
+| `SRESweepDailyHealth` | Daily 07:00 | `FREQ=DAILY;BYHOUR=7;BYMINUTE=0` | `sre-sweep-daily-health` |
+| `SRESweepHygiene` | Monday 09:30 | `FREQ=WEEKLY;BYDAY=MO;BYHOUR=9;BYMINUTE=30` | `sre-sweep-hygiene` |
+| `SRESweepCapacity` | Tuesday 09:00 | `FREQ=WEEKLY;BYDAY=TU;BYHOUR=9;BYMINUTE=0` | `sre-sweep-capacity` |
+| `SRESweepPRFollowup` | Monday and Thursday 10:30 | `FREQ=WEEKLY;BYDAY=MO,TH;BYHOUR=10;BYMINUTE=30` | `sre-sweep-pr-followup` |
+
+The v0.15.0 scheduled-task create API creates tasks **active by default**.
+Do not create these schedules until the approved cutover unless the native UI
+can create them paused and their stored `paused` state is verified. Do not use
+a parking date or a custom registration helper. Native tasks live in the
+Omnigent database, are user-owned and are managed manually in this phase.
+Scheduled results stay in Omnigent; losing automatic Slack digests after a
+future Omnigent-only cutover is an explicit limitation to accept separately.
+The native scheduler does not replay missed fires and skips overlapping runs.
+
+## Controlled validation and rollback
+
+After approved deployment, confirm the active cluster and identity before
+read-only inspection:
 
 ```bash
 use ocp-cluster-reader
 oc whoami --show-server
 oc whoami
-oc get applications.argoproj.io omnigent openshell -n openshift-gitops
-oc get deployment,route,cluster.postgresql.cnpg.io,externalsecret -n omnigent
-oc get jobs,pods -n omnigent-sandboxes
-oc get sandboxes.agents.x-k8s.io,pods -n openshell
-curl -fsS https://omnigent.apps.ocp.igou.systems/v1/info |
-  jq '{managed_sandboxes_enabled, sandbox_provider, sandbox_providers}'
+oc -n omnigent get deployment,externalsecret,pvc,networkpolicy
+oc -n omnigent-sandboxes get sandbox,pod,externalsecret,networkpolicy
+oc -n squid-proxy get networkpolicy
 ```
 
-Expect `openshell` as the default and sole entry in `sandbox_providers`.
-A successful session-create response or HTTP 202 prompt acknowledgement does
-not prove agent completion. Read the assistant output and check task-specific
-results. Delete disposable sessions through Omnigent to reclaim their backend.
+The three legacy `opencode-go-test` Jobs and their Pods were deleted on
+2026-09-27. A follow-up check found no Jobs, Pods or PVCs in
+`omnigent-sandboxes`. Reconfirm before rollout; the new default deny applies
+to any unclassified Pods. Inspect the full effective policy set because allow
+policies are additive. Verify ESO
+readiness, SCC admission, bot startup, Socket Mode connection, writable state
+and state persistence across restart without plaintext delegated tokens.
+Check that the upstream Slack SDK sends both HTTPS and WebSocket traffic via
+Squid, and that the bot reaches the HTTPS Omnigent Route with valid TLS and
+browser conversation links. Exercise `/omnigent` enrollment, login,
+logout/re-enrollment, an `igou-sre` DM and
+channel mention, thread continuation, streaming and approval/question cards.
+Confirm the bot creates a real authenticated managed Sandbox and that runner
+Pods have no Slack credentials.
+
+Run each sweep manually in Omnigent and confirm a readable final conversation
+with no Slack-tool call. Validate read-only infrastructure access, denied
+mutations and proxy bypass, broker use, classified and unclassified runner
+network behavior, busy-run continuity, idle Pod suspension, stale Sandbox
+cleanup, credential refresh and server restart/misfire handling. Keep the
+Hermes alerting and schedules unchanged during this validation. Only after
+separate cutover approval should the four Hermes schedules be disabled and
+Omnigent Automations created or activated; do not let both own the same
+schedule. For rollback, pause Omnigent tasks, inspect active runs, then
+restore only those four Hermes schedules. Retain historical conversations
+and existing storage.
+
+## Repository checks
+
+```bash
+make test
+make validate-manifest-files
+kustomize build --enable-helm applications/omnigent
+kustomize build --enable-helm applications/squid-proxy
+```
