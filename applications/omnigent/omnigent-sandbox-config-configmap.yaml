@@ -62,6 +62,7 @@ data:
           - GIT_COMMITTER_NAME
           - GIT_COMMITTER_EMAIL
           - OMNIGENT_RUNNER_ENV_PASSTHROUGH
+          - OPENCODE_CONFIG_CONTENT
           - GHAPP_BROKER_URL
           - KUBECONFIG
           - HTTP_PROXY
