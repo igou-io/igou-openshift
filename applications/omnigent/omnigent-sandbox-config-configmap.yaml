@@ -53,6 +53,8 @@ data:
             mount_path: /mnt/credentials/routeros
           - secret_name: omnigent-sre-truenas
             mount_path: /mnt/credentials/truenas
+          - secret_name: omnigent-creds
+            mount_path: /mnt/opencode-config
         env:
           - PATH
           - USER
@@ -62,7 +64,7 @@ data:
           - GIT_COMMITTER_NAME
           - GIT_COMMITTER_EMAIL
           - OMNIGENT_RUNNER_ENV_PASSTHROUGH
-          - OPENCODE_CONFIG_CONTENT
+          - OPENCODE_CONFIG_DIR
           - GHAPP_BROKER_URL
           - KUBECONFIG
           - HTTP_PROXY
