@@ -15,7 +15,7 @@ spec:
       annotations:
         omnigent.io/sandbox-config-sha256: 64e51275023f8da4ece59229b5f066c7643e74d6e34ad69058fdcc4fabd66675
         omnigent.io/server-config-sha256: 777be6fe362e614f0017e28e7ad0e2b6e7c1acceb597771662cbebfd30595734
-        omnigent.io/sre-bundle-sha256: 329eaa35077b064523075b0fdc2aaae42c5d7138105bd2ff949f101551e90ef0
+        omnigent.io/sre-bundle-sha256: 345f3dc6a4065e698850d0d11cc9b02ce4a3cbf4e520635e091b24ca99bf939b
       labels:
         app: omnigent
     spec:

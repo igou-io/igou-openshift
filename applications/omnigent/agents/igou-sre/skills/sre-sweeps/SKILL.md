@@ -45,18 +45,29 @@ Rules for every sweep:
 2. CNPG continuous archiving:
    ```bash
    oc get cluster.postgresql.cnpg.io -A -o jsonpath='{range .items[*]}{.metadata.namespace}/{.metadata.name} \
-     archiving={.status.conditions[?(@.type=="ContinuousArchiving")].status} \
-     lastBackup={.status.lastSuccessfulBackup} firstRecoverability={.status.firstRecoverabilityPoint}{"\n"}{end}'
+     archiving={.status.conditions[?(@.type=="ContinuousArchiving")].status}{"\n"}{end}'
+   oc get objectstores.barmancloud.cnpg.io -A -o json | jq -r '
+     .items[] | .metadata.namespace as $ns | .metadata.name as $store
+     | (.status.serverRecoveryWindow // {}) | to_entries[]
+     | "\($ns)/\($store) server=\(.key) firstRecoverability=\(.value.firstRecoverabilityPoint // "missing") lastSuccess=\(.value.lastSuccessfulBackupTime // "missing") lastFailed=\(.value.lastFailedBackupTime // "none")"'
    ```
-   Flag: `archiving` not `True`, or `firstRecoverabilityPoint` empty.
+   The Barman Cloud plugin publishes the recovery window on `ObjectStore`,
+   not on the Cluster's legacy backup status fields. Flag: `archiving` not
+   `True`, an absent `serverRecoveryWindow`/`firstRecoverabilityPoint`, a
+   `lastSuccessfulBackupTime` older than 26 h, or a failure newer than the
+   last success. If ObjectStore read is 403, report that coverage gap.
 3. ArgoCD drift:
    ```bash
    oc get applications.argoproj.io -n openshift-gitops \
      -o jsonpath='{range .items[*]}{.metadata.name} {.status.sync.status} {.status.health.status}{"\n"}{end}' | grep -v 'Synced Healthy'
    ```
-   For each hit, add since-when from `.status.operationState.finishedAt`
-   and the first message in `.status.conditions`. Auto-sync retries
-   forever with backoff, so "still retrying" is a finding, not noise.
+   For each hit, inspect `.status.resources[]` for OutOfSync resources and
+   `requiresPruning`, and read the first message in `.status.conditions`.
+   A recent successful sync is not proof that drift is transient:
+   `.status.operationState.finishedAt` is the last operation time, not the
+   drift start time. Report resources awaiting prune when auto-prune is off.
+   Auto-sync retries forever with backoff, so "still retrying" is a finding,
+   not noise.
 4. Certificates and CSRs:
    ```bash
    oc get certificate.cert-manager.io -A -o json | jq -r '.items[]
