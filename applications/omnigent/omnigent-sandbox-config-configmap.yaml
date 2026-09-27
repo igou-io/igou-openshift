@@ -32,7 +32,7 @@ data:
         namespace: omnigent-sandboxes
         service_account: omnigent-runner
         secret_name: omnigent-creds
-        image: ghcr.io/igou-io/igou-devenv@sha256:f1203aeaf1fa3fcafbc21b10bce45e1454ab4cfdac2a6aadf92c2e0fd12bb457
+        image: ghcr.io/igou-io/igou-devenv@sha256:0e22e3ffccdea6fa1412fc97149cf7794cedcdf779bd7d9f227e552d8de989d4
         home_size_limit: 8Gi
         pod_ready_timeout_s: 300
         resources:
