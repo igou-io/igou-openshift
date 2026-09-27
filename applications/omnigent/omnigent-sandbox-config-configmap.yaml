@@ -8,7 +8,7 @@ data:
     sandbox:
       provider: agent_sandbox
       server_url: http://omnigent.omnigent.svc.cluster.local
-      keep_warm_s: 300
+      keep_warm_s: 1800
       reaper:
         enabled: true
         terminate_after_offline_days: 7
