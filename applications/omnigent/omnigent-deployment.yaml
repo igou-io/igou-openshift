@@ -13,9 +13,9 @@ spec:
   template:
     metadata:
       annotations:
-        omnigent.io/sandbox-config-sha256: 47a77f2cae61237f0ef7060837bd2ea1ed28d2cfceed4ff1395745255bf78262
-        omnigent.io/server-config-sha256: 9776d8a99dc4ff8066d9c6723fa1363b82d8baad254277db3fa46afe9e15120c
-        omnigent.io/sre-bundle-sha256: e37081f90b643b03cded173127416a880a71457c61de0bc99be22cdba922281d
+        omnigent.io/sandbox-config-sha256: ccd8cdff6406d7ca53021ce1f931051a9037d5474158853d487d3d6174e9c966
+        omnigent.io/server-config-sha256: 3e6b2b530cb9ce970e3f0df8ce7e363dfdbe05c60683c3b2b7ec5b5a21af53d2
+        omnigent.io/sre-bundle-sha256: 329eaa35077b064523075b0fdc2aaae42c5d7138105bd2ff949f101551e90ef0
       labels:
         app: omnigent
     spec:
@@ -40,6 +40,11 @@ spec:
             - secretRef:
                 name: omnigent-opencode-go
           env:
+            - name: OMNIGENT_DEVICE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: omnigent-device-auth
+                  key: OMNIGENT_DEVICE_CLIENT_SECRET
             - name: PATH
               value: /opt/venv/bin:/home/igou/.opencode/bin:/home/igou/.local/bin:/opt/mise/shims:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
             - name: USER
@@ -150,5 +155,3 @@ spec:
                       path: skills/triage-domains/rk8s.md
                     - key: change-correlation.md
                       path: skills/triage-domains/change-correlation.md
-                    - key: sre_slack.py
-                      path: tools/python/sre_slack.py

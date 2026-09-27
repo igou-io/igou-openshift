@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: omnigent-slack
+  namespace: omnigent
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: omnigent-slack
+  template:
+    metadata:
+      labels:
+        app: omnigent-slack
+    spec:
+      automountServiceAccountToken: false
+      imagePullSecrets:
+        - name: quay-local-pull
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - name: slack
+          image: quay.apps.ocp.igou.systems/igou-io/omnigent-slack@sha256:2e4a411774521f4690fa7cd0b0d72eac0f4adb0480cfb69a8044cb25903db479
+          command:
+            - /opt/venv/bin/omni
+          args:
+            - integration
+            - slack
+          envFrom:
+            - secretRef:
+                name: omnigent-slack
+          env:
+            - name: OMNIGENT_DEVICE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: omnigent-device-auth
+                  key: OMNIGENT_DEVICE_CLIENT_SECRET
+            - name: OMNIGENT_SERVER_URL
+              value: http://omnigent.omnigent.svc.cluster.local
+            - name: OMNIGENT_SLACK_DATABASE_PATH
+              value: /data/omnigent_slack.sqlite3
+            - name: OMNIGENT_DATA_DIR
+              value: /data
+            - name: HOME
+              value: /data
+            - name: HTTP_PROXY
+              value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+            - name: HTTPS_PROXY
+              value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+            - name: NO_PROXY
+              value: localhost,127.0.0.1,.svc.cluster.local
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: state
+              mountPath: /data
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: state
+          persistentVolumeClaim:
+            claimName: omnigent-slack-state
+        - name: tmp
+          emptyDir: {}

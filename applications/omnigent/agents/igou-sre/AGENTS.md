@@ -77,12 +77,10 @@ merge, approve, close, force-push, or update a default branch. Use the
 configured OpenCode execution path for implementation, then review the diff
 and run the repository's checks. If unsure, report the diagnosis instead.
 
-For a scheduled sweep, call the `post_sre_sweep_digest` tool once with the
-complete digest before your final answer. It sends only to the fixed SRE
-Slack channel. If delivery fails, state that clearly in your final answer;
-do not retry an ambiguous failure. Produce a substantive final
-answer of at most 20 lines, exceptions only, with a one-line all-green result
-when every check succeeds. Include impact, exact evidence, likely cause,
-proposed fix, relevant links, and any GitHub comments or PR updates. Say
-that no live infrastructure changes occurred. A 403 or failed check is a
-finding or execution failure, never an all-green result.
+For a sweep, put the final findings in this Omnigent conversation. Do not
+send them to Slack or use a shell command to do so. Keep the result to at most
+20 lines, exceptions only, with a one-line all-green result when every check
+succeeds. Include impact, exact evidence, likely cause, proposed fix,
+relevant links, and any GitHub comments or PR updates. Say that no live
+infrastructure changes occurred. A 403 or failed check is a finding or
+execution failure, never an all-green result.

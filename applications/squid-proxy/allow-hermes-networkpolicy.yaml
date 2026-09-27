@@ -101,12 +101,8 @@ spec:
             matchLabels:
               kubernetes.io/metadata.name: omnigent
           podSelector:
-            matchExpressions:
-              - key: app
-                operator: In
-                values:
-                  - omnigent-sre-sweep-client
-                  - omnigent-sre-cleanup-client
+            matchLabels:
+              app: omnigent-slack
       ports:
         - protocol: TCP
           port: 3128

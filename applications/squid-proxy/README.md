@@ -1,23 +1,25 @@
-# Shared Hermes HTTP/HTTPS egress proxy
+# Shared HTTP/HTTPS egress proxy
 
 This application provides the cluster-local Squid proxy used by the three
-Hermes instances. HTTP-aware processes in the Hermes agents, generated
-sessions, authentication pods, GitHub App brokers, and SRE docs-sync job
-inherit:
+Hermes instances and the Omnigent SRE workloads. HTTP-aware processes in
+the Hermes agents, generated sessions, authentication pods, GitHub App
+brokers, SRE docs-sync job, Omnigent SRE runners and upstream Slack bot use:
 
 ```text
 HTTP_PROXY=http://squid-proxy.squid-proxy.svc.cluster.local:3128
 HTTPS_PROXY=http://squid-proxy.squid-proxy.svc.cluster.local:3128
 ```
 
-The equivalent lowercase variables are set as well. `NO_PROXY`/`no_proxy` is
-the same minimal value everywhere:
+Hermes clients also set the lowercase variables. Their `NO_PROXY`/`no_proxy`
+value is:
 
 ```text
 localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,api.ocp.igou.systems,10.10.9.10
 ```
 
-The `.cluster.local` suffix covers Kubernetes service names. The explicit
+The Omnigent bot uses `NO_PROXY=localhost,127.0.0.1,.svc.cluster.local` for
+its internal server API and sends Slack traffic through Squid. The Hermes
+`.cluster.local` suffix covers Kubernetes service names. The explicit
 `172.30.0.1` entry keeps in-cluster Kubernetes clients on the direct API service
 path; without it, clients try to tunnel the private service IP through Squid and
 receive `403 Forbidden`. The `api.ocp.igou.systems` and `10.10.9.10` entries keep
@@ -37,8 +39,8 @@ the workload-level proxy architecture.
 The proxy is registered at sync wave `19`, before the Hermes applications at
 wave `20`. Its NetworkPolicies allow TCP/3128 only from the intended Hermes
 agents, generated sessions, scale-to-zero `auth-login` pods, GitHub App brokers,
-and SRE docs-sync job. Squid has no Route, LoadBalancer, NodePort, hostPort,
-or hostNetwork exposure.
+SRE docs-sync job, classified Omnigent SRE runners and the Omnigent Slack bot.
+Squid has no Route, LoadBalancer, NodePort, hostPort, or hostNetwork exposure.
 
 ## Enforced egress architecture
 

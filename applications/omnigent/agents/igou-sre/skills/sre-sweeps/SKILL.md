@@ -1,6 +1,6 @@
 ---
 name: sre-sweeps
-description: Run one of four scheduled SRE sweeps and post an exception-oriented digest.
+description: Run one of four SRE sweeps and report findings in Omnigent.
 version: 1.0.0
 author: igou-io
 platforms:
@@ -20,15 +20,14 @@ metadata:
 Rules for every sweep:
 - This is scheduled maintenance rather than an incident: skip the
   incident-memory lookup step of `openshift-alert-triage`.
-- One final digest per sweep, <= 20 lines. For findings, put the exact
-  sweep name alone on the first line.
-  Call `post_sre_sweep_digest` once with that digest before the final answer.
-  If the tool fails, report the delivery failure; do not claim success.
+- One final result per sweep in the Omnigent conversation, <= 20 lines.
+  For findings, put the exact sweep name alone on the first line.
   Report exceptions only; when every check is green, use ONE line beginning
   `SRESweepName — all green:` followed by the checks' names, not a table of OKs.
 - Read-only. A 403 means the check is out of scope for this instance:
   name the missing permission in the digest and move on.
-- End with `No live infrastructure changes occurred.` and disclose any
+- Do not call Slack or use the shell to send a digest. End with
+  `No live infrastructure changes occurred.` and disclose any
   GitHub comments or PR updates. When a finding has an obvious declarative
   fix, link the GitOps file to change; open a PR only via the
   `propose-fix` skill and only when confident in the diagnosis.

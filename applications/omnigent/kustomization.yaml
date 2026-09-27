@@ -17,7 +17,6 @@ configMapGenerator:
       - network.md=agents/igou-sre/skills/triage-domains/network.md
       - rk8s.md=agents/igou-sre/skills/triage-domains/rk8s.md
       - change-correlation.md=agents/igou-sre/skills/triage-domains/change-correlation.md
-      - sre_slack.py=agents/igou-sre/tools/python/sre_slack.py
 resources:
   - quay-local-pull-externalsecret.yaml
   - omnigent-namespace.yaml
@@ -28,7 +27,8 @@ resources:
   - cnpg-s3-credentials-externalsecret.yaml
   - omnigent-auth-externalsecret.yaml
   - omnigent-machine-client-externalsecret.yaml
-  - omnigent-sre-slack-externalsecret.yaml
+  - omnigent-slack-externalsecret.yaml
+  - omnigent-device-auth-externalsecret.yaml
   - omnigent-sre-ocp-externalsecret.yaml
   - omnigent-sre-rk8s-externalsecret.yaml
   - omnigent-sre-routeros-externalsecret.yaml
@@ -46,6 +46,9 @@ resources:
   - omnigent-sandboxes-default-deny-networkpolicy.yaml
   - omnigent-sre-runner-networkpolicy.yaml
   - omnigent-artifacts-pvc.yaml
+  - omnigent-slack-state-pvc.yaml
   - omnigent-deployment.yaml
+  - omnigent-slack-deployment.yaml
+  - omnigent-slack-networkpolicy.yaml
   - omnigent-service.yaml
   - omnigent-route.yaml

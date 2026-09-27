@@ -53,8 +53,6 @@ data:
             mount_path: /mnt/credentials/routeros
           - secret_name: omnigent-sre-truenas
             mount_path: /mnt/credentials/truenas
-          - secret_name: omnigent-sre-slack
-            mount_path: /mnt/credentials/slack
         env:
           - PATH
           - USER

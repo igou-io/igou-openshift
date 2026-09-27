@@ -1,6 +1,6 @@
 spec_version: 1
 name: igou-sre
-description: Read-only infrastructure investigations and scheduled SRE sweeps.
+description: Read-only infrastructure investigations and SRE sweeps.
 instructions: AGENTS.md
 executor:
   type: omnigent
