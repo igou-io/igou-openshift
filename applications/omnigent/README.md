@@ -123,6 +123,11 @@ stays in the existing `OPENCODE_GO_API_KEY` Secret-backed environment variable.
 The mounted Secret also supplies `.gitignore`; OpenCode needs that file already
 present because the mount is read-only. Native tasks live in the Omnigent
 database, are user-owned and are managed manually in this phase.
+The managed runner's `keep_warm_s` is 1800 seconds. Omnigent v0.15.0 did not
+count an active native OpenCode sweep as runner activity and exited after the
+previous 300-second window, so the longer window accommodates full sweeps.
+An idle managed runner can therefore remain warm for up to 30 minutes before
+its normal cleanup.
 Scheduled results stay in Omnigent; losing automatic Slack digests after a
 future Omnigent-only cutover is an explicit limitation to accept separately.
 The native scheduler does not replay missed fires and skips overlapping runs.
