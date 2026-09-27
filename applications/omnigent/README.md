@@ -110,11 +110,16 @@ the four tasks with agent `igou-sre`, `managed_sandbox` execution target and
 | `SRESweepCapacity` | Tuesday 09:00 | `FREQ=WEEKLY;BYDAY=TU;BYHOUR=9;BYMINUTE=0` | `sre-sweep-capacity` |
 | `SRESweepPRFollowup` | Monday and Thursday 10:30 | `FREQ=WEEKLY;BYDAY=MO,TH;BYHOUR=10;BYMINUTE=30` | `sre-sweep-pr-followup` |
 
-The v0.15.0 scheduled-task create API creates tasks **active by default**.
-Do not create these schedules until the approved cutover unless the native UI
-can create them paused and their stored `paused` state is verified. Do not use
-a parking date or a custom registration helper. Native tasks live in the
-Omnigent database, are user-owned and are managed manually in this phase.
+The four tasks were created under `igou` on 2026-09-27 and immediately paused.
+They remain paused while Hermes schedules are active. The v0.15.0
+scheduled-task create API creates tasks **active by default**; verify the
+stored `paused` state after editing them. Set each task's model override to
+`opencode-go/glm-5.3-flash`. Scheduled sessions do not retain a managed
+inference selection, so the sandbox receives an OpenCode provider definition
+through `OPENCODE_CONFIG_CONTENT`; the key itself stays in the existing
+`OPENCODE_GO_API_KEY` Secret-backed environment variable. Native tasks live
+in the Omnigent database, are user-owned and are managed manually in this
+phase.
 Scheduled results stay in Omnigent; losing automatic Slack digests after a
 future Omnigent-only cutover is an explicit limitation to accept separately.
 The native scheduler does not replay missed fires and skips overlapping runs.

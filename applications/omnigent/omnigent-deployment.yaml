@@ -13,8 +13,8 @@ spec:
   template:
     metadata:
       annotations:
-        omnigent.io/sandbox-config-sha256: ccd8cdff6406d7ca53021ce1f931051a9037d5474158853d487d3d6174e9c966
-        omnigent.io/server-config-sha256: 3e6b2b530cb9ce970e3f0df8ce7e363dfdbe05c60683c3b2b7ec5b5a21af53d2
+        omnigent.io/sandbox-config-sha256: df1bcb79071d3aeb1268ce0e163aae9b4a8f5ed4d9c709af2add8bfdbcdc8c8f
+        omnigent.io/server-config-sha256: db6204659f323fa7a63272e97deffc4b92b3dee4b2a41ff2e7b7a97ab7b20732
         omnigent.io/sre-bundle-sha256: 329eaa35077b064523075b0fdc2aaae42c5d7138105bd2ff949f101551e90ef0
       labels:
         app: omnigent
