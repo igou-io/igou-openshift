@@ -109,9 +109,6 @@ re-check it against the manifest before you use it:
 | `components/quay-operator/quay-pg-cluster.yaml` | `quay-enterprise` | `quay-pg`    | `quay`      | `quay-pg-r20260704` |
 | `components/rhbk/keycloak-pg-cluster.yaml`      | `keycloak`        | `keycloak-pg`| `keycloak`  | `keycloak-pg` (created after the DR — still on its bare prefix) |
 
-`applications/temporalio/` is dormant (not referenced by `clusters/ocp/values.yaml`)
-and deploys no database — skip it.
-
 ### Step-by-step
 
 Below uses `forgejo-pg` as the worked example. Repeat per cluster, substituting from the

@@ -28,8 +28,8 @@ bootstrap in [`gitops-bootstrap-from-scratch.md`](gitops-bootstrap-from-scratch.
 | `tekton-results-postgres` | `openshift-pipelines` | operator StatefulSet | none | **accepted loss** — pipeline-run history; operator recreates it empty |
 | `firecrawl-nuq-postgres` | `firecrawl` | Deployment | none | **accepted loss** — crawl queue state; comes back empty |
 
-Dormant manifests (`applications/gitea/`, `applications/temporalio/`) are not
-referenced by `clusters/ocp/values.yaml` and deploy nothing — ignore them.
+Dormant manifests in `applications/gitea/` are not referenced by
+`clusters/ocp/values.yaml` and deploy nothing — ignore them.
 
 > ⚠️ **Failure-domain caveat:** all CNPG backups live on the same TrueNAS box
 > as the primary DB storage (RustFS-cold, `https://truenas.igou.systems:20292`,
