@@ -15,3 +15,10 @@ os_env:
   cwd: .
   sandbox:
     type: none
+    env_passthrough:
+      - KUBECONFIG
+      - GHAPP_BROKER_URL
+      - GIT_AUTHOR_NAME
+      - GIT_AUTHOR_EMAIL
+      - GIT_COMMITTER_NAME
+      - GIT_COMMITTER_EMAIL
