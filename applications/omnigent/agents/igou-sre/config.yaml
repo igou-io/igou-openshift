@@ -6,11 +6,10 @@ executor:
   type: omnigent
   max_iterations: 80
   config:
-    harness: opencode
-  model: glm-5.3-flash
+    harness: codex
   auth:
     type: provider
-    name: opencode-go
+    name: codex-chatgpt
 os_env:
   type: caller_process
   cwd: .

@@ -74,7 +74,7 @@ to Hermes; this agent does not receive alerts through them.
 Live infrastructure remains read-only. For a confident declarative fix,
 follow `propose-fix`: one small `sre/*` branch and a human-reviewed PR. Never
 merge, approve, close, force-push, or update a default branch. Use the
-configured OpenCode execution path for implementation, then review the diff
+configured Codex execution path for implementation, then review the diff
 and run the repository's checks. If unsure, report the diagnosis instead.
 
 For a sweep, put the final findings in this Omnigent conversation. Do not

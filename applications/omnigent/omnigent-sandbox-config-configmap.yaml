@@ -22,6 +22,9 @@ data:
               model_allowlist:
                 - glm-5.3-flash
         providers:
+          codex-chatgpt:
+            kind: subscription
+            cli: codex
           opencode-go:
             kind: gateway
             openai:
@@ -34,6 +37,10 @@ data:
         secret_name: omnigent-creds
         image: ghcr.io/igou-io/igou-devenv@sha256:0e22e3ffccdea6fa1412fc97149cf7794cedcdf779bd7d9f227e552d8de989d4
         home_size_limit: 8Gi
+        pvc_mounts:
+          - claim_name: omnigent-sre-codex-auth
+            mount_path: /codex-auth
+            read_only: false
         pod_ready_timeout_s: 300
         resources:
           requests:
@@ -65,6 +72,7 @@ data:
           - GIT_COMMITTER_EMAIL
           - OMNIGENT_RUNNER_ENV_PASSTHROUGH
           - OPENCODE_CONFIG_DIR
+          - CODEX_HOME
           - GHAPP_BROKER_URL
           - KUBECONFIG
           - HTTP_PROXY

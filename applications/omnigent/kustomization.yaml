@@ -47,6 +47,7 @@ resources:
   - omnigent-sre-runner-networkpolicy.yaml
   - omnigent-artifacts-pvc.yaml
   - omnigent-slack-state-pvc.yaml
+  - omnigent-sre-codex-auth-pvc.yaml
   - omnigent-deployment.yaml
   - omnigent-slack-deployment.yaml
   - omnigent-slack-networkpolicy.yaml
