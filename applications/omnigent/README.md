@@ -15,13 +15,43 @@ relay, EDA and `SREHeartbeat` until a separately approved cutover.
 
 The server keeps accounts authentication, `/opt/venv/bin` first on PATH, and
 the direct `agent_sandbox` provider. Managed sessions use the pinned
-`igou-devenv` host image, `opencode-go`, and the native idle/reaper lifecycle.
+`igou-devenv` host image and the native idle/reaper lifecycle. `igou-sre` runs
+the Codex harness through the `codex-chatgpt` subscription provider and lets
+Codex choose its default model. OpenCode Go remains configured as an optional
+provider.
 The `igou-sre` bundle has five skills and four domain references. ESO mounts
 read-only OCP/rk8s, RouterOS and TrueNAS credentials into managed hosts, not
 the Slack bot. The runner ServiceAccount token is disabled. The existing SRE
 `ghbroker`, Squid and namespace-wide default-deny restrict classified and
 unclassified runner Pods. The server-to-host and host-to-runner environment
 allowlists preserve the proxy, broker and Git identity settings.
+
+The writable `omnigent-sre-codex-auth` claim in `omnigent-sandboxes` is mounted
+at `CODEX_HOME=/codex-auth`. Omnigent links its `auth.json` into each private
+Codex conversation home, so token refreshes persist across runner Pods. The
+claim starts empty; after it is provisioned, launch a managed `igou-sre`
+session, then sign in from its runner Pod:
+
+```bash
+use ocp
+oc whoami --show-server
+oc whoami
+oc get pods -n omnigent-sandboxes -l 'omnigent.ai/agent=igou-sre,omnigent.ai/role=sandbox-host'
+oc exec -n omnigent-sandboxes -it POD_NAME -- sh -lc \
+  'printf "%s\n" "cli_auth_credentials_store = \"file\"" > "$CODEX_HOME/config.toml" && codex login --device-auth'
+oc exec -n omnigent-sandboxes POD_NAME -- codex login status
+```
+
+Replace `POD_NAME` with the listed runner Pod, and complete the device flow in
+your browser. Keep the claim and its login file
+private; never display, copy into Git, or log `auth.json`. The old OpenShell
+claim is in another namespace and is not mounted here. The sandbox provider
+mounts this claim into every managed runner, so only trusted agents and users
+should receive managed sandbox access. A shared ChatGPT login must not be used
+by concurrent Codex sessions; serialize interactive runs and sweeps until a
+per-run credential design exists.
+See the [OpenAI authentication guide](https://learn.chatgpt.com/docs/auth) and
+[shared-login guidance](https://learn.chatgpt.com/docs/auth/ci-cd-auth).
 
 The separate `omnigent-slack` Deployment runs `omni integration slack` in the
 foreground, one replica with `Recreate` strategy. It has no Kubernetes API
@@ -113,16 +143,10 @@ the four tasks with agent `igou-sre`, `managed_sandbox` execution target and
 The four tasks were created under `igou` on 2026-09-27 and immediately paused.
 They remain paused while Hermes schedules are active. The v0.15.0
 scheduled-task create API creates tasks **active by default**; verify the
-stored `paused` state after editing them. Set each task's model override to
-`opencode-go/glm-5.3-flash`. Scheduled sessions do not retain a managed
-inference selection, so the sandbox mounts an OpenCode provider definition
-from the `omnigent-creds` ExternalSecret at `OPENCODE_CONFIG_DIR`.
-Omnigent's native OpenCode launcher discards `OPENCODE_CONFIG_CONTENT`, while
-the custom config directory survives its environment filter. The key itself
-stays in the existing `OPENCODE_GO_API_KEY` Secret-backed environment variable.
-The mounted Secret also supplies `.gitignore`; OpenCode needs that file already
-present because the mount is read-only. Native tasks live in the Omnigent
-database, are user-owned and are managed manually in this phase.
+stored `paused` state after editing them. Remove the existing
+`opencode-go/glm-5.3-flash` model override from each task before its next run;
+Codex should use the subscription login's default model. Native tasks live in
+the Omnigent database, are user-owned and are managed manually in this phase.
 The managed runner's `keep_warm_s` is 1800 seconds. Omnigent v0.15.0 did not
 count an active native OpenCode sweep as runner activity and exited after the
 previous 300-second window, so the longer window accommodates full sweeps.
@@ -142,7 +166,7 @@ use ocp-cluster-reader
 oc whoami --show-server
 oc whoami
 oc -n omnigent get deployment,externalsecret,pvc,networkpolicy
-oc -n omnigent-sandboxes get sandbox,pod,externalsecret,networkpolicy
+oc -n omnigent-sandboxes get sandbox,pod,pvc,externalsecret,networkpolicy
 oc -n squid-proxy get networkpolicy
 ```
 
@@ -160,6 +184,10 @@ logout/re-enrollment, an `igou-sre` DM and
 channel mention, thread continuation, streaming and approval/question cards.
 Confirm the bot creates a real authenticated managed Sandbox and that runner
 Pods have no Slack credentials.
+Check `codex login status` inside the runner after the device flow, then ask
+`igou-sre` for a short read-only answer in Omnigent and in Slack. Leave the
+four paused Automations paused until their OpenCode model overrides are removed
+and one Codex sweep has completed without another Codex session running.
 
 Run each sweep manually in Omnigent and confirm a readable final conversation
 with no Slack-tool call. Validate read-only infrastructure access, denied
