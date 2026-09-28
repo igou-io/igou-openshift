@@ -24,7 +24,10 @@ read-only OCP/rk8s, RouterOS and TrueNAS credentials into managed hosts, not
 the Slack bot. The runner ServiceAccount token is disabled. The existing SRE
 `ghbroker`, Squid and namespace-wide default-deny restrict classified and
 unclassified runner Pods. The server-to-host and host-to-runner environment
-allowlists preserve the proxy, broker and Git identity settings.
+allowlists preserve the proxy, broker and Git identity settings. The Codex
+agent's `os_env.sandbox.env_passthrough` also admits `KUBECONFIG`, the broker
+URL and Git identity through Omnigent's Codex subprocess filter; without that
+declaration the variables exist on the runner Pod but disappear inside Codex.
 
 The writable `omnigent-sre-codex-auth` claim in `omnigent-sandboxes` is mounted
 at `CODEX_HOME=/codex-auth`. Omnigent links its `auth.json` into each private
