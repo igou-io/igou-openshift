@@ -16,7 +16,7 @@ GitOps repository for OpenShift managed by ArgoCD. This repository can support m
 
 - **clusters/** — Per-cluster config. Each cluster has its own `values.yaml` for the app-of-apps pattern. This repository is single cluster
 - **components/** — Reusable operator/platform components (external-secrets, openshift-virt, cert-manager, etc.), each independently installable via kustomize. Shared across clusters.
-- **applications/** — User-facing apps (jellyfin, minecraft, n8n, ollama) deployed via kustomize with inline Helm charts.
+- **applications/** — User-facing apps (jellyfin, minecraft, ollama) deployed via kustomize with inline Helm charts.
 - **test-workloads/** — Networking test scenarios (multus-macvlan, multus-ovnk variants). Each has its own kustomization and README.
 - **groups/** — Component grouping; references the `argocd-app-of-app` Helm chart.
 - **.helm/charts/** — Custom Helm charts: `argocd-app-of-app` (app-of-apps templating) and `ocp-base-config` (cluster base config).

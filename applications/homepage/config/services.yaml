@@ -175,9 +175,6 @@
         icon: forgejo.png
         href: https://forgejo.apps.ocp.igou.systems
         description: git
-    # gitea, n8n: manifests staged in applications/ but not wired
-    # into clusters/ocp/values.yaml — no ArgoCD app, empty namespaces, routes
-    # 503. Re-add tiles (or annotate their Ingress) when actually onboarded.
     - Hermes Assistant:
         icon: mdi-robot
         href: https://hermes-dashboard.apps.ocp.igou.systems
