@@ -1,5 +1,5 @@
 ---
-# Production Hermes on the kubernetes terminal backend (fork build 4d92e555,
+# Production Hermes on the kubernetes terminal backend (fork build fac75f96,
 # david-igou/hermes-agent feat/kubernetes-terminal-backend). Replaced the
 # hermes VM (applications/hermes-agent, retired 2026-08-24) at the
 # 2026-08-14 cutover.
@@ -23,11 +23,11 @@ metadata:
     argocd.argoproj.io/sync-wave: '10'
 spec:
   image:
-    # Built from the fully rebased fork at 4d92e555 and hosted on the
+    # Built from the fully rebased fork at fac75f96 and hosted on the
     # cluster's Quay.
     repository: quay.apps.ocp.igou.systems/igou-io/hermes-agent
-    tag: k8s-prod-4d92e555
-    digest: sha256:61823c3d363c505befa3f3f042d92f359af91ece6a3e243d5506c9a275123910
+    tag: k8s-prod-fac75f96
+    digest: sha256:6da5b31d871fb8d00a3c72098572ffa660599ac7270900298b2630e677670dc5
     pullPolicy: IfNotPresent
   security:
     # We own the SA: the kubernetes backend needs pod create/get/list/delete
@@ -139,7 +139,7 @@ spec:
   # hermes-dashboard.service used; scrypt BasicAuth comes from hermes-env.
   sidecars:
     - name: dashboard
-      image: quay.apps.ocp.igou.systems/igou-io/hermes-agent@sha256:61823c3d363c505befa3f3f042d92f359af91ece6a3e243d5506c9a275123910
+      image: quay.apps.ocp.igou.systems/igou-io/hermes-agent@sha256:6da5b31d871fb8d00a3c72098572ffa660599ac7270900298b2630e677670dc5
       imagePullPolicy: IfNotPresent
       args:
         - dashboard
@@ -203,7 +203,7 @@ spec:
     # it copies Hermes-store tokens into the shared CLI file whenever the
     # store's last_refresh is strictly newer. Latest-wins in both directions.
     - name: codex-auth-sync
-      image: quay.apps.ocp.igou.systems/igou-io/hermes-agent@sha256:61823c3d363c505befa3f3f042d92f359af91ece6a3e243d5506c9a275123910
+      image: quay.apps.ocp.igou.systems/igou-io/hermes-agent@sha256:6da5b31d871fb8d00a3c72098572ffa660599ac7270900298b2630e677670dc5
       command:
         - python3
         - -u
