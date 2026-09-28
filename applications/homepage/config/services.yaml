@@ -2,7 +2,7 @@
 # Static tiles for apps exposed via raw Routes (no annotation-based discovery
 # for the openshift Route kind). Apps exposed via Ingress or HTTPRoute are
 # auto-discovered from gethomepage.dev/* annotations instead — do not
-# duplicate them here (currently: gitea-mirror, jellyfin, MeTube, and T3 Code).
+# duplicate them here (currently: jellyfin, MeTube, and T3 Code).
 #
 # Alerts + Servers widgets query thanos-querier (bearer token from the
 # homepage SA via HOMEPAGE_VAR_THANOS_TOKEN) and the open rk8s Prometheus
@@ -175,9 +175,6 @@
         icon: forgejo.png
         href: https://forgejo.apps.ocp.igou.systems
         description: git
-    # gitea, n8n, temporalio: manifests staged in applications/ but not wired
-    # into clusters/ocp/values.yaml — no ArgoCD app, empty namespaces, routes
-    # 503. Re-add tiles (or annotate their Ingress) when actually onboarded.
     - Hermes Assistant:
         icon: mdi-robot
         href: https://hermes-dashboard.apps.ocp.igou.systems
