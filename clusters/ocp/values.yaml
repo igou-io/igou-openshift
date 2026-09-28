@@ -713,14 +713,6 @@ applications:
         jsonPointers:
           - /spec/bootstrap
           - /spec/externalClusters
-  gitea-mirror:
-    project: cluster-apps
-    annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
-      argocd.argoproj.io/sync-wave: '23'
-    source:
-      path: applications/gitea-mirror
-
   quay-operator:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous

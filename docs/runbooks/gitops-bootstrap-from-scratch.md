@@ -196,7 +196,7 @@ out of `clusters/ocp/values.yaml` (or `oc -n openshift-gitops get applications`)
 19  firecrawl
 20  cloudnative-pg, hermes-agent, jellyfin, llmkube, searxng, gotify,
     pac-tenants, remote-tenants
-22  forgejo, quay-operator, rhdh          23  gitea-mirror
+22  forgejo, quay-operator, rhdh
 25  alertmanager-config   30  ansible-automation-platform   39  molecule
 40  service-accounts      50  openshift-virt
 ```

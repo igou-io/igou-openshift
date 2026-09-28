@@ -2,8 +2,6 @@
 
 **Applies to:** all CNPG `Cluster` databases on this cluster — `forgejo-pg` (forgejo),
 `quay-pg` (quay-enterprise), `rhdh-pg` (rhdh), `keycloak-pg` (keycloak).
-`applications/temporalio/` is dormant — not referenced by `clusters/ocp/values.yaml`,
-deploys no database.
 **Method:** the first-party **Barman Cloud Plugin** (`barman-cloud.cloudnative-pg.io`)
 to an S3-compatible object store, with **scheduled (non-PITR)** backups + continuous
 WAL archiving. This is the CNPG-maintained replacement for the deprecated in-tree

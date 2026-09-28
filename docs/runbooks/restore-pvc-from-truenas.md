@@ -61,7 +61,6 @@ the patch:
 | Cluster | Namespace | PVC |
 |---|---|---|
 | ocp | forgejo | forgejo-shared-storage |
-| ocp | gitea-mirror | gitea-mirror-config |
 | ocp | comfyui | comfyui-data |
 | ocp | sands-of-time | sands-of-time-data |
 | ocp | jellyfin | jellyfin-config |

@@ -1,7 +1,7 @@
 # homepage
 
 Lab landing page at <https://home.apps.ocp.igou.systems> — [gethomepage.dev](https://gethomepage.dev)
-deployed via the bjw-s `app-template` chart (same pattern as ntfy/gitea-mirror).
+deployed via the bjw-s `app-template` chart (same pattern as ntfy).
 
 ## How tiles get on the page
 
@@ -19,7 +19,7 @@ Two paths:
    gethomepage.dev/icon: myapp.png
    ```
 
-   Current annotated examples: ntfy + gitea-mirror (Ingress), jellyfin
+   Current annotated examples: ntfy (Ingress), jellyfin
    (HTTPRoute). New apps should prefer Ingress (`className:
    openshift-default`) over a raw Route — OpenShift generates the Route from
    the Ingress and homepage can discover it.

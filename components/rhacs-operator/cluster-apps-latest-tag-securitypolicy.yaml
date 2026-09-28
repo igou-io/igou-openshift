@@ -30,7 +30,6 @@ spec:
     - namespace: comfyui
     - namespace: firecrawl
     - namespace: forgejo
-    - namespace: gitea-mirror
     - namespace: gotify
     - namespace: hermes
     - namespace: jellyfin
