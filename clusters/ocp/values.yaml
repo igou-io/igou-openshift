@@ -688,6 +688,7 @@ applications:
       path: applications/openshell
 
   omnigent:
+    autoSyncPrune: true
     project: cluster-apps
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
