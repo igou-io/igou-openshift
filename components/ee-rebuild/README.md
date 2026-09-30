@@ -6,6 +6,13 @@ ansible-builder, and builds and pushes
 `quay.apps.ocp.igou.systems/igou-io/igou-aap-ee-rhel9:latest`.
 The final RHACS check is advisory.
 
+Tekton does not provide a recurring-run resource in the installed OpenShift
+Pipelines 1.23.2 APIs. Upstream [TEP-0128: Scheduled Runs](https://github.com/tektoncd/community/blob/main/teps/0128-scheduled-runs.md)
+describes CronJobs creating PipelineRuns or calling EventListeners as the
+existing scheduling patterns; its `ScheduledTemplate` is a proposal.
+For this single weekly build, the CronJob creates the PipelineRun directly.
+`TektonScheduler` configures Kueue resource scheduling, not calendar schedules.
+
 The CronJob waits for the PipelineRun to finish. Build failures fail the Job,
 and `concurrencyPolicy: Forbid` covers the whole build. There is no automatic
 Job retry that would submit a duplicate PipelineRun.
