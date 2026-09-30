@@ -1,0 +1,144 @@
+---
+# yaml-language-server: $schema=https://www.schemastore.org/api/json/catalog.json
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: buildah-galaxy
+spec:
+  description: >-
+    Builds a Containerfile with buildah and pushes the result, injecting the
+    Red Hat Automation Hub offline token without ever putting its value on a
+    command line.
+
+    This is the upstream buildah task (catalog 0.9) minus VERBOSE/set -x, plus
+    Automation Hub auth. The token is read from a Secret into this step's
+    environment and handed to buildah by *name only* (`--build-arg NAME`, no
+    `=value`), which makes buildah resolve the value from its own environment.
+    Nothing secret therefore appears in the PipelineRun object, in the
+    TaskRun log, or in a process argument list. Passing the tokens as
+    `--build-arg NAME=value` instead leaks them to anyone who can `oc logs`
+    the namespace -- the reason this task exists (igou-inventory#748).
+  params:
+    - name: IMAGE
+      description: Reference of the image buildah will produce.
+      type: string
+    - name: BUILDER_IMAGE
+      description: The location of the buildah builder image.
+      type: string
+      default: "quay.io/buildah/stable:v1.43.2"
+    - name: STORAGE_DRIVER
+      description: Buildah storage driver. vfs needs no extra privileges under pipelines-scc.
+      type: string
+      default: "vfs"
+    - name: DOCKERFILE
+      description: Path to the Containerfile to build.
+      type: string
+      default: "./Containerfile"
+    - name: CONTEXT
+      description: Path to the directory to use as build context.
+      type: string
+      default: "."
+    - name: TLSVERIFY
+      description: Verify the TLS on the registry endpoint.
+      type: string
+      default: "true"
+    - name: FORMAT
+      description: The format of the built container, oci or docker.
+      type: string
+      default: "oci"
+    - name: BUILD_ARGS
+      description: >-
+        Non-secret build arguments, as an array of key=value. Secret values do
+        not belong here -- they are visible in the PipelineRun and in this
+        task's log.
+      type: array
+      default: []
+    - name: GALAXY_TOKEN_SECRET
+      description: Secret holding the Red Hat Automation Hub offline token.
+      type: string
+      default: "rh-automationhub-credentials"
+    - name: GALAXY_TOKEN_KEY
+      description: Key within GALAXY_TOKEN_SECRET holding the offline token.
+      type: string
+      default: "token"
+  workspaces:
+    - name: source
+      description: Workspace holding the build context.
+  results:
+    - name: IMAGE_DIGEST
+      description: Digest of the image just built.
+    - name: IMAGE_URL
+      description: Image repository where the built image was pushed.
+  steps:
+    - name: build-and-push
+      image: $(params.BUILDER_IMAGE)
+      workingDir: $(workspaces.source.path)
+      env:
+        # Both Automation Hub servers authenticate with the same offline
+        # token, mirroring the Repository params in igou-openshift
+        # (clusters/ocp/pac-tenants/values.yaml, tenant igou-ansible).
+        - name: ANSIBLE_GALAXY_SERVER_RH_CERTIFIED_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.GALAXY_TOKEN_SECRET)
+              key: $(params.GALAXY_TOKEN_KEY)
+        - name: ANSIBLE_GALAXY_SERVER_VALIDATED_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: $(params.GALAXY_TOKEN_SECRET)
+              key: $(params.GALAXY_TOKEN_KEY)
+        - name: PARAM_IMAGE
+          value: $(params.IMAGE)
+        - name: PARAM_STORAGE_DRIVER
+          value: $(params.STORAGE_DRIVER)
+        - name: PARAM_DOCKERFILE
+          value: $(params.DOCKERFILE)
+        - name: PARAM_CONTEXT
+          value: $(params.CONTEXT)
+        - name: PARAM_TLSVERIFY
+          value: $(params.TLSVERIFY)
+        - name: PARAM_FORMAT
+          value: $(params.FORMAT)
+      args:
+        - $(params.BUILD_ARGS[*])
+      script: |
+        #!/usr/bin/env bash
+        # No `set -x` here, deliberately: a trace of this script would print
+        # the token if it were ever passed by value.
+        set -euo pipefail
+
+        build_args=()
+        for arg in "$@"; do
+          [ -n "${arg}" ] && build_args+=("--build-arg=${arg}")
+        done
+
+        # By name only -- buildah reads each value from this step's env.
+        for name in ANSIBLE_GALAXY_SERVER_RH_CERTIFIED_TOKEN ANSIBLE_GALAXY_SERVER_VALIDATED_TOKEN; do
+          build_args+=("--build-arg" "${name}")
+        done
+
+        buildah "--storage-driver=${PARAM_STORAGE_DRIVER}" bud \
+          "${build_args[@]}" \
+          "--format=${PARAM_FORMAT}" \
+          "--tls-verify=${PARAM_TLSVERIFY}" \
+          -f "${PARAM_DOCKERFILE}" -t "${PARAM_IMAGE}" "${PARAM_CONTEXT}"
+
+        buildah "--storage-driver=${PARAM_STORAGE_DRIVER}" push \
+          "--tls-verify=${PARAM_TLSVERIFY}" \
+          --digestfile /tmp/image-digest \
+          "${PARAM_IMAGE}" "docker://${PARAM_IMAGE}"
+
+        tee "$(results.IMAGE_DIGEST.path)" < /tmp/image-digest
+        printf '%s' "${PARAM_IMAGE}" | tee "$(results.IMAGE_URL.path)"
+      securityContext:
+        # Same request the cluster buildah task makes: pipelines-scc is
+        # anyuid + SETFCAP, so this is granted and privileged: true is not.
+        capabilities:
+          add:
+            - SETFCAP
+      volumeMounts:
+        - name: varlibcontainers
+          mountPath: /var/lib/containers
+  volumes:
+    - name: varlibcontainers
+      emptyDir: {}

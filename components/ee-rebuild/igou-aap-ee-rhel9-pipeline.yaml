@@ -11,12 +11,11 @@
 # params (including secret_ref params) into the run at trigger time.
 #
 # Neither is available to a PipelineRun created by a CronJob, so this
-# copy: (a) references the in-cluster `ansible-builder` Task shipped
-# alongside it, (b) carries the non-secret galaxy server settings as
-# literal Pipeline params, and (c) reads the Automation Hub token
-# straight from the `rh-automationhub-credentials` Secret in a prep task
-# that emits the two ANSIBLE_GALAXY_SERVER_*_TOKEN BUILD_ARGS entries as
-# task results. Keep this file in sync with the PaC definition.
+# copy references the in-cluster ansible-builder and buildah-galaxy Tasks
+# and carries only non-secret galaxy settings as Pipeline params.
+# buildah-galaxy reads the Hub token via secretKeyRef and passes build args
+# by name, keeping credentials out of results, params, and traced commands.
+# Keep the Tasks in sync with igou-ansible's .tekton/tasks/ copies.
 apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
@@ -106,59 +105,12 @@ spec:
         - name: source
           workspace: shared-workspace
 
-    # Turns the Automation Hub offline token into the two BUILD_ARGS
-    # entries buildah needs, without the value ever passing through a
-    # Pipeline param, the CronJob manifest, or a log line. Both galaxy
-    # servers authenticate with the same token, hence one secret and two
-    # results. The results do land in this TaskRun's status, which is
-    # namespace-scoped to ci-igou-ansible -- the same blast radius as the
-    # Secret itself.
-    - name: galaxy-auth
-      taskSpec:
-        results:
-          - name: rh-certified-token-arg
-            description: ANSIBLE_GALAXY_SERVER_RH_CERTIFIED_TOKEN=<token> BUILD_ARGS entry.
-          - name: validated-token-arg
-            description: ANSIBLE_GALAXY_SERVER_VALIDATED_TOKEN=<token> BUILD_ARGS entry.
-        steps:
-          - name: emit-build-args
-            # renovate: datasource=docker depName=registry.redhat.io/openshift4/ose-cli
-            image: registry.redhat.io/openshift4/ose-cli:latest@sha256:69762925e16053d77685ff3a08b3b45dd2bfa5d68277851bc6969b368bbd0cb9
-            # The cluster TektonConfig injects runAsNonRoot=true into every
-            # taskrun pod template; this image has no USER, so pin one.
-            securityContext:
-              runAsNonRoot: true
-              runAsUser: 1000
-            env:
-              - name: AH_TOKEN
-                valueFrom:
-                  secretKeyRef:
-                    name: rh-automationhub-credentials
-                    key: token
-            script: |
-              #!/bin/sh
-              set -eu
-              # printf, not echo: no trailing newline in the result value,
-              # and the token is never written to stdout.
-              printf 'ANSIBLE_GALAXY_SERVER_RH_CERTIFIED_TOKEN=%s' "${AH_TOKEN}" \
-                > "$(results.rh-certified-token-arg.path)"
-              printf 'ANSIBLE_GALAXY_SERVER_VALIDATED_TOKEN=%s' "${AH_TOKEN}" \
-                > "$(results.validated-token-arg.path)"
-              echo "emitted 2 galaxy token build args (values not logged)"
-
     - name: build-image
       runAfter:
         - ansible-builder
-        - galaxy-auth
       taskRef:
-        resolver: cluster
-        params:
-          - name: kind
-            value: task
-          - name: name
-            value: buildah
-          - name: namespace
-            value: openshift-pipelines
+        name: buildah-galaxy
+        kind: Task
       params:
         - name: IMAGE
           value: "$(params.IMAGE)"
@@ -166,17 +118,13 @@ spec:
           value: "Containerfile"
         - name: CONTEXT
           value: "execution-environments/igou-aap-ee-rhel9/context"
-        - name: VERBOSE
-          value: "true"
         - name: BUILD_ARGS
           value:
             - "ANSIBLE_GALAXY_SERVER_LIST=$(params.ANSIBLE_GALAXY_SERVER_LIST)"
             - "ANSIBLE_GALAXY_SERVER_RH_CERTIFIED_URL=$(params.ANSIBLE_GALAXY_SERVER_RH_CERTIFIED_URL)"
             - "ANSIBLE_GALAXY_SERVER_RH_CERTIFIED_AUTH_URL=$(params.ANSIBLE_GALAXY_SERVER_RH_CERTIFIED_AUTH_URL)"
-            - "$(tasks.galaxy-auth.results.rh-certified-token-arg)"
             - "ANSIBLE_GALAXY_SERVER_VALIDATED_URL=$(params.ANSIBLE_GALAXY_SERVER_VALIDATED_URL)"
             - "ANSIBLE_GALAXY_SERVER_VALIDATED_AUTH_URL=$(params.ANSIBLE_GALAXY_SERVER_VALIDATED_AUTH_URL)"
-            - "$(tasks.galaxy-auth.results.validated-token-arg)"
             - "ANSIBLE_GALAXY_SERVER_COMMUNITY_URL=$(params.ANSIBLE_GALAXY_SERVER_COMMUNITY_URL)"
       workspaces:
         - name: source
