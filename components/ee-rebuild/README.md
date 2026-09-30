@@ -32,6 +32,12 @@ reads `rh-automationhub-credentials/token` through `secretKeyRef` and passes
 the token build arguments by name. Never put credentials in TaskRun results,
 PipelineRun parameters, or verbose build arguments.
 
+The ArgoCD Application uses server-side diff with mutation webhooks so Tekton's
+admission defaults are included in comparisons. Avoid `ignoreDifferences` paths
+inside task or parameter arrays with `RespectIgnoreDifferences=true`: ArgoCD
+can preserve the entire old array during sync, preventing new task definitions
+from deploying.
+
 ## Trigger and verify
 
 Verify the target cluster and identity before any cluster command:
