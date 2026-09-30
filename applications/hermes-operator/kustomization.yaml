@@ -17,6 +17,17 @@ helmCharts:
     releaseName: hermes-operator
     namespace: hermes-operator
     includeCRDs: true
+    valuesInline:
+      # Chart defaults (limits 256Mi/500m) leave the manager OOM-adjacent under
+      # API watch churn: observed major-page-fault thrash at ~1.5 GB/s on the
+      # node's nvme0n1 (incident 2026-09-29, NodeMemoryMajorPagesFaults).
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: "1"
+          memory: 1Gi
 
 resources:
   - hermes-operator-namespace.yaml
