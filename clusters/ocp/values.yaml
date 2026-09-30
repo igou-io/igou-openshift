@@ -352,34 +352,15 @@ applications:
   # first; this app never creates it.
   ee-rebuild:
     annotations:
-      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      # Include Tekton admission defaults in the predicted live state.
+      # RespectIgnoreDifferences with array paths preserves whole old task
+      # lists during sync and prevents Pipeline/Task updates from deploying.
+      argocd.argoproj.io/compare-options: IgnoreExtraneous,ServerSideDiff=true,IncludeMutationWebhook=true
       argocd.argoproj.io/sync-wave: '21'
     destination:
       namespace: ci-igou-ansible
     source:
       path: components/ee-rebuild
-
-    # Tekton's admission webhook defaults fields the manifests omit
-    # (params[].type, taskRef metadata/spec stubs, steps[].computeResources),
-    # which reads as permanent OutOfSync under auto-sync. Ignore exactly those.
-    ignoreDifferences:
-      - group: tekton.dev
-        kind: Pipeline
-        jqPathExpressions:
-          - '.spec.params[]?.type'
-          - '.spec.tasks[]?.params[]?.type'
-          - '.spec.tasks[]?.taskRef.metadata'
-          - '.spec.tasks[]?.taskRef.spec'
-          - '.spec.tasks[]?.taskSpec.metadata'
-          - '.spec.tasks[]?.taskSpec.spec'
-          - '.spec.tasks[]?.taskSpec.params[]?.type'
-          - '.spec.tasks[]?.taskSpec.results[]?.type'
-          - '.spec.tasks[]?.taskSpec.steps[]?.computeResources'
-      - group: tekton.dev
-        kind: Task
-        jqPathExpressions:
-          - '.spec.steps[]?.computeResources'
-          - '.spec.params[]?.type'
 
   intel-device-plugins-operator:
     annotations:
