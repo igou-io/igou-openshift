@@ -54,6 +54,8 @@ defaults:
 # Schema:
 #   - name: <slug used for namespace name>             # required, matches ^[a-z0-9-]+$
 #     url:  <full https Forgejo URL of the repo>       # required
+#     namespaceAnnotations:                            # optional namespace annotations, e.g. Tekton pruning
+#       operator.tekton.dev/prune.keep: "3"
 #     gitProvider:                                     # required — backing remote secret for the Forgejo
 #       remoteRef:                                       webhook config. Remote secret must contain fields
 #         key: <remote-secret-key>                       `provider.token` (Forgejo PAT) and `webhook.secret`

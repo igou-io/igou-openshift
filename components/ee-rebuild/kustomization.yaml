@@ -10,6 +10,7 @@ namespace: ci-igou-ansible
 
 resources:
   - ansible-builder-task.yaml
+  - buildah-galaxy-task.yaml
   - igou-aap-ee-rhel9-pipeline.yaml
   - ee-rebuild-serviceaccount.yaml
   - ee-rebuild-role.yaml

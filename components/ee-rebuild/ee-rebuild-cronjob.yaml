@@ -1,12 +1,8 @@
 ---
 # Weekly rebuild of the igou-aap-ee-rhel9 execution environment.
 #
-# The image is otherwise frozen: its only build trigger is the
-# Pipelines-as-Code PipelineRun in igou-ansible's .tekton/, gated on a
-# Forgejo push touching two EE paths, and it has never fired (zero
-# PipelineRuns have ever existed in this namespace). A weekly rebuild
-# picks up base-image CVE fixes and, once the collections are pinned,
-# proves the pinned set still resolves.
+# Rebuild from igou-ansible/main to pick up base-image fixes even when
+# no EE artifact changes trigger the separate PaC push pipeline.
 #
 # CronJob -> PipelineRun rather than a Tekton trigger: no webhook, no
 # Forgejo dependency, and nothing to interpolate at trigger time.
@@ -25,7 +21,9 @@ spec:
   failedJobsHistoryLimit: 5
   jobTemplate:
     spec:
-      backoffLimit: 1
+      # Do not submit a second build automatically after a build failure.
+      backoffLimit: 0
+      activeDeadlineSeconds: 8100
       template:
         metadata:
           labels:
@@ -46,6 +44,10 @@ spec:
               env:
                 - name: HOME
                   value: /tmp
+                - name: BUILD_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
               volumeMounts:
                 - name: tmp
                   mountPath: /tmp
@@ -56,13 +58,16 @@ spec:
                 limits:
                   cpu: 200m
                   memory: 256Mi
-              command: ["/bin/bash", "-euo", "pipefail", "-c"]
+              command:
+                - /bin/bash
+                - -euo
+                - pipefail
+                - -c
               args:
-                # This pod only submits the run; it does not wait for it.
-                # Build failures surface as a failed PipelineRun, not a
-                # failed Job.
+                # Wait for the run so Job status, CronJob last-success time,
+                # and concurrencyPolicy reflect the actual build outcome.
                 - |
-                  oc create -f - <<'EOF'
+                  run=$(oc create -n "${BUILD_NAMESPACE}" -o name -f - <<'EOF'
                   apiVersion: tekton.dev/v1
                   kind: PipelineRun
                   metadata:
@@ -119,6 +124,25 @@ spec:
                               requests:
                                 storage: 1Gi
                   EOF
+                  )
+                  echo "Waiting for ${run}"
+                  for ((attempt = 0; attempt < 520; attempt++)); do
+                    status=$(oc get -n "${BUILD_NAMESPACE}" "${run}" \
+                      -o jsonpath='{.status.conditions[?(@.type=="Succeeded")].status}')
+                    case "${status}" in
+                      True)
+                        echo "${run} succeeded; image pushed to internal Quay"
+                        exit 0
+                        ;;
+                      False)
+                        echo "${run} failed; inspect its TaskRun logs" >&2
+                        exit 1
+                        ;;
+                    esac
+                    sleep 15
+                  done
+                  echo "Timed out waiting for ${run}" >&2
+                  exit 1
           volumes:
             - name: tmp
               emptyDir: {}
