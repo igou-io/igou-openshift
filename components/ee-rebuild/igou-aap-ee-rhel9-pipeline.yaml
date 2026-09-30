@@ -133,10 +133,12 @@ spec:
     # Advisory RHACS policy check (igou-openshift#549). Evaluates
     # BUILD+DEPLOY lifecycle policies against the pushed image via
     # Central's route (egress + rhacs-ci-token secret provisioned by the
-    # pac-tenant chart). Non-blocking: the step always exits 0 and
-    # violations land in the run log. Central's route serves the
+    # pac-tenant chart). Non-blocking: onError also covers failures before
+    # the step starts, while policy violations land in the run log.
+    # Central's route serves the
     # RHACS-internal cert, hence --insecure-skip-tls-verify.
     - name: rhacs-image-check
+      onError: continue
       runAfter:
         - build-image
       params:
@@ -148,7 +150,7 @@ spec:
             type: string
         steps:
           - name: roxctl
-            image: registry.redhat.io/advanced-cluster-security/rhacs-roxctl-rhel8:4.11.1
+            image: registry.redhat.io/advanced-cluster-security/rhacs-roxctl-rhel9:4.11.1@sha256:979f329cbe0d0dd1c41e63b471c246294780c5daf029c239ebd7d48129e75a15
             env:
               - name: ROX_API_TOKEN
                 valueFrom:
