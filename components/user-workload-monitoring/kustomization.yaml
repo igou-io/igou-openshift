@@ -15,6 +15,7 @@ resources:
   - exporters/rk8s-federate
   - exporters/snmp-exporter
   - rules/externalsecrets-alerts-prometheusrule.yaml
+  - rules/ee-rebuild-alerts-prometheusrule.yaml
   - rules/cert-manager-alerts-prometheusrule.yaml
   - rules/forgejo/cnpg-alerts-prometheusrule.yaml
   - rules/keycloak/cnpg-alerts-prometheusrule.yaml

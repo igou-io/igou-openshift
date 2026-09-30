@@ -1,0 +1,40 @@
+---
+# Platform kube-state-metrics owns the Job/CronJob series, so evaluate in
+# platform Prometheus instead of UWM's namespace-enforced rule evaluator.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: ee-rebuild-alerts
+  namespace: openshift-monitoring
+spec:
+  groups:
+    - name: ee-rebuild.rules
+      rules:
+        - alert: RHEL9EEBuildFailed
+          expr: |
+            (kube_job_status_failed{namespace="ci-igou-ansible",job_name=~"ee-rebuild-.*"} > 0)
+            and on (namespace, job_name)
+            topk by (namespace) (1, kube_job_status_start_time{namespace="ci-igou-ansible",job_name=~"ee-rebuild-.*"})
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: The latest RHEL 9 EE rebuild failed
+            description: |
+              Job {{ $labels.namespace }}/{{ $labels.job_name }} failed.
+              Inspect its logs and the referenced PipelineRun. The Job waits
+              for the image build and push to internal Quay to complete.
+        - alert: RHEL9EEBuildStale
+          expr: |
+            (time() - kube_cronjob_status_last_successful_time{namespace="ci-igou-ansible",cronjob="ee-rebuild"}) > 691200
+            or
+            absent(kube_cronjob_status_last_successful_time{namespace="ci-igou-ansible",cronjob="ee-rebuild"})
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: The weekly RHEL 9 EE rebuild is overdue
+            description: |
+              ee-rebuild has no successful scheduled build in eight days.
+              Check the CronJob, PipelineRuns, workspace PVC quota, and
+              rh-automationhub-credentials ExternalSecret in ci-igou-ansible.

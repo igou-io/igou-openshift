@@ -14,6 +14,11 @@ secretStore:
 tenants:
   - name: igou-ansible
     url: https://forgejo.apps.ocp.igou.systems/igou-io/igou-ansible
+    # Each retained PipelineRun owns a workspace PVC. Keep fewer runs than
+    # the five-PVC quota, including weekly runs that bypass PaC cleanup.
+    namespaceAnnotations:
+      operator.tekton.dev/prune.keep: "3"
+      operator.tekton.dev/prune.resources: pipelinerun
     gitProvider:
       remoteRef:
         key: ci-forgejo-igou-ansible
@@ -72,19 +77,11 @@ tenants:
         value: "https://console.redhat.com/api/automation-hub/content/published/"
       - name: ansible_galaxy_server_rh_certified_auth_url
         value: "https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token"
-      - name: ansible_galaxy_server_rh_certified_token
-        secret_ref:
-          name: rh-automationhub-credentials
-          key: token
       # RH-validated content.
       - name: ansible_galaxy_server_validated_url
         value: "https://console.redhat.com/api/automation-hub/content/validated/"
       - name: ansible_galaxy_server_validated_auth_url
         value: "https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token"
-      - name: ansible_galaxy_server_validated_token
-        secret_ref:
-          name: rh-automationhub-credentials
-          key: token
       # Public community Galaxy — no auth.
       - name: ansible_galaxy_server_community_url
         value: "https://galaxy.ansible.com/api/"
