@@ -10,6 +10,23 @@ spec:
     - Ingress
     - Egress
   ingress:
+    # virtctl API tunnels dial the launcher pod through virtualization relays.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-cnv
+          podSelector:
+            matchExpressions:
+              - key: kubevirt.io
+                operator: In
+                values:
+                  - virt-api
+                  - virt-handler
+      ports:
+        - port: 22
+          protocol: TCP
+        - port: 443
+          protocol: TCP
     - from:
         - podSelector: {}
       ports:

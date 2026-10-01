@@ -67,10 +67,19 @@ Load its matching private key into the SSH agent:
 
 ```bash
 ssh-use ansible
-virtctl ssh -n redhat-lab igou@idm
-virtctl ssh -n redhat-lab igou@satellite
-virtctl ssh -n redhat-lab igou@client1
-virtctl ssh -n redhat-lab igou@client2
+virtctl ssh -n redhat-lab igou@vm/idm
+virtctl ssh -n redhat-lab igou@vm/satellite
+virtctl ssh -n redhat-lab igou@vm/client1
+virtctl ssh -n redhat-lab igou@vm/client2
+```
+
+Fresh clones get new SSH host keys. With virtctl's local OpenSSH client,
+remove the old lab records after a reset before reconnecting:
+
+```bash
+for vm in idm satellite client1 client2; do
+  ssh-keygen -R "vm.$vm.redhat-lab"
+done
 ```
 
 Inside each guest, verify preparation before starting an installation:
@@ -115,6 +124,8 @@ DHCP/PXE broadcasts on `lab` stay inside this logical network. Guest-to-guest
 traffic is unrestricted there. The Kubernetes NetworkPolicy covers the pod
 network, allowing DNS and public internet egress while excluding private LAN
 and cluster ranges. SSH and HTTPS access use the KubeVirt API tunnel.
+The policy permits ports 22 and 443 from `virt-api` and `virt-handler`
+pods in `openshift-cnv`, which relay those tunnels to the launcher pod.
 Do not enable guest routing between the two interfaces.
 
 A small CoreDNS pod on the control-plane node supplies initial A/PTR records
