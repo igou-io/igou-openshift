@@ -150,9 +150,9 @@ aliases contain the VM UID, so recreated guests get new identities while
 checking remains enabled for an existing guest.
 
 The stable `redhat-lab-ssh` account in `service-accounts` is bound only to
-VM/VMI reads and port forwarding inside this namespace. Its token and CA are
-published to `op://lab_serviceaccounts/ocp-redhat-lab-ssh/`; AAP resolves them
-privately into a temporary kubeconfig. Namespace teardown revokes its lab
+VM/VMI reads and port forwarding inside this namespace. The publisher renders
+a CA-verified kubeconfig in `op://lab_serviceaccounts/ocp-redhat-lab-ssh/`;
+AAP reads it privately and injects a temporary file. Namespace teardown revokes its lab
 permissions until the RoleBinding is recreated.
 
 ## Networking and DNS
