@@ -40,7 +40,7 @@ spec:
             - ReadWriteOnce
           resources:
             requests:
-              storage: 400Gi
+              storage: 100Gi
   template:
     metadata:
       labels:

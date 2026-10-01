@@ -7,13 +7,15 @@ prepares networking, SSH access, swap, and Satellite's content disk.
 | Guest | FQDN | Private address | vCPU | RAM | Disks |
 |---|---|---|---|---|---|
 | idm | idm.lab.igou.systems | 192.168.240.10 | 2 | 6 GiB | 40 GiB |
-| satellite | satellite.lab.igou.systems | 192.168.240.20 | 8 | 32 GiB | 80 GiB root + 400 GiB Pulp |
+| satellite | satellite.lab.igou.systems | 192.168.240.20 | 8 | 32 GiB | 80 GiB root + 100 GiB Pulp |
 | client1 | client1.lab.igou.systems | 192.168.240.31 | 2 | 4 GiB | 30 GiB |
 | client2 | client2.lab.igou.systems | 192.168.240.32 | 2 | 4 GiB | 30 GiB |
 
 IdM and Satellite each get 4 GiB swap. Total guest RAM is 46 GiB; allow
 additional VM overhead. All disks use TrueNAS
 `freenas-nvmeof-ssd-csi`, not Casval's ephemeral local disks.
+Nominal guest disk capacity is 280 GiB: 40 + 80 + 100 + 30 + 30.
+CDI adds filesystem-volume overhead to the server root PVC requests.
 The 40/80 GiB server roots use filesystem volumes with CDI copies: raw-block
 snapshot clones requiring expansion hit this driver's NodeExpand mount-path
 error. The 30 GiB client roots still use block snapshot clones, and the blank
@@ -176,8 +178,14 @@ kustomize build test-workloads/redhat-lab
 
 Satellite 6.19 requires a fresh dedicated latest RHEL 9 x86_64 system,
 at least 4 CPU cores, 20 GiB RAM and 4 GiB swap. Its content storage depends
-on repositories and retention; 400 GiB is a starting allocation, not a bound
-on how much content you can synchronize.
+on repositories and retention. The 100 GiB Pulp disk is intended for a
+disposable lab using On Demand RPM repositories. An illustrative budget is
+40 GiB downloaded packages + 10 GiB retained older packages + 10 GiB metadata
+and temporary space = 60 GiB. Keeping 25% free requires 60 / 0.75 = 80 GiB;
+100 GiB leaves extra room. These are planning assumptions, not measured
+repository sizes. Full repository downloads require sizing from actual content
+totals. Red Hat's 300 GB runtime example includes RHEL 7, 8, and 9 repositories
+and is not an empty-install content requirement.
 
 - [Satellite installation requirements](https://docs.redhat.com/en/documentation/red_hat_satellite/6.19/html/installing_satellite_server_in_a_connected_network_environment/planning-satellite-server-installation_satellite)
 - [Installing Identity Management on RHEL 9](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/installing_identity_management/index)
