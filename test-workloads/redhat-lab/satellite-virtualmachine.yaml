@@ -6,6 +6,7 @@ metadata:
   namespace: redhat-lab
   labels:
     app.kubernetes.io/part-of: redhat-lab
+    lab.igou.systems/role: satellite
 spec:
   runStrategy: Always
   preference:
@@ -45,6 +46,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/part-of: redhat-lab
+        lab.igou.systems/role: satellite
     spec:
       nodeSelector:
         kubernetes.io/hostname: casval.igou.systems

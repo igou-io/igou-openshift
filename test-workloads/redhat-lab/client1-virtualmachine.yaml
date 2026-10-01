@@ -6,6 +6,7 @@ metadata:
   namespace: redhat-lab
   labels:
     app.kubernetes.io/part-of: redhat-lab
+    lab.igou.systems/role: client
 spec:
   runStrategy: Always
   preference:
@@ -31,6 +32,7 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/part-of: redhat-lab
+        lab.igou.systems/role: client
     spec:
       nodeSelector:
         kubernetes.io/hostname: casval.igou.systems

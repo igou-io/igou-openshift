@@ -458,6 +458,29 @@ serviceAccounts:
                 remoteKey: ocp-virtualmachine-ops
                 property: token
 
+  # Stable API identity for disposable RHEL guests. Its only workload access
+  # comes from the RoleBinding managed with the redhat-lab namespace.
+  - name: redhat-lab-ssh
+    pushSecrets:
+      - name: redhat-lab-ssh-token
+        refreshInterval: "0"
+        secretStoreRefs:
+          - name: onepassword-lab-serviceaccounts
+            kind: ClusterSecretStore
+        data:
+          - conversionStrategy: None
+            match:
+              secretKey: token
+              remoteRef:
+                remoteKey: ocp-redhat-lab-ssh
+                property: token
+          - conversionStrategy: None
+            match:
+              secretKey: ca.crt
+              remoteRef:
+                remoteKey: ocp-redhat-lab-ssh
+                property: ca_certificate
+
   - name: ns-agent
     pushSecrets:
       - name: ns-agent-token

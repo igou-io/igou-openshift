@@ -38,9 +38,7 @@ aap_api() {
     -H 'Content-Type: application/json' "$@" "$aap_root/$aap_path"
 }
 
-scale_node() {
-  local state="$1" response template job status deadline
-  local aap_user aap_password aap_host aap_root aap_path
+aap_connection() {
   aap_host="${AAP_HOST:-${AAP_HOSTNAME:-}}"
   aap_user="${AAP_USER:-${AAP_USERNAME:-}}"
   aap_password="${AAP_PASS:-${AAP_PASSWORD:-}}"
@@ -49,6 +47,57 @@ scale_node() {
   aap_host="${aap_host%/}"
   [[ "$aap_host" == https://* ]] || aap_host="https://$aap_host"
   aap_root="$aap_host/api/controller/v2"
+}
+
+find_inventory_source() {
+  local response
+  aap_path='inventory_sources/?name=igou_kubevirt_ocp'
+  response="$(aap_api)"
+  [[ "$(jq -r '.count' <<< "$response")" == 1 ]] ||
+    die "Expected exactly one igou_kubevirt_ocp inventory source."
+  jq -e '.results[0] |
+    .source == "scm" and
+    .source_path == "dynamic/openshift-virtualization.kubevirt.yml" and
+    .summary_fields.inventory.name == "igou_inventory" and .overwrite == true' \
+    <<< "$response" >/dev/null || die "Unexpected KubeVirt inventory source configuration."
+  jq -er '.results[0].id' <<< "$response"
+}
+
+check_inventory_source() {
+  local aap_user aap_password aap_host aap_root aap_path
+  aap_connection
+  find_inventory_source >/dev/null
+}
+
+sync_inventory() {
+  local response source job status deadline
+  local aap_user aap_password aap_host aap_root aap_path
+  aap_connection
+  source="$(find_inventory_source)"
+  aap_path="inventory_sources/$source/update/"
+  response="$(aap_api --data '{}')"
+  job="$(jq -er '.inventory_update // .id' <<< "$response")"
+  echo "AAP KubeVirt inventory update $job"
+  deadline=$((SECONDS + 600))
+  while ((SECONDS < deadline)); do
+    aap_path="inventory_updates/$job/"
+    response="$(aap_api)"
+    status="$(jq -r '.status' <<< "$response")"
+    case "$status" in
+      successful) echo "KubeVirt inventory refreshed"; return 0 ;;
+      failed|error|canceled)
+        die "Inventory update $job ended with status $status; retry labctl inventory-sync."
+        ;;
+    esac
+    sleep 10
+  done
+  die "Still waiting for inventory update $job; inspect it in AAP before retrying."
+}
+
+scale_node() {
+  local state="$1" response template job status deadline
+  local aap_user aap_password aap_host aap_root aap_path
+  aap_connection
   aap_path='job_templates/?name=casval_scale'
   response="$(aap_api)"
   [[ "$(jq -r '.count' <<< "$response")" == 1 ]] ||
@@ -87,6 +136,7 @@ case "${1:-help}" in
   up)
     check_cluster
     check_namespace
+    check_inventory_source
     oc get datasource rhel9 -n openshift-virtualization-os-images -o json |
       jq -e 'any(.status.conditions[]; .type == "Ready" and .status == "True")' \
       >/dev/null || die "RHEL 9 DataSource is not ready."
@@ -110,17 +160,24 @@ case "${1:-help}" in
     for vm in idm satellite client1 client2; do
       oc wait "vm/$vm" -n "$lab_namespace" --for=condition=Ready --timeout=900s
     done
+    sync_inventory
     echo "VMs are ready. Check cloud-init status inside each guest before installation."
     ;;
   down)
     check_cluster
     check_namespace
+    check_inventory_source
     # Delete guests normally first so their grace period completes before the
     # namespace removes DNS and storage. Never force-delete virt-launcher.
     oc delete vm idm satellite client1 client2 -n "$lab_namespace" \
       --ignore-not-found --wait=true --timeout=300s
     oc delete namespace "$lab_namespace" --ignore-not-found --wait=true --timeout=600s
+    sync_inventory
     echo "Lab removed, including its VM disks. Casval is still available."
+    ;;
+  inventory-sync)
+    check_cluster
+    sync_inventory
     ;;
   node-down)
     check_cluster
@@ -147,9 +204,10 @@ case "${1:-help}" in
     oc get vm,vmi,dv,pvc,pods -n "$lab_namespace"
     ;;
   help|--help|-h)
-    echo "Usage: labctl {up|down|node-down|status|render}"
+    echo "Usage: labctl {up|down|node-down|inventory-sync|status|render}"
     echo "up: create clean RHEL VMs; down: destroy VMs and disks."
     echo "node-down: release this lab's Casval lease after destroying the lab."
+    echo "inventory-sync: refresh dynamic VM discovery before lab automation."
     ;;
   *) die "Unknown action: $1" ;;
 esac

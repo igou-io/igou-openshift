@@ -57,6 +57,9 @@ test-workloads/redhat-lab/labctl node-down
 lease, or another non-DaemonSet pod is running on Casval. The AAP playbook
 also checks lease ownership. To reset, run `down` followed by `up`.
 `up` on an existing lab preserves its current disks.
+Both `up` and `down` require the AAP profile and refresh the existing
+`igou_kubevirt_ocp` inventory source after the namespace change. If a refresh
+fails, inspect its AAP update and run `labctl inventory-sync` to retry.
 
 This directory is intentionally absent from the ArgoCD app-of-apps:
 ArgoCD must not recreate a namespace you just destroyed. Manifests remain
@@ -113,6 +116,44 @@ Use a workstation hosts entry mapping the corresponding FQDN to
 canonical FQDN and port 443; for those workflows, forward local port 443
 with a suitably privileged client, or use an SSH SOCKS tunnel with
 browser-side proxy DNS. Trust the lab CA when exercising TLS.
+
+## Ansible inventory
+
+The existing `igou_kubevirt_ocp` source discovers the `redhat-lab` namespace.
+No lab hosts are statically listed in `igou-inventory/inventory.yaml`.
+
+| Inventory host | Groups while Ready |
+|---|---|
+| idm-redhat-lab | redhat_lab, redhat_lab_idm |
+| satellite-redhat-lab | redhat_lab, redhat_lab_satellite |
+| client1-redhat-lab | redhat_lab, redhat_lab_clients |
+| client2-redhat-lab | redhat_lab, redhat_lab_clients |
+
+A stopped VM remains discoverable but leaves those groups. Deleting the lab
+removes its discovered hosts on the next source refresh. `up` and `down`
+perform that refresh; before an explicitly targeted lab job, run:
+
+```bash
+test-workloads/redhat-lab/labctl inventory-sync
+```
+
+Lab jobs use inventory `igou_inventory`, the `igou-awx-ee` execution environment,
+and both `ansible_user_ed25519` and `redhat-lab-kubeconfig` credentials. Target
+the Ready groups explicitly, using the playbook's normal host-selection
+variable (for example `ansible_limit: redhat_lab` for `system-update.yaml`).
+The lab does not join the groups targeted by nightly fleet updates.
+
+Connection defaults live beside the dynamic source in
+`igou-inventory/dynamic/group_vars/redhat_lab.yml`. SSH uses user `igou`, sudo,
+and `virtctl port-forward --stdio` through the authenticated API. Host-key
+aliases contain the VM UID, so recreated guests get new identities while
+checking remains enabled for an existing guest.
+
+The stable `redhat-lab-ssh` account in `service-accounts` is bound only to
+VM/VMI reads and port forwarding inside this namespace. Its token and CA are
+published to `op://lab_serviceaccounts/ocp-redhat-lab-ssh/`; AAP resolves them
+privately into a temporary kubeconfig. Namespace teardown revokes its lab
+permissions until the RoleBinding is recreated.
 
 ## Networking and DNS
 
