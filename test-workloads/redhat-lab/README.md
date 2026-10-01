@@ -129,7 +129,8 @@ No lab hosts are statically listed in `igou-inventory/inventory.yaml`.
 | client1-redhat-lab | redhat_lab, redhat_lab_clients |
 | client2-redhat-lab | redhat_lab, redhat_lab_clients |
 
-A stopped VM remains discoverable but leaves those groups. Deleting the lab
+A stopped VM remains discoverable but leaves those groups. Membership also
+requires a discovered SSH address. Deleting the lab
 removes its discovered hosts on the next source refresh. `up` and `down`
 perform that refresh; before an explicitly targeted lab job, run:
 
@@ -138,22 +139,31 @@ test-workloads/redhat-lab/labctl inventory-sync
 ```
 
 Lab jobs use inventory `igou_inventory`, the `igou-awx-ee` execution environment,
-and both `ansible_user_ed25519` and `redhat-lab-kubeconfig` credentials. Target
+and the `ansible_user_ed25519` machine credential. Target
 the Ready groups explicitly, using the playbook's normal host-selection
 variable (for example `ansible_limit: redhat_lab` for `system-update.yaml`).
 The lab does not join the groups targeted by nightly fleet updates.
 
 Connection defaults live beside the dynamic source in
 `igou-inventory/dynamic/group_vars/redhat_lab.yml`. SSH uses user `igou`, sudo,
-and `virtctl port-forward --stdio` through the authenticated API. Host-key
+and the pod-network `ansible_host` discovered by KubeVirt. Host-key
 aliases contain the VM UID, so recreated guests get new identities while
 checking remains enabled for an existing guest.
 
-The stable `redhat-lab-ssh` account in `service-accounts` is bound only to
-VM/VMI reads and port forwarding inside this namespace. The publisher renders
-a CA-verified kubeconfig in `op://lab_serviceaccounts/ocp-redhat-lab-ssh/`;
-AAP reads it privately and injects a temporary file. Namespace teardown revokes its lab
-permissions until the RoleBinding is recreated.
+The lab policy allows inbound TCP 22 from `ansible-automation-platform`.
+The AAP overlay's `allow-observed` policy allows outbound TCP 22 only to
+`redhat-lab` pods carrying the lab and `virt-launcher` labels. Apply both
+policy changes before refreshing discovery from the refactored inventory.
+Inventory discovery continues to use its existing `virtualmachine-reader-token`
+credential; guest jobs need no Kubernetes credential. Interactive `virtctl`
+access can still use the operator's `ocp` environment.
+
+The inventory credential configuration marks the retired `redhat-lab-kubeconfig`
+credential absent. Reconcile it through `aap_sync_credentials` during rollout.
+For the previously provisioned tunnel resources, remove the `lab-ssh` Role and
+RoleBinding in `redhat-lab`, then the `redhat-lab-ssh-token` PushSecret,
+`redhat-lab-ssh` ServiceAccount and its token Secret in `service-accounts`.
+The obsolete 1Password item `ocp-redhat-lab-ssh` can then be retired.
 
 ## Networking and DNS
 

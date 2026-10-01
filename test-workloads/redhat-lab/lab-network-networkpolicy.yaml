@@ -10,6 +10,14 @@ spec:
     - Ingress
     - Egress
   ingress:
+    # AAP connects directly to the masqueraded VM pod interface.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ansible-automation-platform
+      ports:
+        - port: 22
+          protocol: TCP
     # virtctl API tunnels dial the launcher pod through virtualization relays.
     - from:
         - namespaceSelector:

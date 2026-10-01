@@ -96,6 +96,18 @@ spec:
           protocol: TCP
         - port: 8080
           protocol: TCP
+    # Disposable RHEL guests: direct SSH from execution pods to VM pod IPs.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: redhat-lab
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/part-of: redhat-lab
+              kubevirt.io: virt-launcher
+      ports:
+        - port: 22
+          protocol: TCP
     # kube-apiserver (observed egress to the kubernetes.default endpoint)
     - to:
         - ipBlock:
