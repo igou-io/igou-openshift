@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lab-dns
+  namespace: redhat-lab
+spec:
+  # Reserved by this disposable lab; labctl checks for another owner.
+  clusterIP: 172.30.250.53
+  selector:
+    app: lab-dns
+  ports:
+    - name: dns-udp
+      port: 53
+      targetPort: 5353
+      protocol: UDP
+    - name: dns-tcp
+      port: 53
+      targetPort: 5353
+      protocol: TCP

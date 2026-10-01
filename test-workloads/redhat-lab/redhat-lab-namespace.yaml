@@ -1,0 +1,7 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: redhat-lab
+  labels:
+    app.kubernetes.io/part-of: redhat-lab
