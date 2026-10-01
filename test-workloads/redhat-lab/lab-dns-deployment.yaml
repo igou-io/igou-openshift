@@ -1,0 +1,66 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lab-dns
+  namespace: redhat-lab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lab-dns
+  template:
+    metadata:
+      labels:
+        app: lab-dns
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: coredns
+          image: docker.io/coredns/coredns:1.13.1@sha256:9b9128672209474da07c91439bf15ed704ae05ad918dd6454e5b6ae14e35fee6
+          args:
+            - -conf
+            - /etc/coredns/Corefile
+          ports:
+            - containerPort: 5353
+              protocol: UDP
+            - containerPort: 5353
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+              # The upstream binary has a NET_BIND_SERVICE file capability.
+              # restricted-v2 permits this capability; keep all others dropped.
+              add:
+                - NET_BIND_SERVICE
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8181
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+          volumeMounts:
+            - name: config
+              mountPath: /etc/coredns
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: lab-dns

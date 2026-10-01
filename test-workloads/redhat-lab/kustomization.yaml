@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: redhat-lab
+resources:
+  - redhat-lab-namespace.yaml
+  - lab-network-networkattachmentdefinition.yaml
+  - lab-dns-configmap.yaml
+  - lab-dns-deployment.yaml
+  - lab-dns-service.yaml
+  - lab-network-networkpolicy.yaml
+  - lab-clone-helpers-networkpolicy.yaml
+  - idm-virtualmachine.yaml
+  - satellite-virtualmachine.yaml
+  - client1-virtualmachine.yaml
+  - client2-virtualmachine.yaml

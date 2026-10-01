@@ -1,0 +1,17 @@
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: lab-network
+  namespace: redhat-lab
+spec:
+  # No subnets: OVN provides isolated L2; cloud-init assigns guest addresses.
+  config: |
+    {
+      "cniVersion": "1.0.0",
+      "name": "redhat-lab-network",
+      "type": "ovn-k8s-cni-overlay",
+      "topology": "layer2",
+      "mtu": 1400,
+      "netAttachDefName": "redhat-lab/lab-network"
+    }
