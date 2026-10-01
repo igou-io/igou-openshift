@@ -21,7 +21,8 @@ spec:
           namespace: openshift-virtualization-os-images
         storage:
           storageClassName: freenas-nvmeof-ssd-csi
-          volumeMode: Block
+          # Avoid the driver's raw-block NodeExpand path on larger clones.
+          volumeMode: Filesystem
           accessModes:
             - ReadWriteOnce
           resources:

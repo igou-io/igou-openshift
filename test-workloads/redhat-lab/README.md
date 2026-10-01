@@ -14,6 +14,11 @@ prepares networking, SSH access, swap, and Satellite's content disk.
 IdM and Satellite each get 4 GiB swap. Total guest RAM is 46 GiB; allow
 additional VM overhead. All disks use TrueNAS
 `freenas-nvmeof-ssd-csi`, not Casval's ephemeral local disks.
+The 40/80 GiB server roots use filesystem volumes with CDI copies: raw-block
+snapshot clones requiring expansion hit this driver's NodeExpand mount-path
+error. The 30 GiB client roots still use block snapshot clones, and the blank
+Pulp disk is block-backed. CDI helper pods alone can reach the API and accept
+image transfers from the boot-image namespace.
 
 ## Bring up and destroy
 
