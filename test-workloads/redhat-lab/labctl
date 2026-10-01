@@ -1,0 +1,155 @@
+#!/usr/bin/env bash
+# Disposable learning lab; node lifecycle uses the existing AAP template.
+set -euo pipefail
+
+lab_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+lab_namespace=redhat-lab
+lab_dns_ip=172.30.250.53
+lab_lease_id=redhat-lab
+
+die() { echo "$*" >&2; exit 1; }
+
+check_cluster() {
+  local server
+  server="$(oc whoami --show-server)"
+  oc whoami
+  [[ "$server" == https://api.ocp.igou.systems:6443 ]] ||
+    die "Expected api.ocp.igou.systems:6443, got $server"
+}
+
+check_namespace() {
+  local owner
+  owner="$(oc get namespace "$lab_namespace" --ignore-not-found -o json |
+    jq -r '.metadata.labels["app.kubernetes.io/part-of"] // empty')"
+  [[ -z "$owner" ]] && {
+    if oc get namespace "$lab_namespace" --ignore-not-found -o name | rg -q .; then
+      die "Namespace $lab_namespace has no lab ownership label."
+    fi
+    return 0
+  }
+  [[ "$owner" == redhat-lab ]] || die "Namespace $lab_namespace belongs to $owner."
+}
+
+aap_api() {
+  # Basic-auth credentials are passed through an anonymous file descriptor.
+  # They are never printed or included in curl's command-line arguments.
+  curl --silent --show-error --fail --connect-timeout 10 --max-time 60 \
+    --config <(printf 'user = '; printf '%s' "$aap_user:$aap_password" | jq -Rs .) \
+    -H 'Content-Type: application/json' "$@" "$aap_root/$aap_path"
+}
+
+scale_node() {
+  local state="$1" response template job status deadline
+  local aap_user aap_password aap_host aap_root aap_path
+  aap_host="${AAP_HOST:-${AAP_HOSTNAME:-}}"
+  aap_user="${AAP_USER:-${AAP_USERNAME:-}}"
+  aap_password="${AAP_PASS:-${AAP_PASSWORD:-}}"
+  [[ -n "$aap_host" && -n "$aap_user" && -n "$aap_password" ]] ||
+    die "Activate AAP credentials with 'use aap', then retry."
+  aap_host="${aap_host%/}"
+  [[ "$aap_host" == https://* ]] || aap_host="https://$aap_host"
+  aap_root="$aap_host/api/controller/v2"
+  aap_path='job_templates/?name=casval_scale'
+  response="$(aap_api)"
+  [[ "$(jq -r '.count' <<< "$response")" == 1 ]] ||
+    die "Expected exactly one casval_scale AAP template."
+  jq -e '.results[0] |
+    .playbook == "playbooks/openshift/casval_scale.yaml" and
+    .ask_variables_on_launch == true and .inventory != null' \
+    <<< "$response" >/dev/null || die "Unexpected casval_scale template configuration."
+  template="$(jq -r '.results[0].id' <<< "$response")"
+  aap_path="job_templates/$template/launch/"
+  response="$(aap_api --data "$(jq -n --arg state "$state" --arg lease "$lab_lease_id" \
+    --arg duration "${LAB_CASVAL_LEASE:-24h}" \
+    '{extra_vars: {casval_state: $state, casval_lease_id: $lease, casval_lease: $duration}}')")"
+  jq -e '(.ignored_fields // {} | length) == 0' <<< "$response" >/dev/null ||
+    die "AAP ignored launch variables; inspect the launch response in AAP."
+  job="$(jq -er '.job' <<< "$response")"
+  echo "AAP casval_scale job $job ($state)"
+  deadline=$((SECONDS + 2400))
+  while ((SECONDS < deadline)); do
+    aap_path="jobs/$job/"
+    response="$(aap_api)"
+    status="$(jq -r '.status' <<< "$response")"
+    case "$status" in
+      successful) echo "AAP job $job succeeded"; return 0 ;;
+      failed|error|canceled) die "AAP job $job ended with status $status." ;;
+    esac
+    sleep 10
+  done
+  die "Still waiting for AAP job $job; inspect it in AAP before retrying."
+}
+
+case "${1:-help}" in
+  render)
+    exec kustomize build "$lab_dir"
+    ;;
+  up)
+    check_cluster
+    check_namespace
+    oc get datasource rhel9 -n openshift-virtualization-os-images -o json |
+      jq -e 'any(.status.conditions[]; .type == "Ready" and .status == "True")' \
+      >/dev/null || die "RHEL 9 DataSource is not ready."
+    owner="$(oc get service -A -o json | jq -r --arg ip "$lab_dns_ip" \
+      '.items[] | select(.spec.clusterIP == $ip) |
+       .metadata.namespace + "/" + .metadata.name')"
+    [[ -z "$owner" || "$owner" == "$lab_namespace/lab-dns" ]] ||
+      die "DNS ClusterIP $lab_dns_ip is already owned by $owner."
+    node_ready="$(oc get node casval.igou.systems --ignore-not-found -o json |
+      jq -r 'any(.status.conditions[]?; .type == "Ready" and .status == "True")')"
+    if [[ "$node_ready" != true ]]; then
+      replicas="$(oc get machineset.cluster.x-k8s.io casval-worker \
+        -n openshift-cluster-api -o jsonpath='{.spec.replicas}')"
+      [[ "$replicas" == 0 ]] ||
+        die "Casval is already provisioning. Wait for its current AAP job, then retry."
+      scale_node up
+    fi
+    oc wait node/casval.igou.systems --for=condition=Ready --timeout=60s
+    kustomize build "$lab_dir" | oc apply -f -
+    oc rollout status deployment/lab-dns -n "$lab_namespace" --timeout=120s
+    for vm in idm satellite client1 client2; do
+      oc wait "vm/$vm" -n "$lab_namespace" --for=condition=Ready --timeout=900s
+    done
+    echo "VMs are ready. Check cloud-init status inside each guest before installation."
+    ;;
+  down)
+    check_cluster
+    check_namespace
+    # Delete guests normally first so their grace period completes before the
+    # namespace removes DNS and storage. Never force-delete virt-launcher.
+    oc delete vm idm satellite client1 client2 -n "$lab_namespace" \
+      --ignore-not-found --wait=true --timeout=300s
+    oc delete namespace "$lab_namespace" --ignore-not-found --wait=true --timeout=600s
+    echo "Lab removed, including its VM disks. Casval is still available."
+    ;;
+  node-down)
+    check_cluster
+    [[ -z "$(oc get namespace "$lab_namespace" --ignore-not-found -o name)" ]] ||
+      die "Run labctl down before releasing Casval."
+    owner="$(oc get machineset.cluster.x-k8s.io casval-worker \
+      -n openshift-cluster-api -o json | \
+      jq -r '.metadata.annotations["automation.igou.systems/casval-lease-id"] // empty')"
+    [[ "$owner" == "$lab_lease_id" ]] ||
+      die "Casval's lease belongs to another workflow; leaving it running."
+    others="$(oc get pods -A --field-selector \
+      spec.nodeName=casval.igou.systems,status.phase=Running -o json |
+      jq -r '.items[] |
+        select(all(.metadata.ownerReferences[]?; .kind != "DaemonSet")) |
+        .metadata.namespace + "/" + .metadata.name')"
+    [[ -z "$others" ]] ||
+      die "Other workloads are running on Casval; leaving it running: $others"
+    # Existing AAP playbook fences release against this lab's lease ID.
+    scale_node down
+    ;;
+  status)
+    check_cluster
+    oc get machineset.cluster.x-k8s.io casval-worker -n openshift-cluster-api
+    oc get vm,vmi,dv,pvc,pods -n "$lab_namespace"
+    ;;
+  help|--help|-h)
+    echo "Usage: labctl {up|down|node-down|status|render}"
+    echo "up: create clean RHEL VMs; down: destroy VMs and disks."
+    echo "node-down: release this lab's Casval lease after destroying the lab."
+    ;;
+  *) die "Unknown action: $1" ;;
+esac

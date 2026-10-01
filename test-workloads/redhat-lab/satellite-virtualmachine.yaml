@@ -1,0 +1,160 @@
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: satellite
+  namespace: redhat-lab
+  labels:
+    app.kubernetes.io/part-of: redhat-lab
+spec:
+  runStrategy: Always
+  preference:
+    kind: VirtualMachineClusterPreference
+    name: rhel.9
+  dataVolumeTemplates:
+    - metadata:
+        name: satellite-root
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: rhel9
+          namespace: openshift-virtualization-os-images
+        storage:
+          storageClassName: freenas-nvmeof-ssd-csi
+          volumeMode: Block
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 80Gi
+    - metadata:
+        name: satellite-pulp
+      spec:
+        source:
+          blank: {}
+        storage:
+          storageClassName: freenas-nvmeof-ssd-csi
+          volumeMode: Block
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 400Gi
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/part-of: redhat-lab
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: casval.igou.systems
+        node-role.kubernetes.io/burst: ""
+      tolerations:
+        - key: workload
+          operator: Equal
+          value: burst
+          effect: NoSchedule
+      terminationGracePeriodSeconds: 180
+      dnsPolicy: None
+      dnsConfig:
+        nameservers:
+          - 172.30.250.53
+        searches:
+          - lab.igou.systems
+      domain:
+        cpu:
+          sockets: 8
+          cores: 1
+          threads: 1
+        memory:
+          guest: 32Gi
+        devices:
+          autoattachMemBalloon: false
+          disks:
+            - name: rootdisk
+              bootOrder: 1
+              disk:
+                bus: virtio
+            - name: pulp
+              serial: satellite-pulp
+              disk:
+                bus: virtio
+            - name: cloudinit
+              disk:
+                bus: sata
+          interfaces:
+            - name: default
+              macAddress: "02:00:00:24:02:01"
+              masquerade: {}
+            - name: lab
+              macAddress: "02:00:00:24:02:02"
+              bridge: {}
+      networks:
+        - name: default
+          pod: {}
+        - name: lab
+          multus:
+            networkName: lab-network
+      volumes:
+        - name: rootdisk
+          dataVolume:
+            name: satellite-root
+        - name: pulp
+          dataVolume:
+            name: satellite-pulp
+        - name: cloudinit
+          cloudInitNoCloud:
+            networkData: |
+              version: 2
+              ethernets:
+                uplink:
+                  match:
+                    macaddress: "02:00:00:24:02:01"
+                  set-name: uplink
+                  dhcp4: true
+                lab:
+                  match:
+                    macaddress: "02:00:00:24:02:02"
+                  set-name: lab
+                  mtu: 1400
+                  dhcp4: false
+                  addresses:
+                    - 192.168.240.20/24
+            userData: |
+              #cloud-config
+              hostname: satellite
+              fqdn: satellite.lab.igou.systems
+              prefer_fqdn_over_hostname: true
+              manage_etc_hosts: false
+              ssh_pwauth: false
+              users:
+                - name: igou
+                  lock_passwd: true
+                  sudo: ALL=(ALL) NOPASSWD:ALL
+                  ssh_authorized_keys:
+                    - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINHO7UsiIgAepf5+s2z+1CbPQf2eqJo8aNK/vT9Oaf4B
+              disk_setup:
+                /dev/disk/by-id/virtio-satellite-pulp:
+                  table_type: gpt
+                  layout: true
+                  overwrite: false
+              fs_setup:
+                - label: pulp
+                  filesystem: xfs
+                  device: /dev/disk/by-id/virtio-satellite-pulp
+                  partition: 1
+              mounts:
+                - - LABEL=pulp
+                  - /var/lib/pulp
+                  - xfs
+                  - defaults
+                  - "0"
+                  - "2"
+              runcmd:
+                - - sh
+                  - -c
+                  - >-
+                    fallocate -l 4G /swapfile &&
+                    chmod 600 /swapfile &&
+                    mkswap /swapfile &&
+                    swapon /swapfile &&
+                    echo '/swapfile none swap sw 0 0' >> /etc/fstab
