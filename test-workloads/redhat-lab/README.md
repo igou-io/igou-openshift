@@ -151,19 +151,16 @@ aliases contain the VM UID, so recreated guests get new identities while
 checking remains enabled for an existing guest.
 
 The lab policy allows inbound TCP 22 from `ansible-automation-platform`.
-The AAP overlay's `allow-observed` policy allows outbound TCP 22 only to
+The AAP overlay's `redhat-lab-ssh` policy allows outbound TCP 22 only to
 `redhat-lab` pods carrying the lab and `virt-launcher` labels. Apply both
 policy changes before refreshing discovery from the refactored inventory.
 Inventory discovery continues to use its existing `virtualmachine-reader-token`
 credential; guest jobs need no Kubernetes credential. Interactive `virtctl`
 access can still use the operator's `ocp` environment.
 
-The inventory credential configuration marks the retired `redhat-lab-kubeconfig`
-credential absent. Reconcile it through `aap_sync_credentials` during rollout.
-For the previously provisioned tunnel resources, remove the `lab-ssh` Role and
-RoleBinding in `redhat-lab`, then the `redhat-lab-ssh-token` PushSecret,
-`redhat-lab-ssh` ServiceAccount and its token Secret in `service-accounts`.
-The obsolete 1Password item `ocp-redhat-lab-ssh` can then be retired.
+The previous lab tunnel credential, service account, token publisher, token
+Secret, Role, and RoleBinding have been retired. Guest automation uses only the
+existing machine credential; lab DNS remains available at `172.30.250.53`.
 
 ## Networking and DNS
 
