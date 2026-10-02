@@ -32,6 +32,7 @@ spec:
               the input is out of tolerance.
         - alert: UPSLowBattery
           expr: network_ups_tools_ups_status{flag="LB"} == 1
+          for: 1m
           labels:
             severity: critical
           annotations:
