@@ -17,6 +17,12 @@
   },
   "packageRules": [
     {
+      "description": "democratic-csi next builds require TrueNAS >=26; keep the validated image on TrueNAS 25.x and update manually after compatibility testing (incident #1084).",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/democratic-csi/democratic-csi"],
+      "enabled": false
+    },
+    {
       "description": "Docker major updates require manual merge",
       "matchDatasources": ["docker"],
       "matchUpdateTypes": ["major"],
