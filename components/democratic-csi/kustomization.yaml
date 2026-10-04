@@ -1,6 +1,6 @@
 # NOTE(2026-10-04): pinned back to 0f308ae6 (last-known-good). The c6d7414 build gates on
 # TrueNAS >=26; this lab runs TrueNAS 25.10, so every controller CrashLooped and provisioning
-# stopped (ci-igou-ansible/ee-rebuild-29851620). Hold Renovate bumps until upstream drops the gate.
+# stopped. renovate.json freezes this image until a compatible update is validated.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: democratic-csi
