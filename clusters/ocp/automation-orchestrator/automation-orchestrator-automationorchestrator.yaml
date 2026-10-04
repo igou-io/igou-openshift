@@ -51,9 +51,7 @@ spec:
   # depend on these entries. Explicit hosts only (no wildcard support).
   workflowHttpRequestAllowedHosts:
     - automation.apps.ocp.igou.systems # AAP gateway: OIDC + job dispatch
-    - gemma-4-e2b-llmkube-system.apps.ocp.igou.systems
     - qwen3-35b-a3b-llmkube-system.apps.ocp.igou.systems
-    - qwen35-2b-llmkube-system.apps.ocp.igou.systems
     - qwen38-27b-llmkube-system.apps.ocp.igou.systems
     - omnigent.apps.ocp.igou.systems # manual Omnigent REST workflow
     - truenas.igou.systems # rustfs S3 + REST steps (backup verification)
