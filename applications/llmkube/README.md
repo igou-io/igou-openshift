@@ -1,7 +1,17 @@
 # llmkube
 
-Deploys the [LLMKube](https://github.com/defilantech/LLMKube) operator via Helm (chart v0.7.5) and a
-Qwen3.6-35B-A3B inference workload targeting the casval burst baremetal node.
+Deploys the [LLMKube](https://github.com/defilantech/LLMKube) operator via Helm and
+two inference workloads targeting the casval burst baremetal node:
+
+| Model resource | Model | Quantization | Context | Default replicas |
+|---|---|---|---|---|
+| `qwen3-35b-a3b` | Qwen3.6-35B-A3B | UD-Q5_K_XL | 200,000 | 0 |
+| `qwen38-27b` | Qwen3.8-27B | UD-Q5_K_XL | 131,072 | 0 |
+
+Qwen3.5-2B and Gemma 4 E2B were removed from GitOps. Prune their Model,
+InferenceService, and Route resources through ArgoCD when delivering this change;
+automatic pruning is disabled. Keep the shared `llmkube-model-cache` PVC for the
+remaining models.
 
 ## Directory layout
 
@@ -11,7 +21,10 @@ applications/llmkube/
 ├── llmkube-system-namespace.yaml         # Namespace
 ├── qwen3-35b-a3b-model.yaml             # Model CR (downloads GGUF from HuggingFace)
 ├── qwen3-35b-a3b-inferenceservice.yaml  # InferenceService CR (deploys llama.cpp server)
-└── qwen3-35b-a3b-route.yaml             # OpenShift Route exposing the model externally
+├── qwen3-35b-a3b-route.yaml             # OpenShift Route exposing the model externally
+├── qwen38-27b-model.yaml               # Qwen3.8-27B GGUF source
+├── qwen38-27b-inferenceservice.yaml    # llama.cpp server, scaled to zero at rest
+└── qwen38-27b-route.yaml               # OpenShift Route exposing the model externally
 ```
 
 ## CRD Reference
