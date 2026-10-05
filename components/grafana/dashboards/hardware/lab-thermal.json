@@ -106,8 +106,8 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "max by (instance) (node_hwmon_temp_celsius{job=\"node-exporter\", cluster=\"rk8s\"} or node_thermal_zone_temp{job=\"node-exporter\", cluster=\"rk8s\"})",
-          "legendFormat": "rk8s {{instance}}",
+          "expr": "max by (instance) (node_hwmon_temp_celsius{job=\"node-exporter\", cluster=\"rk8s\"} or node_thermal_zone_temp{job=\"node-exporter\", cluster=\"rk8s\"}) * on (instance) group_left (nodename) max by (instance, nodename) (node_uname_info{job=\"node-exporter\", cluster=\"rk8s\"})",
+          "legendFormat": "rk8s {{nodename}}",
           "range": false,
           "instant": true,
           "refId": "B"
@@ -284,7 +284,7 @@
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
-      "description": "Hottest sensor per rk8s node, federated from the rk8s kube-prometheus-stack (cluster=\"rk8s\"). Falls back to thermal-zone readings for ARM boards without hwmon sensors.",
+      "description": "Hottest sensor per rk8s node, federated from the rk8s kube-prometheus-stack (cluster=\"rk8s\"). Hostnames come from node_uname_info. Falls back to thermal-zone readings for ARM boards without hwmon sensors.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -360,8 +360,8 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "max by (instance) (node_hwmon_temp_celsius{job=\"node-exporter\", cluster=\"rk8s\"} or node_thermal_zone_temp{job=\"node-exporter\", cluster=\"rk8s\"})",
-          "legendFormat": "{{instance}}",
+          "expr": "max by (instance) (node_hwmon_temp_celsius{job=\"node-exporter\", cluster=\"rk8s\"} or node_thermal_zone_temp{job=\"node-exporter\", cluster=\"rk8s\"}) * on (instance) group_left (nodename) max by (instance, nodename) (node_uname_info{job=\"node-exporter\", cluster=\"rk8s\"})",
+          "legendFormat": "{{nodename}}",
           "range": true,
           "instant": false,
           "refId": "A"
