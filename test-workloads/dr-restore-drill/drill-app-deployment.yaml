@@ -19,7 +19,7 @@ spec:
       containers:
         - name: app
           # renovate: datasource=docker depName=registry.access.redhat.com/ubi9/python-312
-          image: registry.access.redhat.com/ubi9/python-312:latest@sha256:8b1b36418501692d863a68f7f31ae47f1f169b83f7cdcc84831ac002304af693
+          image: registry.access.redhat.com/ubi9/python-312:latest@sha256:e6a10c3150624fbfd33dbd7721ef99ce7a1001b417d64427ad58515ab8044121
           command: ["python3", "-m", "http.server", "8080", "--directory", "/data"]
           ports:
             - containerPort: 8080
