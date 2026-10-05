@@ -1831,8 +1831,6 @@ data:
                         - opencode-go/minimax-m2.7
                         - opencode/deepseek-v4-flash-free
                         - llmkube/qwen38-27b
-                        - llmkube/qwen35-2b
-                        - llmkube/gemma-4-e2b
                 - required:
                     - model
                   properties:
