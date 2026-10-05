@@ -61,6 +61,13 @@
       "matchManagers": ["helm-values"],
       "matchFileNames": ["applications/omnigent/omnigent-slack-deployment.yaml"],
       "enabled": false
+    },
+    {
+      "description": "OpenShell sandbox images use separate tag and digest fields; the custom regex manager owns this pin because the chart renders the digest field",
+      "matchManagers": ["helm-values"],
+      "matchFileNames": ["applications/openshell/kustomization.yaml"],
+      "matchPackageNames": ["nvcr.io/nvidia/base/ubuntu"],
+      "enabled": false
     }
   ],
   "customManagers": [
@@ -103,6 +110,13 @@
       "datasourceTemplate": "docker",
       "packageNameTemplate": "code.forgejo.org/{{depName}}",
       "autoReplaceStringTemplate": "{{depName}}\\n{{indentation}}tag: {{newValue}}\\n{{indentation}}digest: {{#if newDigest}}{{{newDigest}}}{{else}}{{{currentDigest}}}{{/if}}"
+    },
+    {
+      "description": "OpenShell sandbox pin: preserve the Ubuntu tag and update the separate digest that the chart renders",
+      "customType": "regex",
+      "managerFilePatterns": ["/^applications/openshell/kustomization\\.yaml$/"],
+      "matchStrings": ["repository: (?<depName>nvcr\\.io/nvidia/base/ubuntu)\\n(?<indentation>[ \\t]+)tag: [\"']?(?<currentValue>[^\\s\"'@]+)[\"']?\\n[ \\t]+digest: (?<currentDigest>sha256:[a-f0-9]{64})"],
+      "datasourceTemplate": "docker"
     }
   ]
 }
