@@ -1,0 +1,165 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: we-get-the-hydro
+resources:
+  - we-get-the-hydro-namespace.yaml
+  - we-get-the-hydro-data-pvc.yaml
+  - quay-local-pull-externalsecret.yaml
+  - default-deny-networkpolicy.yaml
+  - we-get-the-hydro-ingress-networkpolicy.yaml
+helmCharts:
+  - name: app-template
+    namespace: we-get-the-hydro
+    version: 4.6.2
+    releaseName: we-get-the-hydro
+    repo: oci://ghcr.io/bjw-s-labs/helm
+    valuesFile: values-dummy.yaml
+    valuesInline:
+      defaultPodOptions:
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - key: node-role.kubernetes.io/control-plane
+                      operator: DoesNotExist
+      controllers:
+        we-get-the-hydro:
+          type: deployment
+          replicas: 1
+          strategy: Recreate
+          pod:
+            automountServiceAccountToken: false
+            imagePullSecrets:
+              - name: quay-local-pull
+            securityContext:
+              seccompProfile:
+                type: RuntimeDefault
+          initContainers:
+            migrate:
+              image:
+                repository: quay.apps.ocp.igou.systems/igou-io/we-get-the-hydro
+                tag: sha-f404ab3147574a24768e9f9b4c39000a708c5b5a@sha256:76543bf51ccc48119052aa7ffa8b5b36c5c75aee7f41b52cbba7c9ea67d49b151
+                pullPolicy: IfNotPresent
+              args:
+                - migrate
+              env:
+                HYDRO_DATABASE_URL: sqlite:////data/hydro.sqlite
+                TMPDIR: /tmp
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  memory: 256Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+          containers:
+            app:
+              image:
+                repository: quay.apps.ocp.igou.systems/igou-io/we-get-the-hydro
+                tag: sha-f404ab3147574a24768e9f9b4c39000a708c5b5a@sha256:76543bf51ccc48119052aa7ffa8b5b36c5c75aee7f41b52cbba7c9ea67d49b151
+                pullPolicy: IfNotPresent
+              env:
+                HYDRO_DATABASE_URL: sqlite:////data/hydro.sqlite
+                HYDRO_BIND: 0.0.0.0
+                HYDRO_PORT: '8080'
+                HYDRO_ALLOWED_HOSTS: we-get-the-hydro.apps.ocp.igou.systems,127.0.0.1,localhost
+                HYDRO_PUBLIC_ORIGIN: https://we-get-the-hydro.apps.ocp.igou.systems
+                TMPDIR: /tmp
+              ports:
+                - name: http
+                  containerPort: 8080
+                  protocol: TCP
+              probes:
+                startup:
+                  enabled: true
+                  custom: true
+                  spec:
+                    httpGet:
+                      path: /healthz
+                      port: http
+                      httpHeaders:
+                        - name: Host
+                          value: localhost
+                    failureThreshold: 30
+                    periodSeconds: 2
+                    timeoutSeconds: 2
+                readiness:
+                  enabled: true
+                  custom: true
+                  spec:
+                    httpGet:
+                      path: /readyz
+                      port: http
+                      httpHeaders:
+                        - name: Host
+                          value: localhost
+                    periodSeconds: 10
+                    timeoutSeconds: 2
+                liveness:
+                  enabled: true
+                  custom: true
+                  spec:
+                    httpGet:
+                      path: /healthz
+                      port: http
+                      httpHeaders:
+                        - name: Host
+                          value: localhost
+                    periodSeconds: 30
+                    timeoutSeconds: 2
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  memory: 256Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+      persistence:
+        data:
+          type: persistentVolumeClaim
+          existingClaim: we-get-the-hydro-data
+          globalMounts:
+            - path: /data
+        tmp:
+          type: emptyDir
+          globalMounts:
+            - path: /tmp
+      service:
+        app:
+          controller: we-get-the-hydro
+          ports:
+            http:
+              port: 80
+              targetPort: 8080
+              protocol: TCP
+      ingress:
+        app:
+          className: openshift-default
+          annotations:
+            route.openshift.io/termination: edge
+            route.openshift.io/insecure-edge-termination-policy: Redirect
+          hosts:
+            - host: we-get-the-hydro.apps.ocp.igou.systems
+              paths:
+                - path: /
+                  pathType: Prefix
+                  service:
+                    identifier: app
+                    port: http
+      serviceAccount:
+        we-get-the-hydro:
+          enabled: true
