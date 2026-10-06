@@ -217,7 +217,9 @@ Repo-specific behavior:
 - Docker images whose package name matches `/igou/` are allowed to automerge, including majors.
 - OCI Helm charts managed by Kustomize do not get Docker digest pinning (`matchDepTypes: HelmChart`, `pinDigests: false`).
 - The `llmkube` Helm chart and `ghcr.io/defilantech/llmkube-controller` image are both disabled in Renovate. Bump `applications/llmkube` chart version and image digest together manually because newer controller builds can drop required args and crash-loop.
-- `components/democratic-csi/kustomization.yaml` has a regex custom manager for inline `tag@sha256` image pins in the chart's nonstandard image schema.
+- `components/democratic-csi/values-common.yaml` has a regex custom manager for
+  shared controller/node `tag@sha256` image pins in the chart's nonstandard image
+  schema. Its existing compatibility freeze remains in place.
 
 Merge policy for Renovate PRs:
 - Patch/minor chart or image PRs can usually merge after CI passes if rendered manifests are unchanged in risky areas or the change is clearly scoped.
