@@ -1,7 +1,7 @@
 # Standalone Ollama
 
 This workload is dormant: it is not registered in the cluster app-of-apps.
-See `docs/workload-lifecycle.md` before activating or retiring it.
+See `https://github.com/igou-io/igou-docs/blob/main/reference/igou-openshift%20Workload%20Lifecycle%20and%20Cleanup.md` before activating or retiring it.
 
 `kustomization.yaml` contains site overrides for the pinned chart. Keep the
 image digest pin, two-GPU request, model preload, environment, persistent volume,

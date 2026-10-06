@@ -9,7 +9,7 @@ with staleness/failure alerting.
 with OADP 1.6.1. Drill-verified on 2026-08-02: a
 sands-of-time backup (66 items, 1.3GB through the data mover) restored via
 `namespaceMapping` into a scratch namespace with data intact. Restores:
-see `docs/runbooks/oadp-restore.md`.
+see `https://github.com/igou-io/igou-docs/blob/main/storage/OADP%20Velero%20Backups%20on%20OpenShift.md`.
 
 ## Architecture
 
@@ -78,7 +78,7 @@ Recorded for rebuilds; all in place today:
 
 ## Restores
 
-See `docs/runbooks/oadp-restore.md` (drill-verified commands: inspect
+See `https://github.com/igou-io/igou-docs/blob/main/storage/OADP%20Velero%20Backups%20on%20OpenShift.md` (drill-verified commands: inspect
 backups, whole-namespace restore, scratch-namespace drill via
 `namespaceMapping`, VM notes, troubleshooting).
 

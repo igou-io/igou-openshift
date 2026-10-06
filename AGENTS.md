@@ -58,13 +58,21 @@ Components are placed in order of dependencies. Storage and secrets management a
   `test-workloads/windows-vms/examples/` files. The
   `make validate-manifest-files` target enforces the convention in `make test`
   and CI.
-- **Workload lifecycle**: `docs/workload-lifecycle.md` records dormant and
+- **Workload lifecycle**: `/workspace/igou-docs/reference/igou-openshift Workload Lifecycle and Cleanup.md` records dormant and
   rollback workloads. Dormant manifests remain validated; confirmed retired
   content may be removed or archived under `archive/`, outside normal validation.
   Do not infer live-resource deletion from removal of an Application entry.
 - **Helm values**: retain site overrides and explicit security, storage, resource,
   and image settings. Avoid copying upstream defaults; compare parsed renders
   at the pinned chart version when trimming values.
+
+# Documentation
+
+Shared operational documentation lives in `/workspace/igou-docs`; start with
+`Home.md` and `reference/igou-openshift Documentation Migration Index.md`. Update
+the relevant vault page after changes. Keep component/application READMEs beside
+their manifests; add shared runbooks, examples, incident reports, and historical
+designs to the vault rather than recreating `docs/` here.
 
 # Agent Workflow
 
@@ -151,7 +159,7 @@ Still in place from that machinery: every volume carries `k8s:cluster` /
 `k8s:pvc_namespace` / `k8s:pvc_name` ZFS properties (stamped at provision
 time by democratic-csi); AAP JT `truenas_restore_volume` restores by name
 from a live zvol — take a manual `zfs snapshot` first — or a leftover
-replica (see docs/runbooks/restore-pvc-from-truenas.md, which also holds
+replica (see the igou-docs page "Restoring PVC Data from TrueNAS zvols - ZFS Snapshot Rescue and Static PV Import", which also holds
 the Retain-patch roster); those PVs stay `reclaimPolicy: Retain`
 (live-only — re-patch after any rebuild). Postgres volumes are deliberately
 out of scope for both layers' data path (CNPG Barman owns those).

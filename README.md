@@ -47,7 +47,7 @@ documented in the Makefile.
 
 ## Workload lifecycle and Helm values
 
-See [the lifecycle inventory](docs/workload-lifecycle.md) for dormant workloads,
+See [the lifecycle inventory](https://github.com/igou-io/igou-docs/blob/main/reference/igou-openshift%20Workload%20Lifecycle%20and%20Cleanup.md) for dormant workloads,
 rollback deployments, and confirmed retirements. The app registry is the source
 of truth for managed workloads; absence from it does not establish that live
 resources or data have been removed.
@@ -57,3 +57,10 @@ not a copied upstream values file. Keep image pins, security, resource sizing,
 and storage choices visible. When trimming values, compare parsed rendered
 objects at the same chart version before and after the change. Review the
 upstream defaults again when updating a chart.
+
+## Documentation
+
+Shared runbooks, networking examples, incident reports, and historical designs live
+in [igou-docs](https://github.com/igou-io/igou-docs/blob/main/Home.md). The
+[documentation migration index](https://github.com/igou-io/igou-docs/blob/main/reference/igou-openshift%20Documentation%20Migration%20Index.md) maps the former `docs/` files to their vault notes. Keep
+component and application READMEs beside their manifests.

@@ -29,7 +29,7 @@ spec:
             description: >-
               Job {{ $labels.job_name }} in namespace etcd-backup has
               failed pods. Check its logs (backup and upload containers)
-              and docs/runbooks/etcd-backup-restore.md in igou-openshift.
+              and https://github.com/igou-io/igou-docs/blob/main/openshift/Backing%20Up%20and%20Restoring%20OpenShift%20etcd.md in igou-docs.
               Failed Jobs persist ~5 nights; delete the Job to clear this
               alert once resolved.
         - alert: EtcdBackupStale
@@ -49,6 +49,6 @@ spec:
               The nightly etcd-backup CronJob in namespace etcd-backup has
               no successful run in the last 36 hours (or the CronJob is
               gone). Restores need a fresh same-z-stream snapshot — see
-              docs/runbooks/etcd-backup-restore.md in igou-openshift.
+              https://github.com/igou-io/igou-docs/blob/main/openshift/Backing%20Up%20and%20Restoring%20OpenShift%20etcd.md in igou-docs.
               Check: oc get cronjob,jobs -n etcd-backup and the last job's
               logs.

@@ -7,7 +7,7 @@ pinned to the `hpg5`/`p330` worker pool. Two shared, once-rendered resources:
 the `remote-tenant-operator` ClusterRole and the `remote-tenant-no-burst` /
 `remote-tenant-no-secondary-net` ValidatingAdmissionPolicies.
 
-See the design spec: `docs/superpowers/specs/2026-06-13-remote-tenant-access-design.md`.
+See the design spec: `https://github.com/igou-io/igou-docs/blob/main/reference/2026-06-13%20Remote%20Tenant%20Access%20Design%20and%20Implementation.md`.
 
 ## One-time cluster prerequisites
 

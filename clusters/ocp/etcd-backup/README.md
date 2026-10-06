@@ -3,8 +3,8 @@
 Nightly `cluster-backup.sh` on the single master (05:00 US-Eastern),
 uploaded to the `etcd-backups` bucket on rustfs-cold, keyed
 `<z-stream>/<timestamp>/`. Closes DR-assessment gap #1
-(`docs/post-mortems/2026-07-31-dr-readiness-assessment.md`). Restore and
-snapshot-mining procedures: `docs/runbooks/etcd-backup-restore.md`.
+(`https://github.com/igou-io/igou-docs/blob/main/reference/2026-07-31%20OpenShift%20Disaster%20Recovery%20Readiness%20Assessment.md`). Restore and
+snapshot-mining procedures: `https://github.com/igou-io/igou-docs/blob/main/openshift/Backing%20Up%20and%20Restoring%20OpenShift%20etcd.md`.
 
 Design notes (the non-obvious bits):
 

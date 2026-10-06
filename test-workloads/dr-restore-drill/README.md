@@ -14,7 +14,7 @@
 > snapshot + replica. The findings below all still apply.
 
 A repeatable disaster-recovery drill for the name-addressed volume
-protection stack (`docs/runbooks/restore-pvc-from-truenas.md`, "Restore by
+protection stack (`https://github.com/igou-io/igou-docs/blob/main/storage/Restoring%20PVC%20Data%20from%20TrueNAS%20zvols%20-%20ZFS%20Snapshot%20Rescue%20and%20Static%20PV%20Import.md`, "Restore by
 NAME"). A trivial stateful app (HTTP server over a PVC) is deployed,
 protected, destroyed, and restored from its cold replica — proving the
 whole chain an operator would rely on after real data loss.
