@@ -72,9 +72,9 @@
   ],
   "customManagers": [
     {
-      "description": "democratic-csi driver image pinned via inline tag@sha256 (chart's nonstandard image.registry+image.tag schema isn't picked up by helm-values manager)",
+      "description": "democratic-csi driver image pinned via shared tag@sha256 values (chart's nonstandard image.registry+image.tag schema isn't picked up by helm-values manager)",
       "customType": "regex",
-      "managerFilePatterns": ["/^components/democratic-csi/kustomization\\.yaml$/"],
+      "managerFilePatterns": ["/^components/democratic-csi/values-common\\.yaml$/"],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)\\s+tag: \"(?<currentValue>[^@\"]+)@(?<currentDigest>sha256:[a-f0-9]+)\""
       ]

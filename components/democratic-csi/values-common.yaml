@@ -1,0 +1,63 @@
+# NOTE(2026-10-04): pinned back to 0f308ae6 (last-known-good). The c6d7414 build gates on
+# TrueNAS >=26; this lab runs TrueNAS 25.10, so every controller CrashLooped and provisioning
+# stopped. renovate.json freezes this image until a compatible update is validated.
+# Shared by all nine releases; release-specific values stay in kustomization.yaml.
+controller:
+  # klog sidecars default --v=5: leader-election renewals alone were
+  # most of this namespace's residual log volume (igou-openshift#382).
+  externalProvisioner:
+    verbosityLevel: 2
+  externalAttacher:
+    verbosityLevel: 2
+  externalResizer:
+    verbosityLevel: 2
+  externalSnapshotter:
+    verbosityLevel: 2
+  driver:
+    enabled: true
+    logLevel: warn
+    image:
+      registry: "ghcr.io/democratic-csi/democratic-csi"
+      # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
+      tag: "next@sha256:0f308ae601474cb9633f90dc96f59dbd23440b0ed0e77d70e224465246a12dfa"
+  tolerations:
+  - effect: NoSchedule
+    key: node-role.kubernetes.io/master
+  # Prefer dedicated workers. ocp is also labeled worker, so exclude
+  # control-plane rather than selecting worker. Soft: still schedules
+  # on the master if workers are full or drained. Node DaemonSets stay.
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: node-role.kubernetes.io/control-plane
+                operator: DoesNotExist
+  rbac:
+    enabled: true
+    openshift:
+      privileged: true
+  hostNetwork: true
+node:
+  driverRegistrar:
+    verbosityLevel: 2
+  tolerations:
+  - effect: NoSchedule
+    key: node-role.kubernetes.io/master
+  - effect: NoSchedule
+    key: workload
+    operator: Exists
+  rbac:
+    openshift:
+      privileged: true
+  driver:
+    enabled: true
+    logLevel: warn
+    image:
+      registry: "ghcr.io/democratic-csi/democratic-csi"
+      # renovate: datasource=docker depName=ghcr.io/democratic-csi/democratic-csi
+      tag: "next@sha256:0f308ae601474cb9633f90dc96f59dbd23440b0ed0e77d70e224465246a12dfa"
+    # The previous inline null retained this chart default during Kustomize's
+    # values merge. Keep the rendered host mount explicitly when using a file.
+    localtimeHostPath: /etc/localtime
