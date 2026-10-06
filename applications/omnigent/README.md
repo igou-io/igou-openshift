@@ -14,7 +14,9 @@ relay, EDA and `SREHeartbeat` until a separately approved cutover.
 ## Platform and credentials
 
 The server keeps accounts authentication, `/opt/venv/bin` first on PATH, and
-the direct `agent_sandbox` provider. Managed sessions use the pinned
+the direct `agent_sandbox` provider. The runner finds pinned CLI binaries in
+`/usr/local/bin` before mise shims, which need a registry cache absent from
+the ephemeral runner home. Managed sessions use the pinned
 `igou-devenv` host image and the native idle/reaper lifecycle. `igou-sre` runs
 the Codex harness through the `codex-chatgpt` subscription provider and lets
 Codex choose its default model. OpenCode Go remains configured as an optional

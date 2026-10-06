@@ -46,7 +46,7 @@ spec:
                   name: omnigent-device-auth
                   key: OMNIGENT_DEVICE_CLIENT_SECRET
             - name: PATH
-              value: /opt/venv/bin:/home/igou/.opencode/bin:/home/igou/.local/bin:/opt/mise/shims:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+              value: /opt/venv/bin:/home/igou/.opencode/bin:/home/igou/.local/bin:/usr/local/sbin:/usr/local/bin:/opt/mise/shims:/usr/sbin:/usr/bin:/sbin:/bin
             - name: USER
               value: igou-sre
             - name: LOGNAME
