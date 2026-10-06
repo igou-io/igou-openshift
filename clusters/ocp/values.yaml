@@ -759,6 +759,17 @@ applications:
         jsonPointers:
           - /spec/bootstrap
           - /spec/externalClusters
+  # Private image mirror is served by quay-operator (wave 22).
+  we-get-the-hydro:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '23'
+    destination:
+      namespace: we-get-the-hydro
+    source:
+      path: applications/we-get-the-hydro
+
   alertmanager-config:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous

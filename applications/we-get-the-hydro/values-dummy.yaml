@@ -1,0 +1,4 @@
+---
+# Required for kustomize helmCharts because app-template has empty defaults.
+# All chart configuration lives in kustomization.yaml valuesInline.
+foo: bar
