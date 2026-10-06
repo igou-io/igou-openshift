@@ -116,6 +116,17 @@ spec:
     - to:
         - namespaceSelector:
             matchLabels:
+              kubernetes.io/metadata.name: firecrawl
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: firecrawl
+              app.kubernetes.io/controller: api
+      ports:
+        - protocol: TCP
+          port: 3002
+    - to:
+        - namespaceSelector:
+            matchLabels:
               kubernetes.io/metadata.name: sands-of-time
       ports:
         - protocol: TCP
