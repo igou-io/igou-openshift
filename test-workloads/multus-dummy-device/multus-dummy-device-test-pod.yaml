@@ -12,7 +12,9 @@ spec:
   containers:
     - name: tools
       image: registry.redhat.io/openshift4/ose-tools-rhel9:latest
-      command: ["sleep", "infinity"]
+      command:
+        - sleep
+        - infinity
       securityContext:
         allowPrivilegeEscalation: false
         runAsNonRoot: true

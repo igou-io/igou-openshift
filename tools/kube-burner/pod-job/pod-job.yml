@@ -6,7 +6,8 @@ global:
   measurements:
     - name: jobLatency
 metricsEndpoints:
-  - metrics: ["metrics.yml"]
+  - metrics:
+    - metrics.yml
     indexer:
       type: local
 jobs:

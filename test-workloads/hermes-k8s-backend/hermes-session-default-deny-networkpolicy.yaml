@@ -32,7 +32,9 @@ spec:
   podSelector:
     matchLabels:
       app.kubernetes.io/managed-by: hermes-agent
-  policyTypes: ["Ingress", "Egress"]
+  policyTypes:
+    - Ingress
+    - Egress
   ingress: []
   egress:
     # DNS only. Everything else is denied by the empty-ish egress list above.

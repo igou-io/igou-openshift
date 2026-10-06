@@ -5,5 +5,7 @@ metadata:
   name: freenas-nfs-cold-csi
 spec:
   claimPropertySets:
-    - accessModes: [ReadWriteMany, ReadWriteOnce]
+    - accessModes:
+      - ReadWriteMany
+      - ReadWriteOnce
       volumeMode: Filesystem

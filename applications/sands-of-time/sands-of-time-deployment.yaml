@@ -26,7 +26,8 @@ spec:
         - name: serve
           image: quay.apps.ocp.igou.systems/igou-io/sands-of-time:dev
           imagePullPolicy: Always # mutable tag — must re-pull on every restart
-          args: ["serve"]
+          args:
+            - serve
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

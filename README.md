@@ -38,10 +38,11 @@ Hermes proxy bypass, validation regression tests, and Kustomize builds with
 schema validation. Each Kustomization is rendered once; its successful output
 is passed to kubeconform. Temporary renders are removed after validation.
 Kustomize Components are validated through their consuming Kustomizations.
+YAML collections use block style; only empty `{}` and `[]` remain inline.
 
-For faster iteration, `make validate-kustomize` checks rendering only, while
-`make validate-schemas` checks both rendering and schemas. Both cover dormant
-workloads and test scenarios, exclude archived content and downloaded charts,
+For faster iteration, `make validate-kustomize` checks rendering and lifecycle,
+while `make validate-schemas` also checks schemas. Both cover dormant
+workloads and test scenarios, exclude downloaded charts,
 and fail immediately on a build error. Existing CRD schema exceptions remain
 documented in the Makefile.
 
@@ -57,6 +58,18 @@ the `applications/` and `components/` subdirectories. They remain covered by
 `make test` and Renovate. Move them back before registering them for deployment.
 Registered rollback workloads remain in their existing paths.
 Active sources must not reference `inactive/`.
+
+The lifecycle check follows rendered local Application sources from each
+`clusters/<name>` root and their Kustomize dependencies. It rejects missing
+paths, active references into `inactive/`, and unregistered top-level application
+or component Kustomizations. Applications in other repositories are outside
+this local path check.
+
+Authored object manifests must be referenced by a Kustomization or a local
+Application directory source. Intentionally manual manifests require an exact
+path and reason in `scripts/lifecycle-exceptions.yaml`; stale exceptions fail
+validation. Inactive workloads and test scenarios remain checked for orphaned
+manifests without becoming active deployments.
 
 Helm values should contain site overrides and explicit compatibility settings,
 not a copied upstream values file. Keep image pins, security, resource sizing,

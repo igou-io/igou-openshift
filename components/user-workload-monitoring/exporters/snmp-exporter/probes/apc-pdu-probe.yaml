@@ -31,6 +31,7 @@ spec:
         - targetLabel: __param_auth
           replacement: apc_v1
           action: replace
-        - sourceLabels: [__param_target]
+        - sourceLabels:
+          - __param_target
           targetLabel: instance
           action: replace

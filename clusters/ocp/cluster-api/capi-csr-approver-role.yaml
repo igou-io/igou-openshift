@@ -5,6 +5,10 @@ metadata:
   name: capi-csr-approver
   namespace: openshift-cluster-api
 rules:
-- apiGroups: ["cluster.x-k8s.io"]
-  resources: ["machines"]
-  verbs: ["get", "list"]
+- apiGroups:
+  - cluster.x-k8s.io
+  resources:
+    - machines
+  verbs:
+    - get
+    - list

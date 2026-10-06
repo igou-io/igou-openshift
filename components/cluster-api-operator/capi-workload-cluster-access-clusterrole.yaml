@@ -9,9 +9,18 @@ kind: ClusterRole
 metadata:
   name: capi-workload-cluster-access
 rules:
-  - apiGroups: [""]
-    resources: ["nodes", "pods"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: [""]
-    resources: ["nodes"]
-    verbs: ["patch"]
+  - apiGroups:
+    - ''
+    resources:
+      - nodes
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+    - ''
+    resources:
+      - nodes
+    verbs:
+      - patch

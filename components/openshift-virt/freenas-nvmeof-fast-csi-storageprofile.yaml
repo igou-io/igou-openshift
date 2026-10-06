@@ -5,6 +5,7 @@ metadata:
   name: freenas-nvmeof-fast-csi
 spec:
   claimPropertySets:
-    - accessModes: [ReadWriteOnce]
+    - accessModes:
+      - ReadWriteOnce
       volumeMode: Block
   cloneStrategy: snapshot

@@ -29,6 +29,7 @@ EXCLUDED_FILENAMES = {
     "Chart.yml",
     "kustomization.yaml",
     "kustomization.yml",
+    "Kustomization",
     "values.yaml",
     "values.yml",
 }
@@ -38,8 +39,9 @@ KIND_ALIASES = {
 }
 
 
-def is_excluded(path: Path) -> bool:
-    relative = path.relative_to(REPO_ROOT)
+def is_excluded(path: Path, root: Path | None = None) -> bool:
+    root = root or REPO_ROOT
+    relative = path.relative_to(root)
     is_values_file = (
         path.name.startswith(("values-", "values."))
         or path.name.endswith(("-values.yaml", "-values.yml"))
@@ -71,16 +73,17 @@ def expected_filename(document: dict[str, Any]) -> str:
     return f"{filename_name(document['metadata']['name'])}-{kind_token}.yaml"
 
 
-def manifest_files() -> list[Path]:
+def manifest_files(repo_root: Path | None = None) -> list[Path]:
+    repo_root = repo_root or REPO_ROOT
     paths: list[Path] = []
     for root_name in MANIFEST_ROOTS:
-        root = REPO_ROOT / root_name
+        root = repo_root / root_name
         paths.extend(
             path
             for path in root.rglob("*")
             if path.is_file()
             and path.suffix in {".yaml", ".yml"}
-            and not is_excluded(path)
+            and not is_excluded(path, repo_root)
         )
     return sorted(paths)
 

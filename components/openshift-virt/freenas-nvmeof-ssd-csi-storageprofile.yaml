@@ -11,6 +11,7 @@ metadata:
   name: freenas-nvmeof-ssd-csi
 spec:
   claimPropertySets:
-    - accessModes: [ReadWriteOnce]
+    - accessModes:
+      - ReadWriteOnce
       volumeMode: Block
   cloneStrategy: snapshot

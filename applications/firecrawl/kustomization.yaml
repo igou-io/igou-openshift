@@ -85,8 +85,11 @@ helmCharts:
           containers:
             app:
               nameOverride: api
-              command: ["node"]
-              args: ["--max-old-space-size=2048", "dist/src/index.js"]
+              command:
+                - node
+              args:
+                - --max-old-space-size=2048
+                - dist/src/index.js
               image: &firecrawlImage
                 repository: docker.io/winkkgmbh/firecrawl
                 digest: sha256:8b26e0967fa83e7f92d2e506e0957c10fe52f082b829e56a72ade0f7a627ed50
@@ -172,8 +175,11 @@ helmCharts:
           containers:
             app:
               nameOverride: worker
-              command: ["node"]
-              args: ["--max-old-space-size=1536", "dist/src/services/queue-worker.js"]
+              command:
+                - node
+              args:
+                - --max-old-space-size=1536
+                - dist/src/services/queue-worker.js
               image: *firecrawlImage
               envFrom: *firecrawlEnvFrom
               env:
@@ -239,8 +245,11 @@ helmCharts:
           containers:
             app:
               nameOverride: extract-worker
-              command: ["node"]
-              args: ["--max-old-space-size=1536", "dist/src/services/extract-worker.js"]
+              command:
+                - node
+              args:
+                - --max-old-space-size=1536
+                - dist/src/services/extract-worker.js
               image: *firecrawlImage
               envFrom: *firecrawlEnvFrom
               env:
@@ -316,8 +325,11 @@ helmCharts:
           containers:
             app:
               nameOverride: nuq-worker
-              command: ["node"]
-              args: ["--max-old-space-size=1536", "dist/src/services/worker/nuq-worker.js"]
+              command:
+                - node
+              args:
+                - --max-old-space-size=1536
+                - dist/src/services/worker/nuq-worker.js
               image: *firecrawlImage
               envFrom: *firecrawlEnvFrom
               env:
@@ -394,8 +406,11 @@ helmCharts:
           containers:
             app:
               nameOverride: nuq-prefetch-worker
-              command: ["node"]
-              args: ["--max-old-space-size=768", "dist/src/services/worker/nuq-prefetch-worker.js"]
+              command:
+                - node
+              args:
+                - --max-old-space-size=768
+                - dist/src/services/worker/nuq-prefetch-worker.js
               image: *firecrawlImage
               envFrom: *firecrawlEnvFrom
               env:
@@ -519,7 +534,9 @@ helmCharts:
           containers:
             app:
               nameOverride: redis
-              command: ["/bin/sh", "-c"]
+              command:
+                - /bin/sh
+                - -c
               args:
                 - |
                   if [ -n "$REDIS_PASSWORD" ]; then
