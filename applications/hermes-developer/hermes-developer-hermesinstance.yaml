@@ -23,11 +23,11 @@ metadata:
     argocd.argoproj.io/sync-wave: '10'
 spec:
   image:
-    # Built from the fully rebased fork at fac75f96 and hosted on the
+    # Built from the fully rebased fork at 2eaf1e3e and hosted on the
     # cluster's Quay.
     repository: quay.apps.ocp.igou.systems/igou-io/hermes-agent
-    tag: k8s-prod-fac75f96
-    digest: sha256:6da5b31d871fb8d00a3c72098572ffa660599ac7270900298b2630e677670dc5
+    tag: k8s-prod-2eaf1e3e
+    digest: sha256:729127ea3451a655d549c12735f7816f9d4f55d7a5886f96d124f424e3e02098
     pullPolicy: IfNotPresent
   security:
     # We own the SA: the kubernetes backend needs pod create/get/list/delete
@@ -139,7 +139,7 @@ spec:
   # hermes-dashboard.service used; scrypt BasicAuth comes from hermes-env.
   sidecars:
     - name: dashboard
-      image: quay.apps.ocp.igou.systems/igou-io/hermes-agent@sha256:6da5b31d871fb8d00a3c72098572ffa660599ac7270900298b2630e677670dc5
+      image: quay.apps.ocp.igou.systems/igou-io/hermes-agent@sha256:729127ea3451a655d549c12735f7816f9d4f55d7a5886f96d124f424e3e02098
       imagePullPolicy: IfNotPresent
       args:
         - dashboard
@@ -203,7 +203,7 @@ spec:
     # it copies Hermes-store tokens into the shared CLI file whenever the
     # store's last_refresh is strictly newer. Latest-wins in both directions.
     - name: codex-auth-sync
-      image: quay.apps.ocp.igou.systems/igou-io/hermes-agent@sha256:6da5b31d871fb8d00a3c72098572ffa660599ac7270900298b2630e677670dc5
+      image: quay.apps.ocp.igou.systems/igou-io/hermes-agent@sha256:729127ea3451a655d549c12735f7816f9d4f55d7a5886f96d124f424e3e02098
       command:
         - python3
         - -u
