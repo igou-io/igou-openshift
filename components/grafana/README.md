@@ -17,6 +17,23 @@ ready before any custom resources are created.
 | 10 | ServiceAccount, ClusterRoleBindings, SA token Secret, OAuth cookie Password + ExternalSecret | Identity and credentials. |
 | 11 | `Grafana` CR, `GrafanaDatasource` CR | The Grafana instance and its Thanos datasource. |
 
+## Persistence
+
+The operator creates `grafana-pvc` from `spec.persistentVolumeClaim`.
+`grafana-grafana.yaml` explicitly backs the generated `grafana-data` volume
+with that claim, preserving `/var/lib/grafana` across pod replacement. This
+explicit override is needed alongside the OAuth sidecar volumes; the PVC
+declaration alone left `grafana-data` as an `emptyDir` (#431).
+
+The Deployment uses `Recreate` for the single RWO claim. Dashboards and
+datasources are reconciled from their CRs; playlists, service accounts,
+preferences and other runtime state depend on the persisted SQLite database.
+
+Before the first rollout from `emptyDir`, preserve any required runtime state.
+Changing the volume does not copy the running database into the PVC. After
+rollout, verify `grafana-data` references `grafana-pvc`, then confirm a harmless
+runtime object survives a separately authorized pod replacement.
+
 ## Authentication
 
 Login uses OpenShift OAuth via a sidecar `oauth-proxy`:
