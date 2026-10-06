@@ -40,7 +40,7 @@ helmCharts:
             migrate:
               image:
                 repository: quay.apps.ocp.igou.systems/igou-io/we-get-the-hydro
-                tag: sha-f404ab3147574a24768e9f9b4c39000a708c5b5a@sha256:76543bf51ccc48119052aa7ffa8b5b36c5c75aee7f41b52cbba7c9ea67d49b151
+                tag: sha-f404ab3147574a24768e9f9b4c39000a708c5b5a@sha256:76543bf51ccc48119052aa7ffa8b5b36c5c75aee7f41b52cbba7c9ea67d49b15
                 pullPolicy: IfNotPresent
               args:
                 - migrate
@@ -64,7 +64,7 @@ helmCharts:
             app:
               image:
                 repository: quay.apps.ocp.igou.systems/igou-io/we-get-the-hydro
-                tag: sha-f404ab3147574a24768e9f9b4c39000a708c5b5a@sha256:76543bf51ccc48119052aa7ffa8b5b36c5c75aee7f41b52cbba7c9ea67d49b151
+                tag: sha-f404ab3147574a24768e9f9b4c39000a708c5b5a@sha256:76543bf51ccc48119052aa7ffa8b5b36c5c75aee7f41b52cbba7c9ea67d49b15
                 pullPolicy: IfNotPresent
               env:
                 HYDRO_DATABASE_URL: sqlite:////data/hydro.sqlite
