@@ -19,7 +19,6 @@ GitOps repository for OpenShift managed by ArgoCD. This repository can support m
 - **applications/** — User-facing apps (jellyfin, minecraft, ollama) deployed via kustomize with inline Helm charts.
 - **test-workloads/** — Networking test scenarios (multus-macvlan, multus-ovnk variants). Each has its own kustomization and README.
 - **inactive/** — Unregistered reusable workloads, grouped under `applications/` and `components/`. Still validated and maintained by Renovate; move them back before activation.
-- **archive/** — Historical examples excluded from normal validation and dependency updates.
 - **groups/** — Component grouping; references the `argocd-app-of-app` Helm chart.
 - **.helm/charts/** — Custom Helm charts: `argocd-app-of-app` (app-of-apps templating) and `ocp-base-config` (cluster base config).
 
@@ -61,10 +60,10 @@ Components are placed in order of dependencies. Storage and secrets management a
   `make validate-manifest-files` target enforces the convention in `make test`
   and CI.
 - **Workload lifecycle**: `/workspace/igou-docs/reference/igou-openshift Workload Lifecycle and Cleanup.md` records dormant and
-  rollback workloads. Dormant manifests live under `inactive/` and remain validated; confirmed retired
-  content may be removed or archived under `archive/`, outside normal validation.
+  rollback workloads. Dormant manifests live under `inactive/` and remain validated;
+  confirmed retired source files may be removed and retained in Git history.
   Do not infer live-resource deletion from removal of an Application entry.
-  Active Kustomizations and Applications must not reference `inactive/` or `archive/`.
+  Active Kustomizations and Applications must not reference `inactive/`.
 - **Helm values**: retain site overrides and explicit security, storage, resource,
   and image settings. Avoid copying upstream defaults; compare parsed renders
   at the pinned chart version when trimming values.

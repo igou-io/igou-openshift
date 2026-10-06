@@ -56,9 +56,7 @@ Reusable dormant workloads live under [`inactive/`](inactive/README.md), keeping
 the `applications/` and `components/` subdirectories. They remain covered by
 `make test` and Renovate. Move them back before registering them for deployment.
 Registered rollback workloads remain in their existing paths.
-Historical affinity examples live under [`archive/`](archive/README.md), outside
-normal validation and dependency updates. Active sources must not reference
-either directory.
+Active sources must not reference `inactive/`.
 
 Helm values should contain site overrides and explicit compatibility settings,
 not a copied upstream values file. Keep image pins, security, resource sizing,

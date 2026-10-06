@@ -101,14 +101,11 @@ class ValidateManifestFilesTests(unittest.TestCase):
 
         self.assertEqual(validator.validate(path), [])
 
-    def test_inactive_manifest_errors_are_checked_but_archives_are_excluded(self) -> None:
+    def test_inactive_manifest_errors_are_checked(self) -> None:
         inactive = self.root / "inactive/applications/example"
-        archive = self.root / "archive/misc/examples"
         inactive.mkdir(parents=True)
-        archive.mkdir(parents=True)
         content = "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: example\n"
         dormant = self.write("inactive/applications/example/wrong.yaml", content)
-        self.write("archive/misc/examples/wrong.yaml", content)
 
         self.assertEqual(validator.manifest_files(), [dormant])
         self.assertEqual(

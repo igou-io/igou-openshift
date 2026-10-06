@@ -18,7 +18,7 @@ and validates their schemas. Renovate still maintains their dependencies.
 Before activation, review secrets, storage, chart compatibility, namespaces, and
 any retained resources or data. Move the workload back to `applications/` or
 `components/`, update path references, and add its app-of-apps entry. Active
-Kustomizations and Applications must not reference `inactive/` or `archive/`.
+Kustomizations and Applications must not reference `inactive/`.
 
 ```bash
 kustomize build --enable-helm inactive/applications/minecraft-server
@@ -26,7 +26,7 @@ make test
 ```
 
 Workloads that are still registered for rollback, such as Calibre-Web with zero
-replicas, remain beside active workloads. Historical examples go under `archive/`
-and are excluded from validation and dependency updates. See the
+replicas, remain beside active workloads. Retired source files can be removed;
+Git history preserves them. See the
 [lifecycle inventory](https://github.com/igou-io/igou-docs/blob/main/reference/igou-openshift%20Workload%20Lifecycle%20and%20Cleanup.md)
 for status and retirement procedures.
