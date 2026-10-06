@@ -9,7 +9,7 @@ Can be deployed OKD or OCP, depending on what I'm working on
 ## Manifest file conventions
 
 Authored static Kubernetes and OpenShift object manifests under `applications/`,
-`components/`, `clusters/`, `groups/`, and `test-workloads/` contain exactly one
+`components/`, `clusters/`, `groups/`, `test-workloads/`, and `inactive/` contain exactly one
 object per file and use `<metadata.name>-<kind-token>.yaml`. Object names are
 lowercased for filenames and non-filename separators such as `:` become `-`.
 Kind tokens are the lowercase Kubernetes kind, with `pv` and `pvc` as the
@@ -51,6 +51,14 @@ See [the lifecycle inventory](https://github.com/igou-io/igou-docs/blob/main/ref
 rollback deployments, and confirmed retirements. The app registry is the source
 of truth for managed workloads; absence from it does not establish that live
 resources or data have been removed.
+
+Reusable dormant workloads live under [`inactive/`](inactive/README.md), keeping
+the `applications/` and `components/` subdirectories. They remain covered by
+`make test` and Renovate. Move them back before registering them for deployment.
+Registered rollback workloads remain in their existing paths.
+Historical affinity examples live under [`archive/`](archive/README.md), outside
+normal validation and dependency updates. Active sources must not reference
+either directory.
 
 Helm values should contain site overrides and explicit compatibility settings,
 not a copied upstream values file. Keep image pins, security, resource sizing,

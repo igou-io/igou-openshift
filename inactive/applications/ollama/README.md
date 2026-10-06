@@ -9,5 +9,5 @@ and burst-node placement when updating the chart. Omitted settings follow the
 chart defaults. These values were reduced by comparing parsed rendered objects
 at the same chart version.
 
-Run `kustomize build --enable-helm applications/ollama` and `make test` from the
+Run `kustomize build --enable-helm inactive/applications/ollama` and `make test` from the
 repository root when changing these values.

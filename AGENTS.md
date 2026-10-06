@@ -18,6 +18,8 @@ GitOps repository for OpenShift managed by ArgoCD. This repository can support m
 - **components/** — Reusable operator/platform components (external-secrets, openshift-virt, cert-manager, etc.), each independently installable via kustomize. Shared across clusters.
 - **applications/** — User-facing apps (jellyfin, minecraft, ollama) deployed via kustomize with inline Helm charts.
 - **test-workloads/** — Networking test scenarios (multus-macvlan, multus-ovnk variants). Each has its own kustomization and README.
+- **inactive/** — Unregistered reusable workloads, grouped under `applications/` and `components/`. Still validated and maintained by Renovate; move them back before activation.
+- **archive/** — Historical examples excluded from normal validation and dependency updates.
 - **groups/** — Component grouping; references the `argocd-app-of-app` Helm chart.
 - **.helm/charts/** — Custom Helm charts: `argocd-app-of-app` (app-of-apps templating) and `ocp-base-config` (cluster base config).
 
@@ -53,15 +55,16 @@ Components are placed in order of dependencies. Storage and secrets management a
   replace separators such as `:` with `-`, and lowercase the Kind; the approved
   aliases are `pv` for `PersistentVolume` and `pvc` for
   `PersistentVolumeClaim`. This applies under `applications/`, `components/`,
-  `clusters/`, `groups/`, and `test-workloads/`. It excludes non-object
+  `clusters/`, `groups/`, `test-workloads/`, and `inactive/`. It excludes non-object
   configuration, vendored chart content, Helm templates, and the templated
   `test-workloads/windows-vms/examples/` files. The
   `make validate-manifest-files` target enforces the convention in `make test`
   and CI.
 - **Workload lifecycle**: `/workspace/igou-docs/reference/igou-openshift Workload Lifecycle and Cleanup.md` records dormant and
-  rollback workloads. Dormant manifests remain validated; confirmed retired
+  rollback workloads. Dormant manifests live under `inactive/` and remain validated; confirmed retired
   content may be removed or archived under `archive/`, outside normal validation.
   Do not infer live-resource deletion from removal of an Application entry.
+  Active Kustomizations and Applications must not reference `inactive/` or `archive/`.
 - **Helm values**: retain site overrides and explicit security, storage, resource,
   and image settings. Avoid copying upstream defaults; compare parsed renders
   at the pinned chart version when trimming values.

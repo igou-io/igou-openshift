@@ -1,7 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "ignorePaths": [
-    "/charts/ocp-base-config/"
+    "/charts/ocp-base-config/",
+    "archive/**"
   ],
   "extends": [
     "github>igou-io/igou-devenv//renovate-base.json",
