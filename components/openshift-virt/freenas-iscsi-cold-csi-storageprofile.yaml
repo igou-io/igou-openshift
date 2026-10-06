@@ -5,5 +5,6 @@ metadata:
   name: freenas-iscsi-cold-csi
 spec:
   claimPropertySets:
-    - accessModes: [ReadWriteOnce]
+    - accessModes:
+      - ReadWriteOnce
       volumeMode: Block

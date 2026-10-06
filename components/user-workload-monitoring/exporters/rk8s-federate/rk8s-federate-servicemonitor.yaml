@@ -82,28 +82,32 @@ spec:
         # no job/instance are left untouched instead of blanked. Explicit
         # action: keeps CRD defaults visible so ArgoCD stays Synced.
         - action: replace
-          sourceLabels: [exported_job]
+          sourceLabels:
+            - exported_job
           regex: (.+)
           targetLabel: job
           replacement: $1
         - action: labeldrop
           regex: exported_job
         - action: replace
-          sourceLabels: [exported_instance]
+          sourceLabels:
+            - exported_instance
           regex: (.+)
           targetLabel: instance
           replacement: $1
         - action: labeldrop
           regex: exported_instance
         - action: replace
-          sourceLabels: [exported_service]
+          sourceLabels:
+            - exported_service
           regex: (.+)
           targetLabel: service
           replacement: $1
         - action: labeldrop
           regex: exported_service
         - action: replace
-          sourceLabels: [exported_endpoint]
+          sourceLabels:
+            - exported_endpoint
           regex: (.+)
           targetLabel: endpoint
           replacement: $1

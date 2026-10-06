@@ -5,14 +5,20 @@ inhibit_rules:
       - severity = critical
     target_matchers:
       - severity =~ "warning|info"
-    equal: [namespace, alertname]
+    equal:
+      - namespace
+      - alertname
   - source_matchers:
       - severity = warning
     target_matchers:
       - severity = info
-    equal: [namespace, alertname]
+    equal:
+      - namespace
+      - alertname
 route:
-  group_by: [alertname, namespace]
+  group_by:
+    - alertname
+    - namespace
   group_wait: 30s
   group_interval: 5m
   repeat_interval: 4h

@@ -5,6 +5,8 @@ metadata:
   name: freenas-nfs-ssd-csi
 spec:
   claimPropertySets:
-    - accessModes: [ReadWriteMany, ReadWriteOnce]
+    - accessModes:
+      - ReadWriteMany
+      - ReadWriteOnce
       volumeMode: Filesystem
   cloneStrategy: snapshot

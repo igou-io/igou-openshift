@@ -59,8 +59,7 @@ class ValidateKustomizeTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("FAIL schemas: applications/example", result.stderr)
 
-    def test_archives_caches_and_components_are_not_standalone_builds(self) -> None:
-        self.manifest("archive/applications/retired")
+    def test_caches_and_components_are_not_standalone_builds(self) -> None:
         self.manifest("applications/example/charts/vendored")
         self.manifest(".venv/package")
         self.manifest(".cache/baseline")
@@ -68,6 +67,13 @@ class ValidateKustomizeTests(unittest.TestCase):
         result = self.run_validation()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual((self.root / "calls").read_text(), "build\n")
+
+    def test_archive_named_directories_have_no_special_exemption(self) -> None:
+        self.manifest("archive/example")
+        result = self.run_validation("--schemas")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("PASS build: archive/example", result.stdout)
+        self.assertEqual((self.root / "calls").read_text(), "build\nschema\nbuild\nschema\n")
 
     def test_empty_repository_fails_instead_of_reporting_success(self) -> None:
         (self.root / "applications/example/kustomization.yaml").unlink()
@@ -81,6 +87,23 @@ class ValidateKustomizeTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("PASS build: inactive/applications/dormant", result.stdout)
         self.assertEqual((self.root / "calls").read_text(), "build\nschema\nbuild\nschema\n")
+
+    def test_lifecycle_reuses_render_and_rejects_missing_application_source(self) -> None:
+        self.manifest("clusters/ocp")
+        self.command("kustomize", "echo build >> calls\ncat <<'YAML'\nkind: Application\nmetadata:\n  name: missing\nspec:\n  source:\n    repoURL: https://github.com/igou-io/igou-openshift.git\n    path: applications/missing\nYAML\n")
+        result = self.run_validation("--lifecycle")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Application missing: missing source path", result.stderr)
+        self.assertEqual((self.root / "calls").read_text(), "build\nbuild\n")
+
+    def test_all_supported_kustomization_filenames_are_discovered(self) -> None:
+        for directory, filename in (("applications/second", "kustomization.yml"), ("applications/third", "Kustomization")):
+            self.manifest(directory)
+            path = self.root / directory
+            (path / "kustomization.yaml").rename(path / filename)
+        result = self.run_validation()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((self.root / "calls").read_text(), "build\nbuild\nbuild\n")
 
 
 if __name__ == "__main__":

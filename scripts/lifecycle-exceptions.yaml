@@ -1,0 +1,4 @@
+# Exact paths only. Remove an exception when its manifest is wired in or deleted.
+applications/sands-of-time/sands-of-time-bootstrap-job.yaml: Manual database bootstrap documented in applications/sands-of-time/README.md; deliberately excluded from automatic reconciliation.
+inactive/applications/minecraft-server/recovery/mc-backup-idle-pod.yaml: Manual recovery helper documented in igou-docs/openshift/Minecraft Server Backup Recovery.md; must run only after stopping the server.
+test-workloads/virtualmachine-devhosttest/devhosttest-virtualmachine.yaml: Standalone VM scenario documented in igou-docs/openshift/OpenShift Test Workloads and the Multus-UDN Scenario Library.md.

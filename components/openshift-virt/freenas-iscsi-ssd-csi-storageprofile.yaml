@@ -5,6 +5,7 @@ metadata:
   name: freenas-iscsi-ssd-csi
 spec:
   claimPropertySets:
-    - accessModes: [ReadWriteOnce]
+    - accessModes:
+      - ReadWriteOnce
       volumeMode: Block
   cloneStrategy: snapshot

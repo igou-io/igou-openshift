@@ -3,7 +3,6 @@ extends: default
 ignore:
   - .venv/
   - .cache/
-  - archive/
   - .helm/charts/*/templates/
   # in-tree local chart (singular `chart/` so make clean spares it; kustomize
   # load restrictions keep it out of .helm/charts)
@@ -13,6 +12,10 @@ ignore:
   - test-workloads/windows-vms/examples/
 
 rules:
+  braces:
+    forbid: non-empty
+  brackets:
+    forbid: non-empty
   line-length:
     max: 250
     allow-non-breakable-inline-mappings: true
