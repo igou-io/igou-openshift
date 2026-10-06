@@ -75,6 +75,13 @@ class ValidateKustomizeTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("No Kustomizations found", result.stderr)
 
+    def test_inactive_workloads_still_build_and_validate_schemas(self) -> None:
+        self.manifest("inactive/applications/dormant")
+        result = self.run_validation("--schemas")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("PASS build: inactive/applications/dormant", result.stdout)
+        self.assertEqual((self.root / "calls").read_text(), "build\nschema\nbuild\nschema\n")
+
 
 if __name__ == "__main__":
     unittest.main()

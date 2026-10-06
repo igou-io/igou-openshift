@@ -12,5 +12,10 @@ The backup configuration still contains a `CHANGEME` placeholder. Review its
 secret delivery before activating this workload; the values cleanup does not
 change that existing configuration.
 
-Run `kustomize build --enable-helm applications/minecraft-server` and `make test`
+Run `kustomize build --enable-helm inactive/applications/minecraft-server` and `make test`
 from the repository root when changing these values.
+
+For tar-backup recovery, follow [Minecraft Server Backup Recovery](https://github.com/igou-io/igou-docs/blob/main/openshift/Minecraft%20Server%20Backup%20Recovery.md).
+The manual helper is `recovery/mc-backup-idle-pod.yaml`; it is deliberately absent
+from the server Kustomization and mounts the existing data PVC plus temporary
+backup storage.

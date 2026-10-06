@@ -18,6 +18,7 @@ MANIFEST_ROOTS = (
     "clusters",
     "groups",
     "test-workloads",
+    "inactive",
 )
 EXCLUDED_PARTS = {"charts", "templates"}
 EXCLUDED_PREFIXES = (

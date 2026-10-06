@@ -40,7 +40,8 @@ helmCharts:
               type: RuntimeDefault
         containers:
           app:
-            args: ["serve"]
+            args:
+              - serve
             image:
               repository: docker.io/binwiederhier/ntfy
               tag: v2.28.0@sha256:6ef4b819f722fccdc036af611c4774cfdc2de821ab74fdd48bbf4c9d6f8973da
