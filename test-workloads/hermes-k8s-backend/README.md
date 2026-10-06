@@ -19,15 +19,22 @@ isolation.
 | File | Purpose |
 |---|---|
 | `kustomization.yaml` | inflates the hermes-operator OCI chart via `helmCharts` |
-| `namespace.yaml` | `hermes-k8s-test` + the `hermes-agent` ServiceAccount |
-| `operator-namespace.yaml` | `hermes-operator` (chart inflation has no `--create-namespace`) |
-| `scc.yaml` | `hermes-agent-root` SCC — restricted-v2 + `RunAsAny` + 5 caps |
-| `scc-rbac.yaml` | binds that SCC to the agent SA |
-| `rbac.yaml` | session SA (no perms) + the agent's pod/exec Role |
-| `session-networkpolicy.yaml` | session-pod default-deny + optional internet |
-| `agent-egress-networkpolicy.yaml` | **the one that makes it work** — see below |
-| `quay-pull-externalsecret.yaml` | Quay robot pull secret from 1Password |
-| `hermesinstance.yaml` | the `HermesInstance` CR |
+| `hermes-k8s-test-namespace.yaml` | Test namespace |
+| `hermes-agent-serviceaccount.yaml` | Agent ServiceAccount |
+| `hermes-operator-namespace.yaml` | Operator namespace (chart inflation has no `--create-namespace`) |
+| `hermes-agent-root-securitycontextconstraints.yaml` | SCC — restricted-v2 + `RunAsAny` + 5 caps |
+| `system-openshift-scc-hermes-agent-root-clusterrole.yaml` | Grants use of the SCC |
+| `system-openshift-scc-hermes-agent-root-rolebinding.yaml` | Binds the SCC role to the agent SA |
+| `hermes-session-noperms-serviceaccount.yaml` | Session SA with no API permissions |
+| `hermes-session-exec-role.yaml` | Agent session-pod and exec permissions |
+| `hermes-session-exec-rolebinding.yaml` | Binds session-pod permissions to the agent |
+| `hermes-session-sandbox-role.yaml` | Agent Sandbox permissions |
+| `hermes-session-sandbox-rolebinding.yaml` | Binds Sandbox permissions to the agent |
+| `hermes-session-default-deny-networkpolicy.yaml` | Session-pod default deny |
+| `hermes-session-allow-internet-networkpolicy.yaml` | Session-pod internet access |
+| `hermes-agent-openshift-egress-networkpolicy.yaml` | **the one that makes it work** — see below |
+| `quay-local-pull-externalsecret.yaml` | Shared Quay robot pull secret from 1Password |
+| `hermes-k8s-hermesinstance.yaml` | The `HermesInstance` CR |
 
 ## Apply
 
@@ -89,7 +96,7 @@ against the earlier revision of this workload will now fail loudly.
 
 Each of these cost real debugging; none are cosmetic.
 
-1. **`agent-egress-networkpolicy.yaml` — OVN-Kubernetes applies load-balancer
+1. **`hermes-agent-openshift-egress-networkpolicy.yaml` — OVN-Kubernetes applies load-balancer
    DNAT *before* egress ACLs.** The operator's own NetworkPolicy allows egress
    on 53 and 443, which is right on vanilla Kubernetes and blocks everything
    here: the apiserver's `172.30.0.1:443` DNATs to `:6443` and OpenShift

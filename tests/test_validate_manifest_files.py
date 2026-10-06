@@ -101,6 +101,18 @@ class ValidateManifestFilesTests(unittest.TestCase):
 
         self.assertEqual(validator.validate(path), [])
 
+    def test_inactive_manifest_errors_are_checked(self) -> None:
+        inactive = self.root / "inactive/applications/example"
+        inactive.mkdir(parents=True)
+        content = "apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: example\n"
+        dormant = self.write("inactive/applications/example/wrong.yaml", content)
+
+        self.assertEqual(validator.manifest_files(), [dormant])
+        self.assertEqual(
+            validator.validate(dormant),
+            ["inactive/applications/example/wrong.yaml: expected filename example-configmap.yaml"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

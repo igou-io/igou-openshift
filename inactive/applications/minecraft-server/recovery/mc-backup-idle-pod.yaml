@@ -11,11 +11,18 @@ spec:
     - name: mc-backup
       image: itzg/mc-backup:latest@sha256:3ff6a1e8fa15ca4e4440b118676cf58c611a4079d4da8fe792b04a9a13619f16
       imagePullPolicy: IfNotPresent
-      command: ["/bin/sh", "-c", "sleep infinity"]
+      command:
+        - /bin/sh
+        - -c
+        - sleep infinity
       volumeMounts:
         - name: minecraft-datadir
           mountPath: /data
+        - name: backups
+          mountPath: /backups
   volumes:
     - name: minecraft-datadir
       persistentVolumeClaim:
         claimName: minecraft-datadir
+    - name: backups
+      emptyDir: {}
