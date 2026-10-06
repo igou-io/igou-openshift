@@ -26,6 +26,25 @@ inspects**; it cannot change anything:
   coding-CLI OAuth state is seeded or refreshed per instance with the
   scale-to-zero `auth-login` Deployment below).
 
+## Web extraction
+
+Search uses the in-cluster SearXNG service. Extraction uses the bundled
+`web-firecrawl` plugin with `web.extract_backend: firecrawl` and
+`FIRECRAWL_API_URL=http://firecrawl-api.firecrawl.svc.cluster.local:3002`.
+The self-hosted endpoint needs no API key. The shared
+`ghcr.io/igou-io/hermes-agent-k8s` image is built by igou-containers from the
+pinned Kubernetes fork branch and includes the `firecrawl` Python extra at build time; `security.allow_lazy_installs` stays
+disabled.
+
+The agent's NetworkPolicy permits TCP 3002 only to Firecrawl API pods in the
+`firecrawl` namespace. Firecrawl's existing ingress policy permits `hermes-sre`.
+The service DNS name bypasses Squid through the existing `.cluster.local`
+proxy exclusion.
+
+After rollout, verify plugin discovery and run `web_extract` against a public
+page. Confirm search still uses SearXNG and extraction does not attempt a
+runtime dependency install.
+
 ## Refresh coding-CLI authentication
 
 The `auth-login` Deployment uses the same `igou-devenv` image as terminal
@@ -91,9 +110,9 @@ directory, nothing hand-seeded on the PVC):
   must be on the igou-hermes App installation). Its only egress is DNS, the
   namespace-local broker, and Squid TCP/3128.
 - `max_concurrent_sessions: 4` (alert webhooks are rejected, not queued, at the
-  limit), `session_reset: idle 120 min`, and no Firecrawl configuration. Lazy
-  installs remain disabled and search stays on SearXNG; issue #859 tracks baking
-  the plugin into the pinned image before restoring `web_extract`.
+  limit), and `session_reset: idle 120 min`. Firecrawl extraction uses the baked
+  SDK and bundled plugin; lazy installs remain disabled and search stays on
+  SearXNG (issue #859).
 
 Alert-path hardening (2026-08-30, second pass):
 
