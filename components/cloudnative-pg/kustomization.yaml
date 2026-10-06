@@ -1,6 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+- cnpg-pull-secret-secret.yaml
 - cloudnative-pg-operatorgroup.yaml
 - cloudnative-pg-servicemonitor.yaml
 - cloudnative-pg-subscription.yaml
