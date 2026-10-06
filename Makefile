@@ -13,15 +13,8 @@ validate-manifest-files: ## Validate one-object-per-file and manifest filenames
 validate-kustomize: ## Validate all kustomization.yaml files build successfully
 	$(PYTHON) scripts/validate_kustomize.py --lifecycle
 
-# Kinds skipped because the datreeio CRDs-catalog schema is stale vs the live CRD:
-#  - CoreProvider/InfrastructureProvider/IPAMProvider: catalog ships the deprecated
-#    `manifestPatches` field but not the newer `patches` field that v1alpha2 supports.
-#  - NVIDIADriver: catalog's nvidiadriver_v1alpha1.json lacks the `kernelModuleType`
-#    field the operator added (used by the 580/595 side-by-side drivers; valid on the
-#    live CRD), so `-strict` rejects it as an additional property.
-# All verified against the live CRDs on cluster. Re-enable each when datreeio catches up.
+# Validate every kind with an available schema; skip only missing schemas.
 KUBECONFORM_FLAGS := -strict -ignore-missing-schemas \
-	-skip ClusterSecretStore,MachineSet,CoreProvider,InfrastructureProvider,IPAMProvider,NVIDIADriver \
 	-schema-location default \
 	-schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
 	-summary
