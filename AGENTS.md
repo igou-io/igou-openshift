@@ -55,9 +55,16 @@ Components are placed in order of dependencies. Storage and secrets management a
   `PersistentVolumeClaim`. This applies under `applications/`, `components/`,
   `clusters/`, `groups/`, and `test-workloads/`. It excludes non-object
   configuration, vendored chart content, Helm templates, and the templated
-  `test-workloads/windows-vms/examples/` files. The optional
-  `make validate-manifest-files` target audits the convention manually; it is
-  not part of `make test` or CI.
+  `test-workloads/windows-vms/examples/` files. The
+  `make validate-manifest-files` target enforces the convention in `make test`
+  and CI.
+- **Workload lifecycle**: `docs/workload-lifecycle.md` records dormant and
+  rollback workloads. Dormant manifests remain validated; confirmed retired
+  content may be removed or archived under `archive/`, outside normal validation.
+  Do not infer live-resource deletion from removal of an Application entry.
+- **Helm values**: retain site overrides and explicit security, storage, resource,
+  and image settings. Avoid copying upstream defaults; compare parsed renders
+  at the pinned chart version when trimming values.
 
 # Agent Workflow
 

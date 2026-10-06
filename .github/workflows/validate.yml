@@ -2,54 +2,57 @@ name: Validate Manifests
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
-  lint:
-    name: YAML Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
-      - name: Install yamllint
-        run: pip install yamllint
-
-      - name: Run yamllint
-        run: make lint
-
-  validate-kustomize:
-    name: Kustomize Build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
-      - name: Install kustomize
-        uses: imranismail/setup-kustomize@53f941b41dca13ed61874bbc6b4b6e1562877530 # v3
-
-      - name: Install Helm
-        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5
-
-      - name: Validate kustomize builds
-        run: make validate-kustomize
-
   validate-schemas:
     name: Schema Validation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
+      - name: Install Python validation dependencies
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install -r requirements-dev.txt
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+
       - name: Install kustomize
         uses: imranismail/setup-kustomize@53f941b41dca13ed61874bbc6b4b6e1562877530 # v3
+        with:
+          kustomize-version: 5.8.1
 
       - name: Install Helm
         uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5
+        with:
+          version: v4.3.0
 
       - name: Install kubeconform
         run: |
-          curl -sL https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz | \
-            tar xz -C /usr/local/bin
+          curl --fail --silent --show-error --location \
+            https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-linux-amd64.tar.gz \
+            --output "$RUNNER_TEMP/kubeconform.tar.gz"
+          tar xzf "$RUNNER_TEMP/kubeconform.tar.gz" -C /usr/local/bin kubeconform
 
-      - name: Validate schemas
-        run: make validate-schemas
+      - name: Run the local validation gate
+        run: make test
+
+  # Keep the existing branch-rule check names. Both depend on the complete gate;
+  # builds and lint are performed above, without rendering everything again.
+  lint:
+    name: YAML Lint
+    needs: validate-schemas
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "YAML and Helm lint verified by make test"
+
+  validate-kustomize:
+    name: Kustomize Build
+    needs: validate-schemas
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Kustomize builds verified by make test"
