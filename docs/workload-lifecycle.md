@@ -49,8 +49,9 @@ retirements are inferred by this cleanup.
 The 2026-10-06 file audit checked tracked files against Kustomize resources,
 patches, generators, Helm values, object-name consumers, and local references
 in igou-containers, igou-ansible, igou-inventory, igou-skills, and igou-docs.
-The following 14 files are source-removal candidates. They remain in this PR
-for review; none have been deleted. These marks do not authorize live cleanup.
+The audit identified 14 source-removal candidates. The root `PR_REVIEW.md` was
+removed at the operator's request; the following 13 files remain for review.
+These marks do not authorize live cleanup.
 
 | File | Evidence |
 | --- | --- |
@@ -63,7 +64,6 @@ for review; none have been deleted. These marks do not authorize live cleanup.
 | `applications/omnigent/patch_openshell_service_auth.py` | Its only filename reference is the obsolete `Containerfile.openshell`. |
 | `applications/omnigent/openshell-host-policy.yaml` | No generator/file reference found. Its old policy environment variable is used only by the obsolete OpenShell patch. |
 | `components/nvidia-gpu-operator/time-slicing-config-configmap.yaml` | Absent from Kustomize, and ClusterPolicy does not reference `time-slicing-config`. The July component review already records it as orphaned and unwired. |
-| `PR_REVIEW.md` | Unreferenced March 20 review of old dependency branches, not current repository guidance. |
 | `docs/superpowers/plans/2026-05-07-gitea-mirror-gitops.md` | Implementation plan for Gitea Mirror, removed in #1077. No external filename references found. Remove together with its spec, or keep both explicitly as history. |
 | `docs/superpowers/specs/2026-05-07-gitea-mirror-gitops-design.md` | Spec for the same retired application. |
 | `docs/superpowers/plans/2026-06-14-hermes-agent-poc-phase1-guardrails.md` | Plan for the old `applications/hermes-agent` VM deployment, removed in #774. igou-docs records completed VM retirement. |
