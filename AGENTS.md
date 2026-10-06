@@ -64,6 +64,12 @@ Components are placed in order of dependencies. Storage and secrets management a
   confirmed retired source files may be removed and retained in Git history.
   Do not infer live-resource deletion from removal of an Application entry.
   Active Kustomizations and Applications must not reference `inactive/`.
+  `make test` checks rendered Application source paths and their dependency
+  graph, rejects unregistered application/component Kustomizations, and catches
+  orphaned object manifests. Document intentional manual object files with an
+  exact path and reason in `scripts/lifecycle-exceptions.yaml`.
+- **YAML style**: use block collections; inline `{}` and `[]` are allowed only
+  when empty. YAML lint enforces this across authored YAML.
 - **Helm values**: retain site overrides and explicit security, storage, resource,
   and image settings. Avoid copying upstream defaults; compare parsed renders
   at the pinned chart version when trimming values.

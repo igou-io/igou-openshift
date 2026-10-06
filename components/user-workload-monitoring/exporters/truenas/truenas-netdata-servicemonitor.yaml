@@ -30,7 +30,8 @@ spec:
         # the rendered manifest matches the live object and ArgoCD stays
         # Synced instead of perpetually OutOfSync on the defaulted field.
         - action: replace
-          sourceLabels: [chart]
+          sourceLabels:
+            - chart
           regex: '.*_serial(?:_lunid)?_([^_]+).*'
           targetLabel: disk
           replacement: '${1}'
@@ -44,5 +45,6 @@ spec:
         # (num_dropped=9). No relabeling can recover the lost pool identity, and
         # per-pool usage already comes from zfs_exporter, so drop the series.
         - action: drop
-          sourceLabels: [__name__]
+          sourceLabels:
+            - __name__
           regex: 'netdata_pool_usage_bytes_average'

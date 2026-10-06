@@ -57,7 +57,9 @@ helmCharts:
             http:
               method: GET
               preferred_ip_protocol: ip4
-              valid_http_versions: [HTTP/1.1, HTTP/2.0]
+              valid_http_versions:
+                - HTTP/1.1
+                - HTTP/2.0
               valid_status_codes: []
               fail_if_ssl: false
               fail_if_not_ssl: false
@@ -69,8 +71,11 @@ helmCharts:
             http:
               method: GET
               preferred_ip_protocol: ip4
-              valid_http_versions: [HTTP/1.1, HTTP/2.0]
-              valid_status_codes: [401]
+              valid_http_versions:
+                - HTTP/1.1
+                - HTTP/2.0
+              valid_status_codes:
+                - 401
               fail_if_ssl: false
               fail_if_not_ssl: false
               tls_config:
@@ -81,8 +86,12 @@ helmCharts:
             http:
               method: GET
               preferred_ip_protocol: ip4
-              valid_http_versions: [HTTP/1.1, HTTP/2.0]
-              valid_status_codes: [200, 403]
+              valid_http_versions:
+                - HTTP/1.1
+                - HTTP/2.0
+              valid_status_codes:
+                - 200
+                - 403
               fail_if_ssl: false
               fail_if_not_ssl: false
               tls_config:
@@ -93,7 +102,9 @@ helmCharts:
             http:
               method: GET
               preferred_ip_protocol: ip4
-              valid_http_versions: [HTTP/1.1, HTTP/2.0]
+              valid_http_versions:
+                - HTTP/1.1
+                - HTTP/2.0
               valid_status_codes: []
               tls_config:
                 insecure_skip_verify: true

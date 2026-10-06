@@ -31,7 +31,8 @@ spec:
   podSelector:
     matchLabels:
       app.kubernetes.io/managed-by: hermes-agent
-  policyTypes: ["Egress"]
+  policyTypes:
+    - Egress
   egress:
     - to:
         - ipBlock:

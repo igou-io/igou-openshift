@@ -11,7 +11,7 @@ validate-manifest-files: ## Validate one-object-per-file and manifest filenames
 
 .PHONY: validate-kustomize
 validate-kustomize: ## Validate all kustomization.yaml files build successfully
-	$(PYTHON) scripts/validate_kustomize.py
+	$(PYTHON) scripts/validate_kustomize.py --lifecycle
 
 # Kinds skipped because the datreeio CRDs-catalog schema is stale vs the live CRD:
 #  - CoreProvider/InfrastructureProvider/IPAMProvider: catalog ships the deprecated
@@ -28,7 +28,7 @@ KUBECONFORM_FLAGS := -strict -ignore-missing-schemas \
 
 .PHONY: validate-schemas
 validate-schemas: ## Validate rendered manifests against K8s/OpenShift schemas
-	$(PYTHON) scripts/validate_kustomize.py --schemas $(KUBECONFORM_FLAGS)
+	$(PYTHON) scripts/validate_kustomize.py --lifecycle --schemas $(KUBECONFORM_FLAGS)
 
 .PHONY: lint-helm
 lint-helm: ## Lint all Helm charts under .helm/charts/
