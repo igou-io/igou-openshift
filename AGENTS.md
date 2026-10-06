@@ -1,8 +1,8 @@
-# Build & Validation Commands
+# Code standards
 
-Before pushing, ensure linting and schema validation pases with `make test`
-
-Kustomization files in this repo often use the `helmChart` field. Do not use `oc/kubectl apply -k` and instead opt for `kustomize build --enable-helm | oc apply -f -` to properly render
+Read and follow [CODE_STANDARDS.md](CODE_STANDARDS.md) before editing this
+repository. It defines YAML style, manifest naming, workload lifecycle, Helm
+values, secrets, validation, and dependency review requirements.
 
 # Architecture
 
@@ -16,7 +16,7 @@ GitOps repository for OpenShift managed by ArgoCD. This repository can support m
 
 - **clusters/** — Per-cluster config. Each cluster has its own `values.yaml` for the app-of-apps pattern. This repository is single cluster
 - **components/** — Reusable operator/platform components (external-secrets, openshift-virt, cert-manager, etc.), each independently installable via kustomize. Shared across clusters.
-- **applications/** — User-facing apps (jellyfin, minecraft, ollama) deployed via kustomize with inline Helm charts.
+- **applications/** — User-facing apps (jellyfin, forgejo, homepage) deployed via kustomize with inline Helm charts.
 - **test-workloads/** — Networking test scenarios (multus-macvlan, multus-ovnk variants). Each has its own kustomization and README.
 - **inactive/** — Unregistered reusable workloads, grouped under `applications/` and `components/`. Still validated and maintained by Renovate; move them back before activation.
 - **groups/** — Component grouping; references the `argocd-app-of-app` Helm chart.
@@ -29,50 +29,12 @@ Each cluster uses its own `values.yaml` to define managed applications. Each ent
 Components are placed in order of dependencies. Storage and secrets management are frequently used by other parts of the environment so they are deployed and synced first.
 
 **Sync-wave ordering** controls deployment sequence:
+
 - Wave 0: external-secrets-operator
 - Wave 1-2: storage, machine configs
 - Wave 5-6: networking, cert management
 - Wave 8-10: operators, platform services
 - Wave 20+: user applications
-
-# Key Conventions
-
-- **Annotations**: `argocd.argoproj.io/sync-wave`, `argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true,ServerSideApply=true`
-- **Sync policy defaults**: auto-sync enabled, auto-prune disabled, unlimited retry with exponential backoff
-- **Secrets**: externalized via External Secrets Operator + 1Password ClusterSecretStore — never stored in git
-- **Container images**: pinned to digest where possible (Renovate manages updates)
-- **Control-plane placement**: always-on components (Connect, ESO, CAPI, CNPG,
-  log-gateway, ingress) stay pinned to the master. Workloads that expose
-  affinity prefer dedicated workers via `preferredDuringScheduling`
-  `node-role.kubernetes.io/control-plane DoesNotExist` (`ocp` is also labeled
-  `worker`, so selecting `worker` would still match the master). Soft
-  preference: they still schedule on `ocp` if workers are full or drained.
-  GitOps and RHACS have no preferred-affinity knob.
-- **Object manifest boundaries and naming**: every authored static Kubernetes or
-  OpenShift object manifest contains exactly one object and is named
-  `<metadata.name>-<kind-token>.yaml`. Lowercase the object name for the filename,
-  replace separators such as `:` with `-`, and lowercase the Kind; the approved
-  aliases are `pv` for `PersistentVolume` and `pvc` for
-  `PersistentVolumeClaim`. This applies under `applications/`, `components/`,
-  `clusters/`, `groups/`, `test-workloads/`, and `inactive/`. It excludes non-object
-  configuration, vendored chart content, Helm templates, and the templated
-  `test-workloads/windows-vms/examples/` files. The
-  `make validate-manifest-files` target enforces the convention in `make test`
-  and CI.
-- **Workload lifecycle**: `/workspace/igou-docs/reference/igou-openshift Workload Lifecycle and Cleanup.md` records dormant and
-  rollback workloads. Dormant manifests live under `inactive/` and remain validated;
-  confirmed retired source files may be removed and retained in Git history.
-  Do not infer live-resource deletion from removal of an Application entry.
-  Active Kustomizations and Applications must not reference `inactive/`.
-  `make test` checks rendered Application source paths and their dependency
-  graph, rejects unregistered application/component Kustomizations, and catches
-  orphaned object manifests. Document intentional manual object files with an
-  exact path and reason in `scripts/lifecycle-exceptions.yaml`.
-- **YAML style**: use block collections; inline `{}` and `[]` are allowed only
-  when empty. YAML lint enforces this across authored YAML.
-- **Helm values**: retain site overrides and explicit security, storage, resource,
-  and image settings. Avoid copying upstream defaults; compare parsed renders
-  at the pinned chart version when trimming values.
 
 # Documentation
 
@@ -87,10 +49,6 @@ designs to the vault rather than recreating `docs/` here.
 - Start with the closest `README.md` or runbook in the component/application directory, then read that directory's `kustomization.yaml`.
 - For managed applications, check `clusters/ocp/values.yaml` to understand the ArgoCD Application name, destination namespace, source path, sync wave, and any `ignoreDifferences` rules.
 - For reusable platform pieces, expect a split between `components/<name>/` (installable building block) and `clusters/ocp/<name>/` (cluster-specific wiring and values).
-- Preserve controller-owned fields documented in `ignoreDifferences`; do not "fix" live-controller drift back into git unless that is the explicit intent.
-- Keep generated secrets and secret material out of git. Use External Secrets / 1Password references instead.
-- When adding or moving YAML manifests, update the nearest `kustomization.yaml` and prefer filenames of the form `<metadata.name>-<kind>.yaml`.
-- For image changes, preserve digest pinning where the manifest already uses it unless the Renovate rules below say otherwise.
 
 # Networking
 
@@ -202,9 +160,11 @@ oc explain <resource>[.<field>]
 oc get crd <crd-name> -o yaml
 ```
 
-Use `oc apply -k <path>` only when intentionally applying a single component/application outside ArgoCD. For normal GitOps changes, update git and let ArgoCD reconcile.
+For normal GitOps changes, update git and let ArgoCD reconcile. When direct
+application is explicitly authorized, follow the Helm rendering guidance in
+[CODE_STANDARDS.md](CODE_STANDARDS.md#helm-values-images-and-secrets).
 
-# Automation and Merge Guidelines
+# Dependency Automation
 
 ## Renovate
 
@@ -221,14 +181,7 @@ Repo-specific behavior:
   shared controller/node `tag@sha256` image pins in the chart's nonstandard image
   schema. Its existing compatibility freeze remains in place.
 
-Merge policy for Renovate PRs:
-- Patch/minor chart or image PRs can usually merge after CI passes if rendered manifests are unchanged in risky areas or the change is clearly scoped.
-- Docker major updates require manual review even if CI passes. Check upstream release notes and whether values, probes, security context, CRDs, or storage behavior changed.
-- Major Helm chart updates require manual review of the chart changelog and values schema. CI confirms rendering/schema shape, not runtime compatibility.
-- Digest-only updates are usually low risk, but still check whether the workload is stateful, privileged, GPU-dependent, storage-critical, or cluster-networking-critical.
-- Do not merge Renovate PRs that combine unrelated ecosystem changes unless the combined blast radius is understood. Prefer one component/application per merge when possible.
-- For any operator, CRD, CNI, storage, MachineConfig, or Cluster API related update, verify ordering/sync-wave assumptions and CRD compatibility before merge.
-- If CI is green but `make test` fails locally, treat local failure as blocking unless the reason is a documented environment/tooling difference.
+Review dependency changes using [CODE_STANDARDS.md](CODE_STANDARDS.md#reviewing-dependency-updates).
 
 # Research Guidelines
 
