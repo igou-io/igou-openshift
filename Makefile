@@ -1,4 +1,5 @@
 REPO_ROOT := $(shell git rev-parse --show-toplevel)
+PYTHON ?= python3
 
 .PHONY: lint
 lint: clean ## Lint all YAML files with yamllint
@@ -6,19 +7,11 @@ lint: clean ## Lint all YAML files with yamllint
 
 .PHONY: validate-manifest-files
 validate-manifest-files: ## Validate one-object-per-file and manifest filenames
-	python3 scripts/validate_manifest_files.py
+	$(PYTHON) scripts/validate_manifest_files.py
 
 .PHONY: validate-kustomize
 validate-kustomize: ## Validate all kustomization.yaml files build successfully
-	@find $(REPO_ROOT) -name kustomization.yaml -print0 | \
-		xargs -0 -I{} sh -c 'dir=$$(dirname "{}"); reldir=$${dir#$(REPO_ROOT)/}; \
-		if kustomize build --enable-helm "$$dir" > /dev/null 2>&1; then \
-			echo "✅ $$reldir"; \
-		else \
-			echo "❌ $$reldir"; \
-			kustomize build --enable-helm "$$dir" 2>&1 | tail -5; \
-			exit 1; \
-		fi'
+	$(PYTHON) scripts/validate_kustomize.py
 
 # Kinds skipped because the datreeio CRDs-catalog schema is stale vs the live CRD:
 #  - CoreProvider/InfrastructureProvider/IPAMProvider: catalog ships the deprecated
@@ -35,11 +28,7 @@ KUBECONFORM_FLAGS := -strict -ignore-missing-schemas \
 
 .PHONY: validate-schemas
 validate-schemas: ## Validate rendered manifests against K8s/OpenShift schemas
-	@find $(REPO_ROOT) -name kustomization.yaml -print0 | \
-		xargs -0 -I{} sh -c 'dir=$$(dirname "{}"); reldir=$${dir#$(REPO_ROOT)/}; \
-		echo "--- $$reldir ---"; \
-		kustomize build --enable-helm "$$dir" 2>/dev/null | \
-		kubeconform $(KUBECONFORM_FLAGS) || exit 1'
+	$(PYTHON) scripts/validate_kustomize.py --schemas $(KUBECONFORM_FLAGS)
 
 .PHONY: lint-helm
 lint-helm: ## Lint all Helm charts under .helm/charts/
@@ -59,7 +48,11 @@ validate-hermes-proxy: ## Ensure Hermes bypasses Squid for the in-cluster API se
 		} END { exit failed }' {} +
 
 .PHONY: test
-test: lint lint-helm validate-hermes-proxy validate-kustomize validate-schemas ## Run all standard validation checks
+test: lint lint-helm validate-manifest-files validate-hermes-proxy test-validation validate-schemas ## Run all standard validation checks (one render per Kustomization)
+
+.PHONY: test-validation
+test-validation: ## Run validation regression tests
+	$(PYTHON) -m unittest discover -s tests -v
 
 .PHONY: clean
 clean: ## Remove charts/ directories left behind by kustomize build (excludes .helm/charts)

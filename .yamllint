@@ -1,6 +1,9 @@
 extends: default
 
 ignore:
+  - .venv/
+  - .cache/
+  - archive/
   - .helm/charts/*/templates/
   # in-tree local chart (singular `chart/` so make clean spares it; kustomize
   # load restrictions keep it out of .helm/charts)

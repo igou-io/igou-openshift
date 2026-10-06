@@ -6,7 +6,7 @@ Secondary **localnet** on VLAN **9**, using the same OVS bridge mapping as other
 
 - **`physicalNetworkName`**: `trunk-network` — must match `ovn.bridge-mappings` (`localnet: trunk-network` → `br-secondary`) in [nmstate mapping](../nmstate/mapping-nodenetworkconfigurationpolicy.yaml).
 - **Tagging**: `vlan.access.id: 9` applies 802.1Q VLAN 9 on that localnet path (OVN tags traffic to the underlay).
-- **IPAM**: disabled — OVN assigns a MAC only; VMs/pods must get addresses via DHCP, cloud-init, or static config (see [docs/udn/cudn-localnet-no-ipam](../../docs/udn/cudn-localnet-no-ipam/)).
+- **IPAM**: disabled — OVN assigns a MAC only; VMs/pods must get addresses via DHCP, cloud-init, or static config (see [the no-IPAM localnet example](https://github.com/igou-io/igou-docs/blob/main/wiki/UDN%20and%20ClusterUserDefinedNetwork%20Topologies%20%28Layer2%2C%20Layer3%2C%20Localnet%29%20on%20OVN-K.md#cudn-localnet-no-ipam)).
 
 ### Namespace access
 
