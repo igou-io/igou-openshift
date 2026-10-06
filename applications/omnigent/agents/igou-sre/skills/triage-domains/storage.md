@@ -21,5 +21,5 @@ iSCSI, NFS and NVMe-oF as separate democratic-csi releases.
    source pool (die with it); `-detached` classes are full send/receive
    copies onto `cold` (minutes-per-GiB, not instant — slow is expected).
 5. Retain-policy PVs and name-addressed restore paths are documented in
-   igou-openshift `docs/runbooks/restore-pvc-from-truenas.md`; link it
+   igou-docs `https://github.com/igou-io/igou-docs/blob/main/storage/Restoring%20PVC%20Data%20from%20TrueNAS%20zvols%20-%20ZFS%20Snapshot%20Rescue%20and%20Static%20PV%20Import.md`; link it
    instead of restating it.

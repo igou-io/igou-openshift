@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Manually audit file boundaries and names for authored Kubernetes manifests."""
+"""Validate file boundaries and names for authored Kubernetes manifests."""
 
 from __future__ import annotations
 

@@ -20,7 +20,7 @@ spec:
   imagePullPolicy: IfNotPresent
   # Pin to the always-present control-plane host so a rolling restart never
   # migrates the RWO NVMe-oF PVC to an (ephemeral CAPI) worker node and trips the
-  # democratic-csi Multi-Attach bug. See docs/runbooks/nvmeof-stuck-multiattach.md.
+  # democratic-csi Multi-Attach bug. See https://github.com/igou-io/igou-docs/blob/main/storage/Cluster%20Storage%20with%20democratic-csi%20and%20Volume%20Recovery.md.
   affinity:
     nodeSelector:
       node-role.kubernetes.io/control-plane: ""

@@ -1,10 +1,10 @@
 ---
 # Nightly etcd backup for the single-master cluster (DR-assessment gap #1,
-# docs/post-mortems/2026-07-31-dr-readiness-assessment.md). Two stages in
+# https://github.com/igou-io/igou-docs/blob/main/reference/2026-07-31%20OpenShift%20Disaster%20Recovery%20Readiness%20Assessment.md). Two stages in
 # one pod: a privileged initContainer runs the host's cluster-backup.sh
 # via chroot, then an unprivileged rc container uploads the artifacts to
 # rustfs-cold. Restore + snapshot-mining procedures:
-# docs/runbooks/etcd-backup-restore.md.
+# https://github.com/igou-io/igou-docs/blob/main/openshift/Backing%20Up%20and%20Restoring%20OpenShift%20etcd.md.
 #
 # hostNetwork is REQUIRED (cluster-backup.sh's etcdctl targets
 # localhost:2379, and chroot does not change netns); hostPID for the
