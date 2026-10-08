@@ -1,0 +1,14 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: omnigent-pg-daily
+  namespace: omnigent
+spec:
+  schedule: '0 45 3 * * *'
+  immediate: true
+  backupOwnerReference: self
+  cluster:
+    name: omnigent-pg
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io

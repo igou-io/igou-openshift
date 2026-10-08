@@ -1,0 +1,34 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: omnigent-pg
+  namespace: omnigent
+  annotations:
+    argocd.argoproj.io/sync-wave: '-1'
+spec:
+  instances: 1
+  enablePDB: false
+  imagePullPolicy: IfNotPresent
+  affinity:
+    nodeSelector:
+      node-role.kubernetes.io/control-plane: ''
+    podAntiAffinityType: preferred
+  bootstrap:
+    initdb:
+      database: omnigent
+      owner: omnigent
+  storage:
+    size: 10Gi
+    storageClass: freenas-nvmeof-ssd-csi
+  monitoring:
+    enablePodMonitor: true
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      enabled: true
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: omnigent-pg-backup
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi

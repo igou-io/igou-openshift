@@ -1,0 +1,24 @@
+spec_version: 1
+name: igou-sre
+description: Read-only infrastructure investigations and SRE sweeps.
+instructions: AGENTS.md
+executor:
+  type: omnigent
+  max_iterations: 80
+  config:
+    harness: codex
+  auth:
+    type: provider
+    name: codex-chatgpt
+os_env:
+  type: caller_process
+  cwd: .
+  sandbox:
+    type: none
+    env_passthrough:
+      - KUBECONFIG
+      - GHAPP_BROKER_URL
+      - GIT_AUTHOR_NAME
+      - GIT_AUTHOR_EMAIL
+      - GIT_COMMITTER_NAME
+      - GIT_COMMITTER_EMAIL
