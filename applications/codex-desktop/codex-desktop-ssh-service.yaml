@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: codex-desktop-ssh
+  namespace: codex-desktop
+spec:
+  selector:
+    app.kubernetes.io/name: codex-desktop
+  ports:
+    - name: ssh
+      port: 22
+      targetPort: 22

@@ -1,0 +1,14 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: codex-desktop-provisioner
+  namespace: codex-desktop
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: codex-desktop-provisioner
+subjects:
+  - kind: ServiceAccount
+    name: virtualmachine-ops
+    namespace: service-accounts

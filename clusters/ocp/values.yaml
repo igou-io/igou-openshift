@@ -1,5 +1,4 @@
 applications:
-
   external-secrets-operator:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
@@ -889,3 +888,27 @@ applications:
       argocd.argoproj.io/sync-wave: '50'
     source:
       path: components/openshift-virt
+
+  codex-desktop:
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '51'
+    destination:
+      namespace: codex-desktop
+    source:
+      path: applications/codex-desktop
+    ignoreDifferences:
+      # KubeVirt and kube-mac-pool generate stable guest identity and machine defaults.
+      - group: kubevirt.io
+        kind: VirtualMachine
+        name: codex-desktop
+        namespace: codex-desktop
+        jsonPointers:
+          - /spec/template/metadata/annotations/kubevirt.io~1pci-topology-version
+          - /spec/template/spec/domain/firmware/serial
+          - /spec/template/spec/domain/firmware/uuid
+          - /spec/template/spec/domain/machine/type
+        jqPathExpressions:
+          - '.spec.template.spec.domain.devices.interfaces[] | select(.name == "default") | .macAddress'
+    syncOptions:
+      - RespectIgnoreDifferences=true

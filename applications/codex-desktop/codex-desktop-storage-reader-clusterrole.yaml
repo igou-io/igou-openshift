@@ -1,0 +1,15 @@
+---
+# VolumeAttachments are cluster-scoped; read access is required to prove disk
+# detachment before root replacement or a worker release.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: codex-desktop-storage-reader
+rules:
+  - apiGroups:
+      - storage.k8s.io
+    resources:
+      - volumeattachments
+    verbs:
+      - get
+      - list

@@ -16,6 +16,7 @@ spec:
   schedule: "0 8 * * *"
   template:
     includedNamespaces:
+      - codex-desktop
       - forgejo
       - grafana
       - hermes-sre
