@@ -10,6 +10,8 @@ resources:
   - keycloak-pg-credentials-externalsecret.yaml
   - keycloak-realm-secrets-externalsecret.yaml
   - keycloak-openshift-secret-externalsecret.yaml
+  - keycloak-application-secrets-externalsecret.yaml
+  - keycloak-aap-secret-externalsecret.yaml
   - cnpg-s3-credentials-externalsecret.yaml
   - keycloak-pg-backup-objectstore.yaml
   - keycloak-pg-cluster.yaml

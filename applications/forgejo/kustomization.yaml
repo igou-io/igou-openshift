@@ -11,6 +11,7 @@ resources:
   - cnpg-s3-credentials-externalsecret.yaml
   - forgejo-pg-metrics-podmonitor.yaml
   - forgejo-secrets-externalsecret.yaml
+  - forgejo-keycloak-externalsecret.yaml
   - use-scc-nonroot-v2-role.yaml
   - forgejo-nonroot-v2-rolebinding.yaml
 helmCharts:
@@ -84,6 +85,12 @@ helmCharts:
         name: forgejo
 
       gitea:
+        oauth:
+          - name: keycloak
+            provider: openidConnect
+            existingSecret: forgejo-keycloak
+            autoDiscoverUrl: https://keycloak.apps.ocp.igou.systems/realms/igou/.well-known/openid-configuration
+            scopes: openid,email,profile
         admin:
           existingSecret: forgejo-secrets
           passwordMode: initialOnlyRequireReset
@@ -92,6 +99,10 @@ helmCharts:
           serviceMonitor:
             enabled: true
         config:
+          oauth2_client:
+            ACCOUNT_LINKING: login
+            ENABLE_AUTO_REGISTRATION: false
+            USERNAME: preferred_username
           database:
             DB_TYPE: postgres
             SCHEMA: public

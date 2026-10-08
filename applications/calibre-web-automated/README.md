@@ -94,6 +94,44 @@ database.
 
 ## Verification
 
+### Keycloak browser login
+
+CWA v4.0.6 supports a generic OIDC provider configured through **Admin → Basic
+Configuration**, stored in its application database. These settings are not
+container environment variables. The Keycloak bootstrap record includes client
+`calibre-web-automated`; provision the client in the live `igou` realm first.
+Store its generated secret as concealed `client_secret` in 1Password item
+`lab_openshift/calibre-web-automated-keycloak`.
+
+During the authorized rollout, configure:
+
+| Setting | Value |
+|---------|-------|
+| Login type | Use OAuth (requires HTTPS) |
+| OAuth Redirect Host | `https://calibre-web-automated.apps.ocp.igou.systems` |
+| Metadata URL | `https://keycloak.apps.ocp.igou.systems/realms/igou/.well-known/openid-configuration` |
+| OAuth Client ID | `calibre-web-automated` |
+| OAuth Client Secret | `client_secret` from the item above |
+| OAuth Scopes | `openid profile email` |
+| Username Field | `preferred_username` |
+| Email Field | `email` |
+| Admin Group | `admins` |
+
+The callback is
+`https://calibre-web-automated.apps.ocp.igou.systems/login/generic/authorized`.
+The client mapper includes claim `groups` in the ID token and userinfo even
+without a separate `groups` scope. Retain standard login during rollout and
+link the existing library user from its profile before testing a fresh SSO
+session; confirm its shelves and permissions remain intact. Use the built-in
+metadata test before saving and restart CWA after changing the redirect host.
+Do not write directly to its SQLite settings database.
+
+The upstream [OAuth configuration guide](https://github.com/crocodilestick/Calibre-Web-Automated/wiki/OAuth-Configuration)
+describes the UI and linking process. The PR provisions bootstrap wiring and
+documents the settings; CWA is not configured until these live UI steps run.
+
+### Workload health
+
 Check the workload and GitOps application:
 
 ```bash
