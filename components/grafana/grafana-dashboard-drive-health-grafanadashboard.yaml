@@ -12,9 +12,8 @@ spec:
       dashboards: grafana
   folder: hardware
   resyncPeriod: 24h
-  datasources:
-    - inputName: DS_PROMETHEUS
-      datasourceName: thanos-querier
+  # The JSON resolves DS_PROMETHEUS through a hidden datasource variable.
+  # Name substitution into a datasource.uid would break Grafana queries.
   configMapRef:
     name: grafana-dashboard-drive-health-json
     key: drive-health.json

@@ -1,13 +1,4 @@
 {
-  "__inputs": [
-    {
-      "name": "DS_PROMETHEUS",
-      "label": "Prometheus",
-      "type": "datasource",
-      "pluginId": "prometheus",
-      "pluginName": "Prometheus"
-    }
-  ],
   "uid": "truenas-drive-health",
   "title": "Drive health",
   "description": "TrueNAS physical drive health: stable serial identity, protocol-specific errors, wear, thermals and telemetry coverage.",
@@ -35,6 +26,19 @@
   },
   "templating": {
     "list": [
+      {
+        "name": "DS_PROMETHEUS",
+        "type": "datasource",
+        "query": "prometheus",
+        "regex": "/^thanos-querier$/",
+        "hide": 2,
+        "refresh": 1,
+        "current": {},
+        "options": [],
+        "multi": false,
+        "includeAll": false,
+        "skipUrlSync": true
+      },
       {
         "name": "protocol",
         "label": "Protocol",
