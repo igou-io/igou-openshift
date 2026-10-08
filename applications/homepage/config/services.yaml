@@ -207,10 +207,6 @@
         icon: mdi-security-network
         href: https://so-crates.apps.ocp.igou.systems
         description: file and network analysis
-    - Omnigent:
-        icon: mdi-robot
-        href: https://omnigent.apps.ocp.igou.systems
-        description: managed agent sessions
 
 - Servers:
     - ocp master (ms01):

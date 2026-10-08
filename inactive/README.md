@@ -10,6 +10,7 @@ and validates their schemas. Renovate still maintains their dependencies.
 | `applications/minecraft-server/` | Minecraft server and manual recovery helper |
 | `applications/ntfy/` | Push notifications |
 | `applications/ollama/` | Standalone Ollama serving |
+| `applications/omnigent/` | Managed SRE agent sessions and Slack integration |
 | `components/openshift-ai/` | OpenShift AI operator and instance |
 | `components/openshift-dev-spaces/` | Separate Dev Spaces operator; the managed stack uses `components/devspaces/` |
 | `components/openshift-mtv/` | Migration Toolkit for Virtualization |

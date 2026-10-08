@@ -25,13 +25,6 @@ spec:
         - podSelector:
             matchLabels:
               app: igou-docs-sync
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: omnigent-sandboxes
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/managed-by: omnigent
-              omnigent.ai/agent: igou-sre
       ports:
         - protocol: TCP
           port: 8085

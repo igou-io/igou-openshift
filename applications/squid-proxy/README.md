@@ -1,9 +1,9 @@
 # Shared HTTP/HTTPS egress proxy
 
 This application provides the cluster-local Squid proxy used by the three
-Hermes instances and the Omnigent SRE workloads. HTTP-aware processes in
+Hermes instances. HTTP-aware processes in
 the Hermes agents, generated sessions, authentication pods, GitHub App
-brokers, SRE docs-sync job, Omnigent SRE runners and upstream Slack bot use:
+brokers and SRE docs-sync job use:
 
 ```text
 HTTP_PROXY=http://squid-proxy.squid-proxy.svc.cluster.local:3128
@@ -17,9 +17,7 @@ value is:
 localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,api.ocp.igou.systems,10.10.9.10
 ```
 
-The Omnigent bot bypasses Squid only for its exact HTTPS Route hostname,
-`omnigent.apps.ocp.igou.systems`, and sends Slack traffic through Squid. The
-Hermes `.cluster.local` suffix covers Kubernetes service names. The explicit
+The Hermes `.cluster.local` suffix covers Kubernetes service names. The explicit
 `172.30.0.1` entry keeps in-cluster Kubernetes clients on the direct API service
 path; without it, clients try to tunnel the private service IP through Squid and
 receive `403 Forbidden`. The `api.ocp.igou.systems` and `10.10.9.10` entries keep
@@ -39,7 +37,7 @@ the workload-level proxy architecture.
 The proxy is registered at sync wave `19`, before the Hermes applications at
 wave `20`. Its NetworkPolicies allow TCP/3128 only from the intended Hermes
 agents, generated sessions, scale-to-zero `auth-login` pods, GitHub App brokers,
-SRE docs-sync job, classified Omnigent SRE runners and the Omnigent Slack bot.
+and SRE docs-sync job.
 Squid has no Route, LoadBalancer, NodePort, hostPort, or hostNetwork exposure.
 
 ## Enforced egress architecture

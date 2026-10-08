@@ -22,13 +22,6 @@ spec:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: hermes-sre
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: omnigent-sandboxes
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/managed-by: omnigent
-              omnigent.ai/agent: igou-sre
       ports:
         - port: 8000
           protocol: TCP

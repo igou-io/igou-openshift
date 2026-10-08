@@ -1,14 +1,31 @@
 # Omnigent SRE and first-party Slack integration
 
-Issue [#1040](https://github.com/igou-io/igou-openshift/issues/1040) stages the
+## Inactive workload
+
+These manifests are retained for reuse and are not registered in the cluster
+app-of-apps. The CNPG access policy is kept beside the workload. Before
+reactivation, move this directory back to `applications/omnigent`, register it,
+and restore the required Squid, GitHub broker, and Sands of Time access rules.
+Review the Homepage link, Automation Orchestrator allowlist, RHACS namespace
+scopes, secrets, image compatibility, and retained volumes before deployment.
+
+The existing volumes are `omnigent-pg-1` (10 GiB PostgreSQL data),
+`omnigent-artifacts` (10 GiB artifacts), `omnigent-slack-state` (1 GiB bot SQLite
+state), and `omnigent-sre-codex-auth` (1 GiB Codex login data). Their live PV
+reclaim policies were set to `Retain` before the planned cluster removal.
+New PVCs will not automatically reattach these volumes after namespace deletion.
+
+## Previous deployment
+
+Issue [#1040](https://github.com/igou-io/igou-openshift/issues/1040) introduced the
 `igou-sre` agent, its four sweep prompts, and Omnigent v0.15.0's upstream
 interactive Slack bot. The three disposable legacy `opencode-go-test` Jobs
 and their Pods were removed from `omnigent-sandboxes` on 2026-09-27 with
-operator authorization; Hermes schedules remain unchanged. The live
-`omnigent` ArgoCD Application has automated sync: merging this PR can deploy
-server, Secret, PVC, bot and NetworkPolicy changes. Before merging with
-auto-sync active, authorize GitOps reconciliation or establish and verify a
-deployment hold. Hermes keeps its four production schedules, Slack app, alert
+operator authorization; Hermes schedules remain unchanged. A registered
+`omnigent` ArgoCD Application uses automated sync, so reactivation can deploy
+server, Secret, PVC, bot and NetworkPolicy changes. The notes below describe
+the former deployment and requirements to review before reactivation.
+Hermes keeps its four production schedules, Slack app, alert
 relay, EDA and `SREHeartbeat` until a separately approved cutover.
 
 ## Platform and credentials
@@ -211,6 +228,6 @@ and existing storage.
 ```bash
 make test
 make validate-manifest-files
-kustomize build --enable-helm applications/omnigent
+kustomize build --enable-helm inactive/applications/omnigent
 kustomize build --enable-helm applications/squid-proxy
 ```
