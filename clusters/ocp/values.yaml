@@ -898,11 +898,17 @@ applications:
     source:
       path: applications/codex-desktop/overlays/standard
     ignoreDifferences:
-      - group: coordination.k8s.io
-        kind: Lease
-        name: codex-desktop-operation
+      # KubeVirt and kube-mac-pool generate stable guest identity and machine defaults.
+      - group: kubevirt.io
+        kind: VirtualMachine
+        name: codex-desktop
         namespace: codex-desktop
         jsonPointers:
-          - /spec/holderIdentity
+          - /spec/template/metadata/annotations/kubevirt.io~1pci-topology-version
+          - /spec/template/spec/domain/firmware/serial
+          - /spec/template/spec/domain/firmware/uuid
+          - /spec/template/spec/domain/machine/type
+        jqPathExpressions:
+          - '.spec.template.spec.domain.devices.interfaces[] | select(.name == "default") | .macAddress'
     syncOptions:
       - RespectIgnoreDifferences=true

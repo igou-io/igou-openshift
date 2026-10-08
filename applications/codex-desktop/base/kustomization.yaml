@@ -11,6 +11,5 @@ resources:
   - codex-desktop-provisioner-role.yaml
   - codex-desktop-provisioner-rolebinding.yaml
   - codex-desktop-networkpolicy.yaml
-  - codex-desktop-operation-lease.yaml
   - codex-desktop-storage-reader-clusterrole.yaml
   - codex-desktop-storage-reader-clusterrolebinding.yaml
