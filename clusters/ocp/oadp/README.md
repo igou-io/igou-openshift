@@ -44,30 +44,32 @@ see `https://github.com/igou-io/igou-docs/blob/main/storage/OADP%20Velero%20Back
 | `daily-apps` | 08:00 (04:00 ET) | forgejo, grafana, hermes-sre, hermes-assistant, hermes-developer, sands-of-time, gotify, searxng, jellyfin, metube, calibre-web, shelfmark | 30d |
 | `daily-platform` | 08:30 | ansible-automation-platform (Fernet key!), stackrox | 30d |
 | `weekly-heavy` | Sat 06:00 | comfyui | 90d |
+| `monthly-windows-goldens` | 1st of each month, 05:00 | openshift-virtualization-os-images (Windows goldens only) | 65d |
 
-`windows-goldens-20261008` is a one-time Backup of the unchanged `win11`
-and `win2k25` goldens in `openshift-virtualization-os-images`, retained for
-100 years (`876000h`). Its selector excludes resources labelled
+`monthly-windows-goldens` backs up the `win11` and `win2k25` goldens in
+`openshift-virtualization-os-images` monthly with 65-day retention
+(`1560h`). Its selector excludes resources labelled
 `cdi.kubevirt.io/dataImportCron`, so automatically imported Linux PVCs are
 not archived. DataVolume/DataSource metadata and the selected PVCs' related
-PVs accompany the data. The fixed Backup name makes subsequent syncs reuse
-the same archive. ArgoCD deletion/pruning is disabled for this object.
+PVs accompany the data. The 65-day window keeps at least two monthly
+recovery points once the schedule has been running long enough.
 
-After rollout, verify the Backup is `Completed` and both Windows PVC
+After rollout, verify the latest monthly Backup is `Completed` and both Windows PVC
 DataUploads are `Completed`; do not remove older backups until then:
 
 ```sh
-oc -n openshift-adp get backups.velero.io windows-goldens-20261008
+oc -n openshift-adp get backups.velero.io \
+  -l velero.io/schedule-name=monthly-windows-goldens
 oc -n openshift-adp get datauploads.velero.io \
-  -l velero.io/backup-name=windows-goldens-20261008
+  -l 'velero.io/backup-name=<monthly-backup-name>'
 ```
 
 Red Hat/CDI OS-image volumes no longer have recurring OADP coverage. The
 retired desktop in `windows-images` stays outside the schedules. Existing
 weekly backups retain their original 90-day expiration and are reclaimed
 by Velero/Kopia normally; this policy change does not immediately delete
-their data. If either Windows golden is rebuilt, create and verify a new
-dated archive before deliberately deleting the old one through Velero.
+their data. New monthly backups expire after 65 days through normal
+Velero/Kopia retention.
 
 `jellyfin-media` (1Ti static NFS PV), `metube-downloads` (8Ti static NFS
 staging), and `comfyui-models` (200Gi of re-downloadable weights) carry

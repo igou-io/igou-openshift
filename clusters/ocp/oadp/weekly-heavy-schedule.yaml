@@ -6,7 +6,7 @@
 # removed in favor of OADP):
 # - comfyui: comfyui-data only (comfyui-models carries the
 #   velero.io/exclude-from-backup label — re-downloadable weights).
-# Windows goldens have a separate one-time archive. CDI-managed OS images
+# Windows goldens have a separate monthly schedule. CDI-managed OS images
 # are reproducible from upstream and do not need scheduled volume backups.
 apiVersion: velero.io/v1
 kind: Schedule
