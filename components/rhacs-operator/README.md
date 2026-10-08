@@ -13,10 +13,9 @@ keep-vs-kill decisions before any enforcement or policy work.
   (plus ~150m/420Mi per node for Collector+compliance). Scanner V4 and
   local/delegated scanning disabled on both CRs; admission controller deployed
   with `enforcement: Disabled` (observe-only, fail-open).
-- Placement: Central + Central DB are pinned to `truenas-w1` (the only
-  non-tenant, non-master worker) so the single stateful piece stays off the
-  tenant nodes and the master. Everything else schedules freely — that
-  placement is part of the phase-1 measurement.
+- Placement: components schedule freely. The phase-1 `truenas-w1` hostname
+  pins were removed after worker lifecycle operations stranded RHACS Pending
+  (#604).
 
 ## Bootstrap: cluster-init bundle (one-time, non-GitOps)
 
@@ -65,20 +64,34 @@ step 2 above) stays as break-glass.
 ## Policy-as-code (#547)
 
 Six `SecurityPolicy` CRs (`cluster-apps-*-securitypolicy.yaml`, reconciled by
-config-controller) clone built-ins scoped to the **cluster-apps ArgoCD project
-namespaces + hermes**: the dangerous-workload set — Privileged Container,
-Sensitive Host Mounts, Runtime Socket Mount, CAP_SYS_ADMIN, Secret in Env Var
-(#547) — plus Latest tag (#559, gated on the firecrawl digest-only pinning;
-AAP automation-job/activation-job pods are excluded because their EE/DE images
-track `:latest` by design in igou-inventory). Criteria copied verbatim from
-the 4.11 built-ins. The built-ins keep observing cluster-wide; the clones
-carry admission enforcement actions (`FAIL_DEPLOYMENT_CREATE/UPDATE`).
+config-controller) clone built-ins scoped to the **32 current cluster-apps
+ArgoCD project namespaces**, including the four Hermes namespaces and both
+`omnigent` and `omnigent-sandboxes`. The retired `hermes` namespace is removed.
+The dangerous-workload set is Privileged Container, Sensitive Host Mounts,
+Runtime Socket Mount, CAP_SYS_ADMIN, and Secret in Env Var (#547), plus Latest
+tag (#559). AAP automation-job/activation-job workloads remain excluded from
+Latest tag because their EE/DE images track `:latest` by design in igou-inventory.
+Detection criteria are unchanged from the 4.11 built-ins. Latest tag checks
+only `latest`; it does not require every image to use a digest.
+
+The namespace lists are static, not an ArgoCD project selector. When adding,
+moving, or retiring a cluster-apps namespace, update `spec.scope` in **all six**
+policy manifests. Include secondary namespaces declared by an application,
+such as `omnigent-sandboxes`, and use the namespace name rather than the ArgoCD
+application name (`llmkube` deploys to `llmkube-system`).
 
 **Enforcement is currently OFF**: the SecuredCluster CR has
-`admissionControl.enforcement: Disabled`, which makes those actions inert.
-The flip, when decided, is that single field → `Enabled` (failurePolicy stays
-Ignore/fail-open). Runtime policies (exec/attach) deliberately carry no
-enforcement — killing virt-launcher kills the hermes VM.
+`admissionControl.enforcement: Disabled`, which makes the clones' admission
+rejection actions inert. They continue to report violations through the
+configured Slack notifier. Expanding their scope can produce new alerts;
+the July 2026 zero-violation baseline does not establish that the new namespaces
+are clear. Before a separate enforcement rollout, collect a fresh baseline,
+review intended workload exceptions, and audit enforcement actions on built-in
+policies as well as these clones. The admission webhook remains fail-open.
+These six policies evaluate deployment configuration and carry no runtime
+kill or scale-to-zero actions. Hermes now runs in `hermes-assistant`,
+`hermes-developer`, `hermes-operator`, and `hermes-sre`; the former Hermes VM
+is retired.
 
 ### Built-in tuning (API-managed, not GitOps)
 
@@ -101,8 +114,9 @@ Recipe (add an exclusion): `GET /v1/policies?query=Policy:<name>` for the id,
 The six cluster-apps SecurityPolicy CRs reference the notifier
 `slack-igoucloud-alerts` by name — violations of those policies (and only
 those) post to the **#igoucloud-alerts-warning** Slack channel (the same
-channel Alertmanager's warning receiver uses). With zero in-scope violations
-at baseline, this is silent until something dangerous ships.
+channel Alertmanager's warning receiver uses). The original July baseline had
+zero in-scope violations; re-baseline after namespace changes before
+interpreting silence as a clean result.
 
 The notifier itself is **API-managed** (declarative config supports only
 generic/splunk types): type `slack`, name `slack-igoucloud-alerts`, webhook

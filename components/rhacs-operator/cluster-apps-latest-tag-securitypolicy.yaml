@@ -6,8 +6,8 @@ metadata:
   namespace: stackrox
 spec:
   policyName: 'cluster-apps: Latest tag'
-  description: Clone of the built-in "Latest tag" policy, scoped to the cluster-apps project namespaces + hermes (#559).
-  rationale: A mutable latest tag makes it impossible to tell which code is running; all in-scope images are digest-pinned via Renovate.
+  description: Clone of the built-in "Latest tag" policy, scoped to the current cluster-apps project namespaces (#559).
+  rationale: A mutable latest tag can change without a manifest update; prefer version tags or digest-only references.
   remediation: Pin the image to a version tag or digest-only reference (repo@sha256:...); Renovate tracks digest bumps.
   categories:
     - DevOps Best Practices
@@ -25,17 +25,41 @@ spec:
   # by name, resolved by config-controller.
   notifiers:
     - slack-igoucloud-alerts
+  # Static inventory of cluster-apps namespaces; update all six policies
+  # when adding, moving, or retiring an application namespace.
   scope:
+    - namespace: aap-portal
+    - namespace: ace-step
     - namespace: ansible-automation-platform
+    - namespace: ansible-collection-bench
+    - namespace: automation-orchestrator
+    - namespace: calibre-web
+    - namespace: calibre-web-automated
     - namespace: comfyui
     - namespace: firecrawl
     - namespace: forgejo
     - namespace: gotify
-    - namespace: hermes
+    - namespace: hermes-assistant
+    - namespace: hermes-developer
+    - namespace: hermes-operator
+    - namespace: hermes-sre
+    - namespace: homepage
+    - namespace: it-tools
     - namespace: jellyfin
     - namespace: llmkube-system
+    - namespace: metube
+    - namespace: omnigent
+    - namespace: omnigent-sandboxes
+    - namespace: openshell
+    - namespace: qbittorrent
+    - namespace: radarr
     - namespace: sands-of-time
     - namespace: searxng
+    - namespace: shelfmark
+    - namespace: so-crates
+    - namespace: sonarr
+    - namespace: squid-proxy
+    - namespace: we-get-the-hydro
   # AAP execution/decision environments are rebuilt and pushed to :latest by
   # design (igou-inventory group_vars/aap/execution_environments.yml + eda.yml)
   # and run as transient automation-job/activation-job pods; excluded rather
