@@ -98,6 +98,7 @@ resources:
   - grafana-dashboard-power-energy-cost-grafanadashboard.yaml
   # Fleet hardware thermals (hardware folder)
   - grafana-dashboard-hardware-lab-thermal-grafanadashboard.yaml
+  - grafana-dashboard-drive-health-grafanadashboard.yaml
   - grafana-dashboard-mx3d-thermals-grafanadashboard.yaml
   # NetObserv flow analytics (network folder)
   - grafana-dashboard-network-netobserv-traffic-grafanadashboard.yaml
@@ -354,6 +355,10 @@ configMapGenerator:
     namespace: grafana
     files:
       - dashboards/hardware/lab-thermal.json
+  - name: grafana-dashboard-drive-health-json
+    namespace: grafana
+    files:
+      - dashboards/hardware/drive-health.json
   - name: grafana-dashboard-mx3d-thermals-json
     namespace: grafana
     files:
