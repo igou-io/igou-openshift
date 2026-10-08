@@ -17,6 +17,8 @@ auth:
   externalSecret:
     name: htpasswd-secret
     onePasswordSecretName: htpasswd
+  openID:
+    enabled: false
 
 timesync:
   enabled: false

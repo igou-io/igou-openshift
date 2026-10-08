@@ -1,6 +1,6 @@
 ---
-# One-shot declarative import of the `igou` realm: OIDC clients for RHDH and
-# OpenShell, the RHDH service account (realm-management read roles for the
+# One-shot declarative import of the `igou` realm: OIDC clients for OpenShift,
+# RHDH and OpenShell, the RHDH service account (realm-management read roles for the
 # keycloakOrg catalog provider), human and agent users, groups, and realm roles.
 #
 # NOTE: KeycloakRealmImport is import-only — it runs once and does NOT
@@ -17,6 +17,10 @@ metadata:
 spec:
   keycloakCRName: keycloak
   placeholders:
+    OPENSHIFT_CLIENT_SECRET:
+      secret:
+        name: keycloak-openshift-secret
+        key: OPENSHIFT_CLIENT_SECRET
     RHDH_CLIENT_SECRET:
       secret:
         name: keycloak-realm-secrets
@@ -52,6 +56,20 @@ spec:
         - name: openshell-user
           description: OpenShell workspace user
     clients:
+      - clientId: openshift
+        name: OpenShift
+        enabled: true
+        protocol: openid-connect
+        publicClient: false
+        secret: "${OPENSHIFT_CLIENT_SECRET}"
+        standardFlowEnabled: true
+        directAccessGrantsEnabled: false
+        serviceAccountsEnabled: false
+        redirectUris:
+          - https://oauth-openshift.apps.ocp.igou.systems/oauth2callback/keycloak
+        defaultClientScopes:
+          - profile
+          - email
       - clientId: rhdh
         name: Red Hat Developer Hub
         enabled: true
