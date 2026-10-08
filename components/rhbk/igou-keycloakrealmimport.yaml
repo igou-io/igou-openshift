@@ -69,6 +69,9 @@ spec:
     registrationAllowed: false
     resetPasswordAllowed: false
     bruteForceProtected: true
+    # Explicit clientScopes otherwise suppress Keycloak's built-in scopes on import.
+    attributes:
+      CreateDefaultClientScopes: 'true'
     clientScopes:
       - name: groups
         description: Optional group scope requested by Shelfmark
