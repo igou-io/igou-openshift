@@ -6,9 +6,8 @@
 # removed in favor of OADP):
 # - comfyui: comfyui-data only (comfyui-models carries the
 #   velero.io/exclude-from-backup label — re-downloadable weights).
-# - openshift-virtualization-os-images: the manually-built win2k25/win11
-#   goldens; DataImportCron-managed goldens ride along (not in git, no
-#   way to name-exclude — rebuildable, but cheap enough weekly).
+# Windows goldens have a separate monthly schedule. CDI-managed OS images
+# are reproducible from upstream and do not need scheduled volume backups.
 apiVersion: velero.io/v1
 kind: Schedule
 metadata:
@@ -21,12 +20,5 @@ spec:
   template:
     includedNamespaces:
       - comfyui
-      - openshift-virtualization-os-images
-    # NOTE: do NOT excludedResources: [pods] here — the kubevirt velero
-    # plugin refuses to back up a running VM whose launcher pod is
-    # outside the backup ("VM cannot be safely backed up"). The Windows
-    # VSS thaw failure is instead downgraded per-VM with the
-    # post.hook.backup.velero.io/on-error=Continue template annotation
-    # (see igou-ansible deploy_windows_desktop.yml).
     snapshotMoveData: true
     ttl: 2160h0m0s

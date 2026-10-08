@@ -1,0 +1,29 @@
+---
+# Monthly Windows goldens; CDI-managed Linux imports are reproducible.
+# First of the month at 05:00 UTC, before the weekly and daily windows.
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: monthly-windows-goldens
+  namespace: openshift-adp
+  annotations:
+    argocd.argoproj.io/sync-wave: '12'
+spec:
+  schedule: "0 5 1 * *"
+  template:
+    includedNamespaces:
+      - openshift-virtualization-os-images
+    includedNamespaceScopedResources:
+      - persistentvolumeclaims
+      - datavolumes.cdi.kubevirt.io
+      - datasources.cdi.kubevirt.io
+    # Automatic Linux imports carry this label on their PVCs/DataVolumes.
+    # The manually published win11 and win2k25 goldens do not.
+    labelSelector:
+      matchExpressions:
+        - key: cdi.kubevirt.io/dataImportCron
+          operator: DoesNotExist
+    storageLocation: default
+    snapshotMoveData: true
+    # 65 days = 1,560 hours; keeps at least two monthly recovery points.
+    ttl: 1560h0m0s
