@@ -1,0 +1,55 @@
+---
+# Desired additions to API-managed built-in policies; not a Kubernetes manifest.
+# Append these to the current policy body, preserving vendor/previous exclusions.
+# Keep shared entries consistent with the corresponding SecurityPolicy CRs.
+# Omnigent has no exception; its removal is managed separately.
+policies:
+  - policyName: Latest tag
+    exclusions:
+      - name: AAP controller job pods (EE images track latest by design)
+        deployment:
+          name: automation-job.*
+          scope:
+            namespace: ansible-automation-platform
+      - name: EDA activation pods (DE images track latest by design)
+        deployment:
+          name: activation-job.*
+          scope:
+            namespace: ansible-automation-platform
+      - name: Hermes SRE helpers and relay (reviewed digest-pinned latest)
+        deployment:
+          name: ^(auth-login|hermes-sre|igou-docs-sync|sre-heartbeat)$
+          scope:
+            namespace: ^hermes-sre$
+      - name: Hermes developer auth helper (reviewed digest-pinned latest)
+        deployment:
+          name: ^auth-login$
+          scope:
+            namespace: ^hermes-developer$
+      - name: Reviewed stopped Dev Spaces workspaces (accepted latest dev tools)
+        deployment:
+          name: ^workspace(17d1342f78964bf4|d0eb0b6410ce4164)$
+          scope:
+            namespace: ^igou-devspaces$
+      - name: EE rebuild helper (reviewed digest-pinned ose-cli)
+        deployment:
+          name: ^ee-rebuild$
+          scope:
+            namespace: ^ci-igou-ansible$
+      - name: Etcd backup helper (reviewed digest-pinned ose-cli)
+        deployment:
+          name: ^etcd-backup$
+          scope:
+            namespace: ^etcd-backup$
+      - name: Cluster API helpers (reviewed digest-pinned ose-cli)
+        deployment:
+          name: ^capi-(csr-approver|node-cleanup)$
+          scope:
+            namespace: ^openshift-cluster-api$
+  - policyName: Environment Variable Contains Secret
+    exclusions:
+      - name: Hermes SRE relay (public loopback signing value)
+        deployment:
+          name: ^hermes-sre$
+          scope:
+            namespace: ^hermes-sre$
