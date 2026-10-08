@@ -295,6 +295,12 @@ helmCharts:
   repo: https://democratic-csi.github.io/charts/
   valuesFile: values-common.yaml
   valuesInline:
+    node:
+      driver:
+        # Hide the image's shared host identity behind node-local persistent files.
+        nvmeDirMountEnabled: true
+        nvmeDirHostPath: /var/lib/democratic-csi/nvmeof-fast
+        nvmeDirHostPathType: DirectoryOrCreate
     csiDriver:
       name: "org.democratic-csi.nvmeof-fast"
     storageClasses:
@@ -341,6 +347,11 @@ helmCharts:
   repo: https://democratic-csi.github.io/charts/
   valuesFile: values-common.yaml
   valuesInline:
+    node:
+      driver:
+        nvmeDirMountEnabled: true
+        nvmeDirHostPath: /var/lib/democratic-csi/nvmeof-ssd
+        nvmeDirHostPathType: DirectoryOrCreate
     csiDriver:
       name: "org.democratic-csi.nvmeof-ssd"
     storageClasses:
@@ -411,6 +422,11 @@ helmCharts:
   repo: https://democratic-csi.github.io/charts/
   valuesFile: values-common.yaml
   valuesInline:
+    node:
+      driver:
+        nvmeDirMountEnabled: true
+        nvmeDirHostPath: /var/lib/democratic-csi/nvmeof-cold
+        nvmeDirHostPathType: DirectoryOrCreate
     csiDriver:
       name: "org.democratic-csi.nvmeof-cold"
     storageClasses:
@@ -436,6 +452,21 @@ helmCharts:
       config:
         driver: freenas-api-nvmeof
 patches:
+  # New identities require deliberate volume reconnection during node maintenance.
+  # Sync the template without restarting plugins that still own live controllers.
+  - target:
+      group: apps
+      version: v1
+      kind: DaemonSet
+      name: democratic-csi-nvmeof-.*-config-node
+    patch: |-
+      apiVersion: apps/v1
+      kind: DaemonSet
+      metadata:
+        name: unused
+      spec:
+        updateStrategy:
+          type: OnDelete
   # The chart hardcodes failureThreshold: 3 on the controller csi-driver
   # liveness probe (only enabled/disabled is exposed via values). The probe's
   # Probe RPC calls the TrueNAS API with a 5s client timeout, and middlewared
