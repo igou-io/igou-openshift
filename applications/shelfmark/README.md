@@ -1,7 +1,7 @@
 # Shelfmark
 
 Shelfmark is a self-hosted book and audiobook search/download interface. This
-deployment enables Prowlarr as a release source and Keycloak OIDC for login.
+deployment enables Prowlarr as a release source.
 
 The deployment uses the upstream full image, which includes Chromium for its
 browser-based sources:
@@ -68,25 +68,8 @@ Shelfmark is exposed through an edge-terminated Route at:
 
 `https://shelfmark.apps.ocp.igou.systems`
 
-OIDC uses confidential client `shelfmark` in the `igou` realm. Its callback is
-`https://shelfmark.apps.ocp.igou.systems/api/auth/oidc/callback`. The
-`shelfmark-keycloak` ExternalSecret reads `client_secret` from the same-named
-1Password item in `lab_openshift` and injects `OIDC_CLIENT_SECRET`.
-Realm group `admins` grants Shelfmark administrator access; other realm users
-receive regular user access. The client mapper emits non-path group names.
-Shelfmark automatically requests scope `groups` when group authorization is
-enabled, so create that realm client scope and attach it to `shelfmark` as an
-optional scope, as recorded in the bootstrap manifest.
-
-Create the live Keycloak client and backing item before merging the enabled
-configuration. The realm import only records the client for bootstrap. See
-`clusters/ocp/ocp-base-config/README.md` for the shared rollout prerequisites.
-Before enabling OIDC, use Shelfmark's Users settings to ensure a local admin
-with a password exists. Keep local authentication enabled for recovery; verify
-any existing user's email matches a verified Keycloak email before first SSO
-login to avoid creating a second account. Use Settings → Security → Test
-Connection to check discovery and signing keys. See the upstream
-[OIDC guide](https://github.com/calibrain/shelfmark/blob/v1.3.15/docs/oidc.md).
+Authentication rollout and recovery are documented in
+[igou-docs — RHDH and Keycloak SSO](https://github.com/igou-io/igou-docs/blob/main/openshift/RHDH%20and%20Keycloak%20SSO.md#openshift-and-application-login-rollout).
 
 ## Prowlarr search
 
