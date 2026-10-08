@@ -1,17 +1,19 @@
 ---
+# Tombstone for the old scanner database. Keep this declarative: removing a
+# retained Database CR would leave its data in quay-pg and in every backup.
 apiVersion: postgresql.cnpg.io/v1
 kind: Database
 metadata:
   name: clair
   namespace: quay-enterprise
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
+    # Apply after the wave-0 config bundle and QuayRegistry cutover. CNPG
+    # reconciles deletion once connections from the old Clair pod close.
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   cluster:
     name: quay-pg
   name: clair
   owner: clair
+  ensure: absent
   databaseReclaimPolicy: retain
-  extensions:
-    - name: pg_trgm
-      ensure: present

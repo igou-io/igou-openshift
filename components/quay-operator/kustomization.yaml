@@ -15,6 +15,8 @@ resources:
   - quay-pg-daily-scheduledbackup.yaml
   - quay-pg-cluster.yaml
   - quay-pg-metrics-podmonitor.yaml
+  - clair-pg-cluster.yaml
+  - clair-pg-metrics-podmonitor.yaml
   - clair-database.yaml
   - config-bundle-secret-externalsecret.yaml
   - igou-registry-quayregistry.yaml

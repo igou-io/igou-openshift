@@ -1,0 +1,48 @@
+---
+# Disposable scanner state: advisory feeds and image scan results are rebuilt
+# by Clair. Keep this outside quay-pg's physical backups and WAL archive.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: clair-pg
+  namespace: quay-enterprise
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  labels:
+    velero.io/exclude-from-backup: "true"
+spec:
+  instances: 1
+  # A single instance has no HA value for a PDB to preserve.
+  enablePDB: false
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.4-system-trixie@sha256:233d7414ff5c1e4951e85389fb4bec31c18f35be1d7d47eea5aa296a46af0b5f
+  imagePullPolicy: IfNotPresent
+  inheritedMetadata:
+    labels:
+      velero.io/exclude-from-backup: "true"
+  # Keep RWO storage on the always-present control plane, as for quay-pg.
+  affinity:
+    nodeSelector:
+      node-role.kubernetes.io/control-plane: ""
+    podAntiAffinityType: preferred
+  bootstrap:
+    initdb:
+      database: clair
+      owner: clair
+      secret:
+        name: quay-clair-pg-credentials
+      postInitApplicationSQL:
+        - CREATE EXTENSION IF NOT EXISTS pg_trgm
+  # Match the existing scanner's capacity and resources; its live database
+  # already occupies 21.6 GiB. No Barman plugin or ScheduledBackup is attached.
+  storage:
+    size: 40Gi
+    storageClass: freenas-nvmeof-ssd-csi
+  resources:
+    requests:
+      cpu: 500m
+      memory: 2Gi
+  postgresql:
+    parameters:
+      effective_cache_size: 3GB
+      work_mem: 16MB
+      maintenance_work_mem: 256MB

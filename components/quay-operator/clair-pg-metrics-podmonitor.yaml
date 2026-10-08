@@ -1,0 +1,16 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: clair-pg-metrics
+  namespace: quay-enterprise
+  labels:
+    cnpg.io/cluster: clair-pg
+spec:
+  namespaceSelector: {}
+  podMetricsEndpoints:
+    - port: metrics
+  selector:
+    matchLabels:
+      cnpg.io/cluster: clair-pg
+      cnpg.io/podRole: instance

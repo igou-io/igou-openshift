@@ -35,9 +35,8 @@ spec:
         name: quay-pg-credentials
       postInitApplicationSQL:
         - CREATE EXTENSION IF NOT EXISTS pg_trgm
-  # The clair role lives on the same cluster but owns its own database (managed
-  # via the Database CR in clair-database.yaml). CNPG keeps the role's password
-  # in sync with the password key of quay-clair-pg-credentials.
+  # Retain the legacy owner role for clair-database.yaml's ensure: absent
+  # tombstone. Scanner data now lives only in the unbacked clair-pg cluster.
   managed:
     roles:
       - name: clair
@@ -49,7 +48,7 @@ spec:
         connectionLimit: -1
         passwordSecret:
           name: quay-clair-pg-credentials
-        comment: Owner role for the clair database
+        comment: Legacy owner for the retired clair database
   storage:
     size: 40Gi
     storageClass: freenas-nvmeof-ssd-csi
