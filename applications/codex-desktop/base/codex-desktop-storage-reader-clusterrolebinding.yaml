@@ -1,0 +1,13 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: codex-desktop-storage-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: codex-desktop-storage-reader
+subjects:
+  - kind: ServiceAccount
+    name: virtualmachine-ops
+    namespace: service-accounts

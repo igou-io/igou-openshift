@@ -1,0 +1,9 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: codex-desktop
+  annotations:
+    argocd.argoproj.io/sync-wave: '-2'
+    # Namespace deletion would bypass the retained PVC's own protection.
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false

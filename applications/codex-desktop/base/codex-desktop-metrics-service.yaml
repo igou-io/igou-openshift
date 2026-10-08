@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: codex-desktop-metrics
+  namespace: codex-desktop
+  labels:
+    app.kubernetes.io/name: codex-desktop-metrics
+spec:
+  selector:
+    app.kubernetes.io/name: codex-desktop
+  ports:
+    - name: metrics
+      port: 9100
+      targetPort: 9100

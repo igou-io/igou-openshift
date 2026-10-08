@@ -1,0 +1,16 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - codex-desktop-namespace.yaml
+  - codex-desktop-virtualmachine.yaml
+  - codex-desktop-state-pvc.yaml
+  - codex-desktop-ssh-service.yaml
+  - codex-desktop-metrics-service.yaml
+  - codex-desktop-servicemonitor.yaml
+  - codex-desktop-provisioner-role.yaml
+  - codex-desktop-provisioner-rolebinding.yaml
+  - codex-desktop-networkpolicy.yaml
+  - codex-desktop-operation-lease.yaml
+  - codex-desktop-storage-reader-clusterrole.yaml
+  - codex-desktop-storage-reader-clusterrolebinding.yaml

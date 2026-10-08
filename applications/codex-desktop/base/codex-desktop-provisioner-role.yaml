@@ -1,0 +1,69 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: codex-desktop-provisioner
+  namespace: codex-desktop
+rules:
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    resourceNames:
+      - codex-desktop-operation
+    verbs:
+      - get
+      - patch
+  - apiGroups:
+      - ''
+    resources:
+      - persistentvolumeclaims
+      - pods
+      - services
+      - events
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ''
+    resources:
+      - persistentvolumeclaims
+    resourceNames:
+      - codex-desktop-root
+    verbs:
+      - delete
+  - apiGroups:
+      - cdi.kubevirt.io
+    resources:
+      - datavolumes
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - patch
+      - delete
+  - apiGroups:
+      - upload.cdi.kubevirt.io
+    resources:
+      - uploadtokenrequests
+    verbs:
+      - create
+  - apiGroups:
+      - kubevirt.io
+    resources:
+      - virtualmachines
+      - virtualmachineinstances
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - subresources.kubevirt.io
+    resources:
+      - virtualmachines/start
+      - virtualmachines/stop
+      - virtualmachines/restart
+    verbs:
+      - update
