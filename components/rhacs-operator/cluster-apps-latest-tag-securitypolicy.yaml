@@ -73,6 +73,18 @@ spec:
         name: activation-job.*
         scope:
           namespace: ansible-automation-platform
+    # Reviewed igou-devenv references retain :latest but pin the image digest.
+    # Exclusions apply to these workloads, not to the entire Hermes namespaces.
+    - name: Hermes SRE helpers and relay (reviewed digest-pinned latest)
+      deployment:
+        name: ^(auth-login|hermes-sre|igou-docs-sync|sre-heartbeat)$
+        scope:
+          namespace: ^hermes-sre$
+    - name: Hermes developer auth helper (reviewed digest-pinned latest)
+      deployment:
+        name: ^auth-login$
+        scope:
+          namespace: ^hermes-developer$
   policySections:
     - sectionName: Criteria
       policyGroups:

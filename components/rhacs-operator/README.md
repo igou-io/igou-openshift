@@ -74,6 +74,27 @@ Latest tag because their EE/DE images track `:latest` by design in igou-inventor
 Detection criteria are unchanged from the 4.11 built-ins. Latest tag checks
 only `latest`; it does not require every image to use a digest.
 
+### Reviewed workload exceptions (2026-10-08)
+
+Latest tag also excludes the reviewed digest-pinned `igou-devenv` workloads:
+`hermes-sre/{auth-login,hermes-sre,igou-docs-sync,sre-heartbeat}` and
+`hermes-developer/auth-login`. The remaining Hermes workloads keep policy
+coverage. These workload exclusions would also hide a later unpinned image
+in the same workload, so preserve their digest pins when changing manifests.
+
+Secret in Env Var excludes only `hermes-sre/hermes-sre`. Its relay's
+`WEBHOOK_SECRET` is a deliberately public HMAC signing value for the pod-local
+`127.0.0.1:8644` webhook. The externally reachable relay on 8645 authenticates
+with `INBOUND_TOKEN`, supplied by the `hermes-sre-am-relay` ExternalSecret from
+`lab_rk8s/hermes-sre-am-relay`. RHACS exclusions apply to the whole workload,
+not an individual variable or container: all containers in this workload
+lose coverage from this policy. Re-review if its environment configuration,
+authentication, or loopback binding changes. The Automation Orchestrator
+file-path findings remain covered; this review did not approve their exclusion.
+
+Omnigent receives no exception. Its separate retirement removes its namespaces
+from the custom policy scopes.
+
 The namespace lists are static, not an ArgoCD project selector. When adding,
 moving, or retiring a cluster-apps namespace, update `spec.scope` in **all six**
 policy manifests. Include secondary namespaces declared by an application,
@@ -103,6 +124,20 @@ truth:
 |---|---|---|
 | Docker CIS 4.1 (container user) | ansible-automation-platform, nvidia-gpu-operator | vendor images, acceptable behavior |
 | Red Hat Package Manager in Image | ansible-automation-platform, nvidia-gpu-operator | vendor images, acceptable behavior |
+
+`built-in-policy-exclusions.yaml` records additional desired workload exclusions
+for the built-in Latest tag and Environment Variable Contains Secret policies.
+It is API-managed configuration, deliberately absent from `kustomization.yaml`;
+ArgoCD does not apply it. It mirrors the Hermes/AAP exceptions above and adds
+only the two reviewed stopped Dev Spaces workspaces, `ci-igou-ansible/ee-rebuild`,
+`etcd-backup/etcd-backup`, and the two `openshift-cluster-api/capi-*` helpers.
+Do not exclude their entire namespaces or all `latest` images.
+
+To reconcile these additions, read the full built-in policy by its exact name,
+append missing entries from the inventory to its current `.exclusions`, and
+PUT the full body to `/v1/policies/{id}`. Preserve vendor and previous
+exclusions, criteria, severity, enforcement actions, and notifier configuration.
+Verify each entry with a fresh GET and collect a fresh violation baseline.
 
 Recipe (add an exclusion): `GET /v1/policies?query=Policy:<name>` for the id,
 `GET /v1/policies/{id}`, append to `.exclusions` an entry
