@@ -76,3 +76,19 @@ spec:
               Schedule weekly-heavy has no successful backup in 8.5 days
               (or has never reported one). Check: oc -n openshift-adp get
               schedule,backup and the velero deployment logs.
+        - alert: VeleroMonthlyBackupStale
+          # 35 days: longest calendar month plus four days of slack.
+          expr: |
+            (time() - max by (schedule) (velero_backup_last_successful_timestamp{schedule="monthly-windows-goldens"})) > 3024000
+            or
+            absent(velero_backup_last_successful_timestamp{schedule="monthly-windows-goldens"})
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "the monthly Windows golden backup has not succeeded in 35d"
+            description: >-
+              Schedule monthly-windows-goldens has no successful backup in
+              35 days (or has never reported one). Check: oc -n
+              openshift-adp get schedules.velero.io,backups.velero.io and
+              the velero deployment logs. Backups expire after 65 days.
