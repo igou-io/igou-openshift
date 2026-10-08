@@ -18,6 +18,7 @@ resources:
   - freenas-nfs-ssd-csi-velero-storageprofile.yaml
   - daily-platform-schedule.yaml
   - weekly-heavy-schedule.yaml
+  - windows-goldens-20261008-backup.yaml
   - default-deny-networkpolicy.yaml
   - allow-oadp-egress-networkpolicy.yaml
   - allow-monitoring-ingress-networkpolicy.yaml
