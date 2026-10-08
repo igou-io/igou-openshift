@@ -64,9 +64,9 @@ step 2 above) stays as break-glass.
 ## Policy-as-code (#547)
 
 Six `SecurityPolicy` CRs (`cluster-apps-*-securitypolicy.yaml`, reconciled by
-config-controller) clone built-ins scoped to the **32 current cluster-apps
-ArgoCD project namespaces**, including the four Hermes namespaces and both
-`omnigent` and `omnigent-sandboxes`. The retired `hermes` namespace is removed.
+config-controller) clone built-ins scoped to the **30 current cluster-apps
+ArgoCD project namespaces**, including the four Hermes namespaces. The retired
+`hermes`, `omnigent`, and `omnigent-sandboxes` namespaces are removed.
 The dangerous-workload set is Privileged Container, Sensitive Host Mounts,
 Runtime Socket Mount, CAP_SYS_ADMIN, and Secret in Env Var (#547), plus Latest
 tag (#559). AAP automation-job/activation-job workloads remain excluded from
@@ -77,7 +77,7 @@ only `latest`; it does not require every image to use a digest.
 The namespace lists are static, not an ArgoCD project selector. When adding,
 moving, or retiring a cluster-apps namespace, update `spec.scope` in **all six**
 policy manifests. Include secondary namespaces declared by an application,
-such as `omnigent-sandboxes`, and use the namespace name rather than the ArgoCD
+and use the namespace name rather than the ArgoCD
 application name (`llmkube` deploys to `llmkube-system`).
 
 **Enforcement is currently OFF**: the SecuredCluster CR has

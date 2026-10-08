@@ -57,12 +57,6 @@
       "enabled": false
     },
     {
-      "description": "The Omnigent Slack Deployment is a Kubernetes manifest; the kubernetes manager owns its image digest",
-      "matchManagers": ["helm-values"],
-      "matchFileNames": ["applications/omnigent/omnigent-slack-deployment.yaml"],
-      "enabled": false
-    },
-    {
       "description": "OpenShell sandbox images use separate tag and digest fields; the custom regex manager owns this pin because the chart renders the digest field",
       "matchManagers": ["helm-values"],
       "matchFileNames": ["applications/openshell/kustomization.yaml"],
