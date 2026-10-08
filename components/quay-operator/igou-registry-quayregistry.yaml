@@ -40,15 +40,14 @@ spec:
             cpu: 500m
             memory: 512Mi
         affinity: *prefer-workers
-    # Clair's database shares the CNPG quay-pg cluster (see clair-database.yaml
-    # + Cluster.spec.managed.roles in quay-pg-cluster.yaml). connstrings are
-    # rendered into the config bundle alongside DB_URI.
+    # Clair's database uses the unbacked CNPG clair-pg cluster. Its connection
+    # strings are rendered into the config bundle alongside Quay's DB_URI.
     - kind: clairpostgres
       managed: false
     - kind: redis
       managed: true
-      overrides:
-        affinity: *prefer-workers
+      # The operator rejects affinity overrides for this component and blocks
+      # the entire registry rollout, including the Clair database cutover.
     - kind: horizontalpodautoscaler
       managed: false
     - kind: objectstorage
