@@ -18,6 +18,7 @@ configMapGenerator:
       - rk8s.md=agents/igou-sre/skills/triage-domains/rk8s.md
       - change-correlation.md=agents/igou-sre/skills/triage-domains/change-correlation.md
 resources:
+  - allow-omnigent-networkpolicy.yaml
   - quay-local-pull-externalsecret.yaml
   - omnigent-namespace.yaml
   - omnigent-sandboxes-namespace.yaml

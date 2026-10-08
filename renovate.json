@@ -57,9 +57,9 @@
       "enabled": false
     },
     {
-      "description": "The Omnigent Slack Deployment is a Kubernetes manifest; the kubernetes manager owns its image digest",
+      "description": "The inactive Omnigent Slack Deployment is a Kubernetes manifest; the kubernetes manager owns its image digest",
       "matchManagers": ["helm-values"],
-      "matchFileNames": ["applications/omnigent/omnigent-slack-deployment.yaml"],
+      "matchFileNames": ["inactive/applications/omnigent/omnigent-slack-deployment.yaml"],
       "enabled": false
     },
     {

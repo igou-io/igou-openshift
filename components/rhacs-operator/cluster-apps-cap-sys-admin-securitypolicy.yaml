@@ -47,8 +47,6 @@ spec:
     - namespace: jellyfin
     - namespace: llmkube-system
     - namespace: metube
-    - namespace: omnigent
-    - namespace: omnigent-sandboxes
     - namespace: openshell
     - namespace: qbittorrent
     - namespace: radarr
