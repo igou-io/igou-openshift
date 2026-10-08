@@ -896,7 +896,7 @@ applications:
     destination:
       namespace: codex-desktop
     source:
-      path: applications/codex-desktop/overlays/standard
+      path: applications/codex-desktop
     ignoreDifferences:
       # KubeVirt and kube-mac-pool generate stable guest identity and machine defaults.
       - group: kubevirt.io

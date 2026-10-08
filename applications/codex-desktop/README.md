@@ -5,9 +5,9 @@ lifecycle RBAC, Services, NetworkPolicy, and
 ServiceMonitor. AAP creates/replaces the root DataVolume and configures the guest.
 No root DataVolume URL or desktop image build is committed here.
 
-- `overlays/standard`: soft preference for non-control-plane workers and casval.
-- `overlays/casval`: the same policy plus a required burst node selector.
-- Both tolerate `workload=burst:NoSchedule` and master/control-plane
+- The VM softly prefers casval when it is schedulable, then other non-control-plane
+  workers, with control-plane fallback. There is no required casval selector.
+- It tolerates `workload=burst:NoSchedule` and master/control-plane
   `NoSchedule` taints. The control-plane host also has a worker label, so the
   preference explicitly excludes both control-plane role labels.
 - `runStrategy: Manual` allows AAP start/stop operations without Argo power drift.
@@ -20,11 +20,11 @@ No root DataVolume URL or desktop image build is committed here.
 - `daily-apps` in `clusters/ocp/oadp` includes this namespace.
 
 ```bash
-kustomize build --enable-helm applications/codex-desktop/overlays/standard
-kustomize build --enable-helm applications/codex-desktop/overlays/casval
+kustomize build --enable-helm applications/codex-desktop
 ```
 
-Select the overlay in `clusters/ocp/values.yaml` while stopped and sync Argo CD
-before starting. Initial rollout uses AAP `codex_desktop_rollout`; routine power
+Scheduling preferences live in the VM manifest. Desktop automation controls
+only the VM; it does not provision, scale, lease, start, or stop casval.
+Initial rollout uses AAP `codex_desktop_rollout`; routine power
 jobs preserve both disks and enrollment. See
 `igou-ansible/docs/codex-desktop.md` and the Fedora Codex Desktop vault runbook.
