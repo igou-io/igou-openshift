@@ -21,12 +21,12 @@ spec:
               sizeMiB: 0
               typeGuid: E6D6D379-F507-44C2-A23C-238F2A3DF928
       files:
-        # Register in the Casval pool immediately; CAPI labels arrive later.
+        # Kubelet accepts this unreserved label; CAPI adds the burst role later.
         - path: /etc/kubernetes/casval-kubelet-env
           mode: 420
           overwrite: true
           contents:
-            source: data:,CUSTOM_KUBELET_LABELS%3Dnode-role.kubernetes.io%2Fcasval%3D%2Cnode-role.kubernetes.io%2Fburst%3D%0A
+            source: data:,CUSTOM_KUBELET_LABELS%3Dnode.igou.systems%2Fcasval%3Dtrue%0A
     systemd:
       units:
         - name: kubelet.service

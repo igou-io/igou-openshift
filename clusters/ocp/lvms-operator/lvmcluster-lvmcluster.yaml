@@ -25,7 +25,7 @@ spec:
           - key: node-role.kubernetes.io/master
             operator: Exists
         - matchExpressions:
-          - key: node-role.kubernetes.io/casval
+          - key: node.igou.systems/casval
             operator: Exists
       deviceSelector:
         forceWipeDevicesAndDestroyAllData: false
