@@ -32,6 +32,15 @@ metadata:
         }
       ]
 spec:
+  # The default 750m CPU limit throttled CDI copies on an otherwise idle Casval.
+  resourceRequirements:
+    storageWorkloads:
+      limits:
+        cpu: "4"
+        memory: 600M
+      requests:
+        cpu: 100m
+        memory: 60M
   # Backend storage for persistent vTPM + persistent EFI (NVRAM) state PVCs.
   # Every Windows VM here carries persistent vTPM + EFI (baked into the
   # windows.* ClusterPreferences), and KubeVirt stores that state in a small
