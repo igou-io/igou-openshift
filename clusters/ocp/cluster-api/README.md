@@ -75,9 +75,11 @@ oc get secret worker-user-data-managed -n openshift-machine-api -o json \
 1.53 TiB, unformatted and unmounted. The disk is selected by its stable by-id path.
 
 `MachineConfigPool/casval` inherits worker configuration and adds this MC. The MC
-sets kubelet registration labels so a fresh node enters the pool immediately.
+registers `node.igou.systems/casval=true`, which the pool selects immediately.
+Kubelet rejects custom `node-role.kubernetes.io/*` registration labels; CAPI
+applies the existing worker and burst roles after registration.
 The existing MachineSet and Metal3 template keep their names and Secret references.
-The pool role is not propagated through the MachineSet: CAPI would also apply it
+The pool selector label is not propagated through the MachineSet: CAPI would also apply it
 to existing Machines whose disks cannot be repartitioned in place.
 
 Before reprovisioning, require the pool's served configuration to include the
