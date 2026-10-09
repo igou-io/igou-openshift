@@ -37,6 +37,14 @@ rules:
     resources:
       - persistentvolumeclaims
     resourceNames:
+      - codex-desktop-state
+    verbs:
+      - patch
+  - apiGroups:
+      - ''
+    resources:
+      - persistentvolumeclaims
+    resourceNames:
       - codex-desktop-root
     verbs:
       - delete

@@ -910,5 +910,13 @@ applications:
           - /spec/template/spec/domain/machine/type
         jqPathExpressions:
           - '.spec.template.spec.domain.devices.interfaces[] | select(.name == "default") | .macAddress'
+      # AAP owns the enrollment record on the independently retained disk.
+      - group: ''
+        kind: PersistentVolumeClaim
+        name: codex-desktop-state
+        namespace: codex-desktop
+        jsonPointers:
+          - /metadata/annotations/codex-desktop.igou.io~1tailscale-device-id
+          - /metadata/annotations/codex-desktop.igou.io~1tailscale-retired
     syncOptions:
       - RespectIgnoreDifferences=true
