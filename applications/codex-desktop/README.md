@@ -25,6 +25,9 @@ kustomize build --enable-helm applications/codex-desktop
 
 Scheduling preferences live in the VM manifest. Desktop automation controls
 only the VM; it does not provision, scale, lease, start, or stop casval.
-Initial rollout uses AAP `codex_desktop_rollout`; routine power
-jobs preserve both disks and enrollment. See
-`igou-ansible/docs/codex-desktop.md` and the Fedora Codex Desktop vault runbook.
+Initial rollout uses AAP `codex_desktop_rollout`. The start job restores
+ephemeral Tailscale enrollment and T3 Serve; the stop job preserves both disks.
+Tailscale removes an ephemeral device after it disconnects. Permanent retirement
+uses `codex_desktop_stop` before removing the VM definition through GitOps.
+See the [Fedora Codex Desktop runbook](https://github.com/igou-io/igou-docs/blob/main/openshift/Fedora%20Codex%20Desktop.md),
+including the one-time migration from the previous persistent tailnet registration.
