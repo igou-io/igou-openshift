@@ -17,6 +17,10 @@ metadata:
 spec:
   keycloakCRName: keycloak
   placeholders:
+    USER_PASSWORD:
+      secret:
+        name: keycloak-user-user
+        key: USER_PASSWORD
     CWA_CLIENT_SECRET:
       secret:
         name: keycloak-application-secrets
@@ -228,7 +232,9 @@ spec:
         directAccessGrantsEnabled: false
         serviceAccountsEnabled: false
         redirectUris:
-          - http://127.0.0.1:*/callback
+          # Keycloak permits an ephemeral port for an IP loopback redirect.
+          # A wildcard inside the port is not a valid redirect registration.
+          - http://127.0.0.1/callback
         attributes:
           pkce.code.challenge.method: S256
           oauth2.device.authorization.grant.enabled: 'true'
@@ -248,6 +254,20 @@ spec:
       # keeps the bootstrap record complete for a from-scratch re-import.
       - name: developers
     users:
+      - username: user
+        enabled: true
+        firstName: Ordinary
+        lastName: User
+        email: user@igou.systems
+        emailVerified: true
+        groups:
+          - /developers
+        realmRoles:
+          - openshell-user
+        credentials:
+          - type: password
+            value: "${USER_PASSWORD}"
+            temporary: false
       - username: service-account-rhdh
         enabled: true
         serviceAccountClientId: rhdh

@@ -19,5 +19,8 @@ data:
       - key: groups
         value: global-admins
         role: Admin
+      - key: name
+        value: user
+        role: Analyst
     openshift:
       enable: true

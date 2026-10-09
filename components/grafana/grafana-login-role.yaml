@@ -1,0 +1,15 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: grafana-login
+  namespace: grafana
+rules:
+  - apiGroups:
+      - ''
+    resources:
+      - services
+    resourceNames:
+      - grafana-service
+    verbs:
+      - get

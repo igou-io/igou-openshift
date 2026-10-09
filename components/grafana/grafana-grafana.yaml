@@ -36,7 +36,7 @@ spec:
       auto_sign_up: 'true'
     users:
       auto_assign_org: 'true'
-      auto_assign_org_role: Admin
+      auto_assign_org_role: Viewer
   deployment:
     spec:
       strategy:
