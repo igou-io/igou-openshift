@@ -1,0 +1,16 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: lvms-casval
+provisioner: topolvm.io
+parameters:
+  topolvm.io/device-class: lvm-local-storage
+  csi.storage.k8s.io/fstype: xfs
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+allowedTopologies:
+  - matchLabelExpressions:
+      - key: topology.topolvm.io/node
+        values:
+          - casval.igou.systems

@@ -4,4 +4,5 @@ kind: Kustomization
 resources:
   - ../../../components/lvms-operator
   - lvmcluster-lvmcluster.yaml
+  - lvms-casval-storageclass.yaml
   - lvms-lvm-local-storage-immediate-storageclass.yaml
