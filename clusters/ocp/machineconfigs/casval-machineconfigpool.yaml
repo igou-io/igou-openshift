@@ -1,0 +1,20 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfigPool
+metadata:
+  name: casval
+  labels:
+    pools.operator.machineconfiguration.openshift.io/casval: ""
+  annotations:
+    # Create only after the partition MC exists, so the first render includes it.
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  machineConfigSelector:
+    matchExpressions:
+      - key: machineconfiguration.openshift.io/role
+        operator: In
+        values:
+          - worker
+          - casval
+  nodeSelector:
+    matchLabels:
+      node-role.kubernetes.io/casval: ""
