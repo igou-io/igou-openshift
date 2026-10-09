@@ -65,7 +65,7 @@ the pools, BGPPeer, communities, and advertisements are in
 `clusters/ocp/metallb/` — peer and pool specifics live in those manifests.
 The full network design — peer addressing, ASNs, tier split boundaries, the
 pinned-VIP registry — lives in the private inventory repo at
-`igou-inventory/docs/network-topology.md`; **read it before changing
+`igou-docs/networking/Network Fabric - VLANs, VIPs, BGP, and MetalLB Tiers.md`; **read it before changing
 anything here.** What an agent needs to know from this side:
 
 - Three exposure tiers — `trusted-lan`, `iot`, `guest-dmz`. The router's
@@ -204,3 +204,12 @@ https://raw.githubusercontent.com/openshift/openshift-docs/enterprise-4.21/<path
 
 - Verify API group/version/kind against the live cluster using `oc api-resources` and `oc explain <resource>` before recommending usage
 - When examining CRDs, use `oc get crd <name> -o yaml` to confirm the schema on this cluster
+
+## Documentation ownership
+
+Operational runbooks and durable architecture decisions belong in
+`/workspace/igou-docs`. Keep implementation plans in the conversation; if a
+persistent record is needed, write a concise decision note in that vault.
+Do not create `docs/superpowers/` or repository-local agent execution plans.
+Keep public API/collection documentation, READMEs, and agent instructions
+beside the code. Update the relevant vault note when behavior changes.
