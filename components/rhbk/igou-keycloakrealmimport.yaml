@@ -232,7 +232,9 @@ spec:
         directAccessGrantsEnabled: false
         serviceAccountsEnabled: false
         redirectUris:
-          - http://127.0.0.1:*/callback
+          # Keycloak permits an ephemeral port for an IP loopback redirect.
+          # A wildcard inside the port is not a valid redirect registration.
+          - http://127.0.0.1/callback
         attributes:
           pkce.code.challenge.method: S256
           oauth2.device.authorization.grant.enabled: 'true'
