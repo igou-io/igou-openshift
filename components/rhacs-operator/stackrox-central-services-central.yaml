@@ -19,6 +19,14 @@ spec:
     exposure:
       route:
         enabled: true
+        # Keep passthrough and reencrypt hosts distinct. Sensor mTLS still
+        # uses the operator's separate central.stackrox passthrough route.
+        host: central-passthrough-stackrox.apps.ocp.igou.systems
+        reencrypt:
+          enabled: true
+          host: central-stackrox.apps.ocp.igou.systems
+          # Omit frontend TLS material to use the router's acme-apps cert.
+          # The operator supplies Central's CA for backend verification.
     # Placement: unpinned. The #381 phase-1 hostname pins to truenas-w1 are
     # gone — that VM worker is destroyed/rebuilt by the lifecycle workflow,
     # so pinning to it strands everything Pending (18h RHACS outage
