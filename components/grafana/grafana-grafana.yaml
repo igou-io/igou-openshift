@@ -82,7 +82,7 @@ spec:
                 - '--email-domain=*'
                 - '--upstream=http://127.0.0.1:3000'
                 - '--openshift-service-account=grafana'
-                - '--openshift-sar={"namespace":"grafana","resource":"services","name":"grafana-service","verb":"get"}'
+                - '--openshift-sar={"namespace":"grafana","resource":"services","resourceName":"grafana-service","verb":"get"}'
                 - '--tls-cert=/etc/tls/private/tls.crt'
                 - '--tls-key=/etc/tls/private/tls.key'
                 - '--cookie-secret-file=/etc/proxy/cookie/cookie-secret'

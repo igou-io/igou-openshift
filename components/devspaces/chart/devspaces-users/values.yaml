@@ -3,6 +3,10 @@
 # RBAC. Overridden via valuesInline in the component kustomization.
 users: []
 
+# Subset of users with a provisioned, user-scoped AAP MCP token in 1Password.
+# Namespace onboarding alone must not require automation credentials.
+aapMcpUsers: []
+
 # Subset of users whose workspaces get 1Password Connect credentials
 # auto-mounted (op-connect ExternalSecret). The token reads the lab
 # claude/awx vaults — never add sandbox personas here.
