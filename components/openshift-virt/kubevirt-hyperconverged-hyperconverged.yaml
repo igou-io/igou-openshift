@@ -6,32 +6,29 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "3"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-    # HCO copies spec.workloads.nodePlacement verbatim onto every workload
-    # component it manages, including the CDI CR. That made transient CDI pods
-    # (importer-prime / cdi-upload-prime) tolerate casval's workload=burst
-    # taint, so they could land on casval during plain DataVolume imports and
-    # clones. Strip the tolerations from the CDI CR
-    # only: virt-handler keeps them (it must run on casval for opt-in VMs to
-    # schedule there),
-    # while CDI worker pods stay on the always-on workers. Note: HCO reports
-    # jsonpatch annotations as an unsupported modification
-    # (kubevirt_hco_unsafe_modification_count metric) — accepted trade-off.
-    #
-    # This must be "replace" with an empty list, NOT "remove": HCO applies the
-    # patch to the marshaled desired CDI and then json.Unmarshals the result
-    # back into the same populated Go struct (applyAnnotationPatch in
-    # controllers/operands/operand.go). Go's Unmarshal leaves struct fields
-    # untouched when their key is absent from the JSON, so a removed key
-    # silently keeps its old value — "remove" ops are no-ops for every HCO
-    # jsonpatch annotation. "replace" keeps the key present so the unmarshal
-    # actually clears the field, and HCO's ReformatObj normalizes the empty
-    # list back to nil, so the operand doesn't flap.
+    # CDI inherits the burst toleration so imports and clones can consume
+    # Casval-local PVCs. Prefer always-on nodes for other CDI work; PVC
+    # topology still forces lvms-casval consumers onto Casval.
+    # HCO reports jsonpatch annotations as an unsupported modification
+    # (kubevirt_hco_unsafe_modification_count metric), an accepted trade-off.
     containerizeddataimporter.kubevirt.io/jsonpatch: |-
       [
         {
-          "op": "replace",
-          "path": "/spec/workload/tolerations",
-          "value": []
+          "op": "add",
+          "path": "/spec/workload/affinity/nodeAffinity/preferredDuringSchedulingIgnoredDuringExecution",
+          "value": [
+            {
+              "weight": 100,
+              "preference": {
+                "matchExpressions": [
+                  {
+                    "key": "node-role.kubernetes.io/burst",
+                    "operator": "DoesNotExist"
+                  }
+                ]
+              }
+            }
+          ]
         }
       ]
 spec:
@@ -81,9 +78,9 @@ spec:
   # Allow virt-handler (and virt-launcher pods it spawns) onto the casval burst
   # worker, which carries workload=burst:NoSchedule from the CAPI MachineSet.
   # HCO propagates this to the virt-handler DaemonSet so VMs that opt in via
-  # matching nodeSelector + toleration can run there. CDI is deliberately
-  # excluded via the containerizeddataimporter.kubevirt.io/jsonpatch
-  # annotation above — see the comment there.
+  # matching nodeSelector + toleration can run there. CDI also needs this
+  # toleration for Casval-local storage; its annotation above adds a
+  # preference for always-on workers when storage permits.
   workloads:
     nodePlacement:
       # Keep virt-handler (and therefore VM scheduling) OFF truenas-w1:
