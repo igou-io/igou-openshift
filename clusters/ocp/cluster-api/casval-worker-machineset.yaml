@@ -7,6 +7,8 @@ kind: MachineSet
 metadata:
   name: casval-worker
   namespace: openshift-cluster-api
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
   labels:
     cluster.x-k8s.io/cluster-name: ocp-hb42r
 spec:
@@ -41,12 +43,12 @@ spec:
           # managing it.
           propagation: Always
       bootstrap:
-        dataSecretName: worker-user-data-managed
+        dataSecretName: casval-worker-user-data
       clusterName: ocp-hb42r
       infrastructureRef:
         apiGroup: infrastructure.cluster.x-k8s.io
         kind: Metal3MachineTemplate
-        name: casval-worker-template
+        name: casval-worker-lvm-template
       deletion:
         nodeDrainTimeoutSeconds: 300
         nodeVolumeDetachTimeoutSeconds: 120

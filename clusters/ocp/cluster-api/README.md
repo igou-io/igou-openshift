@@ -27,16 +27,18 @@ next opportunity to keep names meaningful.
 
 ## Manual bootstrap (one-time per cluster — RERUN AFTER EVERY REINSTALL)
 
-These steps are not yet automated in GitOps; they will eventually move to
-the GitOps bootstrap Ansible. Perform them once after the
+The workload-cluster kubeconfig and initialized status are not yet automated
+in GitOps; they will eventually move to the GitOps bootstrap Ansible. Perform
+the remaining manual steps once after the
 `cluster-api-operator` and `cluster-api` ArgoCD applications go healthy.
 
-**A cluster reinstall silently loses all of them** (they live only in the
-recreated namespaces). Symptoms of a missed re-run, seen 2026-07-05:
+**A cluster reinstall silently loses the manual bootstrap state** (it lives
+only in the recreated namespaces). The Casval bootstrap Secret is generated
+declaratively. Symptoms to check after reinstall:
 
 - BMH stuck in `provisioning` with `poweredOn: false`; baremetal-operator
-  logs `could not retrieve user data: ... secrets "worker-user-data-managed"
-  not found` → step 1 missing.
+  cannot find `casval-worker-user-data` → check the bootstrap ExternalSecret
+  and SecretStore in step 1.
 - capm3/capi logs loop on `error getting kubeconfig secret: Secret
   "<clusterName>-kubeconfig" not found`; Machine never gets a nodeRef →
   step 2 missing.
@@ -44,16 +46,49 @@ recreated namespaces). Symptoms of a missed re-run, seen 2026-07-05:
   minutes; touch an annotation on the BMH to trigger an immediate retry
   (`oc annotate bmh casval -n openshift-cluster-api nudge=1 --overwrite`).
 
-### 1. Copy `worker-user-data-managed` secret
+### 1. Verify the generated Casval bootstrap
 
-CAPM3 consumes this for the Ignition bootstrap. One-time copy from
-`openshift-machine-api`:
+External Secrets reads only `worker-user-data-managed` in
+`openshift-machine-api`, through the `casval-bootstrap-reader` service account,
+and generates `casval-worker-user-data` in `openshift-cluster-api`. It preserves
+the managed worker Ignition bootstrap and adds Casval's installation partition.
+No bootstrap credentials or certificates are committed to git. The reader
+uses the cluster's default `system:basic-user` permission for self-access reviews.
 
 ```bash
-oc get secret worker-user-data-managed -n openshift-machine-api -o yaml \
-  | sed 's/namespace: openshift-machine-api/namespace: openshift-cluster-api/' \
-  | oc apply -f -
+oc get secretstore casval-bootstrap -n openshift-cluster-api
+oc get externalsecret casval-worker-user-data -n openshift-cluster-api
+oc get secret casval-worker-user-data -n openshift-cluster-api
 ```
+
+Both CAPI's `bootstrap.dataSecretName` and the Metal3 template's `userData`
+reference this generated Secret. The old copied Secret is no longer needed
+for new Machines. Existing Machines keep their original bootstrap reference.
+
+### Casval installation disk
+
+On the next fresh RHCOS installation, Ignition creates partition 5 on
+`/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S7KHNU0Y110642R`, labeled
+`casval-lvm`, starting at 307200 MiB (300 GiB). Boot and root occupy the space
+before that boundary. The partition extends to the end of the 2 TB disk,
+leaving about 1.53 TiB for LVMS before its metadata/thin-pool overhead.
+Ignition leaves it unformatted and unmounted; LVMS will own its volume group.
+
+This is an installation-time change. Syncing these resources does not shrink
+the root partition of the running node. A fresh install is required, with
+workloads stopped and data backed up before an explicitly authorized release
+and reprovision. No partition-preservation option has been added to
+`install_coreos`; treat data on this disk as disposable across reprovisioning.
+
+The new `casval-worker-lvm-template` avoids editing an immutable Metal3 template.
+The MachineSet uses it for new Machines and continues to leave lease-owned
+replicas alone. The old template may remain live because auto-prune is disabled;
+do not remove it while existing Metal3Machines still reference it.
+
+LVMS enablement is a separate step after verifying the new partition: add a
+Casval-specific device class to the existing LVMCluster, select the partition's
+stable by-id path with `-part5`, and add the burst toleration. See
+`igou-docs/storage/Cluster Storage with democratic-csi and Volume Recovery.md`.
 
 ### 2. Create the workload-cluster kubeconfig + mark control plane initialized
 
