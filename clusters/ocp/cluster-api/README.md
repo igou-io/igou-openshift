@@ -46,14 +46,55 @@ recreated namespaces). Symptoms of a missed re-run, seen 2026-07-05:
 
 ### 1. Copy `worker-user-data-managed` secret
 
-CAPM3 consumes this for the Ignition bootstrap. One-time copy from
-`openshift-machine-api`:
+CAPM3 consumes this for the Ignition bootstrap. Copy the managed Secret from
+`openshift-machine-api` using the existing name, changing its MCS source to
+`/config/casval` so the partition MachineConfig is consumed before first boot.
+The source Secret stays unchanged; certificates and other bootstrap data are
+preserved. Run this only when preparing an authorized fresh installation:
 
 ```bash
-oc get secret worker-user-data-managed -n openshift-machine-api -o yaml \
-  | sed 's/namespace: openshift-machine-api/namespace: openshift-cluster-api/' \
+oc get secret worker-user-data-managed -n openshift-machine-api -o json \
+  | jq '
+      .metadata = {name: .metadata.name, namespace: "openshift-cluster-api"}
+      | .data.userData |= (
+          @base64d | fromjson
+          | if ([.ignition.config.merge[]? | select(.source | endswith("/config/worker"))] | length) != 1
+            then error("Expected one worker pool source") else . end
+          | .ignition.config.merge[].source |= sub("/config/worker$"; "/config/casval")
+          | tojson | @base64
+        )
+    ' \
   | oc apply -f -
 ```
+
+### Casval installation disk
+
+`../machineconfigs/98-casval-data-partition-machineconfig.yaml` reserves the first
+300 GiB of Casval's Samsung 990 PRO for boot, RHCOS, and container images. Partition
+5 (`casval-lvm`) starts at 307200 MiB and consumes the remaining approximately
+1.53 TiB, unformatted and unmounted. The disk is selected by its stable by-id path.
+
+`MachineConfigPool/casval` inherits worker configuration and adds this MC. The MC
+sets kubelet registration labels so a fresh node enters the pool immediately.
+The existing MachineSet and Metal3 template keep their names and Secret references.
+The pool role is not propagated through the MachineSet: CAPI would also apply it
+to existing Machines whose disks cannot be repartitioned in place.
+
+Before reprovisioning, require the pool's served configuration to include the
+partition MC. With zero updated nodes, the MCS uses `status.configuration`:
+
+```bash
+oc get mcp casval -o jsonpath='{.status.configuration.name}{"\n"}{.status.configuration.source[*].name}{"\n"}'
+oc get mc 98-casval-data-partition
+```
+
+A fresh installation is required; this does not shrink the running node's root
+partition. Do not label the existing node into the new pool. `install_coreos`
+does not preserve this data partition across reinstalls, so treat local volumes
+as disposable. After installation, verify pool membership and partition 5, then
+add a Casval device class and burst toleration to the existing LVMCluster and
+test PVC provisioning. See the storage and bare-metal burst worker runbooks in
+`igou-docs` for the rollout checks.
 
 ### 2. Create the workload-cluster kubeconfig + mark control plane initialized
 
