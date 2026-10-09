@@ -36,7 +36,7 @@ spec:
   resourceRequirements:
     storageWorkloads:
       limits:
-        cpu: "4"
+        cpu: "16"
         memory: 600M
       requests:
         cpu: 100m
