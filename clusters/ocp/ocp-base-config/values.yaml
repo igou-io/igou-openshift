@@ -42,6 +42,14 @@ auth:
   externalSecret:
     name: htpasswd-secret
     onePasswordSecretName: htpasswd
+  openID:
+    enabled: true
+    name: keycloak
+    issuer: https://keycloak.apps.ocp.igou.systems/realms/igou
+    clientID: openshift
+    externalSecret:
+      name: openshift-keycloak
+      onePasswordSecretName: openshift-keycloak
 
 timesync:
   enabled: false

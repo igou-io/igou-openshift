@@ -1,4 +1,4 @@
-{{- if and .Values.auth.enabled .Values.auth.externalSecret -}}
+{{- if and .Values.auth.enabled (or .Values.auth.externalSecret .Values.auth.openID.enabled) -}}
 apiVersion: config.openshift.io/v1
 kind: OAuth
 metadata:
@@ -7,10 +7,32 @@ metadata:
     argocd.argoproj.io/sync-wave: '1'
 spec:
   identityProviders:
+{{- if .Values.auth.externalSecret }}
   - mappingMethod: claim
     name: {{ .Values.auth.htpasswdDisplayName }}
     type: HTPasswd
     htpasswd:
       fileData:
-        name: htpasswd-secret
-{{ end }}
+        name: {{ .Values.auth.externalSecret.name }}
+{{- end }}
+{{- if .Values.auth.openID.enabled }}
+  - name: {{ .Values.auth.openID.name | quote }}
+    mappingMethod: add
+    type: OpenID
+    openID:
+      issuer: {{ .Values.auth.openID.issuer | quote }}
+      clientID: {{ .Values.auth.openID.clientID | quote }}
+      clientSecret:
+        name: {{ .Values.auth.openID.externalSecret.name }}
+      extraScopes:
+        - profile
+        - email
+      claims:
+        preferredUsername:
+          - preferred_username
+        name:
+          - name
+        email:
+          - email
+{{- end }}
+{{- end }}
