@@ -1,8 +1,7 @@
 # Shelfmark
 
 Shelfmark is a self-hosted book and audiobook search/download interface. This
-deployment enables Prowlarr as a release source. Download clients and
-authentication remain available for later configuration.
+deployment enables Prowlarr as a release source.
 
 The deployment uses the upstream full image, which includes Chromium for its
 browser-based sources:
@@ -69,8 +68,8 @@ Shelfmark is exposed through an edge-terminated Route at:
 
 `https://shelfmark.apps.ocp.igou.systems`
 
-This initial deployment is intentionally unauthenticated. Do not treat the
-Route as an authentication boundary; external authentication is future work.
+Authentication rollout and recovery are documented in
+[igou-docs — RHDH and Keycloak SSO](https://github.com/igou-io/igou-docs/blob/main/openshift/RHDH%20and%20Keycloak%20SSO.md#openshift-and-application-login-rollout).
 
 ## Prowlarr search
 

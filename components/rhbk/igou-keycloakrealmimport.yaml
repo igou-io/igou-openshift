@@ -1,6 +1,6 @@
 ---
-# One-shot declarative import of the `igou` realm: OIDC clients for RHDH and
-# OpenShell, the RHDH service account (realm-management read roles for the
+# One-shot declarative import of the `igou` realm: OIDC clients for OpenShift,
+# supported applications, RHDH and OpenShell, the RHDH service account (read roles for the
 # keycloakOrg catalog provider), human and agent users, groups, and realm roles.
 #
 # NOTE: KeycloakRealmImport is import-only — it runs once and does NOT
@@ -17,6 +17,30 @@ metadata:
 spec:
   keycloakCRName: keycloak
   placeholders:
+    CWA_CLIENT_SECRET:
+      secret:
+        name: keycloak-application-secrets
+        key: CWA_CLIENT_SECRET
+    FORGEJO_CLIENT_SECRET:
+      secret:
+        name: keycloak-application-secrets
+        key: FORGEJO_CLIENT_SECRET
+    QUAY_CLIENT_SECRET:
+      secret:
+        name: keycloak-application-secrets
+        key: QUAY_CLIENT_SECRET
+    SHELFMARK_CLIENT_SECRET:
+      secret:
+        name: keycloak-application-secrets
+        key: SHELFMARK_CLIENT_SECRET
+    AAP_CLIENT_SECRET:
+      secret:
+        name: keycloak-aap-secret
+        key: AAP_CLIENT_SECRET
+    OPENSHIFT_CLIENT_SECRET:
+      secret:
+        name: keycloak-openshift-secret
+        key: OPENSHIFT_CLIENT_SECRET
     RHDH_CLIENT_SECRET:
       secret:
         name: keycloak-realm-secrets
@@ -45,6 +69,16 @@ spec:
     registrationAllowed: false
     resetPasswordAllowed: false
     bruteForceProtected: true
+    # Explicit clientScopes otherwise suppress Keycloak's built-in scopes on import.
+    attributes:
+      CreateDefaultClientScopes: 'true'
+    clientScopes:
+      - name: groups
+        description: Optional group scope requested by Shelfmark
+        protocol: openid-connect
+        attributes:
+          include.in.token.scope: 'true'
+          display.on.consent.screen: 'false'
     roles:
       realm:
         - name: openshell-admin
@@ -52,6 +86,124 @@ spec:
         - name: openshell-user
           description: OpenShell workspace user
     clients:
+      - clientId: calibre-web-automated
+        name: Calibre-Web Automated
+        enabled: true
+        protocol: openid-connect
+        publicClient: false
+        secret: "${CWA_CLIENT_SECRET}"
+        standardFlowEnabled: true
+        directAccessGrantsEnabled: false
+        serviceAccountsEnabled: false
+        redirectUris:
+          - https://calibre-web-automated.apps.ocp.igou.systems/login/generic/authorized
+        defaultClientScopes:
+          - profile
+          - email
+        protocolMappers:
+          - name: groups
+            protocol: openid-connect
+            protocolMapper: oidc-group-membership-mapper
+            config:
+              claim.name: groups
+              full.path: 'false'
+              id.token.claim: 'true'
+              access.token.claim: 'false'
+              userinfo.token.claim: 'true'
+      - clientId: forgejo
+        name: Forgejo
+        enabled: true
+        protocol: openid-connect
+        publicClient: false
+        secret: "${FORGEJO_CLIENT_SECRET}"
+        standardFlowEnabled: true
+        directAccessGrantsEnabled: false
+        serviceAccountsEnabled: false
+        redirectUris:
+          - https://forgejo.apps.ocp.igou.systems/user/oauth2/keycloak/callback
+        defaultClientScopes:
+          - profile
+          - email
+      - clientId: quay
+        name: Quay
+        enabled: true
+        protocol: openid-connect
+        publicClient: false
+        secret: "${QUAY_CLIENT_SECRET}"
+        standardFlowEnabled: true
+        directAccessGrantsEnabled: false
+        serviceAccountsEnabled: false
+        redirectUris:
+          - https://quay.apps.ocp.igou.systems/oauth2/keycloak/callback
+          - https://quay.apps.ocp.igou.systems/oauth2/keycloak/callback/attach
+          - https://quay.apps.ocp.igou.systems/oauth2/keycloak/callback/cli
+        defaultClientScopes:
+          - profile
+          - email
+      - clientId: shelfmark
+        name: Shelfmark
+        enabled: true
+        protocol: openid-connect
+        publicClient: false
+        secret: "${SHELFMARK_CLIENT_SECRET}"
+        standardFlowEnabled: true
+        directAccessGrantsEnabled: false
+        serviceAccountsEnabled: false
+        redirectUris:
+          - https://shelfmark.apps.ocp.igou.systems/api/auth/oidc/callback
+        defaultClientScopes:
+          - profile
+          - email
+        optionalClientScopes:
+          - groups
+        protocolMappers:
+          - name: groups
+            protocol: openid-connect
+            protocolMapper: oidc-group-membership-mapper
+            config:
+              claim.name: groups
+              full.path: 'false'
+              id.token.claim: 'true'
+              access.token.claim: 'false'
+              userinfo.token.claim: 'true'
+      - clientId: aap
+        name: Ansible Automation Platform
+        enabled: true
+        protocol: openid-connect
+        publicClient: false
+        secret: "${AAP_CLIENT_SECRET}"
+        standardFlowEnabled: true
+        directAccessGrantsEnabled: false
+        serviceAccountsEnabled: false
+        redirectUris:
+          - https://automation.apps.ocp.igou.systems/api/gateway/social/complete/keycloak/
+        defaultClientScopes:
+          - profile
+          - email
+        protocolMappers:
+          - name: groups
+            protocol: openid-connect
+            protocolMapper: oidc-group-membership-mapper
+            config:
+              claim.name: groups
+              full.path: 'false'
+              id.token.claim: 'true'
+              access.token.claim: 'false'
+              userinfo.token.claim: 'true'
+      - clientId: openshift
+        name: OpenShift
+        enabled: true
+        protocol: openid-connect
+        publicClient: false
+        secret: "${OPENSHIFT_CLIENT_SECRET}"
+        standardFlowEnabled: true
+        directAccessGrantsEnabled: false
+        serviceAccountsEnabled: false
+        redirectUris:
+          - https://oauth-openshift.apps.ocp.igou.systems/oauth2callback/keycloak
+        defaultClientScopes:
+          - profile
+          - email
       - clientId: rhdh
         name: Red Hat Developer Hub
         enabled: true

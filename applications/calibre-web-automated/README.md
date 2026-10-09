@@ -70,6 +70,9 @@ CWA through the `/calibre-library` mount. Do not configure Calibre to use
 
 ## Security and availability
 
+Keycloak login setup is documented in
+[igou-docs — RHDH and Keycloak SSO](https://github.com/igou-io/igou-docs/blob/main/openshift/RHDH%20and%20Keycloak%20SSO.md#openshift-and-application-login-rollout).
+
 CWA runs with UID `1000` and GID `3006`, matching the shared media permission
 model. Its dedicated ServiceAccount has an `anyuid` SCC exception because the
 upstream LinuxServer/s6 startup process must initialize the mounted volumes as

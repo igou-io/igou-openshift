@@ -10,6 +10,7 @@ resources:
   - shelfmark-config-pvc.yaml
   - shelfmark-prowlarr-externalsecret.yaml
   - shelfmark-qbittorrent-externalsecret.yaml
+  - shelfmark-keycloak-externalsecret.yaml
   - shelfmark-uid1000-securitycontextconstraints.yaml
   - system-openshift-scc-shelfmark-uid1000-clusterrole.yaml
   - shelfmark-uid1000-rolebinding.yaml
@@ -80,6 +81,14 @@ helmCharts:
                 tag: v1.3.15@sha256:9602290324993c801b319d3166b202b96bd9039af2416f0916dae03a5bdca815
                 pullPolicy: IfNotPresent
               env:
+                AUTH_METHOD: oidc
+                OIDC_DISCOVERY_URL: https://keycloak.apps.ocp.igou.systems/realms/igou/.well-known/openid-configuration
+                OIDC_CLIENT_ID: shelfmark
+                OIDC_GROUP_CLAIM: groups
+                OIDC_ADMIN_GROUP: admins
+                OIDC_USE_ADMIN_GROUP: "true"
+                OIDC_AUTO_PROVISION: "true"
+                OIDC_BUTTON_LABEL: Keycloak
                 TZ: America/New_York
                 FLASK_PORT: "8084"
                 CONFIG_DIR: /config
@@ -93,6 +102,8 @@ helmCharts:
                 QBITTORRENT_URL: http://qbittorrent.qbittorrent.svc:8080
                 QBITTORRENT_CATEGORY: books
               envFrom:
+                - secretRef:
+                    name: shelfmark-keycloak
                 - secretRef:
                     name: shelfmark-prowlarr
                 - secretRef:
