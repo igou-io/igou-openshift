@@ -7,8 +7,6 @@ kind: MachineSet
 metadata:
   name: casval-worker
   namespace: openshift-cluster-api
-  annotations:
-    argocd.argoproj.io/sync-wave: "4"
   labels:
     cluster.x-k8s.io/cluster-name: ocp-hb42r
 spec:
@@ -26,8 +24,6 @@ spec:
         node-role.kubernetes.io/worker: ""
         # Propagated to the Node by CAPI's label propagation (node-role.* prefix).
         node-role.kubernetes.io/burst: ""
-        # The casval role is set by installation MC, not propagated here: CAPI
-        # syncs these labels to existing Machines whose disks cannot be repartitioned.
       annotations:
         # Pre-terminate hook drives the capi-node-cleanup CronJob workaround
         # for the orphan-node bug on clusters without CAPI control-plane Machines.
@@ -45,12 +41,12 @@ spec:
           # managing it.
           propagation: Always
       bootstrap:
-        dataSecretName: casval-worker-user-data
+        dataSecretName: worker-user-data-managed
       clusterName: ocp-hb42r
       infrastructureRef:
         apiGroup: infrastructure.cluster.x-k8s.io
         kind: Metal3MachineTemplate
-        name: casval-worker-lvm-template
+        name: casval-worker-template
       deletion:
         nodeDrainTimeoutSeconds: 300
         nodeVolumeDetachTimeoutSeconds: 120

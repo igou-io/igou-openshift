@@ -7,12 +7,7 @@ resources:
   - provisioning-configuration-provisioning.yaml
   - ocp-hb42r-metal3cluster.yaml
   - ocp-hb42r-cluster.yaml
-  - casval-bootstrap-reader-serviceaccount.yaml
-  - casval-bootstrap-reader-role.yaml
-  - casval-bootstrap-reader-rolebinding.yaml
-  - casval-bootstrap-secretstore.yaml
-  - casval-worker-user-data-externalsecret.yaml
-  - casval-worker-lvm-template-metal3machinetemplate.yaml
+  - casval-worker-template-metal3machinetemplate.yaml
   - casval-worker-machineset.yaml
   - casval-baremetalhost.yaml
   - casval-bmc-secret-externalsecret.yaml
