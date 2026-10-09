@@ -3,7 +3,7 @@
 # ECMP VIPs partially blackhole. The router side (BFD whitelist + use-bfd on
 # the listener) lives in igou-inventory; one-sided BFD is harmless — the BGP
 # session stays up with BFD down until both ends are configured. Full design:
-# igou-inventory/docs/network-topology.md.
+# igou-docs/networking/Network Fabric - VLANs, VIPs, BGP, and MetalLB Tiers.md.
 apiVersion: metallb.io/v1beta1
 kind: BFDProfile
 metadata:

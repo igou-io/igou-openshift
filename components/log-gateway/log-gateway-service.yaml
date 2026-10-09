@@ -7,7 +7,7 @@ metadata:
   annotations:
     # Pinned VIP — this is the new syslog.igou.systems. The DNS static
     # entry on the rb5009 (igou-inventory) targets this address; update
-    # both repos together (see igou-inventory/docs/network-topology.md
+    # both repos together (see igou-docs/networking/Network Fabric - VLANs, VIPs, BGP, and MetalLB Tiers.md
     # pinned-VIP registry). autoAssign is off on the pool, so it must be
     # named explicitly.
     metallb.universe.tf/address-pool: trusted-lan
