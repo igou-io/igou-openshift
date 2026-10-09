@@ -8,6 +8,8 @@ resources:
   - grafana-operatorgroup.yaml
   - grafana-subscription.yaml
   - grafana-serviceaccount.yaml
+  - grafana-login-role.yaml
+  - grafana-login-rolebinding.yaml
   - grafana-cluster-monitoring-view-clusterrolebinding.yaml
   - grafana-auth-delegator-clusterrolebinding.yaml
   - grafana-sa-token-secret.yaml
