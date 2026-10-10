@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: truenas-nvme-cli
+  namespace: democratic-csi
+data:
+  nvme: |
+    #!/bin/sh
+    # Preserve nvme-cli behavior except for this TrueNAS CSI target.
+    is_truenas() {
+      case "$1" in
+        nqn.2011-06.com.truenas:uuid:116c7577-bfe2-4c9c-914a-50a568f9525f:csi-*-ocp) return 0 ;;
+        *) return 1 ;;
+      esac
+    }
+    command=$1
+    if [ "$command" = connect ]; then
+      target=false
+      for argument in "$@"; do
+        is_truenas "$argument" && target=true
+      done
+      if [ "$target" = true ]; then
+        # nvmet_tcp allocates contiguous command arrays per queue. Keep them small.
+        exec /usr/sbin/nvme "$@" --nr-io-queues=16 --queue-size=32
+      fi
+    fi
+    /usr/sbin/nvme "$@"
+    result=$?
+    [ "$result" = 0 ] || exit "$result"
+    [ "$command" = ns-rescan ] || exit 0
+    controller=${2##*/}
+    case "$controller" in nvme[0-9]*) ;; *) exit 0 ;; esac
+    nqn=$(cat "/sys/class/nvme/$controller/subsysnqn" 2>/dev/null) || exit 0
+    is_truenas "$nqn" || exit 0
+    [ "$(cat "/sys/class/nvme/$controller/transport")" = tcp ] || exit 0
+    # The rescan ioctl queues asynchronous kernel work. Allow it to finish before
+    # CSI returns the device to kubelet and a new consumer opens it.
+    sleep 1
+    for device in /sys/class/block/nvme*n*; do
+      [ -r "$device/queue/read_ahead_kb" ] || continue
+      [ "$(cat "$device/device/subsysnqn" 2>/dev/null)" = "$nqn" ] || continue
+      printf '1024\n' > "$device/queue/read_ahead_kb" || exit 1
+    done

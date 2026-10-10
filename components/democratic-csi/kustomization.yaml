@@ -3,6 +3,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: democratic-csi
 resources:
+  - truenas-nvme-cli-configmap.yaml
   - democratic-csi-namespace.yaml
   - allow-privileged-to-democratic-csi-iscsi-fast-config-node-sa-clusterrolebinding.yaml
   - allow-privileged-to-democratic-csi-iscsi-ssd-config-node-sa-clusterrolebinding.yaml
@@ -458,3 +459,29 @@ patches:
               - name: csi-driver
                 livenessProbe:
                   failureThreshold: 6
+
+  - target:
+      group: apps
+      version: v1
+      kind: DaemonSet
+      name: democratic-csi-nvmeof-(fast|ssd|cold)-config-node
+    patch: |
+      apiVersion: apps/v1
+      kind: DaemonSet
+      metadata:
+        name: nvmeof-node
+      spec:
+        template:
+          spec:
+            volumes:
+              - name: truenas-nvme-cli
+                configMap:
+                  name: truenas-nvme-cli
+                  defaultMode: 493
+            containers:
+              - name: csi-driver
+                volumeMounts:
+                  - name: truenas-nvme-cli
+                    mountPath: /usr/local/sbin/nvme
+                    subPath: nvme
+                    readOnly: true
