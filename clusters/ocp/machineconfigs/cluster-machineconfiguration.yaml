@@ -1,0 +1,31 @@
+apiVersion: operator.openshift.io/v1
+kind: MachineConfiguration
+metadata:
+  name: cluster
+  annotations:
+    argocd.argoproj.io/sync-options: ServerSideApply=true
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  nodeDisruptionPolicy:
+    files:
+      - path: /usr/local/bin/igou-nvme-is-tcp
+        actions:
+          - type: None
+      - path: /usr/local/bin/igou-nvme-readahead
+        actions:
+          - type: None
+      - path: /etc/udev/rules.d/99-truenas-nvme-readahead.rules
+        actions:
+          - type: Restart
+            restart:
+              serviceName: systemd-udevd.service
+    units:
+      - name: truenas-nvme-readahead.service
+        actions:
+          - type: DaemonReload
+      - name: truenas-nvme-readahead.timer
+        actions:
+          - type: DaemonReload
+          - type: Restart
+            restart:
+              serviceName: truenas-nvme-readahead.timer
