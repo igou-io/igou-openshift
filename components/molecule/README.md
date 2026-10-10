@@ -25,9 +25,14 @@ unmounted after import; mounting a source can block snapshot cloning.
 
 The three seeds request 130 GiB of logical space, excluding test writes and
 temporary refresh overlap. Thin-pool data and metadata consumption determine
-actual headroom. Cache imports wait while Casval is unavailable. A destructive
-reprovision loses local data; existing Bound objects are not proof that the
-underlying disk survived. Rebuild stale cache imports after reprovisioning.
+actual headroom. Cache imports wait while Casval is unavailable; they do not
+acquire a lease. A destructive reprovision loses local data; existing Bound
+objects are not proof that the underlying disk survived. The managed
+`casval_scale` acquisition waits for LVMS, removes these feeds' claims from an
+older installation and waits for completed seed imports. It records the current
+node UID in the node's `molecule.igou.systems/cache-node-uid` annotation. Molecule
+requires that marker to match the current node UID before cloning. Reboots and
+lease renewals reuse the cache; partial warm-up retries preserve fresh imports.
 
 The `ansible-molecule` service account can inspect the source DataSources/PVCs
 and authorize cloning, but cannot mutate shared seeds. No new credential or
