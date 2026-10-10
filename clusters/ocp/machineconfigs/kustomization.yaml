@@ -1,6 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+  - cluster-machineconfiguration.yaml
   - 98-casval-data-partition-machineconfig.yaml
   - 99-master-truenas-nvme-readahead-machineconfig.yaml
   - 99-worker-truenas-nvme-readahead-machineconfig.yaml
