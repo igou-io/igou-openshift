@@ -12,6 +12,7 @@ metadata:
 spec:
   template:
     spec:
+      automatedCleaningMode: metadata
       customDeploy:
         method: install_coreos
       hostSelector: {}

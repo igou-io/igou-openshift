@@ -10,7 +10,7 @@ metadata:
   namespace: openshift-cluster-api
 spec:
   architecture: x86_64
-  automatedCleaningMode: disabled
+  automatedCleaningMode: metadata
   online: false
   bootMACAddress: 7C:C2:55:E3:DC:22
   bmc:
