@@ -93,10 +93,23 @@ oc get mc 98-casval-data-partition
 A fresh installation is required; this does not shrink the running node's root
 partition. Do not label the existing node into the new pool. `install_coreos`
 does not preserve this data partition across reinstalls, so treat local volumes
-as disposable. After installation, verify pool membership and partition 5, then
-add a Casval device class and burst toleration to the existing LVMCluster and
-test PVC provisioning. See the storage and bare-metal burst worker runbooks in
-`igou-docs` for the rollout checks.
+as disposable. Metadata cleaning is enabled on both the BareMetalHost and its
+Metal3MachineTemplate so CAPI propagates the policy to each Machine. Without
+cleaning, the provisioning ramdisk activates the old LVMS thin pool on partition
+5 and `coreos-installer` refuses installation with `found busy partitions`.
+
+Metal3 metadata cleaning removes partition tables and signatures from all
+recognized local disks, not only the disk selected by `rootDeviceHints`. Casval
+currently has one physical disk, the Samsung 990 PRO with serial
+`S7KHNU0Y110642R`. Recheck the hardware inventory before adding disks or changing
+this policy. This is disposable-cache cleanup, not a secure erase.
+
+After installation, verify pool membership, partition 5, and the existing
+LVMCluster's Casval status, then warm the image cache before testing PVC
+provisioning. See the storage and bare-metal burst worker runbooks in `igou-docs`
+for rollout checks. Upstream describes both the
+[cleaning behavior](https://book.metal3.io/bmo/automated_cleaning) and
+[CAPI policy propagation](https://book.metal3.io/capm3/automated_cleaning).
 
 ### 2. Create the workload-cluster kubeconfig + mark control plane initialized
 

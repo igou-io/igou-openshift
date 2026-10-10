@@ -180,6 +180,24 @@ clusterRoles:
   # ISO DVs into the molecule namespace for the golden-image build).
   - name: golden-image-cloner
     rules:
+      # Preflight reads only image readiness and storage properties. PVC
+      # annotations can carry CDI clone tokens; consumers must not log them.
+      - apiGroups:
+          - ""
+        resources:
+          - persistentvolumeclaims
+        verbs:
+          - get
+          - list
+          - watch
+      - apiGroups:
+          - cdi.kubevirt.io
+        resources:
+          - datasources
+        verbs:
+          - get
+          - list
+          - watch
       - apiGroups:
           - cdi.kubevirt.io
         resources:

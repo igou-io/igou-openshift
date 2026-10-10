@@ -1,0 +1,34 @@
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataImportCron
+metadata:
+  name: win11-casval
+  namespace: openshift-virtualization-os-images
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+  labels:
+    molecule.igou.systems/image-cache: casval
+spec:
+  schedule: '17 * * * *'
+  managedDataSource: win11-casval
+  importsToKeep: 1
+  garbageCollect: Outdated
+  retentionPolicy: None
+  template:
+    metadata:
+      labels:
+        velero.io/exclude-from-backup: "true"
+    spec:
+      source:
+        pvc:
+          name: win11
+          namespace: openshift-virtualization-os-images
+      storage:
+        storageClassName: lvms-casval
+        accessModes:
+          - ReadWriteOnce
+        volumeMode: Block
+        resources:
+          requests:
+            storage: 50Gi
