@@ -5,6 +5,7 @@ resources:
 - kubevirt-hyperconverged-group-operatorgroup.yaml
 - kubevirt-hyperconverged-hyperconverged.yaml
 - openshift-cnv-namespace.yaml
+- lvms-casval-storageprofile.yaml
 - freenas-nvmeof-ssd-csi-storageprofile.yaml
 - freenas-nvmeof-fast-csi-storageprofile.yaml
 - freenas-nvmeof-cold-csi-storageprofile.yaml

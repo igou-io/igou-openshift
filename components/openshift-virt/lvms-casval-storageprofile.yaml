@@ -1,0 +1,9 @@
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: StorageProfile
+metadata:
+  name: lvms-casval
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  cloneStrategy: snapshot
+  snapshotClass: lvms-lvm-local-storage
