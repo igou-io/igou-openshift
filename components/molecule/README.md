@@ -36,8 +36,12 @@ lease renewals reuse the cache; partial warm-up retries preserve fresh imports.
 
 The `ansible-molecule` service account can inspect the source DataSources/PVCs
 and authorize cloning, but cannot mutate shared seeds. No new credential or
-Secret store is introduced. Seed DataVolumes are excluded from Velero backups;
-the authoritative Windows goldens retain their existing backup policy.
+Secret store is introduced. The existing `monthly-windows-goldens` Velero
+schedule excludes the generated seed DataVolumes, PVCs and DataSources through
+their `cdi.kubevirt.io/dataImportCron` label; authoritative Windows goldens retain
+their existing backup policy. Keep `spec.template.metadata` unset: the installed
+CDI schema prunes nested labels, and trying to restore them causes its immutable
+spec admission check to reject subsequent ArgoCD syncs.
 
 Implementation: [igou-ansible#587](https://github.com/igou-io/igou-ansible/pull/587).
 Operational checks, lease handling and reseeding belong in

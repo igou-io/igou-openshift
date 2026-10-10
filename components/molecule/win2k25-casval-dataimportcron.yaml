@@ -16,9 +16,6 @@ spec:
   garbageCollect: Outdated
   retentionPolicy: None
   template:
-    metadata:
-      labels:
-        velero.io/exclude-from-backup: "true"
     spec:
       source:
         pvc:
