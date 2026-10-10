@@ -1,9 +1,9 @@
 apiVersion: machineconfiguration.openshift.io/v1
 kind: MachineConfig
 metadata:
-  name: 99-casval-truenas-nvme-readahead
+  name: 99-master-truenas-nvme-readahead
   labels:
-    machineconfiguration.openshift.io/role: casval
+    machineconfiguration.openshift.io/role: master
 spec:
   config:
     ignition:
