@@ -1,0 +1,50 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  name: 99-master-truenas-nvme-readahead
+  labels:
+    machineconfiguration.openshift.io/role: master
+spec:
+  config:
+    ignition:
+      version: 3.4.0
+    storage:
+      files:
+        # The read-only helper checks TCP on controller paths and multipath heads.
+        - path: /usr/local/bin/igou-nvme-is-tcp
+          mode: 493
+          overwrite: true
+          contents:
+            source: data:;base64,IyEvYmluL3NoCiMgTlZNZSBtdWx0aXBhdGggaGVhZHMgaGF2ZSBzdWJzeXN0ZW0gcGFyZW50cyBpbnN0ZWFkIG9mIGNvbnRyb2xsZXIgcGFyZW50cy4KY2FzZSAiJDEiIGluCiAgbnZtZVswLTldKm5bMC05XSopIDs7CiAgKikgZXhpdCAxIDs7CmVzYWMKZGV2aWNlPSIvc3lzL2NsYXNzL2Jsb2NrLyQxL2RldmljZSIKZm9yIHRyYW5zcG9ydCBpbiAiJGRldmljZS90cmFuc3BvcnQiICIkZGV2aWNlIi9udm1lKi90cmFuc3BvcnQ7IGRvCiAgaWYgWyAtciAiJHRyYW5zcG9ydCIgXSAmJiBbICIkKGNhdCAiJHRyYW5zcG9ydCIpIiA9IHRjcCBdOyB0aGVuCiAgICBleGl0IDAKICBmaQpkb25lCmV4aXQgMQo=
+        # Apply 1 MiB read-ahead on attachment and change events for this target.
+        - path: /etc/udev/rules.d/99-truenas-nvme-readahead.rules
+          mode: 420
+          overwrite: true
+          contents:
+            source: data:;base64,IyBNYXRjaCB0aGlzIFRydWVOQVMgdGFyZ2V0IGFuZCBUQ1AgdHJhbnNwb3J0LCBpbmNsdWRpbmcgbXVsdGlwYXRoIGhlYWRzLgpBQ1RJT049PSJhZGR8Y2hhbmdlIiwgU1VCU1lTVEVNPT0iYmxvY2siLCBFTlZ7REVWVFlQRX09PSJkaXNrIiwgS0VSTkVMPT0ibnZtZSoiLCBBVFRSU3tzdWJzeXNucW59PT0ibnFuLjIwMTEtMDYuY29tLnRydWVuYXM6dXVpZDoxMTZjNzU3Ny1iZmUyLTRjOWMtOTE0YS01MGE1NjhmOTUyNWY6Y3NpLSotb2NwIiwgUFJPR1JBTT0iL3Vzci9sb2NhbC9iaW4vaWdvdS1udm1lLWlzLXRjcCAlayIsIEFUVFJ7cXVldWUvcmVhZF9haGVhZF9rYn09IjEwMjQiCg==
+        # NVMe rescans reset the queue limits without generating a udev event.
+        - path: /usr/local/bin/igou-nvme-readahead
+          mode: 493
+          overwrite: true
+          contents:
+            source: data:;base64,IyEvYmluL3NoCiMgQ1NJIHJlc2NhbnMgcmVzZXQgcmVhZC1haGVhZCB3aXRob3V0IGEgdWRldiBldmVudDsgcmVjb25jaWxlIG9ubHkgdGhpcyBUQ1AgdGFyZ2V0Lgpmb3IgZGV2aWNlIGluIC9zeXMvY2xhc3MvYmxvY2svbnZtZSpuKjsgZG8KICBbIC1yICIkZGV2aWNlL3F1ZXVlL3JlYWRfYWhlYWRfa2IiIF0gfHwgY29udGludWUKICBucW49JChjYXQgIiRkZXZpY2UvZGV2aWNlL3N1YnN5c25xbiIgMj4vZGV2L251bGwpIHx8IGNvbnRpbnVlCiAgY2FzZSAiJG5xbiIgaW4KICAgIG5xbi4yMDExLTA2LmNvbS50cnVlbmFzOnV1aWQ6MTE2Yzc1NzctYmZlMi00YzljLTkxNGEtNTBhNTY4Zjk1MjVmOmNzaS0qLW9jcCkgOzsKICAgICopIGNvbnRpbnVlIDs7CiAgZXNhYwogIC91c3IvbG9jYWwvYmluL2lnb3UtbnZtZS1pcy10Y3AgIiR7ZGV2aWNlIyMqL30iIHx8IGNvbnRpbnVlCiAgWyAiJChjYXQgIiRkZXZpY2UvcXVldWUvcmVhZF9haGVhZF9rYiIpIiA9IDEwMjQgXSB8fCBwcmludGYgJzEwMjRcbicgPiAiJGRldmljZS9xdWV1ZS9yZWFkX2FoZWFkX2tiIgpkb25lCg==
+    systemd:
+      units:
+        - name: truenas-nvme-readahead.service
+          contents: |
+            [Unit]
+            Description=Reconcile TrueNAS NVMe TCP read-ahead after CSI rescans
+            [Service]
+            Type=oneshot
+            ExecStart=/usr/local/bin/igou-nvme-readahead
+        - name: truenas-nvme-readahead.timer
+          enabled: true
+          contents: |
+            [Unit]
+            Description=Keep TrueNAS NVMe TCP read-ahead at 1 MiB
+            [Timer]
+            OnBootSec=5s
+            OnUnitActiveSec=5s
+            AccuracySec=1s
+            [Install]
+            WantedBy=timers.target
