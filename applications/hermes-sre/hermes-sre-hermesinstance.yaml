@@ -28,7 +28,7 @@ spec:
     # Built by igou-containers from fork commit 2eaf1e3e.
     # Keep the agent, dashboard, and auth-sync on the same factory digest.
     repository: ghcr.io/igou-io/hermes-agent-k8s
-    tag: 54d382eae826906a662cedd1c723da2539ac0393
+    tag: 54d382eae826906a662cedd1c723da2539ac0393@sha256:f43f68947302a6ff14960d3995507e2351b6bad026adbf60829e45ccac937447
     digest: sha256:f43f68947302a6ff14960d3995507e2351b6bad026adbf60829e45ccac937447
     pullPolicy: IfNotPresent
   security:
