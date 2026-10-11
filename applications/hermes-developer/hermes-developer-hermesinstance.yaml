@@ -139,7 +139,7 @@ spec:
   # hermes-dashboard.service used; scrypt BasicAuth comes from hermes-env.
   sidecars:
     - name: dashboard
-      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:f43f68947302a6ff14960d3995507e2351b6bad026adbf60829e45ccac937447
+      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:6acfe3d5435aeb54820110bc4a38692160ab3526bd33d7b0edf35092e8991be2
       imagePullPolicy: IfNotPresent
       args:
         - dashboard
@@ -203,7 +203,7 @@ spec:
     # it copies Hermes-store tokens into the shared CLI file whenever the
     # store's last_refresh is strictly newer. Latest-wins in both directions.
     - name: codex-auth-sync
-      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:f43f68947302a6ff14960d3995507e2351b6bad026adbf60829e45ccac937447
+      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:6acfe3d5435aeb54820110bc4a38692160ab3526bd33d7b0edf35092e8991be2
       command:
         - python3
         - -u
