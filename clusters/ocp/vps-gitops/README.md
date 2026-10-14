@@ -9,8 +9,8 @@ and the existing instance's `openshift-gitops/vps-secrets` Application.
 `clusters/ocp/vps/` contains the dedicated instance's child Applications and
 remote `cluster-config` project. Their workload sources are
 `igou-kubernetes/clusters/vps/`; only VPS resources live in that repository.
-`clusters/ocp/vps-secrets/` contains the OpenShift connection/registration
-ExternalSecrets, API egress Service, source ExternalSecrets and PushSecrets,
+`clusters/ocp/vps-secrets/` contains the OpenShift ExternalSecrets for connection
+and registration, API egress Service, source ExternalSecrets and PushSecrets,
 plus the dedicated `vps-acme` Issuer and `vps-public-tls` Certificate.
 These are reconciled by the existing OCP instance.
 
@@ -33,5 +33,5 @@ and Gotify with a scoped Kustomize patch, because the OCP app-of-apps chart
 omits syncPolicy when auto-sync is disabled. Their ServerSideApply and retries
 remain available during migration; auto-sync stays off until acceptance.
 
-Durable architecture, diagrams and cutover/retirement acceptance live in
+The architecture, diagrams and cutover/retirement checks are in
 `igou-docs/kubernetes/VPS Kubernetes Architecture and Migration.md`.
