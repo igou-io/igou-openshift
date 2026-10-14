@@ -8,7 +8,9 @@ resources:
   - vps-cluster-externalsecret.yaml
   - vps-secrets-secretstore.yaml
   - vps-cloudflare-source-externalsecret.yaml
-  - vps-cloudflare-pushsecret.yaml
+  - vps-acme-issuer.yaml
+  - vps-public-tls-certificate.yaml
+  - vps-public-tls-pushsecret.yaml
   - vps-tailscale-source-externalsecret.yaml
   - vps-tailscale-pushsecret.yaml
   - vps-gotify-source-externalsecret.yaml

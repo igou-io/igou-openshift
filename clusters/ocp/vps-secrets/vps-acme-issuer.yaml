@@ -1,0 +1,20 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: vps-acme
+  namespace: openshift-gitops
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: vps-acme-account
+    solvers:
+      - selector:
+          dnsZones:
+            - igou.io
+        dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: vps-cloudflare-source
+              key: api-token

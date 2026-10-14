@@ -15,8 +15,6 @@ spec:
       server: https://vps-k3s-api.vps-secrets.svc.cluster.local:6443
     - namespace: node-exporter
       server: https://vps-k3s-api.vps-secrets.svc.cluster.local:6443
-    - namespace: cert-manager
-      server: https://vps-k3s-api.vps-secrets.svc.cluster.local:6443
     - namespace: tailscale
       server: https://vps-k3s-api.vps-secrets.svc.cluster.local:6443
     - namespace: nginx-gateway
@@ -38,8 +36,6 @@ spec:
       kind: ClusterRoleBinding
     - group: gateway.networking.k8s.io
       kind: GatewayClass
-    - group: cert-manager.io
-      kind: ClusterIssuer
   namespaceResourceWhitelist:
     - group: '*'
       kind: '*'

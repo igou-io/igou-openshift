@@ -49,14 +49,6 @@ applications:
     source:
       path: clusters/vps/external-secrets-config
 
-  cert-manager:
-    annotations:
-      argocd.argoproj.io/sync-wave: '5'
-    destination:
-      namespace: cert-manager
-    source:
-      path: clusters/vps/cert-manager
-
   nginx-gateway-fabric:
     annotations:
       argocd.argoproj.io/sync-wave: '6'
