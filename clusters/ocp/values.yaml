@@ -1,12 +1,4 @@
 applications:
-  vps-gitops:
-    annotations:
-      argocd.argoproj.io/sync-wave: '15'
-    destination:
-      namespace: vps-gitops
-    source:
-      path: clusters/ocp/vps-gitops
-
   external-secrets-operator:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
@@ -920,3 +912,12 @@ applications:
           - '.spec.template.spec.domain.devices.interfaces[] | select(.name == "default") | .macAddress'
     syncOptions:
       - RespectIgnoreDifferences=true
+
+  # Remote VPS management follows the local OpenShift platform and workloads.
+  vps-gitops:
+    annotations:
+      argocd.argoproj.io/sync-wave: '60'
+    destination:
+      namespace: vps-gitops
+    source:
+      path: clusters/ocp/vps-gitops

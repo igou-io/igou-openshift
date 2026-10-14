@@ -1,7 +1,8 @@
 # VPS GitOps on OpenShift
 
 The existing OCP instance reconciles this directory through Application
-`vps-gitops` at wave 15. It creates the management namespaces, dedicated
+`vps-gitops` at wave 60, after the local platform and workloads. It creates
+the management namespaces, dedicated
 `ArgoCD/vps` in `vps-gitops`, its root Application/`cluster-root` project,
 and the existing instance's `openshift-gitops/vps-secrets` Application.
 
