@@ -1,4 +1,15 @@
 applications:
+  vps:
+    project: vps-root
+    annotations:
+      argocd.argoproj.io/sync-wave: '5'
+    destination:
+      namespace: openshift-gitops
+    source:
+      repoURL: https://github.com/igou-io/igou-kubernetes.git
+      targetRevision: master
+      path: clusters/vps
+
   external-secrets-operator:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
