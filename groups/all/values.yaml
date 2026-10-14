@@ -8,7 +8,6 @@ projects:
     namespace: openshift-gitops
     sourceRepos:
       - "{{ .Values.default.app.source.repoURL }}"
-      - https://github.com/igou-io/igou-kubernetes.git
     destinations: |
       - namespace: '*'
         server: https://kubernetes.default.svc
