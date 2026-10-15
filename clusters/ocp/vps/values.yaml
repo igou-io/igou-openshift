@@ -82,7 +82,6 @@ applications:
       path: clusters/vps/node-exporter
 
   igou-io:
-    enableAutoSync: false
     annotations:
       argocd.argoproj.io/sync-wave: '20'
     destination:
@@ -91,7 +90,6 @@ applications:
       path: clusters/vps/igou-io
 
   gotify:
-    enableAutoSync: false
     annotations:
       argocd.argoproj.io/sync-wave: '20'
     destination:
