@@ -62,6 +62,7 @@ spec:
   rbac:
     defaultPolicy: role:none
     policy: |
+      g, global-admins, role:admin
       g, system:cluster-admins, role:admin
       g, cluster-admins, role:admin
       g, admin, role:admin
