@@ -1,8 +1,10 @@
 ---
-# Vendored locally (2026-07-24 dashboard audit): the upstream board was
-# broken live — ArgoCD (OpenShift GitOps) needed patched selectors (see the audit PR).
-# Re-vendor by refreshing dashboards/argocd.json and re-applying the
-# documented patches.
+# Vendored from the upstream dashboard and patched for OpenShift GitOps.
+# Select controller/repo/server metrics by container and namespace so both
+# the primary and dedicated VPS Argo CD instances work. Scope the cluster
+# variable by namespace; use the observed cluster.SettingsService label.
+# The Operations panel is omitted because app_info has no operation label.
+# Reapply these changes when refreshing dashboards/argocd.json upstream.
 apiVersion: grafana.integreatly.org/v1beta1
 kind: GrafanaDashboard
 metadata:

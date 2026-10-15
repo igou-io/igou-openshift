@@ -154,7 +154,7 @@
       "pluginVersion": "8.0.0",
       "targets": [
         {
-          "expr": "time() - max(process_start_time_seconds{job=\"openshift-gitops-server-metrics\",namespace=~\"$namespace\"})",
+          "expr": "time() - max(process_start_time_seconds{container=\"argocd-server\",namespace=~\"$namespace\"})",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A"
@@ -364,80 +364,6 @@
       "type": "stat"
     },
     {
-      "cacheTimeout": null,
-      "datasource": "$datasource",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "id": 0,
-              "op": "=",
-              "text": "0",
-              "type": 1,
-              "value": "null"
-            }
-          ],
-          "max": 100,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 3,
-        "x": 14,
-        "y": 1
-      },
-      "id": 100,
-      "links": [],
-      "options": {
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true,
-        "text": {}
-      },
-      "pluginVersion": "8.0.0",
-      "repeatDirection": "h",
-      "targets": [
-        {
-          "expr": "sum(argocd_app_info{namespace=~\"$namespace\",dest_server=~\"$cluster\",operation!=\"\"})",
-          "format": "time_series",
-          "instant": true,
-          "intervalFactor": 1,
-          "legendFormat": "",
-          "refId": "A"
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Operations",
-      "type": "gauge"
-    },
-    {
       "aliasColors": {},
       "bars": false,
       "cacheTimeout": null,
@@ -455,8 +381,8 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 4,
-        "w": 7,
-        "x": 17,
+        "w": 10,
+        "x": 14,
         "y": 1
       },
       "hiddenSeries": false,
@@ -1535,7 +1461,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "go_memstats_heap_alloc_bytes{job=\"openshift-gitops-metrics\",namespace=~\"$namespace\"}",
+              "expr": "go_memstats_heap_alloc_bytes{container=\"argocd-application-controller\",namespace=~\"$namespace\"}",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{namespace}}",
@@ -1632,7 +1558,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "irate(process_cpu_seconds_total{job=\"openshift-gitops-metrics\",namespace=~\"$namespace\"}[1m])",
+              "expr": "irate(process_cpu_seconds_total{container=\"argocd-application-controller\",namespace=~\"$namespace\"}[1m])",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{namespace}}",
@@ -1730,7 +1656,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "go_goroutines{job=\"openshift-gitops-metrics\",namespace=~\"$namespace\"}",
+              "expr": "go_goroutines{container=\"argocd-application-controller\",namespace=~\"$namespace\"}",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{namespace}}",
@@ -2450,7 +2376,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "go_memstats_heap_alloc_bytes{job=\"openshift-gitops-repo-server\",namespace=~\"$namespace\"}",
+              "expr": "go_memstats_heap_alloc_bytes{container=\"argocd-repo-server\",namespace=~\"$namespace\"}",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{pod}}",
@@ -2541,7 +2467,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "go_goroutines{job=\"openshift-gitops-repo-server\",namespace=~\"$namespace\"}",
+              "expr": "go_goroutines{container=\"argocd-repo-server\",namespace=~\"$namespace\"}",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{pod}}",
@@ -2646,7 +2572,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "go_memstats_heap_alloc_bytes{job=\"openshift-gitops-server-metrics\",namespace=~\"$namespace\"}",
+              "expr": "go_memstats_heap_alloc_bytes{container=\"argocd-server\",namespace=~\"$namespace\"}",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{pod}}",
@@ -2732,7 +2658,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "go_goroutines{job=\"openshift-gitops-server-metrics\",namespace=~\"$namespace\"}",
+              "expr": "go_goroutines{container=\"argocd-server\",namespace=~\"$namespace\"}",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{pod}}",
@@ -2818,7 +2744,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "go_gc_duration_seconds{job=\"openshift-gitops-server-metrics\", quantile=\"1.0\", namespace=~\"$namespace\"}",
+              "expr": "go_gc_duration_seconds{container=\"argocd-server\", quantile=\"1.0\", namespace=~\"$namespace\"}",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "{{pod}}",
@@ -2926,7 +2852,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(increase(grpc_server_handled_total{job=\"openshift-gitops-server-metrics\",grpc_service=\"application.ApplicationService\",namespace=~\"$namespace\"}[$interval])) by (grpc_code, grpc_method)",
+              "expr": "sum(increase(grpc_server_handled_total{container=\"argocd-server\",grpc_service=\"application.ApplicationService\",namespace=~\"$namespace\"}[$interval])) by (grpc_code, grpc_method)",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{grpc_code}},{{grpc_method}}",
@@ -3016,7 +2942,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(increase(grpc_server_handled_total{job=\"openshift-gitops-server-metrics\",grpc_service=\"cluster.ClusterService\",namespace=~\"$namespace\"}[$interval])) by (grpc_code, grpc_method)",
+              "expr": "sum(increase(grpc_server_handled_total{container=\"argocd-server\",grpc_service=\"cluster.ClusterService\",namespace=~\"$namespace\"}[$interval])) by (grpc_code, grpc_method)",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{grpc_code}},{{grpc_method}}",
@@ -3106,7 +3032,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(increase(grpc_server_handled_total{job=\"openshift-gitops-server-metrics\",grpc_service=\"project.ProjectService\",namespace=~\"$namespace\"}[$interval])) by (grpc_code, grpc_method)",
+              "expr": "sum(increase(grpc_server_handled_total{container=\"argocd-server\",grpc_service=\"project.ProjectService\",namespace=~\"$namespace\"}[$interval])) by (grpc_code, grpc_method)",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{grpc_code}},{{grpc_method}}",
@@ -3195,7 +3121,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(increase(grpc_server_handled_total{job=\"openshift-gitops-server-metrics\",grpc_service=\"repository.RepositoryService\",namespace=~\"$namespace\"}[$interval])) by (grpc_code, grpc_method)",
+              "expr": "sum(increase(grpc_server_handled_total{container=\"argocd-server\",grpc_service=\"repository.RepositoryService\",namespace=~\"$namespace\"}[$interval])) by (grpc_code, grpc_method)",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{grpc_code}},{{grpc_method}}",
@@ -3292,7 +3218,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(increase(grpc_server_handled_total{job=\"openshift-gitops-server-metrics\",grpc_service=\"session.SessionService\",namespace=~\"$namespace\"}[$interval])) by (grpc_code, grpc_method)",
+              "expr": "sum(increase(grpc_server_handled_total{container=\"argocd-server\",grpc_service=\"session.SessionService\",namespace=~\"$namespace\"}[$interval])) by (grpc_code, grpc_method)",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{grpc_code}},{{grpc_method}}",
@@ -3381,7 +3307,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(increase(grpc_server_handled_total{job=\"openshift-gitops-server-metrics\",grpc_service=\"version.VersionService\",namespace=~\"$namespace\"}[$interval])) by (grpc_code, grpc_method)",
+              "expr": "sum(increase(grpc_server_handled_total{container=\"argocd-server\",grpc_service=\"version.VersionService\",namespace=~\"$namespace\"}[$interval])) by (grpc_code, grpc_method)",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{grpc_code}},{{grpc_method}}",
@@ -3470,7 +3396,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(increase(grpc_server_handled_total{job=\"openshift-gitops-server-metrics\",grpc_service=\"account.AccountService\",namespace=~\"$namespace\"}[$interval])) by (grpc_code, grpc_method)",
+              "expr": "sum(increase(grpc_server_handled_total{container=\"argocd-server\",grpc_service=\"account.AccountService\",namespace=~\"$namespace\"}[$interval])) by (grpc_code, grpc_method)",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{grpc_code}},{{grpc_method}}",
@@ -3559,7 +3485,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(increase(grpc_server_handled_total{job=\"openshift-gitops-server-metrics\",grpc_service=\"settings.SettingsService\",namespace=~\"$namespace\"}[$interval])) by (grpc_code, grpc_method)",
+              "expr": "sum(increase(grpc_server_handled_total{container=\"argocd-server\",grpc_service=\"cluster.SettingsService\",namespace=~\"$namespace\"}[$interval])) by (grpc_code, grpc_method)",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{grpc_code}},{{grpc_method}}",
@@ -3878,7 +3804,7 @@
         "allValue": ".*",
         "current": {},
         "datasource": "$datasource",
-        "definition": "label_values(argocd_cluster_info, server)",
+        "definition": "label_values(argocd_cluster_info{namespace=~\"$namespace\"}, server)",
         "description": null,
         "error": null,
         "hide": 0,
@@ -3888,7 +3814,7 @@
         "name": "cluster",
         "options": [],
         "query": {
-          "query": "label_values(argocd_cluster_info, server)",
+          "query": "label_values(argocd_cluster_info{namespace=~\"$namespace\"}, server)",
           "refId": "Prometheus-cluster-Variable-Query"
         },
         "refresh": 1,
