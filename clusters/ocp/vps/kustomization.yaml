@@ -22,24 +22,3 @@ patches:
       - op: add
         path: /metadata/namespace
         value: vps-gitops
-
-  # The OCP chart omits syncPolicy for manual Applications. Preserve SSA and
-  # retry settings while website/Gotify auto-sync stays off during migration.
-  - target:
-      group: argoproj.io
-      kind: Application
-      name: (igou-io|gotify)
-    patch: |-
-      - op: add
-        path: /spec/syncPolicy
-        value:
-          retry:
-            limit: 10
-            backoff:
-              duration: 5s
-              factor: 2
-              maxDuration: 3m
-          syncOptions:
-            - ServerSideApply=true
-            - CreateNamespace=false
-            - SkipDryRunOnMissingResource=true
