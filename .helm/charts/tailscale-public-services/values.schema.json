@@ -3,7 +3,9 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "services"
+    "services",
+    "quota",
+    "containerResources"
   ],
   "properties": {
     "services": {
@@ -13,7 +15,6 @@
         "additionalProperties": false,
         "required": [
           "name",
-          "namespace",
           "hostname",
           "tag",
           "selector",
@@ -24,12 +25,6 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 40,
-            "pattern": "^[a-z]([-a-z0-9]*[a-z0-9])?$"
-          },
-          "namespace": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 63,
             "pattern": "^[a-z]([-a-z0-9]*[a-z0-9])?$"
           },
           "hostname": {
@@ -49,9 +44,6 @@
               "type": "string",
               "minLength": 1
             }
-          },
-          "allowFromTailscale": {
-            "type": "boolean"
           },
           "ports": {
             "type": "array",
@@ -98,6 +90,105 @@
                   ]
                 }
               }
+            }
+          }
+        }
+      }
+    },
+    "quota": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requests.cpu",
+        "requests.memory",
+        "limits.cpu",
+        "limits.memory",
+        "pods",
+        "services",
+        "services.loadbalancers",
+        "persistentvolumeclaims",
+        "requests.storage"
+      ],
+      "properties": {
+        "requests.cpu": {
+          "type": "string",
+          "minLength": 1
+        },
+        "requests.memory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "limits.cpu": {
+          "type": "string",
+          "minLength": 1
+        },
+        "limits.memory": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pods": {
+          "type": "string",
+          "minLength": 1
+        },
+        "services": {
+          "type": "string",
+          "minLength": 1
+        },
+        "services.loadbalancers": {
+          "type": "string",
+          "minLength": 1
+        },
+        "persistentvolumeclaims": {
+          "type": "string",
+          "minLength": 1
+        },
+        "requests.storage": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "containerResources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "defaultRequest",
+        "default"
+      ],
+      "properties": {
+        "defaultRequest": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cpu",
+            "memory"
+          ],
+          "properties": {
+            "cpu": {
+              "type": "string",
+              "minLength": 1
+            },
+            "memory": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "default": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cpu",
+            "memory"
+          ],
+          "properties": {
+            "cpu": {
+              "type": "string",
+              "minLength": 1
+            },
+            "memory": {
+              "type": "string",
+              "minLength": 1
             }
           }
         }

@@ -1,0 +1,26 @@
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: public-services-no-secondary-net
+  annotations:
+    argocd.argoproj.io/sync-wave: '-1'
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups:
+          - ''
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - pods
+  validations:
+    - expression: >-
+        !has(object.metadata.annotations) ||
+        (!('k8s.v1.cni.cncf.io/networks' in object.metadata.annotations) &&
+        !('v1.multus-cni.io/default-network' in object.metadata.annotations))
+      message: Public workloads must use the primary cluster network so NetworkPolicy applies.

@@ -1,11 +1,10 @@
 {{- range $service := .Values.services }}
-{{- if $service.allowFromTailscale }}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: {{ $service.name | quote }}
-  namespace: {{ $service.namespace | quote }}
+  namespace: public-services
 spec:
   podSelector:
     matchLabels:
@@ -22,11 +21,10 @@ spec:
               tailscale.com/managed: 'true'
               tailscale.com/parent-resource-type: svc
               tailscale.com/parent-resource: {{ $service.name | quote }}
-              tailscale.com/parent-resource-ns: {{ $service.namespace | quote }}
+              tailscale.com/parent-resource-ns: public-services
       ports:
         {{- range $port := $service.ports }}
         - port: {{ $port.targetPort | default $port.port | toYaml | trim }}
           protocol: {{ $port.protocol }}
         {{- end }}
-{{- end }}
 {{- end }}

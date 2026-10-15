@@ -2,13 +2,10 @@
 # Illustrative application; these values are not registered with Argo CD.
 services:
   - name: arena-public
-    namespace: games
     hostname: ocp-public-arena
     tag: tag:ocp-public-arena
     selector:
       app.kubernetes.io/name: arena
-    # Opt in only after reviewing existing ingress policies for these pods.
-    allowFromTailscale: false
     ports:
       - name: web
         port: 8080

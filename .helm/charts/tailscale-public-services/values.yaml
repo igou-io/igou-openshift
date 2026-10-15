@@ -1,3 +1,23 @@
 ---
-# Empty until an application is selected for publication.
+# All public-facing application pods and endpoint Services belong in public-services.
+# Empty until an application is selected; namespace guardrails still render.
 services: []
+
+quota:
+  requests.cpu: '2'
+  requests.memory: 2Gi
+  limits.cpu: '4'
+  limits.memory: 4Gi
+  pods: '20'
+  services: '20'
+  services.loadbalancers: '10'
+  persistentvolumeclaims: '5'
+  requests.storage: 20Gi
+
+containerResources:
+  defaultRequest:
+    cpu: 25m
+    memory: 64Mi
+  default:
+    cpu: '1'
+    memory: 512Mi

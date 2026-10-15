@@ -25,17 +25,29 @@ class PublicServicesTests(unittest.TestCase):
                 capture_output=True, text=True, check=False,
             )
 
-    def test_defaults_create_no_endpoints(self) -> None:
+    def test_defaults_create_guardrails_without_endpoints(self) -> None:
         result = self.render({})
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(list(yaml.safe_load_all(result.stdout)), [])
+        objects = list(yaml.safe_load_all(result.stdout))
+        self.assertEqual(len(objects), 8)
+        self.assertNotIn("Service", {o["kind"] for o in objects})
+        namespace = next(o for o in objects if o["kind"] == "Namespace")
+        self.assertEqual(namespace["metadata"]["name"], "public-services")
+        self.assertEqual(namespace["metadata"]["labels"]["pod-security.kubernetes.io/enforce"], "restricted")
+        for obj in objects:
+            if obj["kind"] not in {"Namespace", "ValidatingAdmissionPolicy", "ValidatingAdmissionPolicyBinding"}:
+                self.assertEqual(obj["metadata"]["namespace"], "public-services")
+        account = next(o for o in objects if o["kind"] == "ServiceAccount")
+        self.assertFalse(account["automountServiceAccountToken"])
 
     def test_example_publishes_only_requested_ports_without_nodeports(self) -> None:
         result = self.render(self.values)
         self.assertEqual(result.returncode, 0, result.stderr)
         objects = list(yaml.safe_load_all(result.stdout))
-        self.assertEqual(len(objects), 1)
-        spec = objects[0]["spec"]
+        self.assertEqual(len(objects), 10)
+        service = next(o for o in objects if o["kind"] == "Service")
+        self.assertEqual(service["metadata"]["namespace"], "public-services")
+        spec = service["spec"]
         self.assertEqual(spec["loadBalancerClass"], "tailscale")
         self.assertFalse(spec["allocateLoadBalancerNodePorts"])
         self.assertEqual(
@@ -45,15 +57,14 @@ class PublicServicesTests(unittest.TestCase):
 
     def test_policy_uses_target_ports_and_scopes_both_parent_labels(self) -> None:
         service = self.values["services"][0]
-        service["allowFromTailscale"] = True
         service["ports"][0]["targetPort"] = "http"
         result = self.render(self.values)
         self.assertEqual(result.returncode, 0, result.stderr)
-        policy = next(o for o in yaml.safe_load_all(result.stdout) if o["kind"] == "NetworkPolicy")
+        policy = next(o for o in yaml.safe_load_all(result.stdout) if o["kind"] == "NetworkPolicy" and o["metadata"]["name"] == "arena-public")
         peer = policy["spec"]["ingress"][0]["from"][0]
         self.assertEqual(peer["namespaceSelector"]["matchLabels"]["kubernetes.io/metadata.name"], "tailscale")
         self.assertEqual(peer["podSelector"]["matchLabels"]["tailscale.com/parent-resource"], "arena-public")
-        self.assertEqual(peer["podSelector"]["matchLabels"]["tailscale.com/parent-resource-ns"], "games")
+        self.assertEqual(peer["podSelector"]["matchLabels"]["tailscale.com/parent-resource-ns"], "public-services")
         self.assertEqual(peer["podSelector"]["matchLabels"]["tailscale.com/parent-resource-type"], "svc")
         self.assertEqual(policy["spec"]["ingress"][0]["ports"][0]["port"], "http")
 
@@ -73,3 +84,44 @@ class PublicServicesTests(unittest.TestCase):
         duplicate["name"] = "duplicate"
         self.values["services"][0]["ports"].append(duplicate)
         self.assertIn("duplicate port", self.render(self.values).stderr)
+
+    def test_namespace_denies_all_other_traffic_and_only_allows_cluster_dns(self) -> None:
+        result = self.render({})
+        policies = {o["metadata"]["name"]: o["spec"] for o in yaml.safe_load_all(result.stdout) if o["kind"] == "NetworkPolicy"}
+        deny = policies["default-deny"]
+        self.assertEqual(set(deny["policyTypes"]), {"Ingress", "Egress"})
+        self.assertEqual(deny["podSelector"], {})
+        self.assertNotIn("ingress", deny)
+        self.assertNotIn("egress", deny)
+        dns = policies["allow-dns"]["egress"]
+        self.assertEqual(len(dns), 1)
+        self.assertEqual(dns[0]["to"], [{"namespaceSelector": {"matchLabels": {"kubernetes.io/metadata.name": "openshift-dns"}}}])
+        self.assertEqual({(p["port"], p["protocol"]) for p in dns[0]["ports"]}, {(53, "TCP"), (53, "UDP"), (5353, "TCP"), (5353, "UDP")})
+
+    def test_rejects_per_service_namespace_and_optional_ingress_policy(self) -> None:
+        for field, value in [("namespace", "another-namespace"), ("allowFromTailscale", False)]:
+            with self.subTest(field=field):
+                values = copy.deepcopy(self.values)
+                values["services"][0][field] = value
+                self.assertNotEqual(self.render(values).returncode, 0)
+
+    def test_namespace_has_resource_budget_and_container_defaults(self) -> None:
+        result = self.render({})
+        objects = list(yaml.safe_load_all(result.stdout))
+        quota = next(o for o in objects if o["kind"] == "ResourceQuota")
+        self.assertEqual(quota["spec"]["hard"]["pods"], "20")
+        self.assertEqual(quota["spec"]["hard"]["limits.memory"], "4Gi")
+        limits = next(o for o in objects if o["kind"] == "LimitRange")
+        self.assertEqual(limits["spec"]["limits"][0]["default"]["memory"], "512Mi")
+
+    def test_secondary_network_guard_is_bound_only_to_public_namespace(self) -> None:
+        objects = list(yaml.safe_load_all(self.render({}).stdout))
+        policy = next(o for o in objects if o["kind"] == "ValidatingAdmissionPolicy")
+        binding = next(o for o in objects if o["kind"] == "ValidatingAdmissionPolicyBinding")
+        self.assertEqual(policy["spec"]["failurePolicy"], "Fail")
+        self.assertEqual(policy["spec"]["matchConstraints"]["resourceRules"][0]["resources"], ["pods"])
+        expression = policy["spec"]["validations"][0]["expression"]
+        self.assertIn("k8s.v1.cni.cncf.io/networks", expression)
+        self.assertIn("v1.multus-cni.io/default-network", expression)
+        self.assertEqual(binding["spec"]["matchResources"]["namespaceSelector"]["matchLabels"], {"kubernetes.io/metadata.name": "public-services"})
+        self.assertEqual(binding["spec"]["validationActions"], ["Deny"])
