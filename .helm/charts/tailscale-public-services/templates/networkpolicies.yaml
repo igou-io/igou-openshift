@@ -20,6 +20,7 @@ spec:
           podSelector:
             matchLabels:
               tailscale.com/managed: 'true'
+              tailscale.com/parent-resource-type: svc
               tailscale.com/parent-resource: {{ $service.name | quote }}
               tailscale.com/parent-resource-ns: {{ $service.namespace | quote }}
       ports:

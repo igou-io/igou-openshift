@@ -54,6 +54,7 @@ class PublicServicesTests(unittest.TestCase):
         self.assertEqual(peer["namespaceSelector"]["matchLabels"]["kubernetes.io/metadata.name"], "tailscale")
         self.assertEqual(peer["podSelector"]["matchLabels"]["tailscale.com/parent-resource"], "arena-public")
         self.assertEqual(peer["podSelector"]["matchLabels"]["tailscale.com/parent-resource-ns"], "games")
+        self.assertEqual(peer["podSelector"]["matchLabels"]["tailscale.com/parent-resource-type"], "svc")
         self.assertEqual(policy["spec"]["ingress"][0]["ports"][0]["port"], "http")
 
     def test_rejects_empty_selectors_and_duplicate_tailnet_identities(self) -> None:
