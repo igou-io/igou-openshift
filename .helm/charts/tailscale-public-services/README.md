@@ -3,7 +3,9 @@
 This chart owns one OpenShift namespace, `public-services`, for application
 pods and their private Tailscale-backed Services. Empty default values create
 the namespace guardrails without publishing an endpoint. The chart remains
-unregistered with Argo CD; adding it does not deploy anything.
+registered by the `public-services` platform Application with an empty service
+list. Its companion reader identity is in `components/public-services`; no
+application is published until an endpoint is explicitly configured.
 
 `examples/arena-values.yaml` covers HTTP, TCP, and UDP ports for an illustrative
 application. Render it locally:
