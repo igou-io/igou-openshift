@@ -11,8 +11,10 @@ pod start. Server state lives under `/data/rust/server/homelab/`.
 
 `server.cfg` holds non-secret game settings. The RCON password comes from
 `op://lab_openshift/rust-rcon/rcon-password` through External Secrets. Startup
-writes the effective server.cfg onto memory-backed emptyDir and links it into
-the server identity directory; the password is never passed in process args.
+links the non-secret server.cfg into the server identity directory. Rust needs
+the RCON password as a startup argument; the Python wrapper redacts the password
+from both output streams before forwarding them to container logs. The password
+is not written to the persistent volume.
 
 Readiness performs an A2S_INFO UDP query. The preStop hook requests
 `server.save` followed by `quit` through local WebRCON, with a 120-second

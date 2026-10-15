@@ -161,11 +161,6 @@ helmCharts:
               app:
                 - path: /run/rcon
                   readOnly: true
-        runtime:
-          type: emptyDir
-          medium: Memory
-          globalMounts:
-            - path: /runtime
         tmp:
           type: emptyDir
           globalMounts:
