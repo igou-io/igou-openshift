@@ -23,6 +23,8 @@ spec:
       matchExpressions:
         - key: cdi.kubevirt.io/dataImportCron
           operator: DoesNotExist
+        - key: molecule.igou.systems/image-cache
+          operator: DoesNotExist
     storageLocation: default
     snapshotMoveData: true
     # 65 days = 1,560 hours; keeps at least two monthly recovery points.
