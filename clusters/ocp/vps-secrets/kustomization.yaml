@@ -5,7 +5,7 @@ kind: Kustomization
 resources:
   - vps-k3s-api-service.yaml
   - vps-secrets-externalsecret.yaml
-  - vps-cluster-externalsecret.yaml
+  - vps-remote-cluster-externalsecret.yaml
   - vps-secrets-secretstore.yaml
   - vps-cloudflare-source-externalsecret.yaml
   - vps-acme-issuer.yaml
