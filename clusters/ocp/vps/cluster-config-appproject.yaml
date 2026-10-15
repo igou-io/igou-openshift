@@ -36,6 +36,12 @@ spec:
       kind: ClusterRoleBinding
     - group: gateway.networking.k8s.io
       kind: GatewayClass
+    - group: admissionregistration.k8s.io
+      kind: ValidatingAdmissionPolicy
+    - group: admissionregistration.k8s.io
+      kind: ValidatingAdmissionPolicyBinding
+    - group: networking.k8s.io
+      kind: IngressClass
   namespaceResourceWhitelist:
     - group: '*'
       kind: '*'
