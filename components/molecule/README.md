@@ -44,10 +44,12 @@ pruning**. The application's existing auto-prune setting is disabled. Keep it
 that way until migration finishes; manually pruning the old DataImportCrons
 with `retentionPolicy: None` can delete their seeds and DataSources.
 
-On the next managed acquisition or release, Ansible disables the three legacy
-feeds, changes their retention policy, and removes their persisted CDI cleanup
-and feed labels from seed objects before deleting the feeds. Changing retention
-policy alone does not remove existing cleanup labels. Completed seeds survive
+On the next managed acquisition or release, Ansible removes the three legacy
+feeds' persisted CDI cleanup and feed labels from seed objects, verifies that
+their cleanup selectors are empty, then deletes the feeds with UID and resource
+version preconditions. The installed CDI webhook makes the entire cron spec
+immutable, including retention and schedule; migration only changes metadata.
+Completed seeds survive
 migration; acquisition replaces them only after a successful current-source
 copy. A release can retire the old feeds and remove pending imports while
 Casval remains offline. Do not roll back to the old Ansible implementation or
