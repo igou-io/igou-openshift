@@ -631,6 +631,14 @@ applications:
     source:
       path: applications/so-crates
 
+  rust:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/rust
+
   ace-step:
     project: cluster-apps
     annotations:

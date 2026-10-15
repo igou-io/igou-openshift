@@ -1,0 +1,139 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: rust
+resources:
+  - rust-namespace.yaml
+  - rust-data-pvc.yaml
+  - rust-rcon-externalsecret.yaml
+  - default-deny-networkpolicy.yaml
+  - allow-rust-networkpolicy.yaml
+configMapGenerator:
+  - name: rust-config
+    files:
+      - server.cfg
+helmCharts:
+  - name: app-template
+    namespace: rust
+    version: 4.6.2
+    releaseName: rust
+    repo: oci://ghcr.io/bjw-s-labs/helm
+    valuesFile: values-dummy.yaml
+    valuesInline:
+      defaultPodOptions:
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                preference:
+                  matchExpressions:
+                    - key: node-role.kubernetes.io/control-plane
+                      operator: DoesNotExist
+        nodeSelector:
+          kubernetes.io/arch: amd64
+      controllers:
+        rust:
+          type: deployment
+          replicas: 1
+          strategy: Recreate
+          pod:
+            automountServiceAccountToken: false
+            terminationGracePeriodSeconds: 120
+            securityContext:
+              fsGroupChangePolicy: OnRootMismatch
+              seccompProfile:
+                type: RuntimeDefault
+          containers:
+            app:
+              image:
+                repository: ghcr.io/igou-io/rust-server
+                tag: 8131abdf8c200f6d1eb3fe3fdd8ce1bde2d65f51@sha256:c218a484ef5457bb8c98ed3fa692fc47b2224f7b64ab181f15c4c577360b2c1e
+              env:
+                RCON_PASSWORD_FILE: /run/rcon/rcon-password
+                SERVER_CONFIG: /etc/rust/server.cfg
+              ports:
+                - name: game
+                  containerPort: 28015
+                  protocol: UDP
+                - name: query
+                  containerPort: 28017
+                  protocol: UDP
+              probes:
+                startup:
+                  enabled: true
+                  custom: true
+                  spec:
+                    exec:
+                      command:
+                        - rust-server
+                        - probe
+                    periodSeconds: 10
+                    timeoutSeconds: 8
+                    failureThreshold: 180
+                readiness:
+                  enabled: true
+                  custom: true
+                  spec:
+                    exec:
+                      command:
+                        - rust-server
+                        - probe
+                    periodSeconds: 15
+                    timeoutSeconds: 8
+                    failureThreshold: 4
+                # UDP query failure should remove endpoints, not kill a busy
+                # server during a save. Kubernetes restarts process crashes.
+                liveness:
+                  enabled: false
+              resources:
+                requests:
+                  cpu: '4'
+                  memory: 12Gi
+                  ephemeral-storage: 1Gi
+                limits:
+                  cpu: '6'
+                  memory: 16Gi
+                  ephemeral-storage: 4Gi
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop:
+                    - ALL
+      persistence:
+        data:
+          existingClaim: rust-data
+          globalMounts:
+            - path: /data
+        config:
+          type: configMap
+          name: rust-config
+          globalMounts:
+            - path: /etc/rust
+              readOnly: true
+        rcon:
+          type: secret
+          name: rust-rcon
+          advancedMounts:
+            rust:
+              app:
+                - path: /run/rcon
+                  readOnly: true
+        tmp:
+          type: emptyDir
+          globalMounts:
+            - path: /tmp
+      service:
+        rust:
+          forceRename: rust
+          controller: rust
+          type: ClusterIP
+          ports:
+            game:
+              port: 28015
+              targetPort: 28015
+              protocol: UDP
+            query:
+              port: 28017
+              targetPort: 28017
+              protocol: UDP
