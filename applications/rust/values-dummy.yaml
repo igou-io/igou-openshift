@@ -1,0 +1,4 @@
+---
+# Required by kustomize for app-template's empty upstream values file.
+# All chart settings are in valuesInline.
+foo: bar
