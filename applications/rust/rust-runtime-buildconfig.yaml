@@ -1,0 +1,38 @@
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: rust-runtime
+  namespace: rust
+spec:
+  runPolicy: Serial
+  successfulBuildsHistoryLimit: 1
+  failedBuildsHistoryLimit: 1
+  source:
+    type: Dockerfile
+    dockerfile: |
+      FROM docker.io/cm2network/steamcmd:latest@sha256:45f6515d6c4dcde659c9ad6872bdbeacd1bf5c4e7f241829c4d2f28fb5eda581
+      USER root
+      RUN apt-get update \
+          && apt-get install -y --no-install-recommends python3 python3-websocket libatomic1 libcurl4 \
+          && rm -rf /var/lib/apt/lists/* \
+          && chmod a+rx /home/steam \
+          && chmod -R a+rX /home/steam/steamcmd
+      ENV HOME=/data/home PYTHONDONTWRITEBYTECODE=1
+      WORKDIR /data
+      USER 1000
+  strategy:
+    type: Docker
+    dockerStrategy: {}
+  output:
+    to:
+      kind: ImageStreamTag
+      name: rust-runtime:1
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: '2'
+      memory: 2Gi
+  triggers: []
