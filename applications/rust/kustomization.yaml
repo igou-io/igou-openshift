@@ -5,16 +5,11 @@ resources:
   - rust-namespace.yaml
   - rust-data-pvc.yaml
   - rust-rcon-externalsecret.yaml
-  - rust-runtime-imagestream.yaml
-  - rust-runtime-buildconfig.yaml
   - default-deny-networkpolicy.yaml
   - allow-rust-networkpolicy.yaml
-  - allow-build-networkpolicy.yaml
 configMapGenerator:
-  - name: rust-scripts
+  - name: rust-config
     files:
-      - install.sh
-      - manage.py
       - server.cfg
 helmCharts:
   - name: app-template
@@ -47,42 +42,14 @@ helmCharts:
               fsGroupChangePolicy: OnRootMismatch
               seccompProfile:
                 type: RuntimeDefault
-          initContainers:
-            install:
-              image:
-                repository: image-registry.openshift-image-registry.svc:5000/rust/rust-runtime
-                tag: 1@sha256:174a4557a3dc5d5482364f82da8e6476981ae8ae4617fc37e4a0b54c94a1cac5
-              command:
-                - /bin/bash
-                - /opt/rust/install.sh
-              env:
-                HOME: /data/home
-              resources:
-                requests:
-                  cpu: 500m
-                  memory: 1Gi
-                limits:
-                  cpu: '2'
-                  memory: 2Gi
-              securityContext:
-                allowPrivilegeEscalation: false
-                runAsNonRoot: true
-                readOnlyRootFilesystem: true
-                capabilities:
-                  drop:
-                    - ALL
           containers:
             app:
               image:
-                repository: image-registry.openshift-image-registry.svc:5000/rust/rust-runtime
-                tag: 1@sha256:174a4557a3dc5d5482364f82da8e6476981ae8ae4617fc37e4a0b54c94a1cac5
-              command:
-                - python3
-                - /opt/rust/manage.py
-                - start
+                repository: ghcr.io/igou-io/rust-server
+                tag: f42c758aef2de5564484fe0c279c07b937a3e7ae@sha256:f4422e509685c9b9e460b1bb0e583b878f8a7407fe458612dda650fd353e88ab
               env:
-                HOME: /data/home
-                LD_LIBRARY_PATH: /data/rust/RustDedicated_Data/Plugins/x86_64:/data/steamcmd/linux64
+                RCON_PASSWORD_FILE: /run/rcon/rcon-password
+                SERVER_CONFIG: /etc/rust/server.cfg
               ports:
                 - name: game
                   containerPort: 28015
@@ -90,13 +57,6 @@ helmCharts:
                 - name: query
                   containerPort: 28017
                   protocol: UDP
-              lifecycle:
-                preStop:
-                  exec:
-                    command:
-                      - python3
-                      - /opt/rust/manage.py
-                      - stop
               probes:
                 startup:
                   enabled: true
@@ -104,9 +64,8 @@ helmCharts:
                   spec:
                     exec:
                       command:
-                        - python3
-                        - /opt/rust/manage.py
-                        - query
+                        - rust-server
+                        - probe
                     periodSeconds: 10
                     timeoutSeconds: 8
                     failureThreshold: 180
@@ -116,9 +75,8 @@ helmCharts:
                   spec:
                     exec:
                       command:
-                        - python3
-                        - /opt/rust/manage.py
-                        - query
+                        - rust-server
+                        - probe
                     periodSeconds: 15
                     timeoutSeconds: 8
                     failureThreshold: 4
@@ -147,11 +105,11 @@ helmCharts:
           existingClaim: rust-data
           globalMounts:
             - path: /data
-        scripts:
+        config:
           type: configMap
-          name: rust-scripts
+          name: rust-config
           globalMounts:
-            - path: /opt/rust
+            - path: /etc/rust
               readOnly: true
         rcon:
           type: secret
