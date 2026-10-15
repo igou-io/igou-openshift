@@ -33,6 +33,14 @@ applications:
     source:
       path: clusters/vps/bootstrap
 
+  monitoring:
+    annotations:
+      argocd.argoproj.io/sync-wave: '1'
+    destination:
+      namespace: monitoring
+    source:
+      path: clusters/vps/monitoring
+
   external-secrets-operator:
     annotations:
       argocd.argoproj.io/sync-wave: '3'
@@ -80,6 +88,14 @@ applications:
       namespace: node-exporter
     source:
       path: clusters/vps/node-exporter
+
+  kube-state-metrics:
+    annotations:
+      argocd.argoproj.io/sync-wave: '10'
+    destination:
+      namespace: kube-state-metrics
+    source:
+      path: clusters/vps/kube-state-metrics
 
   igou-io:
     annotations:

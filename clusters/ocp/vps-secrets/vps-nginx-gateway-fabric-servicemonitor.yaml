@@ -1,0 +1,46 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: vps-nginx-gateway-fabric
+  namespace: tailscale
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vps-metrics
+  endpoints:
+    - port: https
+      scheme: https
+      path: /api/v1/namespaces/nginx-gateway/services/http:nginx-gateway-nginx-gateway-fabric:metrics/proxy/metrics
+      interval: 30s
+      scrapeTimeout: 10s
+      authorization:
+        type: Bearer
+        credentials:
+          name: vps-metrics
+          key: token
+      tlsConfig:
+        ca:
+          secret:
+            name: vps-metrics
+            key: ca.crt
+        serverName: vps-k3s-api.vps-secrets.svc.cluster.local
+      relabelings:
+        - action: replace
+          targetLabel: job
+          replacement: vps-nginx-gateway-fabric
+        - action: replace
+          targetLabel: cluster
+          replacement: vps
+        - action: replace
+          targetLabel: instance
+          replacement: vps
+        - action: labeldrop
+          regex: pod|container
+      metricRelabelings:
+        - action: replace
+          sourceLabels:
+            - exported_namespace
+          regex: (.+)
+          targetLabel: vps_namespace
+          replacement: $1

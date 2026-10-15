@@ -15,3 +15,11 @@ resources:
   - vps-tailscale-pushsecret.yaml
   - vps-gotify-source-externalsecret.yaml
   - vps-gotify-pushsecret.yaml
+  - vps-monitoring-clustersecretstore.yaml
+  - vps-metrics-externalsecret.yaml
+  - vps-metrics-service.yaml
+  - vps-k3s-servicemonitor.yaml
+  - vps-cadvisor-servicemonitor.yaml
+  - vps-kube-state-metrics-servicemonitor.yaml
+  - vps-nginx-gateway-fabric-servicemonitor.yaml
+  - vps-nginx-servicemonitor.yaml
