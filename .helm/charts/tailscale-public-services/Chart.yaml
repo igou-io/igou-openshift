@@ -1,0 +1,6 @@
+---
+apiVersion: v2
+name: tailscale-public-services
+version: 0.1.0
+description: Opt-in OpenShift Service endpoints for the VPS public ingress path
+type: application
