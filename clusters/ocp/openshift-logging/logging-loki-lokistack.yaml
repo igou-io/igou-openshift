@@ -17,6 +17,12 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   size: 1x.demo
+  template:
+    gateway:
+      # A gateway memory spike must not take down the single control plane.
+      # Its worker role also matches ocp; tenant is worker-only (hpg5/p330).
+      nodeSelector:
+        node-role.kubernetes.io/tenant: ''
   storage:
     schemas:
       - version: v13

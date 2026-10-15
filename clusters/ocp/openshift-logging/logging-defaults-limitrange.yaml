@@ -1,0 +1,21 @@
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: logging-defaults
+  namespace: openshift-logging
+  annotations:
+    # Admit replacement gateways with bounds before changing their placement.
+    argocd.argoproj.io/sync-wave: '0'
+spec:
+  limits:
+    - type: Container
+      # LokiStack 1x.demo omits resources and its gateway template has no
+      # resources field. Admission defaults survive operator reconciliation
+      # and leave explicit settings (including the 8Gi collectors) intact.
+      default:
+        cpu: '4'
+        memory: 4Gi
+      defaultRequest:
+        cpu: 100m
+        memory: 256Mi
