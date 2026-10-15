@@ -4,6 +4,4 @@ kind: Kustomization
 
 resources:
   - molecule-namespace.yaml
-  - centos-stream10-casval-dataimportcron.yaml
-  - win11-casval-dataimportcron.yaml
-  - win2k25-casval-dataimportcron.yaml
+  - casval-image-cache-configmap.yaml

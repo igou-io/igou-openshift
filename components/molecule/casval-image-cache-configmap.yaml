@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: casval-image-cache
+  namespace: openshift-virtualization-os-images
+data:
+  seeds.yml: |
+    - name: centos-stream10-casval
+      source: centos-stream10
+      size: 30Gi
+    - name: win11-casval
+      source: win11
+      size: 50Gi
+    - name: win2k25-casval
+      source: win2k25
+      size: 50Gi
