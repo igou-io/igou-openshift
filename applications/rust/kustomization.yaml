@@ -46,7 +46,7 @@ helmCharts:
             app:
               image:
                 repository: ghcr.io/igou-io/rust-server
-                tag: f42c758aef2de5564484fe0c279c07b937a3e7ae@sha256:f4422e509685c9b9e460b1bb0e583b878f8a7407fe458612dda650fd353e88ab
+                tag: 8131abdf8c200f6d1eb3fe3fdd8ce1bde2d65f51@sha256:c218a484ef5457bb8c98ed3fa692fc47b2224f7b64ab181f15c4c577360b2c1e
               env:
                 RCON_PASSWORD_FILE: /run/rcon/rcon-password
                 SERVER_CONFIG: /etc/rust/server.cfg
