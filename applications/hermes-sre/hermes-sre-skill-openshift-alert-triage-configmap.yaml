@@ -17,7 +17,12 @@ data:
     platforms: [linux]
     metadata:
       hermes:
-        tags: [sre, openshift, alerts, loki, prometheus]
+        tags:
+          - sre
+          - openshift
+          - alerts
+          - loki
+          - prometheus
     ---
 
     # OpenShift alert triage (read-only)
@@ -75,15 +80,14 @@ data:
     ## 3. Logs (1-2 calls)
 
     ```bash
-    ocp-logs '{kubernetes_namespace_name="NS", kubernetes_pod_name=~"POD.*"}' --since 2h --limit 200
-    oc logs -n NS POD --previous --tail=100        # crash loops
-    ocp-logs --tenant infrastructure '{kubernetes_namespace_name="openshift-NS"}' --since 1h
+    oc logs -n NS POD -c CONTAINER --since=2h --tail=200
+    oc logs -n NS POD -c CONTAINER --previous --tail=100  # crash loops
     ```
 
-    LogQL rules: the stream selector goes in `{}`; labels are
-    `kubernetes_namespace_name`, `kubernetes_pod_name`,
-    `kubernetes_container_name`; filters go after: `|= "text"`, `!= "text"`,
-    `|~ "regex"`. Never pass `--since` without a selector.
+    Use bounded pod logs, including the previous container for crash loops.
+    Loki queries are disabled for this instance: do not use `ocp-logs`,
+    raw Loki HTTP requests or Grafana Explore. If the pod is gone and its logs
+    are unavailable through the Kubernetes API, report that limitation.
 
     ## 4. Metrics only when logs are not enough (1 call)
 

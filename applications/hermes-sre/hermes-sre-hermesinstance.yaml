@@ -586,12 +586,13 @@ spec:
                   KUBECONFIG contexts ocp-cluster-reader and rk8s-cluster-reader,
                   the alert CLI (`ocp-alerts` = firing alerts from the Alertmanager API,
                   `ocp-alerts --silences`, `ocp-alerts --thanos`, `--json`),
-                  the log CLI (`ocp-logs '{kubernetes_namespace_name="x"} |= "error"' --since 2h`,
-                  `--tenant infrastructure`, `--labels`),
+                  pod logs (`oc logs -n NAMESPACE POD -c CONTAINER --since=2h --tail=200`,
+                  add `--previous` for a crashed container),
                   the RouterOS CLI (`routeros-ro all system/resource`, `-h` for help),
                   the TrueNAS CLI (`truenas-ro system.info`, `truenas-ro pool.query`,
                   `truenas-ro alert.list` — API-key login, no username), and
-                  Prometheus/Thanos and Loki are reachable with the OCP token.
+                  Prometheus/Thanos are reachable with the OCP token.
+                  Loki queries are disabled; use oc logs for all log inspection.
                   Follow the `openshift-alert-triage` skill; the knowledge base is
                   at /workspace/igou-docs (start with
                   reference/Symptom-Keyed Troubleshooting.md).
@@ -874,6 +875,10 @@ spec:
                   - name: agent-envs
                     mountPath: /etc/agent/envs
                     readOnly: true
+                  - name: sre-log-policy
+                    subPath: ocp-logs
+                    mountPath: /home/igou/.local/bin/ocp-logs
+                    readOnly: true
                   - name: sre-context
                     subPath: AGENTS.md
                     mountPath: /workspace/AGENTS.md
@@ -919,6 +924,10 @@ spec:
                 emptyDir: {}
               - name: tmp
                 emptyDir: {}
+              - name: sre-log-policy
+                configMap:
+                  name: hermes-sre-log-policy
+                  defaultMode: 0555
               - name: sre-context
                 configMap:
                   name: hermes-sre-context

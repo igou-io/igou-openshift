@@ -49,9 +49,8 @@ data:
     | Need | Command |
     | --- | --- |
     | Firing alerts (Alertmanager API) | `ocp-alerts`, `ocp-alerts --json`, `ocp-alerts --silences`, `ocp-alerts --thanos` |
-    | Container logs (Loki, application tenant) | `ocp-logs '{kubernetes_namespace_name="NS"} \|= "error"' --since 2h --limit 200` |
-    | Node/system logs (Loki, infrastructure tenant) | `ocp-logs --tenant infrastructure '{kubernetes_namespace_name="openshift-monitoring"}' --since 1h` |
-    | Loki label discovery | `ocp-logs --labels`, `ocp-logs --tenant infrastructure --labels` |
+    | Container logs | `oc logs -n NS POD -c CONTAINER --since=2h --tail=200` |
+    | Previous crashed container logs | `oc logs -n NS POD -c CONTAINER --previous --tail=100` |
     | OCP metrics (Thanos) | `curl -sk -H "Authorization: Bearer $(oc whoami -t)" 'https://thanos-querier-openshift-monitoring.apps.ocp.igou.systems/api/v1/query' --data-urlencode 'query=up'` |
     | rk8s metrics | `curl -sk https://prometheus.rk8s.igou.systems/api/v1/query --data-urlencode 'query=up'` |
     | rk8s objects | `kubectl --context rk8s-cluster-reader get nodes -o wide` |
@@ -61,10 +60,11 @@ data:
     | GitHub issues (report findings) | `GH_TOKEN=$(ghapp token --repo igou-io/igou-openshift) gh issue create ...` |
     | Propose a fix as a PR | follow the `propose-fix` skill (branch + PR only; you can never merge) |
 
-    `ocp-logs` takes a LogQL stream selector in braces plus optional pipeline;
-    the label is `kubernetes_namespace_name`, not `namespace`, and pod/container
-    labels are `kubernetes_pod_name` / `kubernetes_container_name`. Do not
-    port-forward to Prometheus, Alertmanager or Loki; use the routes/CLIs above.
+    Log inspection uses `oc logs` only. Loki query access is disabled for
+    this instance; do not use `ocp-logs`, raw Loki HTTP requests or Grafana
+    Explore. The dedicated OCP reader retains pod-log and monitoring access
+    without Loki tenant permissions. Do not port-forward to monitoring services;
+    use the routes/CLIs above.
 
     ## The estate (details in /workspace/igou-docs)
 
@@ -139,8 +139,9 @@ data:
     `rk8s-cluster-reader`. There are no write credentials, SSH keys or sudo.
 
     - Alerts: `ocp-alerts` (`--json`, `--silences`, `--thanos`)
-    - Logs: `ocp-logs '{kubernetes_namespace_name="NS"}' --since 2h`
-      (`--tenant infrastructure`, `--labels`)
+    - Logs: `oc logs -n NS POD -c CONTAINER --since=2h --tail=200`;
+      add `--previous` for a crashed container. Loki queries and `ocp-logs`
+      are disabled for this instance.
     - Network: `routeros-ro all system/resource`; storage: `truenas-ro system.info`,
       `truenas-ro pool.query`, `truenas-ro alert.list`
     - Metrics: Thanos route with `oc whoami -t`; `https://prometheus.rk8s.igou.systems`

@@ -470,6 +470,33 @@ serviceAccounts:
                 remoteKey: ocp-cluster-read-only
                 property: token
 
+  # Dedicated SRE identity: pod logs and monitoring, without Loki tenant reads.
+  - name: hermes-sre-reader
+    clusterRoleBindings:
+      - name: hermes-sre-reader
+        clusterRole: cluster-reader
+      - name: hermes-sre-reader-monitoring-view
+        clusterRole: cluster-monitoring-view
+      - name: hermes-sre-reader-hermes-read
+        clusterRole: hermes-read
+    roleBindings:
+      - namespace: openshift-monitoring
+        roles:
+          - monitoring-alertmanager-view
+    pushSecrets:
+      - name: hermes-sre-reader-token-push
+        refreshInterval: "0"
+        secretStoreRefs:
+          - name: onepassword-lab-serviceaccounts
+            kind: ClusterSecretStore
+        data:
+          - conversionStrategy: None
+            match:
+              secretKey: token
+              remoteRef:
+                remoteKey: ocp-hermes-sre-reader
+                property: token
+
   - name: cluster-edit
     roleBindings:
       - namespace: default
