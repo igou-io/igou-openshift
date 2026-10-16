@@ -41,6 +41,7 @@ resources:
   - hermes-sre-am-relay-externalsecret.yaml
   - hermes-sre-am-relay-configmap.yaml
   - hermes-sre-context-configmap.yaml
+  - hermes-sre-log-policy-configmap.yaml
   - hermes-sre-skill-openshift-alert-triage-configmap.yaml
   - hermes-sre-skill-propose-fix-configmap.yaml
   - hermes-sre-skill-sre-sweeps-configmap.yaml

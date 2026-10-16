@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hermes-sre-log-policy
+  namespace: hermes-sre
+data:
+  ocp-logs: |
+    #!/bin/sh
+    printf '%s\n' 'Loki queries are disabled for Hermes SRE. Use oc logs -n NAMESPACE POD -c CONTAINER --since=2h --tail=200.' >&2
+    exit 126

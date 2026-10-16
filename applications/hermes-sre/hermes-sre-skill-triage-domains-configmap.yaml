@@ -91,8 +91,8 @@ data:
 
     Prefix everything: `kubectl --context rk8s-cluster-reader ...`. Its
     Alertmanager posts into this instance via the am-relay Route, so rk8s
-    alerts arrive exactly like OCP ones — but `ocp-alerts`/`ocp-logs` are
-    OCP-only; on rk8s you have kubectl and metrics only.
+    alerts arrive exactly like OCP ones — but `ocp-alerts` is OCP-only.
+    Use `kubectl logs` and metrics on rk8s; Loki queries are disabled.
 
     1. `kubectl --context rk8s-cluster-reader get nodes -o wide`, then the
        namespace/pod/events pass from the main triage skill.

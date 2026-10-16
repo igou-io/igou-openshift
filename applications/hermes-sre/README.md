@@ -5,11 +5,17 @@ purpose-scoped plan (assistant / developer / sre). This one **monitors and
 inspects**; it cannot change anything:
 
 - Every session pod carries the igou-devenv **`read-only` bundle**
-  (ADR-0006): OCP + rk8s `cluster-read-only` SAs, RouterOS `mktxp` (`read,api`),
+  (ADR-0006): dedicated OCP `service-accounts:hermes-sre-reader` and rk8s
+  `cluster-read-only` SAs, RouterOS `mktxp` (`read,api`),
   TrueNAS `agent-ro` (`READONLY_ADMIN`). The bundle is an ExternalSecret rendered in
   the `envs/*.env` format into `/etc/agent/envs`; `AGENT_PROFILE=read-only` makes
   the baked `~/.bashrc.d/05-agent-profile.sh` activate it in every shell
   (`kubectl config get-contexts` → `ocp-cluster-reader`, `rk8s-cluster-reader`).
+- Log inspection uses `oc logs` only. The dedicated OCP identity retains
+  cluster inspection, pod logs, monitoring and Alertmanager reads, with no
+  Loki tenant-read grant. A read-only ConfigMap mount replaces `ocp-logs`
+  with a local refusal before it can send a query. Credential-policy changes
+  require retiring existing terminal pods so cached shared tokens cannot persist.
 - GitHub via its own `ghbroker`, policy `contents:read` + `issues:write` only.
 - Own Slack app "Hermes SRE" (tokens on `lab_agents/hermes-sre`), confined to
   `#igoucloud-hermes-sre` (`SLACK_ALLOWED_CHANNELS`) and DMs; no slash commands
