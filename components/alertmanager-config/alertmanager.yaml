@@ -69,6 +69,17 @@ route:
     - matchers:
         - alertname = HighOverallControlPlaneCPU
       receiver: 'null'
+    # Casval molecule image-cache DataImportCrons (components/molecule/*-casval-*)
+    # import onto lvms-casval (topology: casval.igou.systems). The CAPI/Metal3
+    # burst node only exists during an AAP lease; by design (components/molecule/
+    # README.md) cache imports wait and never acquire a lease, so the PVC stays
+    # Pending/WFFC between leases. Digest churn fires CDIDataImportCronOutdated
+    # continuously (operator_health_impact: none; 8+ re-fires/24h on
+    # igou-inventory#943). Mute; casval_scale clears it on the next lease.
+    - matchers:
+        - alertname = CDIDataImportCronOutdated
+        - cron_name =~ ".*-casval"
+      receiver: 'null'
     # Orchestrator monitoring was removed entirely (2026-08-31): the operator
     # re-applies its own broken backend ServiceMonitor every reconcile
     # (mandatory client cert, no pod-IP SAN), so TargetDown from this
