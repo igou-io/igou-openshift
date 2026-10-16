@@ -33,7 +33,7 @@ helmCharts:
       controllers:
         rust:
           type: deployment
-          replicas: 1
+          replicas: 0
           strategy: Recreate
           pod:
             automountServiceAccountToken: false
