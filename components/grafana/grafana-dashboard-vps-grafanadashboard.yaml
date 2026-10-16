@@ -1,0 +1,17 @@
+---
+apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: grafana-dashboard-vps
+  namespace: grafana
+  annotations:
+    argocd.argoproj.io/sync-wave: '12'
+spec:
+  instanceSelector:
+    matchLabels:
+      dashboards: grafana
+  folder: kubernetes
+  resyncPeriod: 24h
+  configMapRef:
+    name: grafana-dashboard-vps-json
+    key: vps.json
