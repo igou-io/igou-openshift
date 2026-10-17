@@ -28,9 +28,9 @@ if [ ! -r "$token_file" ]; then
   exit 1
 fi
 token=$(cat "$token_file")
-# Gotify tokens are URL-safe strings. Reject curl configuration injection.
+# Gotify tokens can contain dots. Reject curl configuration injection.
 case "$token" in
-  ''|*[!a-zA-Z0-9_-]*)
+  ''|*[!a-zA-Z0-9_.-]*)
     echo 'qbittorrent-gotify: invalid token file' >&2
     exit 1
     ;;
