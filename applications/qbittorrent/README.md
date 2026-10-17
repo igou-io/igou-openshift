@@ -6,7 +6,7 @@ in `clusters/ocp/values.yaml`.
 ## Current production topology
 
 The Deployment runs one Pod with Gluetun as a restartable native init sidecar
-and three application containers. All four share one network namespace:
+and four application containers. All five share one network namespace:
 
 ```text
 Deployment/qbittorrent (replicas: 1)
@@ -15,6 +15,8 @@ Deployment/qbittorrent (replicas: 1)
 ├── qbittorrent
 │   ├── /config  -> PVC/qbittorrent-config
 │   └── /data    -> PVC/qbittorrent-data -> NFS /mnt/cold/media/data
+├── seeding-stop-watcher
+│   └── /state   -> PVC/qbittorrent-config (notification cursor)
 ├── prowlarr
 │   └── /config  -> PVC/prowlarr-config
 └── flaresolverr
@@ -40,8 +42,9 @@ static native-iSCSI PVs; production media was intentionally disconnected.
 
 `notify.sh` is mounted read-only at `/notifications/notify.sh` through the
 `qbittorrent-notifications` generated ConfigMap. Its content hash causes a
-Deployment rollout when the script changes. Only the qBittorrent container
-mounts this script and the Gotify token.
+Deployment rollout when either notification script changes. qBittorrent and
+`seeding-stop-watcher` mount the sender and Gotify token. Only the watcher
+mounts the additional API credential Secret.
 
 ExternalSecret `qbittorrent-gotify` reads the `token` field of the
 `qbittorrent-gotify` 1Password item in `lab_openshift`, using
@@ -50,8 +53,9 @@ ExternalSecret `qbittorrent-gotify` reads the `token` field of the
 notification token does not prevent downloads. The ExternalSecret will report
 a sync error until the backing item exists. Provision it before rollout.
 
-This stages the sender only: it does not create a Gotify application or modify
-the persisted qBittorrent external-program settings. The activation and rollback
+These manifests install the sender and automatic-stop watcher. They do not
+create a Gotify application or modify the persisted qBittorrent external-program
+settings. The activation and rollback
 procedure belongs in `igou-docs`, under **qBittorrent Gotify Notifications**.
 Completion is a download event; Sonarr/Radarr import is a separate event.
 
@@ -64,9 +68,12 @@ The completion hook command is:
 `%N` is the torrent name and `%L` is its category. The optional added-event
 hook uses the same arguments with `added` instead of `finished`.
 
-The sender accepts `finished|added NAME [CATEGORY]`, sends HTTPS to
+The sender accepts `EVENT NAME [CATEGORY]` and sends HTTPS to
 `https://gotify.igou.io/message`, and uses priority 5 for completion and 0 for
-addition. It reads the token on each invocation and passes the header to curl
+addition. It also accepts `ratio-limit`, `seeding-time-limit`, and
+`inactive-seeding-time-limit`, which send **qBittorrent: seeding stopped** at
+priority 5 with the torrent name and reason. It reads the token on each
+invocation and passes the header to curl
 through stdin. Responses and curl error bodies are discarded. Failures return
 nonzero with status-only diagnostics; they do not change torrent activity.
 Public traffic follows the existing Gluetun VPN route.
@@ -76,6 +83,37 @@ attempts, each with an eight-second timeout and one/two-second backoff. Other
 HTTP errors, redirects, and certificate validation errors are not retried.
 Delivery is best effort: a prolonged outage loses notifications, and an
 ambiguous timeout followed by a retry can produce a duplicate.
+
+### Automatic seeding-stop watcher
+
+`watch-seeding-stops.py` runs as `seeding-stop-watcher` using Python already in
+the same pinned qBittorrent image. Every 15 seconds it reads the local log API
+and matches the explicit ratio/time-limit **Torrent stopped** events. Manual
+stops, queue changes, and limit actions that remove torrents are ignored.
+The file log is linked to stdout in this image, so the watcher uses the API
+instead of tailing that path.
+
+ExternalSecret `qbittorrent-notifications-api` maps `username` and `password`
+from the existing `lab_openshift/shelfmark-qbittorrent` item to read-only files
+under `/var/run/secrets/qbittorrent-api`. Authentication is to
+`http://127.0.0.1:8080` inside the shared Pod network; cookies stay in memory,
+redirects and proxies are disabled, and credential values are never logged.
+The client accepts the pinned 5.2 release's HTTP 204 login response as well as
+the older HTTP 200 `Ok.` response.
+
+The watcher writes only `.gotify-notifications/seeding-stop-cursor.json` on
+the existing qBittorrent config PVC, mounted at `/state`. The checkpoint holds
+the last log timestamp and ID, with no log content. First start skips the
+current log history. Later starts process newer entries, including after
+qBittorrent resets its log IDs on restart. The checkpoint advances before
+posting each notification to avoid replaying it after a watcher restart.
+
+This is best-effort delivery: events can be lost if sending fails, the process
+stops between checkpoint and delivery, the API's bounded log buffer rolls over
+during an outage, or the clock moves backward. The sender's bounded retries
+still apply. Polling or delivery failures log sanitized status and retry later;
+they do not stop torrents. The watcher starts automatically on deployment and
+does not enable the optional torrent-added hook.
 
 ## Historical Phase 2A architecture
 
