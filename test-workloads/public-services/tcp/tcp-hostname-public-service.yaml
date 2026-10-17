@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tcp-hostname-public
+  namespace: public-services
+  annotations:
+    tailscale.com/hostname: ocp-public-tcp-hostname
+    tailscale.com/tags: tag:ocp-public-tcp-hostname
+spec:
+  type: LoadBalancer
+  loadBalancerClass: tailscale
+  allocateLoadBalancerNodePorts: false
+  selector:
+    app.kubernetes.io/name: tcp-hostname
+  ports:
+    - name: tcp
+      port: 9000
+      targetPort: 9000
+      protocol: TCP

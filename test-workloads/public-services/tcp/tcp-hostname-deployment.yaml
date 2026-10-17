@@ -1,18 +1,19 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: udp-echo
+  name: tcp-hostname
   labels:
-    app.kubernetes.io/name: udp-echo
+    app.kubernetes.io/name: tcp-hostname
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: udp-echo
+      app.kubernetes.io/name: tcp-hostname
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: udp-echo
+        app.kubernetes.io/name: tcp-hostname
     spec:
       automountServiceAccountToken: false
       enableServiceLinks: false
@@ -26,25 +27,20 @@ spec:
           command:
             - /agnhost
           args:
-            - netexec
-            - --udp-port=9000
-            - --http-port=8080
-            - --http-override=/healthz
+            - serve-hostname
+            - --http=false
+            - --tcp=true
+            - --port=9000
           ports:
-            - name: udp
+            - name: tcp
               containerPort: 9000
-              protocol: UDP
-            - name: health
-              containerPort: 8080
               protocol: TCP
           readinessProbe:
-            httpGet:
-              path: /healthz
-              port: health
+            tcpSocket:
+              port: tcp
           livenessProbe:
-            httpGet:
-              path: /healthz
-              port: health
+            tcpSocket:
+              port: tcp
           resources:
             requests:
               cpu: 25m

@@ -4,4 +4,6 @@ namespace: public-services
 resources:
   - public-web-test-configmap.yaml
   - public-web-test-deployment.yaml
+  - public-web-test-public-networkpolicy.yaml
+  - public-web-test-public-service.yaml
   - public-web-test-service.yaml

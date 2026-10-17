@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: public-web-test-public
+  namespace: public-services
+  annotations:
+    tailscale.com/hostname: ocp-public-web-test
+    tailscale.com/tags: tag:ocp-public-web-test
+spec:
+  type: LoadBalancer
+  loadBalancerClass: tailscale
+  allocateLoadBalancerNodePorts: false
+  selector:
+    app.kubernetes.io/name: public-web-test
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP

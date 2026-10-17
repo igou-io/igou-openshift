@@ -7,21 +7,12 @@ registered by the `public-services` platform Application with an empty service
 list. Its companion reader identity is in `components/public-services`; no
 application is published until an endpoint is explicitly configured.
 
-`examples/web-test-values.yaml` selects the deployed `public-web-test` pods
-from `test-workloads/public-services-web` on TCP 8080. It creates a separate
-Tailscale Service, `public-web-test-public`, preserving the fixture's existing
-ClusterIP Service. Render it locally:
-
-```bash
-helm template public-services .helm/charts/tailscale-public-services \
-  -f .helm/charts/tailscale-public-services/examples/web-test-values.yaml
-```
-
-These endpoint values remain staged. The matching VPS examples expose HTTPS
-or raw TCP to the same HTTP server. The separate `examples/udp-values.yaml`
-selects the `udp-echo` workload in `test-workloads/public-services-udp` on UDP
-9000. That staged workload uses `agnhost netexec` to answer echo and hostname
-requests. The web fixture does not serve UDP.
+The three complete workload examples live in
+`test-workloads/public-services/http`, `tcp`, and `udp`. Each owns its native
+Tailscale endpoint Service and ingress policy alongside the application.
+The paired VPS sharing examples live in `igou-kubernetes/examples/public-services/`.
+Keep example-owned endpoints out of this chart's `services` values to avoid
+reconciling the same object from two sources.
 
 Each entry requires a Service name, pod selector, distinct tailnet hostname,
 application-specific `tag:ocp-public-*` tag, and named ports. Target ports may
@@ -44,7 +35,7 @@ No namespace users or RBAC permissions are granted by this chart. Give
 workload deployers a narrow Role rather than namespace-wide `edit` access
 that would let them change the guardrails. NetworkPolicies are additive.
 
-Adopt this chart once as a platform-owned Kustomization and keep its guardrails
+Adopt this chart once as a platform-owned Helm Application and keep its guardrails
 separate from per-share cleanup. Deploy public-facing application pods into
 `public-services` and supply their selectors in the central service list.
 Selectors cannot reach workloads in other namespaces; there is no per-service
