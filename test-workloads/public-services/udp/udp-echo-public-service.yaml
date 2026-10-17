@@ -6,7 +6,7 @@ metadata:
   namespace: public-services
   annotations:
     tailscale.com/hostname: ocp-public-udp-echo
-    tailscale.com/tags: tag:ocp-public-udp-echo
+    tailscale.com/tags: tag:ocp-public-service
 spec:
   type: LoadBalancer
   loadBalancerClass: tailscale

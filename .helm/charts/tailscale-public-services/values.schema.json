@@ -3,11 +3,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "proxyTag",
     "services",
     "quota",
     "containerResources"
   ],
   "properties": {
+    "proxyTag": {
+      "type": "string",
+      "pattern": "^tag:ocp-public-[a-z0-9-]+$"
+    },
     "services": {
       "type": "array",
       "items": {
@@ -16,7 +21,6 @@
         "required": [
           "name",
           "hostname",
-          "tag",
           "selector",
           "ports"
         ],
@@ -32,10 +36,6 @@
             "minLength": 1,
             "maxLength": 63,
             "pattern": "^[a-z]([-a-z0-9]*[a-z0-9])?$"
-          },
-          "tag": {
-            "type": "string",
-            "pattern": "^tag:ocp-public-[a-z0-9-]+$"
           },
           "selector": {
             "type": "object",

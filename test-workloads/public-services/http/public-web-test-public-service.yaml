@@ -6,7 +6,7 @@ metadata:
   namespace: public-services
   annotations:
     tailscale.com/hostname: ocp-public-web-test
-    tailscale.com/tags: tag:ocp-public-web-test
+    tailscale.com/tags: tag:ocp-public-service
 spec:
   type: LoadBalancer
   loadBalancerClass: tailscale

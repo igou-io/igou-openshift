@@ -15,8 +15,9 @@ Keep example-owned endpoints out of this chart's `services` values to avoid
 reconciling the same object from two sources.
 
 Each entry requires a Service name, pod selector, distinct tailnet hostname,
-application-specific `tag:ocp-public-*` tag, and named ports. Target ports may
-be numbers or named container ports.
+and named ports. All endpoint proxies use the chart-wide `proxyTag`, which
+defaults to `tag:ocp-public-service`. Target ports may be numbers or named
+container ports.
 Services use `loadBalancerClass: tailscale`, without NodePorts or MetalLB.
 
 The namespace enforces restricted Pod Security and denies ingress and egress
@@ -41,8 +42,10 @@ separate from per-share cleanup. Deploy public-facing application pods into
 Selectors cannot reach workloads in other namespaces; there is no per-service
 namespace override. Existing applications are not moved by this chart.
 The Tailscale operator must already exist.
-Authorize the operator to mint the selected tag and grant the VPS egress
-identity access to only the chosen ports. The matching VPS chart lives in
+Authorize `tag:k8s-operator` to mint `tag:ocp-public-service`. One tailnet grant
+allows `tag:vps-public-service` to reach `tag:ocp-public-service` on all TCP
+and UDP ports. Adding a service requires no new tags or tailnet policy edits;
+its Service and NetworkPolicy still declare the backend ports. The matching VPS chart lives in
 `igou-kubernetes/.helm/charts/tailscale-public-services`.
 
 The design and rollout checks are in igou-docs:

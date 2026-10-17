@@ -17,9 +17,11 @@ Current deployment status and ad hoc verification evidence are recorded in
 The platform's `.helm/charts/tailscale-public-services` chart owns the namespace,
 restricted pod security, default-deny networking, DNS egress, resource budget,
 and admission policy. Install those guardrails once before these examples.
-The Tailscale operator must be installed and authorized to mint the three
-endpoint tags. Tailnet grants must permit the VPS egress tag to reach only
-the selected backend ports. See the matching igou-docs public-sharing note.
+The Tailscale operator must be installed and authorized to mint the shared
+`tag:ocp-public-service` tag. One tailnet grant allows
+`tag:vps-public-service` to reach it on all TCP and UDP ports. The Services
+and NetworkPolicies restrict each proxy to its declared application ports.
+See the matching igou-docs public-sharing note.
 
 Render one workload or all three from this repository:
 

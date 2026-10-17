@@ -8,7 +8,7 @@ Service `udp-echo`, Tailscale Service `udp-echo-public`, and endpoint ingress po
 The pod uses a digest-pinned image, restricted security settings, a read-only
 root filesystem, and no API token. HTTP 8080 serves only the health handler
 through `--http-override=/healthz`; both Services expose UDP 9000 only.
-The tailnet hostname is `ocp-public-udp-echo`; its tag is `tag:ocp-public-udp-echo`.
+The tailnet hostname is `ocp-public-udp-echo`; its tag is `tag:ocp-public-service`.
 
 The matching VPS example is `igou-kubernetes/examples/public-services/udp/`.
 Its native `UDPRoute` maps public UDP 27018 to this endpoint on UDP 9000.

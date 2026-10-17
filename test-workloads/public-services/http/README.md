@@ -6,7 +6,7 @@ Service `public-web-test-public`, and the endpoint ingress policy.
 
 The pod uses restricted security settings, a read-only root filesystem, and
 no API token. The Tailscale hostname is `ocp-public-web-test`; its tag is
-`tag:ocp-public-web-test`.
+`tag:ocp-public-service`.
 
 The matching VPS example is `igou-kubernetes/examples/public-services/http/`.
 Its native `HTTPRoute` publishes HTTPS `https://web-test.igou.io/` and forwards

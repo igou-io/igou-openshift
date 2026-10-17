@@ -1,5 +1,6 @@
 ---
 # All public-facing application pods and endpoint Services belong in public-services.
+proxyTag: tag:ocp-public-service
 # Empty until an application is selected; namespace guardrails still render.
 services: []
 

@@ -8,7 +8,7 @@ owns the Deployment, ClusterIP Service `tcp-hostname`, Tailscale Service
 The pod uses a digest-pinned image, restricted security settings, a read-only
 root filesystem, and no API token. Readiness and liveness use TCP socket probes.
 The tailnet hostname is `ocp-public-tcp-hostname`; its tag is
-`tag:ocp-public-tcp-hostname`.
+`tag:ocp-public-service`.
 
 The matching VPS example is `igou-kubernetes/examples/public-services/tcp/`.
 Its native `TCPRoute` maps public TCP 27010 to this endpoint's TCP 9000.

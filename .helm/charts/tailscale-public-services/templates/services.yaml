@@ -28,7 +28,7 @@ metadata:
   namespace: public-services
   annotations:
     tailscale.com/hostname: {{ $service.hostname | quote }}
-    tailscale.com/tags: {{ $service.tag | quote }}
+    tailscale.com/tags: {{ $.Values.proxyTag | quote }}
 spec:
   type: LoadBalancer
   loadBalancerClass: tailscale
