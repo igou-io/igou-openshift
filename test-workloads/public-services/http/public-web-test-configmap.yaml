@@ -3,6 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: public-web-test
+  namespace: public-services
 data:
   nginx.conf: |
     pid /tmp/nginx.pid;

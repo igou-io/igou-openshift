@@ -5,6 +5,7 @@ metadata:
   name: public-web-test
   labels:
     app.kubernetes.io/name: public-web-test
+  namespace: public-services
 spec:
   replicas: 1
   selector:
@@ -45,9 +46,11 @@ spec:
             requests:
               cpu: 25m
               memory: 32Mi
+              ephemeral-storage: 16Mi
             limits:
               cpu: 100m
               memory: 64Mi
+              ephemeral-storage: 128Mi
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
@@ -68,3 +71,5 @@ spec:
         - name: tmp
           emptyDir:
             sizeLimit: 16Mi
+      runtimeClassName: kata
+      enableServiceLinks: false
