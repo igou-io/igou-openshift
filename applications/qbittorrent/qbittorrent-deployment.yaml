@@ -61,6 +61,19 @@ spec:
             claimName: prowlarr-config
         - name: flaresolverr-config
           emptyDir: {}
+        - name: notifications
+          configMap:
+            name: qbittorrent-notifications
+            defaultMode: 0444
+        - name: gotify-token
+          secret:
+            secretName: qbittorrent-gotify
+            # Staging must not prevent downloads before the token is provisioned.
+            optional: true
+            defaultMode: 0440
+            items:
+              - key: token
+                path: token
       initContainers:
         - name: gluetun
           restartPolicy: Always
@@ -170,6 +183,12 @@ spec:
               containerPort: 8080
               protocol: TCP
           volumeMounts:
+            - name: notifications
+              mountPath: /notifications
+              readOnly: true
+            - name: gotify-token
+              mountPath: /var/run/secrets/gotify
+              readOnly: true
             - name: qbittorrent-config
               mountPath: /config
             - name: data

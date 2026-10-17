@@ -36,6 +36,47 @@ The remaining Phase 2A material is a historical migration record. During that
 validation, only the qBittorrent and Prowlarr configuration was moved to
 static native-iSCSI PVs; production media was intentionally disconnected.
 
+## Gotify notification assets
+
+`notify.sh` is mounted read-only at `/notifications/notify.sh` through the
+`qbittorrent-notifications` generated ConfigMap. Its content hash causes a
+Deployment rollout when the script changes. Only the qBittorrent container
+mounts this script and the Gotify token.
+
+ExternalSecret `qbittorrent-gotify` reads the `token` field of the
+`qbittorrent-gotify` 1Password item in `lab_openshift`, using
+`onepassword-lab-openshift`. The token is mounted at
+`/var/run/secrets/gotify/token`; the mount is optional so an unprovisioned
+notification token does not prevent downloads. The ExternalSecret will report
+a sync error until the backing item exists. Provision it before rollout.
+
+This stages the sender only: it does not create a Gotify application or modify
+the persisted qBittorrent external-program settings. The activation and rollback
+procedure belongs in `igou-docs`, under **qBittorrent Gotify Notifications**.
+Completion is a download event; Sonarr/Radarr import is a separate event.
+
+The completion hook command is:
+
+```text
+/bin/sh /notifications/notify.sh finished "%N" "%L"
+```
+
+`%N` is the torrent name and `%L` is its category. The optional added-event
+hook uses the same arguments with `added` instead of `finished`.
+
+The sender accepts `finished|added NAME [CATEGORY]`, sends HTTPS to
+`https://gotify.igou.io/message`, and uses priority 5 for completion and 0 for
+addition. It reads the token on each invocation and passes the header to curl
+through stdin. Responses and curl error bodies are discarded. Failures return
+nonzero with status-only diagnostics; they do not change torrent activity.
+Public traffic follows the existing Gluetun VPN route.
+
+Temporary network errors, HTTP 408/429, and server errors receive at most three
+attempts, each with an eight-second timeout and one/two-second backoff. Other
+HTTP errors, redirects, and certificate validation errors are not retried.
+Delivery is best effort: a prolonged outage loses notifications, and an
+ambiguous timeout followed by a retry can produce a duplicate.
+
 ## Historical Phase 2A architecture
 
 The `Deployment/qbittorrent` Pod contains one restartable native init-sidecar
