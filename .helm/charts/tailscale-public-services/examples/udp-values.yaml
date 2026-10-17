@@ -1,0 +1,14 @@
+---
+# Separate illustration: requires a UDP server with this label and port.
+# No such workload is deployed by this example.
+services:
+  - name: udp-echo-public
+    hostname: ocp-public-udp-echo
+    tag: tag:ocp-public-udp-echo
+    selector:
+      app.kubernetes.io/name: udp-echo
+    ports:
+      - name: udp
+        port: 9000
+        targetPort: 9000
+        protocol: UDP

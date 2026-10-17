@@ -14,7 +14,7 @@ CHART = Path(__file__).resolve().parents[1] / ".helm/charts/tailscale-public-ser
 
 class PublicServicesTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.values = yaml.safe_load((CHART / "examples/arena-values.yaml").read_text())
+        self.values = yaml.safe_load((CHART / "examples/web-test-values.yaml").read_text())
 
     def render(self, values: dict) -> subprocess.CompletedProcess:
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml") as config:
@@ -52,18 +52,26 @@ class PublicServicesTests(unittest.TestCase):
         self.assertFalse(spec["allocateLoadBalancerNodePorts"])
         self.assertEqual(
             {(p["port"], p["protocol"]) for p in spec["ports"]},
-            {(8080, "TCP"), (27015, "TCP"), (27016, "UDP")},
+            {(8080, "TCP")},
         )
+        self.assertEqual(spec["selector"], {"app.kubernetes.io/name": "public-web-test"})
+        udp = yaml.safe_load((CHART / "examples/udp-values.yaml").read_text())
+        result = self.render(udp)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        service = next(o for o in yaml.safe_load_all(result.stdout) if o["kind"] == "Service")
+        self.assertEqual(service["spec"]["ports"], [
+            {"name": "udp", "port": 9000, "targetPort": 9000, "protocol": "UDP"},
+        ])
 
     def test_policy_uses_target_ports_and_scopes_both_parent_labels(self) -> None:
         service = self.values["services"][0]
         service["ports"][0]["targetPort"] = "http"
         result = self.render(self.values)
         self.assertEqual(result.returncode, 0, result.stderr)
-        policy = next(o for o in yaml.safe_load_all(result.stdout) if o["kind"] == "NetworkPolicy" and o["metadata"]["name"] == "arena-public")
+        policy = next(o for o in yaml.safe_load_all(result.stdout) if o["kind"] == "NetworkPolicy" and o["metadata"]["name"] == "public-web-test-public")
         peer = policy["spec"]["ingress"][0]["from"][0]
         self.assertEqual(peer["namespaceSelector"]["matchLabels"]["kubernetes.io/metadata.name"], "tailscale")
-        self.assertEqual(peer["podSelector"]["matchLabels"]["tailscale.com/parent-resource"], "arena-public")
+        self.assertEqual(peer["podSelector"]["matchLabels"]["tailscale.com/parent-resource"], "public-web-test-public")
         self.assertEqual(peer["podSelector"]["matchLabels"]["tailscale.com/parent-resource-ns"], "public-services")
         self.assertEqual(peer["podSelector"]["matchLabels"]["tailscale.com/parent-resource-type"], "svc")
         self.assertEqual(policy["spec"]["ingress"][0]["ports"][0]["port"], "http")

@@ -7,13 +7,20 @@ registered by the `public-services` platform Application with an empty service
 list. Its companion reader identity is in `components/public-services`; no
 application is published until an endpoint is explicitly configured.
 
-`examples/arena-values.yaml` covers HTTP, TCP, and UDP ports for an illustrative
-application. Render it locally:
+`examples/web-test-values.yaml` selects the deployed `public-web-test` pods
+from `test-workloads/public-services-web` on TCP 8080. It creates a separate
+Tailscale Service, `public-web-test-public`, preserving the fixture's existing
+ClusterIP Service. Render it locally:
 
 ```bash
 helm template public-services .helm/charts/tailscale-public-services \
-  -f .helm/charts/tailscale-public-services/examples/arena-values.yaml
+  -f .helm/charts/tailscale-public-services/examples/web-test-values.yaml
 ```
+
+These endpoint values remain staged. The matching VPS examples expose HTTPS
+or raw TCP to the same HTTP server. The separate `examples/udp-values.yaml`
+illustrates a UDP server on port 9000; it requires an additional workload
+labeled `app.kubernetes.io/name: udp-echo`. The web fixture does not serve UDP.
 
 Each entry requires a Service name, pod selector, distinct tailnet hostname,
 application-specific `tag:ocp-public-*` tag, and named ports. Target ports may
