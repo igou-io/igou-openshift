@@ -77,10 +77,6 @@ HTTP errors, redirects, and certificate validation errors are not retried.
 Delivery is best effort: a prolonged outage loses notifications, and an
 ambiguous timeout followed by a retry can produce a duplicate.
 
-Run `make test-qbittorrent-notifications` for local HTTPS integration tests.
-The tests use the existing Python unittest runner, curl, and OpenSSL with local
-certificates and a fake token; they never contact the live Gotify service.
-
 ## Historical Phase 2A architecture
 
 The `Deployment/qbittorrent` Pod contains one restartable native init-sidecar

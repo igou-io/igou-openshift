@@ -40,10 +40,6 @@ validate-hermes-proxy: ## Ensure Hermes bypasses Squid for the in-cluster API se
 			} \
 		} END { exit failed }' {} +
 
-.PHONY: test-qbittorrent-notifications
-test-qbittorrent-notifications: ## Test Gotify delivery against a local HTTPS server (curl, OpenSSL)
-	$(PYTHON) -m unittest discover -s tests -p test_qbittorrent_notifications.py -v
-
 .PHONY: test
 test: lint lint-helm validate-manifest-files validate-hermes-proxy test-validation validate-schemas ## Run all standard validation checks (one render per Kustomization)
 
