@@ -1,0 +1,30 @@
+{{- range $service := .Values.services }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $service.name | quote }}
+  namespace: public-services
+spec:
+  podSelector:
+    matchLabels:
+      {{- toYaml $service.selector | nindent 6 }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tailscale
+          podSelector:
+            matchLabels:
+              tailscale.com/managed: 'true'
+              tailscale.com/parent-resource-type: svc
+              tailscale.com/parent-resource: {{ $service.name | quote }}
+              tailscale.com/parent-resource-ns: public-services
+      ports:
+        {{- range $port := $service.ports }}
+        - port: {{ $port.targetPort | default $port.port | toYaml | trim }}
+          protocol: {{ $port.protocol }}
+        {{- end }}
+{{- end }}

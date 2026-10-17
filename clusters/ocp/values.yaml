@@ -1,4 +1,20 @@
 applications:
+  public-services:
+    annotations:
+      argocd.argoproj.io/sync-wave: '10'
+    destination:
+      namespace: public-services
+    source:
+      path: .helm/charts/tailscale-public-services
+
+  public-services-reader:
+    annotations:
+      argocd.argoproj.io/sync-wave: '11'
+    destination:
+      namespace: public-services
+    source:
+      path: components/public-services
+
   external-secrets-operator:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous

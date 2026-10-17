@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tcp-hostname
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: tcp-hostname
+  ports:
+    - name: tcp
+      port: 9000
+      targetPort: tcp
+      protocol: TCP

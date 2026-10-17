@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: udp-echo-public
+  namespace: public-services
+  annotations:
+    tailscale.com/hostname: ocp-public-udp-echo
+    tailscale.com/tags: tag:ocp-public-service
+spec:
+  type: LoadBalancer
+  loadBalancerClass: tailscale
+  allocateLoadBalancerNodePorts: false
+  selector:
+    app.kubernetes.io/name: udp-echo
+  ports:
+    - name: udp
+      port: 9000
+      targetPort: 9000
+      protocol: UDP

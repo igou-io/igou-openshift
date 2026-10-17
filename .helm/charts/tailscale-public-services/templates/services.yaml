@@ -1,0 +1,45 @@
+{{- $identities := dict }}
+{{- $hostnames := dict }}
+{{- range $service := .Values.services }}
+{{- $identity := printf "public-services/%s" $service.name }}
+{{- if hasKey $identities $identity }}
+{{- fail (printf "duplicate Service: %s" $identity) }}
+{{- end }}
+{{- $_ := set $identities $identity true }}
+{{- if hasKey $hostnames $service.hostname }}
+{{- fail (printf "duplicate tailnet hostname: %s" $service.hostname) }}
+{{- end }}
+{{- $_ := set $hostnames $service.hostname true }}
+{{- $ports := dict }}
+{{- $names := dict }}
+{{- range $port := $service.ports }}
+{{- $key := printf "%s/%v" $port.protocol $port.port }}
+{{- if or (hasKey $ports $key) (hasKey $names $port.name) }}
+{{- fail (printf "duplicate port or port name in Service %s" $identity) }}
+{{- end }}
+{{- $_ := set $ports $key true }}
+{{- $_ := set $names $port.name true }}
+{{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $service.name | quote }}
+  namespace: public-services
+  annotations:
+    tailscale.com/hostname: {{ $service.hostname | quote }}
+    tailscale.com/tags: {{ $.Values.proxyTag | quote }}
+spec:
+  type: LoadBalancer
+  loadBalancerClass: tailscale
+  allocateLoadBalancerNodePorts: false
+  selector:
+    {{- toYaml $service.selector | nindent 4 }}
+  ports:
+    {{- range $port := $service.ports }}
+    - name: {{ $port.name | quote }}
+      port: {{ $port.port }}
+      targetPort: {{ $port.targetPort | default $port.port | toYaml | trim }}
+      protocol: {{ $port.protocol }}
+    {{- end }}
+{{- end }}
