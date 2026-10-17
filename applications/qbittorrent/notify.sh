@@ -1,12 +1,13 @@
 #!/bin/sh
-# Called by qBittorrent's external-program hooks. Never evaluate torrent metadata.
+# Called by qBittorrent hooks and the log watcher. Never evaluate torrent metadata.
 set -eu
 
 if [ "$#" -lt 2 ] || [ "$#" -gt 3 ]; then
-  echo 'qbittorrent-gotify: usage: notify.sh finished|added NAME [CATEGORY]' >&2
+  echo 'qbittorrent-gotify: usage: notify.sh EVENT NAME [CATEGORY]' >&2
   exit 1
 fi
 
+reason=''
 case "$1" in
   finished)
     title='qBittorrent: download finished'
@@ -15,6 +16,15 @@ case "$1" in
   added)
     title='qBittorrent: torrent added'
     priority=0
+    ;;
+  ratio-limit|seeding-time-limit|inactive-seeding-time-limit)
+    title='qBittorrent: seeding stopped'
+    priority=5
+    case "$1" in
+      ratio-limit) reason='share ratio limit reached' ;;
+      seeding-time-limit) reason='seeding time limit reached' ;;
+      inactive-seeding-time-limit) reason='inactive seeding time limit reached' ;;
+    esac
     ;;
   *)
     echo 'qbittorrent-gotify: unsupported event' >&2
@@ -37,6 +47,9 @@ case "$token" in
 esac
 
 message=$2
+if [ -n "$reason" ]; then
+  message=$(printf '%s\nReason: %s' "$message" "$reason")
+fi
 if [ -n "${3:-}" ]; then
   message=$(printf '%s\nCategory: %s' "$message" "$3")
 fi
