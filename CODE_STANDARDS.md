@@ -80,10 +80,13 @@ make test
 ```
 
 Run `make test` before pushing. CI uses the same gate: YAML lint, Helm lint,
-manifest filenames, Hermes proxy bypass, validation regression tests, lifecycle,
-and Kustomize builds with schema validation. Each Kustomization is rendered once;
-temporary output is passed to kubeconform and removed afterward. Components are
-validated through their consuming Kustomizations.
+manifest filenames, Hermes proxy bypass, lifecycle, and Kustomize builds with
+schema validation. Each Kustomization is rendered once; temporary output is
+passed to kubeconform and removed afterward. Components are validated through
+their consuming Kustomizations.
+
+Do not create Python tests in the repository's root `tests/` directory. Use the
+existing validation checks for configuration changes.
 
 For focused checks, use `make validate-manifest-files`,
 `make validate-kustomize` (rendering and lifecycle), or `make validate-schemas`

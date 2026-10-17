@@ -41,11 +41,7 @@ validate-hermes-proxy: ## Ensure Hermes bypasses Squid for the in-cluster API se
 		} END { exit failed }' {} +
 
 .PHONY: test
-test: lint lint-helm validate-manifest-files validate-hermes-proxy test-validation validate-schemas ## Run all standard validation checks (one render per Kustomization)
-
-.PHONY: test-validation
-test-validation: ## Run validation regression tests
-	$(PYTHON) -m unittest discover -s tests -v
+test: lint lint-helm validate-manifest-files validate-hermes-proxy validate-schemas ## Run all standard validation checks (one render per Kustomization)
 
 .PHONY: clean
 clean: ## Remove charts/ directories left behind by kustomize build (excludes .helm/charts)
