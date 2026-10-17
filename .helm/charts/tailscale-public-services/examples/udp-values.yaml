@@ -1,6 +1,5 @@
 ---
-# Separate illustration: requires a UDP server with this label and port.
-# No such workload is deployed by this example.
+# Endpoint for test-workloads/public-services-udp; not registered with Argo CD.
 services:
   - name: udp-echo-public
     hostname: ocp-public-udp-echo

@@ -19,8 +19,9 @@ helm template public-services .helm/charts/tailscale-public-services \
 
 These endpoint values remain staged. The matching VPS examples expose HTTPS
 or raw TCP to the same HTTP server. The separate `examples/udp-values.yaml`
-illustrates a UDP server on port 9000; it requires an additional workload
-labeled `app.kubernetes.io/name: udp-echo`. The web fixture does not serve UDP.
+selects the `udp-echo` workload in `test-workloads/public-services-udp` on UDP
+9000. That staged workload uses `agnhost netexec` to answer echo and hostname
+requests. The web fixture does not serve UDP.
 
 Each entry requires a Service name, pod selector, distinct tailnet hostname,
 application-specific `tag:ocp-public-*` tag, and named ports. Target ports may
