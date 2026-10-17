@@ -34,7 +34,9 @@ readOnlyRootFilesystem: false
 seccompProfiles:
   - runtime/default
 volumes:
+  - configMap
   - emptyDir
   - persistentVolumeClaim
+  - secret
 users: []
 groups: []
