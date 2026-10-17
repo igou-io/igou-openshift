@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: public-services
+  namespace: public-services
+  annotations:
+    argocd.argoproj.io/sync-wave: '-1'
+spec:
+  hard:
+    {{- toYaml .Values.quota | nindent 4 }}

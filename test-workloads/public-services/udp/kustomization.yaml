@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: public-services
+resources:
+  - udp-echo-deployment.yaml
+  - udp-echo-public-networkpolicy.yaml
+  - udp-echo-public-service.yaml
+  - udp-echo-service.yaml

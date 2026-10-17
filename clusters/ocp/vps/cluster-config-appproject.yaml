@@ -9,6 +9,8 @@ spec:
   sourceRepos:
     - https://github.com/igou-io/igou-kubernetes.git
   destinations:
+    - namespace: public-services
+      server: https://vps-k3s-api.vps-secrets.svc.cluster.local:6443
     - namespace: monitoring
       server: https://vps-k3s-api.vps-secrets.svc.cluster.local:6443
     - namespace: kube-state-metrics
