@@ -145,6 +145,14 @@
         "requests.storage": {
           "type": "string",
           "minLength": 1
+        },
+        "requests.ephemeral-storage": {
+          "type": "string",
+          "minLength": 1
+        },
+        "limits.ephemeral-storage": {
+          "type": "string",
+          "minLength": 1
         }
       }
     },
@@ -171,6 +179,10 @@
             "memory": {
               "type": "string",
               "minLength": 1
+            },
+            "ephemeral-storage": {
+              "type": "string",
+              "minLength": 1
             }
           }
         },
@@ -187,6 +199,10 @@
               "minLength": 1
             },
             "memory": {
+              "type": "string",
+              "minLength": 1
+            },
+            "ephemeral-storage": {
               "type": "string",
               "minLength": 1
             }

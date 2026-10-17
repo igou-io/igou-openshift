@@ -1,0 +1,26 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: udp-echo-public-backend
+  namespace: tailscale
+spec:
+  podSelector:
+    matchLabels:
+      tailscale.com/managed: 'true'
+      tailscale.com/parent-resource-type: svc
+      tailscale.com/parent-resource: udp-echo-public
+      tailscale.com/parent-resource-ns: public-services
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: public-services
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: udp-echo
+      ports:
+        - port: 9000
+          protocol: UDP
