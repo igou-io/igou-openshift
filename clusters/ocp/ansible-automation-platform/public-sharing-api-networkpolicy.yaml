@@ -1,0 +1,24 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: public-sharing-api
+  namespace: ansible-automation-platform
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tailscale
+          podSelector:
+            matchLabels:
+              tailscale.com/managed: 'true'
+              tailscale.com/parent-resource: vps-k3s-api
+              tailscale.com/parent-resource-ns: vps-secrets
+              tailscale.com/parent-resource-type: svc
+      ports:
+        - protocol: TCP
+          port: 6443

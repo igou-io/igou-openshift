@@ -6,6 +6,7 @@ resources:
   - allow-observed-networkpolicy.yaml
   - redhat-lab-ssh-networkpolicy.yaml
   - codex-desktop-ssh-networkpolicy.yaml
+  - public-sharing-api-networkpolicy.yaml
   - ../../../components/ansible-automation-platform
   - aap-admin-password-externalsecret.yaml
   - aap-ansibleautomationplatform.yaml
