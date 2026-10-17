@@ -98,6 +98,8 @@ from the existing `lab_openshift/shelfmark-qbittorrent` item to read-only files
 under `/var/run/secrets/qbittorrent-api`. Authentication is to
 `http://127.0.0.1:8080` inside the shared Pod network; cookies stay in memory,
 redirects and proxies are disabled, and credential values are never logged.
+The client accepts the pinned 5.2 release's HTTP 204 login response as well as
+the older HTTP 200 `Ok.` response.
 
 The watcher writes only `.gotify-notifications/seeding-stop-cursor.json` on
 the existing qBittorrent config PVC, mounted at `/state`. The checkpoint holds

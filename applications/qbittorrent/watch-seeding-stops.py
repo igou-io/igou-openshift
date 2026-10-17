@@ -49,7 +49,9 @@ class LogAPI:
             key: (CREDENTIALS / key).read_text() for key in ("username", "password")
         }).encode()
         with self.opener.open(API_URL + "/api/v2/auth/login", data=data, timeout=8) as response:
-            if response.read().strip() != b"Ok.":
+            # 5.2 returns 204; older releases return 200 with "Ok.".
+            body = response.read().strip()
+            if response.status != 204 and not (response.status == 200 and body == b"Ok."):
                 raise PermissionError("qBittorrent authentication failed")
 
     def logs(self):
