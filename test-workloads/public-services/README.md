@@ -10,9 +10,9 @@ Service, and a NetworkPolicy allowing only that endpoint's own proxy pods.
 | `tcp/` | agnhost, `tcp-hostname` | Raw TCP 9000 | `tcp-hostname-public` | `igou-kubernetes/examples/public-services/tcp/` |
 | `udp/` | agnhost, `udp-echo` | UDP 9000 | `udp-echo-public` | `igou-kubernetes/examples/public-services/udp/` |
 
-The HTTP pod and ClusterIP Service are already deployed. TCP, UDP, and all
-Tailscale endpoints remain staged. The HTTP objects keep their existing names;
-the folder move does not require replacing the deployed workload.
+The HTTP objects keep their existing names through the folder reorganization.
+Current deployment status and ad hoc verification evidence are recorded in
+`igou-docs/networking/Public Service Sharing with AAP.md`.
 
 The platform's `.helm/charts/tailscale-public-services` chart owns the namespace,
 restricted pod security, default-deny networking, DNS egress, resource budget,
