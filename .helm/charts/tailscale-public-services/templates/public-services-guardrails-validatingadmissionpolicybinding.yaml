@@ -1,0 +1,15 @@
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: public-services-guardrails
+  annotations:
+    argocd.argoproj.io/sync-wave: '-1'
+spec:
+  policyName: public-services-guardrails
+  validationActions:
+  - Deny
+  matchResources:
+    namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: public-services

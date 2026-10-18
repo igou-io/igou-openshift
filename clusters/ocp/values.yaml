@@ -7,6 +7,14 @@ applications:
     source:
       path: .helm/charts/tailscale-public-services
 
+  public-services-examples:
+    annotations:
+      argocd.argoproj.io/sync-wave: '11'
+    destination:
+      namespace: public-services
+    source:
+      path: test-workloads/public-services
+
   public-services-reader:
     annotations:
       argocd.argoproj.io/sync-wave: '11'

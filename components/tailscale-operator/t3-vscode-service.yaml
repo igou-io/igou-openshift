@@ -9,9 +9,8 @@ kind: Service
 metadata:
   name: t3-vscode
   annotations:
-    # MagicDNS name of the vscode host; tracks the device if its tailnet IP
-    # changes.
-    tailscale.com/tailnet-fqdn: "vscode.weasel-alioth.ts.net"
+    # Stable vscode Tailscale IPv4; review if the host is deleted/re-enrolled.
+    tailscale.com/tailnet-ip: 100.84.111.102
     # Override the proxy's device tags (default would be tag:k8s).
     tailscale.com/tags: "tag:openshift"
     # Readable tailnet device name (default is the generated ts-<svc>-<hash>).

@@ -5,6 +5,7 @@ metadata:
   name: udp-echo-public
   namespace: public-services
   annotations:
+    tailscale.com/proxy-class: public-services
     tailscale.com/hostname: ocp-public-udp-echo
     tailscale.com/tags: tag:ocp-public-service
 spec:

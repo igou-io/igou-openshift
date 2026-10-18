@@ -1,0 +1,26 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: tcp-hostname-public-backend
+  namespace: tailscale
+spec:
+  podSelector:
+    matchLabels:
+      tailscale.com/managed: 'true'
+      tailscale.com/parent-resource-type: svc
+      tailscale.com/parent-resource: tcp-hostname-public
+      tailscale.com/parent-resource-ns: public-services
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: public-services
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: tcp-hostname
+      ports:
+        - port: 9000
+          protocol: TCP

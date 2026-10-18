@@ -1,0 +1,61 @@
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: public-services-workloads
+  annotations:
+    argocd.argoproj.io/sync-wave: '-1'
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - ''
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - pods
+      - pods/ephemeralcontainers
+  variables:
+  - name: containers
+    expression: 'object.spec.containers + (has(object.spec.initContainers) ? object.spec.initContainers : [])'
+  validations:
+  - expression: has(object.spec.runtimeClassName) && object.spec.runtimeClassName == "kata"
+    message: Public application pods must use the kata sandbox runtime.
+  - expression: '!has(object.spec.nodeName) || object.spec.nodeName == "" || (request.operation == "UPDATE" && has(oldObject.spec.nodeName)
+      && object.spec.nodeName == oldObject.spec.nodeName)'
+    message: Do not bypass sandbox scheduling with nodeName.
+  - expression: object.spec.serviceAccountName == "default" && has(object.spec.automountServiceAccountToken) &&
+      object.spec.automountServiceAccountToken == false
+    message: Only the tokenless default service account is permitted.
+  - expression: '!has(object.spec.ephemeralContainers) || size(object.spec.ephemeralContainers) == 0'
+    message: Ephemeral containers are not permitted in public application pods.
+  - expression: variables.containers.all(c, has(c.securityContext) && has(c.securityContext.readOnlyRootFilesystem)
+      && c.securityContext.readOnlyRootFilesystem)
+    message: Every application and init container must have a read-only root filesystem.
+  - expression: '!has(object.spec.volumes) || object.spec.volumes.all(v, has(v.configMap) || has(v.downwardAPI)
+      || (has(v.emptyDir) && has(v.emptyDir.sizeLimit)))'
+    message: Only ConfigMap, downward API and size-limited emptyDir volumes are permitted; API tokens, Secrets and
+      PVCs are excluded.
+  - expression: variables.containers.all(c, (!has(c.envFrom) || c.envFrom.all(e, !has(e.secretRef))) && (!has(c.env)
+      || c.env.all(e, !has(e.valueFrom) || !has(e.valueFrom.secretKeyRef))))
+    message: Application containers cannot read Secrets through environment variables.
+  - expression: variables.containers.all(c, !has(c.livenessProbe) || ((!has(c.livenessProbe.httpGet) || !has(c.livenessProbe.httpGet.host)
+      || c.livenessProbe.httpGet.host == "") && (!has(c.livenessProbe.tcpSocket) || !has(c.livenessProbe.tcpSocket.host)
+      || c.livenessProbe.tcpSocket.host == "")))
+    message: Probes cannot ask the kubelet to connect to another host.
+  - expression: variables.containers.all(c, !has(c.readinessProbe) || ((!has(c.readinessProbe.httpGet) || !has(c.readinessProbe.httpGet.host)
+      || c.readinessProbe.httpGet.host == "") && (!has(c.readinessProbe.tcpSocket) || !has(c.readinessProbe.tcpSocket.host)
+      || c.readinessProbe.tcpSocket.host == "")))
+    message: Probes cannot ask the kubelet to connect to another host.
+  - expression: variables.containers.all(c, !has(c.startupProbe) || ((!has(c.startupProbe.httpGet) || !has(c.startupProbe.httpGet.host)
+      || c.startupProbe.httpGet.host == "") && (!has(c.startupProbe.tcpSocket) || !has(c.startupProbe.tcpSocket.host)
+      || c.startupProbe.tcpSocket.host == "")))
+    message: Probes cannot ask the kubelet to connect to another host.
+  - expression: variables.containers.all(c, !has(c.lifecycle) || ((!has(c.lifecycle.postStart) || (!has(c.lifecycle.postStart.httpGet)
+      && !has(c.lifecycle.postStart.tcpSocket))) && (!has(c.lifecycle.preStop) || (!has(c.lifecycle.preStop.httpGet)
+      && !has(c.lifecycle.preStop.tcpSocket)))))
+    message: Use exec or sleep lifecycle hooks; kubelet network lifecycle hooks are not permitted.

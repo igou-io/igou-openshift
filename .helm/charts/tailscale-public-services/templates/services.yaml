@@ -27,6 +27,7 @@ metadata:
   name: {{ $service.name | quote }}
   namespace: public-services
   annotations:
+    tailscale.com/proxy-class: public-services
     tailscale.com/hostname: {{ $service.hostname | quote }}
     tailscale.com/tags: {{ $.Values.proxyTag | quote }}
 spec:
