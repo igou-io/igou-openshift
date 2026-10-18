@@ -24,5 +24,3 @@ spec:
       ports:
         - port: 27020
           protocol: UDP
-        - port: 27021
-          protocol: UDP

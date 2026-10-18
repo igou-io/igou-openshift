@@ -19,7 +19,3 @@ spec:
       port: 27020
       targetPort: 27020
       protocol: UDP
-    - name: query
-      port: 27021
-      targetPort: 27021
-      protocol: UDP

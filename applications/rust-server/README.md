@@ -10,12 +10,21 @@ restarts but is lost when the pod is replaced. PVCs remain forbidden by the
 namespace admission policy. Installation and map generation can take several
 minutes. There is no liveness restart during startup.
 
-Only its own Tailscale proxy can reach UDP 27020 (game) and UDP 27021 (Steam
-query). RCON is disabled and bound to loopback; Rust+ is disabled. AAP exposes
-the two UDP ports as separate shares using the `rust-game` and `rust-query`
-private inventory entries. Matching public/backend ports avoid advertising a
-different game port in query responses. The existing `igou.io` website remains
-on HTTPS 443.
+The server supports direct connections at `igou.io:27020`. Only its own
+Tailscale proxy can reach that UDP game port. The Steam query listener on
+UDP 27021 stays inside the pod for readiness checks; Services and NetworkPolicies
+do not expose it, and the private AAP catalog contains only `rust-game`.
+Blocking query traffic follows [Facepunch's hidden-server guidance](https://wiki.facepunch.com/rust/Creating_a_hidden_whitelisted_server)
+and prevents server-browser queries. Previously cached listings may take time
+to disappear. This is not a player whitelist: anyone with the address can
+attempt to join. RCON and Rust+ remain disabled. The website continues on
+HTTPS 443.
+
+Connect from the Rust F1 console:
+
+```text
+client.connect igou.io:27020
+```
 
 This application alone can query OpenShift DNS and reach public IPv4 addresses
 on HTTP/HTTPS and Steam TCP/UDP 27000–27100. Private, link-local, loopback,

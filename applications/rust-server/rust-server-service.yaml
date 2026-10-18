@@ -12,7 +12,3 @@ spec:
       port: 27020
       targetPort: game
       protocol: UDP
-    - name: query
-      port: 27021
-      targetPort: query
-      protocol: UDP
