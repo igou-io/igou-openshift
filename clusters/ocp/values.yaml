@@ -14,15 +14,16 @@ applications:
       namespace: public-services
     source:
       path: .helm/charts/tailscale-public-services
-      helm:
-        valuesObject:
-          quota:
-            requests.cpu: '4'
-            requests.memory: 12Gi
-            limits.cpu: '8'
-            limits.memory: 16Gi
-            requests.ephemeral-storage: 24Gi
-            limits.ephemeral-storage: 48Gi
+      extraSourceFields: |
+        helm:
+          valuesObject:
+            quota:
+              requests.cpu: '4'
+              requests.memory: 12Gi
+              limits.cpu: '8'
+              limits.memory: 16Gi
+              requests.ephemeral-storage: 24Gi
+              limits.ephemeral-storage: 48Gi
 
   public-services-examples:
     annotations:
