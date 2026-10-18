@@ -1,0 +1,17 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: public-services-egress
+  namespace: public-services-egress
+rules:
+  - apiGroups:
+      - ''
+    resources:
+      - secrets
+    resourceNames:
+      - public-services-egress-state
+    verbs:
+      - get
+      - update
+      - patch

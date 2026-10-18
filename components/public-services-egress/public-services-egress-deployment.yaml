@@ -1,0 +1,128 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: public-services-egress
+  namespace: public-services-egress
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: public-services-egress
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: public-services-egress
+      annotations:
+        io.kubernetes.cri-o.Devices: /dev/net/tun
+        k8s.v1.cni.cncf.io/networks: public-services-egress
+    spec:
+      serviceAccountName: public-services-egress
+      automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/hostname: ocp.igou.systems
+      securityContext:
+        runAsUser: 0
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: forwarding
+          image: docker.io/tailscale/tailscale:v1.102.4@sha256:2667499ed87ae29218f292556ba062918402dd5e92e93637af14867e4df12dd3
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              export XTABLES_LOCKFILE=/tmp/xtables.lock
+              iptables -P FORWARD DROP
+              sysctl -w net.ipv4.ip_forward=1 net.ipv4.conf.all.rp_filter=0 net.ipv4.conf.default.rp_filter=0 net.ipv4.conf.net1.rp_filter=0
+              if [ -d /proc/sys/net/ipv6 ]; then
+                sysctl -w net.ipv6.conf.all.forwarding=0 net.ipv6.conf.all.disable_ipv6=1 net.ipv6.conf.default.disable_ipv6=1
+              fi
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            privileged: true
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 32Mi
+      containers:
+        - name: gateway
+          image: docker.io/tailscale/tailscale:v1.102.4@sha256:2667499ed87ae29218f292556ba062918402dd5e92e93637af14867e4df12dd3
+          command:
+            - /bin/sh
+            - /config/start.sh
+          env:
+            - name: EXIT_NODE
+              value: vps-public-egress
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - NET_ADMIN
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - /config/ready.sh
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 128Mi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: auth
+              mountPath: /auth
+              readOnly: true
+            - name: api
+              mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: config
+          configMap:
+            name: public-services-egress
+        - name: auth
+          secret:
+            secretName: public-services-egress-auth
+            defaultMode: 256
+        - name: api
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: token
+                  expirationSeconds: 3600
+              - configMap:
+                  name: kube-root-ca.crt
+                  items:
+                    - key: ca.crt
+                      path: ca.crt
+              - downwardAPI:
+                  items:
+                    - path: namespace
+                      fieldRef:
+                        fieldPath: metadata.namespace
+        - name: tmp
+          emptyDir:
+            sizeLimit: 128Mi

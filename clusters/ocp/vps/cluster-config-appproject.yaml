@@ -31,6 +31,8 @@ spec:
       server: https://vps-k3s-api.vps-secrets.svc.cluster.local:6443
   clusterResourceWhitelist:
     - group: tailscale.com
+      kind: Connector
+    - group: tailscale.com
       kind: ProxyClass
     - group: external-secrets.io
       kind: ClusterSecretStore

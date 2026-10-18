@@ -1,4 +1,19 @@
 applications:
+  public-services-egress:
+    annotations:
+      argocd.argoproj.io/sync-wave: '9'
+    destination:
+      namespace: public-services-egress
+    source:
+      path: components/public-services-egress
+    ignoreDifferences:
+      - group: ''
+        kind: Secret
+        name: public-services-egress-state
+        namespace: public-services-egress
+        jsonPointers:
+          - /data
+
   rust-server:
     annotations:
       argocd.argoproj.io/sync-wave: '20'
