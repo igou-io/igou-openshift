@@ -1,6 +1,9 @@
 # Public service workload examples
 
-Three independent workloads run in the fixed `public-services` namespace.
+Three independent workload examples target the fixed `public-services` namespace.
+All three are deliberately scaled to zero while public-service egress isolation
+is being redesigned. To resume testing, set the selected Deployment's replicas
+to one through GitOps after reviewing that design.
 Each folder contains the application, ClusterIP Service, Tailscale endpoint
 Service, and a NetworkPolicy allowing only that endpoint's own proxy pods.
 
