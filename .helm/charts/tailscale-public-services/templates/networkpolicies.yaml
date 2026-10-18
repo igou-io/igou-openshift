@@ -27,4 +27,32 @@ spec:
         - port: {{ $port.targetPort | default $port.port | toYaml | trim }}
           protocol: {{ $port.protocol }}
         {{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ printf "%s-backend" $service.name | quote }}
+  namespace: tailscale
+spec:
+  podSelector:
+    matchLabels:
+      tailscale.com/managed: 'true'
+      tailscale.com/parent-resource-type: svc
+      tailscale.com/parent-resource: {{ $service.name | quote }}
+      tailscale.com/parent-resource-ns: public-services
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: public-services
+          podSelector:
+            matchLabels:
+              {{- toYaml $service.selector | nindent 14 }}
+      ports:
+        {{- range $port := $service.ports }}
+        - port: {{ $port.targetPort | default $port.port | toYaml | trim }}
+          protocol: {{ $port.protocol }}
+        {{- end }}
 {{- end }}

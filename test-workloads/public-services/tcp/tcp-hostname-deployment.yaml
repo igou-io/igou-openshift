@@ -5,6 +5,7 @@ metadata:
   name: tcp-hostname
   labels:
     app.kubernetes.io/name: tcp-hostname
+  namespace: public-services
 spec:
   replicas: 1
   selector:
@@ -45,12 +46,15 @@ spec:
             requests:
               cpu: 25m
               memory: 32Mi
+              ephemeral-storage: 16Mi
             limits:
               cpu: 100m
               memory: 128Mi
+              ephemeral-storage: 128Mi
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true
             capabilities:
               drop:
                 - ALL
+      runtimeClassName: kata

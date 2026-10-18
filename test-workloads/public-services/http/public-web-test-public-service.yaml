@@ -5,6 +5,7 @@ metadata:
   name: public-web-test-public
   namespace: public-services
   annotations:
+    tailscale.com/proxy-class: public-services
     tailscale.com/hostname: ocp-public-web-test
     tailscale.com/tags: tag:ocp-public-service
 spec:

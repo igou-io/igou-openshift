@@ -1,0 +1,35 @@
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: public-services-guardrails
+  annotations:
+    argocd.argoproj.io/sync-wave: '-1'
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups:
+      - networking.k8s.io
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      - DELETE
+      resources:
+      - networkpolicies
+    - apiGroups:
+      - ''
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      - DELETE
+      resources:
+      - resourcequotas
+      - limitranges
+  validations:
+  - expression: '"system:masters" in request.userInfo.groups || request.userInfo.username == "system:serviceaccount:openshift-gitops:openshift-gitops-argocd-application-controller"'
+    message: Only platform administrators and the primary GitOps controller may change public namespace guardrails.

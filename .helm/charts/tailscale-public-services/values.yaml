@@ -14,11 +14,15 @@ quota:
   services.loadbalancers: '10'
   persistentvolumeclaims: '5'
   requests.storage: 20Gi
+  requests.ephemeral-storage: 512Mi
+  limits.ephemeral-storage: 2Gi
 
 containerResources:
   defaultRequest:
     cpu: 25m
     memory: 64Mi
+    ephemeral-storage: 16Mi
   default:
     cpu: '1'
     memory: 512Mi
+    ephemeral-storage: 128Mi

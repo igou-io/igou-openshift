@@ -51,3 +51,8 @@ chart's `services` values.
 Remove an example with `oc delete -n public-services -k` and its folder path.
 That removes its workload, endpoint, and ingress policy while preserving the
 shared namespace and guardrails.
+
+All three Deployments require the existing `kata` RuntimeClass. Each pod has
+250m CPU/350Mi memory runtime overhead on this cluster; include that in quota
+and capacity planning. They need no DNS egress. Namespace admission enforces
+the sandbox and token/volume restrictions, including on future workloads.
