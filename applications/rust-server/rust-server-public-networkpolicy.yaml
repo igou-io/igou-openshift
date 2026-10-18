@@ -1,0 +1,28 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: rust-server-public
+  namespace: public-services
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: rust-server
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tailscale
+          podSelector:
+            matchLabels:
+              tailscale.com/managed: 'true'
+              tailscale.com/parent-resource-type: svc
+              tailscale.com/parent-resource: rust-server-public
+              tailscale.com/parent-resource-ns: public-services
+      ports:
+        - port: 27020
+          protocol: UDP
+        - port: 27021
+          protocol: UDP

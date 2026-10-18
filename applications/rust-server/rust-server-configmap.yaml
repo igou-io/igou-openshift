@@ -1,0 +1,24 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rust-server
+  namespace: public-services
+data:
+  start.sh: |
+    #!/bin/bash
+    set -euo pipefail
+    mkdir -p /data/steamcmd /data/.steam/sdk64
+    if [ ! -x /data/steamcmd/steamcmd.sh ]; then
+      cp -R /home/steam/steamcmd/. /data/steamcmd/
+    fi
+    /data/steamcmd/steamcmd.sh +force_install_dir /data/rust +login anonymous +app_update 258550 +quit
+    ln -sfn /data/steamcmd/linux64/steamclient.so /data/.steam/sdk64/steamclient.so
+    cd /data/rust
+    exec ./RustDedicated -batchmode -nographics -logfile /dev/stdout \
+      +server.ip 0.0.0.0 +server.port 27020 +server.queryport 27021 \
+      +server.hostname 'igou.io | Vanilla' +server.description 'Small vanilla Rust server hosted on OpenShift' \
+      +server.url https://igou.io +server.identity public-rust \
+      +server.level 'Procedural Map' +server.seed 20261018 +server.worldsize 2000 \
+      +server.maxplayers 10 +server.saveinterval 300 \
+      +rcon.ip 127.0.0.1 +rcon.port 0 +app.port 1-

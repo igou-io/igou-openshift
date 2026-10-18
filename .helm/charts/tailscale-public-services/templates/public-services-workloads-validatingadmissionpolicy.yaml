@@ -37,7 +37,7 @@ spec:
       && c.securityContext.readOnlyRootFilesystem)
     message: Every application and init container must have a read-only root filesystem.
   - expression: '!has(object.spec.volumes) || object.spec.volumes.all(v, has(v.configMap) || has(v.downwardAPI)
-      || (has(v.emptyDir) && has(v.emptyDir.sizeLimit)))'
+      || (has(v.emptyDir) && has(dyn(v.emptyDir).sizeLimit)))'
     message: Only ConfigMap, downward API and size-limited emptyDir volumes are permitted; API tokens, Secrets and
       PVCs are excluded.
   - expression: variables.containers.all(c, (!has(c.envFrom) || c.envFrom.all(e, !has(e.secretRef))) && (!has(c.env)
