@@ -32,7 +32,7 @@ spec:
             effect: NoSchedule
           containers:
           - name: approver
-            image: registry.redhat.io/openshift4/ose-cli:latest@sha256:ef83967297f619f45075e7fd1428a1eb981622a6c174c46fb53b158ed24bed85
+            image: registry.redhat.io/openshift4/ose-cli:latest@sha256:19d5ab1748456a63e53d7ee679b5700b01edf8a2c8684fc64c0461b15c2d165f
             resources:
               requests:
                 cpu: 10m
