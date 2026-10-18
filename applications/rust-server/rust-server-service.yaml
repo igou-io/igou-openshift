@@ -1,0 +1,18 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rust-server
+  namespace: public-services
+spec:
+  selector:
+    app.kubernetes.io/name: rust-server
+  ports:
+    - name: game
+      port: 27020
+      targetPort: game
+      protocol: UDP
+    - name: query
+      port: 27021
+      targetPort: query
+      protocol: UDP
