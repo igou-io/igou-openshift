@@ -1,0 +1,18 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - public-services-egress-adminpolicybasedexternalroute.yaml
+  - public-services-egress-auth-externalsecret.yaml
+  - public-services-egress-configmap.yaml
+  - public-services-egress-deployment.yaml
+  - public-services-egress-namespace.yaml
+  - public-services-egress-networkattachmentdefinition.yaml
+  - public-services-egress-networkpolicy.yaml
+  - public-services-egress-role.yaml
+  - public-services-egress-rolebinding.yaml
+  - public-services-egress-scc-clusterrole.yaml
+  - public-services-egress-scc-rolebinding.yaml
+  - public-services-egress-securitycontextconstraints.yaml
+  - public-services-egress-serviceaccount.yaml
+  - public-services-egress-state-secret.yaml

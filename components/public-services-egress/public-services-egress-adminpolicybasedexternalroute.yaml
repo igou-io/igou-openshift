@@ -1,0 +1,17 @@
+---
+apiVersion: k8s.ovn.org/v1
+kind: AdminPolicyBasedExternalRoute
+metadata:
+  name: public-services-egress
+  annotations:
+    argocd.argoproj.io/sync-wave: '1'
+spec:
+  from:
+    namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: public-services
+  nextHops:
+    static:
+      # Keep the next hop when the pod is absent; do not fall back to home SNAT.
+      - ip: 10.10.9.12
+        bfdEnabled: false

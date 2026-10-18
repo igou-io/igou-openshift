@@ -1,0 +1,14 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: public-services-egress-scc
+  namespace: public-services-egress
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: public-services-egress-scc
+subjects:
+  - kind: ServiceAccount
+    name: public-services-egress
+    namespace: public-services-egress

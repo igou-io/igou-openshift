@@ -33,5 +33,12 @@ authentication without granting access to other cluster workloads. DNS and
 public service connections are outbound data channels; this workload needs
 them, unlike the network test examples.
 
+The separate `public-services-egress` infrastructure gateway routes internet
+traffic through the VPS exit node. Steam must see the same public IP that
+players connect to; forwarding only inbound UDP can produce Steam's
+`NetworkIdentityFailure` rejection. The gateway does not grant the application
+additional ports or private-network access. Its source and dependencies are in
+`components/public-services-egress/`.
+
 Render with `kustomize build applications/rust-server`. Resource overrides for
 the shared namespace quota are in `clusters/ocp/values.yaml`.
