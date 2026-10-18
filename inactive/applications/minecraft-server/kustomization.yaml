@@ -147,7 +147,7 @@ helmCharts:
         enabled: true
         image:
           repository: itzg/mc-backup
-          tag: latest@sha256:5a572dd1bf3e4f17e81e62fbd1c6a3c1b1c40bc7b198b41ff6041a84aa24808f
+          tag: latest@sha256:c5f2c369bbe47d0b712601bf44af5927e67a18cb5816dc378efb45eb993dab0a
           pullPolicy: IfNotPresent
         backupInterval: 6h
         rconRetries: -1
