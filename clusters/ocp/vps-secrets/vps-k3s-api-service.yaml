@@ -5,7 +5,7 @@ metadata:
   name: vps-k3s-api
   namespace: vps-secrets
   annotations:
-    tailscale.com/tailnet-fqdn: racknerd-49580b0.weasel-alioth.ts.net
+    tailscale.com/tailnet-ip: 100.111.146.57
     tailscale.com/tags: tag:openshift
     tailscale.com/hostname: ocp-egress-vps-api
 spec:
