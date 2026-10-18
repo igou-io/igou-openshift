@@ -1,5 +1,10 @@
 # Rust server
 
+The Deployment is deliberately scaled to zero pending a hardened design for
+public ingress and VPS egress. The connection instructions below describe its
+configuration when enabled. Restore replicas through GitOps only after that
+design is reviewed and authenticated joins pass.
+
 Small vanilla Rust game server in `public-services`: a 2000-size procedural
 map, seed 20261018, and ten player slots. The pinned SteamCMD base downloads
 the current stable dedicated server (Steam app 258550) at startup.
