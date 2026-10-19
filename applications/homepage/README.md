@@ -17,9 +17,11 @@ Two paths:
    gethomepage.dev/name: My App
    gethomepage.dev/group: Applications
    gethomepage.dev/icon: myapp.png
+   gethomepage.dev/href: https://myapp.example.com/
+   gethomepage.dev/siteMonitor: https://myapp.example.com/health
    ```
 
-   Current annotated examples: ntfy (Ingress), jellyfin
+   Current annotated examples: Jellyfin, MeTube, and T3 Code
    (HTTPRoute). New apps should prefer Ingress (`className:
    openshift-default`) over a raw Route — OpenShift generates the Route from
    the Ingress and homepage can discover it.
@@ -31,6 +33,26 @@ Two paths:
 Group layout/order is controlled in `config/settings.yaml`; discovered and
 static tiles merge into the same named groups.
 
+## Availability checks
+
+Every linked static tile has a `siteMonitor`; discovered tiles set
+`gethomepage.dev/siteMonitor` on their HTTPRoute. `statusStyle: basic` shows
+an explicit UP/DOWN badge. These are HTTP checks from the Homepage pod every
+30 seconds while the page is open. They follow redirects; use public health
+endpoints where available. The pinned Homepage version treats HTTP 401/403
+as reachable, so netboot.xyz's expected authentication challenge is UP.
+Other tiles check the linked page or its login page. The GitHub queue tiles
+check `https://github.com`, not the authenticated user's PR search.
+
+Continuous monitoring is separate: the blackbox exporter's `infra-https`
+Probe and the app-local SO-CRATES Probe cover the remaining linked services,
+alongside existing infra,
+media, GitHub, VPS, and Jellyfin probes. It supplies failure and TLS alerts
+even when nobody has Homepage open. Keep both layers current when adding
+links; a working widget or Kubernetes pod status alone does not test ingress.
+SO-CRATES uses `http_2xx_http10` because its server returns HTTP/1.0; that
+module retains TLS verification and requires a 2xx response.
+
 ## Widgets / secrets
 
 - Kubernetes cluster + node utilisation (info widget, needs `metrics.k8s.io`
@@ -39,15 +61,16 @@ static tiles merge into the same named groups.
   (`lab_openshift/truenas` → `truenas_api_key` field only) via ExternalSecret
   as env var `HOMEPAGE_VAR_TRUENAS_KEY`, referenced from `services.yaml` as
   `{{HOMEPAGE_VAR_TRUENAS_KEY}}`.
-- Follow-up candidate: ArgoCD widget (needs a read-only apiKey account minted
-  in the openshift-gitops ArgoCD CR + a 1P item; skipped in v1).
+- ArgoCD and AAP widgets use read-only tokens from their ExternalSecrets.
 
 ## Gotchas
 
 - `HOMEPAGE_ALLOWED_HOSTS` must match the Route host or homepage serves 400s.
-- Namespace is default-deny; egress allows only DNS, kube-apiserver
-  (post-DNAT node IP `10.10.9.10:6443` — OVN-K matches after service DNAT)
-  and the TrueNAS API (`10.10.9.213:443`). A new widget that calls anything
-  else needs a matching egress rule.
+- Namespace is default-deny. `homepage-egress-networkpolicy.yaml` permits
+  DNS, the kube-apiserver, and HTTPS to the linked service destinations.
+  Gateway checks also match Envoy pods after DNAT. New destinations need
+  matching egress rules; test from the Homepage pod, not only a workstation.
+- Set an explicit HTTPS `gethomepage.dev/href` on HTTPRoutes whose Gateway
+  has an HTTP listener first; discovery otherwise infers HTTP from it.
 - Homepage has no auth of its own — it is only reachable via the trusted-LAN
   default ingress tier.

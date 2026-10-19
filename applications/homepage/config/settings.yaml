@@ -5,6 +5,7 @@ color: slate
 headerStyle: clean
 hideVersion: true
 disableCollapse: true
+statusStyle: basic
 layout:
   Platform:
     style: row
