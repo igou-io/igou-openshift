@@ -28,6 +28,22 @@ spec:
         - https://hermes-sre-am-relay.apps.ocp.igou.systems/healthz
         - https://headlamp.rk8s.igou.systems
         - https://prometheus.rk8s.igou.systems
+        # Remaining services linked from Homepage; keep continuous alerting
+        # alongside its on-demand siteMonitor badges.
+        - https://portal.apps.ocp.igou.systems
+        - https://orchestrator.apps.ocp.igou.systems
+        - https://central-stackrox.apps.ocp.igou.systems
+        - https://alertmanager.rk8s.igou.systems
+        - https://metube.lan.igou.systems/
+        - https://t3-vscode.lan.igou.systems/
+        - https://hermes-developer.apps.ocp.igou.systems
+        - https://hermes-sre.apps.ocp.igou.systems
+        - https://sands-of-time.apps.ocp.igou.systems/api/summary
+        - https://it-tools.apps.ocp.igou.systems
+        - https://calibre-web-automated.apps.ocp.igou.systems
+        - https://shelfmark.apps.ocp.igou.systems/api/health
+        - https://rustfs.infra.igou.systems/rustfs/console/
+        - https://rustfs-cold.infra.igou.systems/rustfs/console/
       labels:
         tier: standard
         category: infra

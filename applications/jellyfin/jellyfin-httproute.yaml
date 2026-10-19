@@ -10,6 +10,8 @@ metadata:
     gethomepage.dev/group: Applications
     gethomepage.dev/icon: jellyfin.png
     gethomepage.dev/description: media
+    gethomepage.dev/href: https://jellyfin.dmz.igou.systems/
+    gethomepage.dev/siteMonitor: https://jellyfin.dmz.igou.systems/health
 spec:
   # group/kind/weight below are API-server defaults, stated explicitly so
   # ArgoCD's server-side-apply diff doesn't report the route as forever

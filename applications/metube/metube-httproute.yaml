@@ -10,6 +10,8 @@ metadata:
     gethomepage.dev/group: Applications
     gethomepage.dev/icon: metube.png
     gethomepage.dev/description: media downloader
+    gethomepage.dev/href: https://metube.lan.igou.systems/
+    gethomepage.dev/siteMonitor: https://metube.lan.igou.systems/
 spec:
   parentRefs:
     - name: trusted-lan
