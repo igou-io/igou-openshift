@@ -10,13 +10,15 @@ spec:
   applicationSet:
     enabled: false
   controller:
+    # Bound CRD sync memory spikes from concurrent kubectl processes.
+    parallelismLimit: 5
     resources:
       requests:
         cpu: 100m
-        memory: 256Mi
+        memory: 1Gi
       limits:
         cpu: '1'
-        memory: 1Gi
+        memory: 2Gi
   repo:
     resources:
       requests:
