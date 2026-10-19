@@ -17,6 +17,8 @@ metadata:
     gethomepage.dev/description: coding-agent GUI
     gethomepage.dev/href: https://t3-vscode.lan.igou.systems/
     gethomepage.dev/siteMonitor: https://t3-vscode.lan.igou.systems/
+    # The operator's proxy pods use parent-resource labels, not the app name.
+    gethomepage.dev/pod-selector: tailscale.com/parent-resource=t3-vscode,tailscale.com/parent-resource-type=svc
 spec:
   # group/kind/weight below are API-server defaults, stated explicitly so
   # ArgoCD's server-side-apply diff doesn't report the route as forever
