@@ -1,0 +1,20 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: so-crates
+  labels:
+    app.kubernetes.io/name: blackbox-exporter
+spec:
+  interval: 60s
+  module: http_2xx_http10
+  prober:
+    url: blackbox-exporter.blackbox-exporter.svc:9115
+  targets:
+    staticConfig:
+      static:
+        - https://so-crates.apps.ocp.igou.systems/socrates.html
+      labels:
+        tier: standard
+        category: so-crates
+        owner: platform
