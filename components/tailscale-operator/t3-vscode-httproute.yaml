@@ -13,7 +13,7 @@ metadata:
     gethomepage.dev/enabled: "true"
     gethomepage.dev/name: T3 Code
     gethomepage.dev/group: Applications
-    gethomepage.dev/icon: mdi-robot
+    gethomepage.dev/icon: sh-t3-code.svg
     gethomepage.dev/description: coding-agent GUI
     gethomepage.dev/href: https://t3-vscode.lan.igou.systems/
     gethomepage.dev/siteMonitor: https://t3-vscode.lan.igou.systems/
