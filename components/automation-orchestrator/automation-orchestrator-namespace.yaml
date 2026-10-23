@@ -5,4 +5,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: '0'
   labels:
-    openshift.io/cluster-monitoring: "true"
+    # The operator recreates its incompatible backend ServiceMonitor. Exclude
+    # this namespace from both Prometheus stacks instead of masking TargetDown.
+    openshift.io/cluster-monitoring: "false"
+    openshift.io/user-monitoring: "false"
