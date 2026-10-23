@@ -18,7 +18,7 @@
         siteMonitor: https://console-openshift-console.apps.ocp.igou.systems
         description: cluster console
     - ArgoCD:
-        icon: argocd.png
+        icon: argo-cd.svg
         href: https://openshift-gitops-server-openshift-gitops.apps.ocp.igou.systems
         siteMonitor: https://openshift-gitops-server-openshift-gitops.apps.ocp.igou.systems
         description: gitops
@@ -33,7 +33,7 @@
         siteMonitor: https://grafana.apps.ocp.igou.systems
         description: dashboards (ocp + rk8s folders)
     - AAP:
-        icon: ansible.png
+        icon: sh-red-hat.svg
         href: https://automation.apps.ocp.igou.systems
         siteMonitor: https://automation.apps.ocp.igou.systems
         description: automation controller
@@ -50,17 +50,17 @@
             label: status
             limit: 4
     - AAP Portal:
-        icon: ansible.png
+        icon: sh-red-hat.svg
         href: https://portal.apps.ocp.igou.systems
         siteMonitor: https://portal.apps.ocp.igou.systems
         description: automation portal
     - Automation Orchestrator:
-        icon: ansible.png
+        icon: sh-red-hat.svg
         href: https://orchestrator.apps.ocp.igou.systems
         siteMonitor: https://orchestrator.apps.ocp.igou.systems
         description: workflow orchestration
     - RHDH:
-        icon: backstage.png
+        icon: https://rhdh.apps.ocp.igou.systems/favicon-192x192.png
         href: https://rhdh.apps.ocp.igou.systems
         siteMonitor: https://rhdh.apps.ocp.igou.systems
         description: developer hub
@@ -75,12 +75,12 @@
         siteMonitor: https://quay.apps.ocp.igou.systems
         description: registry
     - RHACS Central:
-        icon: mdi-shield-lock
+        icon: sh-red-hat.svg
         href: https://central-stackrox.apps.ocp.igou.systems
         siteMonitor: https://central-stackrox.apps.ocp.igou.systems
         description: security console
     - Dev Spaces:
-        icon: eclipse-che.png
+        icon: sh-red-hat.svg
         href: https://devspaces.apps.ocp.igou.systems
         siteMonitor: https://devspaces.apps.ocp.igou.systems
         description: cloud ide
@@ -198,17 +198,17 @@
         siteMonitor: https://forgejo.apps.ocp.igou.systems
         description: git
     - Hermes Assistant:
-        icon: mdi-robot
+        icon: sh-hermes-agent-light.png
         href: https://hermes-dashboard.apps.ocp.igou.systems
         siteMonitor: https://hermes-dashboard.apps.ocp.igou.systems
         description: personal agent
     - Hermes Developer:
-        icon: mdi-robot
+        icon: sh-hermes-agent-light.png
         href: https://hermes-developer.apps.ocp.igou.systems
         siteMonitor: https://hermes-developer.apps.ocp.igou.systems
         description: development agent
     - Hermes SRE:
-        icon: mdi-robot
+        icon: sh-hermes-agent-light.png
         href: https://hermes-sre.apps.ocp.igou.systems
         siteMonitor: https://hermes-sre.apps.ocp.igou.systems
         description: operations agent
@@ -218,22 +218,22 @@
         siteMonitor: https://sands-of-time.apps.ocp.igou.systems/api/summary
         description: price tracker
     - IT Tools:
-        icon: mdi-tools
+        icon: it-tools.svg
         href: https://it-tools.apps.ocp.igou.systems
         siteMonitor: https://it-tools.apps.ocp.igou.systems
         description: browser utilities
     - Calibre-Web Automated:
-        icon: mdi-book-open-page-variant
+        icon: calibre-web.svg
         href: https://calibre-web-automated.apps.ocp.igou.systems
         siteMonitor: https://calibre-web-automated.apps.ocp.igou.systems
         description: ebook library
     - Shelfmark:
-        icon: mdi-bookshelf
+        icon: sh-shelfmark.svg
         href: https://shelfmark.apps.ocp.igou.systems
         siteMonitor: https://shelfmark.apps.ocp.igou.systems/api/health
         description: book search and downloads
     - SO-CRATES:
-        icon: mdi-security-network
+        icon: https://so-crates.apps.ocp.igou.systems/static/favicon.svg
         href: https://so-crates.apps.ocp.igou.systems
         siteMonitor: https://so-crates.apps.ocp.igou.systems/socrates.html
         description: file and network analysis
@@ -778,12 +778,12 @@
           key: "{{HOMEPAGE_VAR_TRUENAS_KEY}}"
           enablePools: true
     - RustFS HOT:
-        icon: mdi-database
+        icon: sh-rustfs.svg
         href: https://rustfs.infra.igou.systems/rustfs/console/
         siteMonitor: https://rustfs.infra.igou.systems/rustfs/console/
         description: ssd object storage
     - RustFS COLD:
-        icon: mdi-database-clock
+        icon: sh-rustfs.svg
         href: https://rustfs-cold.infra.igou.systems/rustfs/console/
         siteMonitor: https://rustfs-cold.infra.igou.systems/rustfs/console/
         description: backup object storage
@@ -827,14 +827,14 @@
         siteMonitor: https://igounas.igou.systems
         description: legacy nas
     - netboot.xyz:
-        icon: mdi-ethernet
+        icon: netbootxyz.svg
         href: https://netbootxyz.infra.igou.systems
         siteMonitor: https://netbootxyz.infra.igou.systems
         description: pxe menu
 
 - rk8s:
     - Headlamp:
-        icon: mdi-kubernetes
+        icon: headlamp.svg
         href: https://headlamp.rk8s.igou.systems
         siteMonitor: https://headlamp.rk8s.igou.systems
         description: cluster ui
