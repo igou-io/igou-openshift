@@ -28,6 +28,7 @@ resources:
   - grafana-dashboard-12239-grafanadashboard.yaml
   - grafana-dashboard-22515-grafanadashboard.yaml
   - grafana-dashboard-14584-grafanadashboard.yaml
+  - grafana-dashboard-vps-grafanadashboard.yaml
   - grafana-dashboard-20417-grafanadashboard.yaml
   - grafana-dashboard-13679-grafanadashboard.yaml
   - grafana-dashboard-1860-grafanadashboard.yaml
@@ -108,6 +109,10 @@ resources:
 # it cannot come from spec.grafanaCom). Stable name: the GrafanaDashboard
 # CR references the ConfigMap by name.
 configMapGenerator:
+  - name: grafana-dashboard-vps-json
+    namespace: grafana
+    files:
+      - dashboards/vps.json
   - name: grafana-dashboard-20340-json
     namespace: grafana
     files:
