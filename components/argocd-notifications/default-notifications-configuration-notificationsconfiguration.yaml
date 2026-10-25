@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: NotificationsConfiguration
+metadata:
+  name: default-notifications-configuration
+  namespace: openshift-gitops
+spec:
+  context:
+    argocdUrl: https://openshift-gitops-server-openshift-gitops.apps.ocp.igou.systems
+  services:
+    service.slack: |
+      token: $slack-token
+      disableUnfurl: true
+  templates:
+    template.app-sync-failed: |
+      message: |
+        Application {{.app.metadata.name}} failed to sync.
+        {{.app.status.operationState.message}}
+        {{.context.argocdUrl}}/applications/{{.app.metadata.name}}
+    template.app-health-degraded: |
+      message: |
+        Application {{.app.metadata.name}} is degraded.
+        {{.context.argocdUrl}}/applications/{{.app.metadata.name}}
+  triggers:
+    trigger.on-sync-failed: |
+      - description: Application sync failed
+        when: app.status.operationState != nil and (app.status.operationState.phase == 'Error' or app.status.operationState.phase == 'Failed')
+        send:
+          - app-sync-failed
+    trigger.on-health-degraded: |
+      - description: Application health is degraded
+        when: app.status.health.status == 'Degraded'
+        send:
+          - app-health-degraded
