@@ -19,7 +19,7 @@ spec:
       containers:
         - name: app
           # renovate: datasource=docker depName=registry.access.redhat.com/ubi9/python-312
-          image: registry.access.redhat.com/ubi9/python-312:latest@sha256:f793a102147ffa00b45ccb88ae91d726c17ac2f7e70214eef0cbfdc32816ec01
+          image: registry.access.redhat.com/ubi9/python-312:latest@sha256:26533737695d39d003558de435f54f52bd54879d8184a0d7038147d1ff3ea9bd
           command:
             - python3
             - -m
