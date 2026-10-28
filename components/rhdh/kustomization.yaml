@@ -22,3 +22,7 @@ resources:
   - catalog-templates-configmap.yaml
   - allow-bench-trigger-egress-networkpolicy.yaml
   - rhdh-developer-hub-backstage.yaml
+  - rhdh-public-sharing-serviceaccount.yaml
+  - rhdh-public-sharing-oauth-externalsecret.yaml
+  - rhdh-public-sharing-reader-externalsecret.yaml
+  - allow-public-sharing-egress-networkpolicy.yaml

@@ -11,6 +11,22 @@ data:
     app:
       title: Red Hat Developer Hub
       baseUrl: https://rhdh.apps.ocp.igou.systems
+    publicSharing:
+      catalogUrl: https://github.com/igou-io/igou-inventory/blob/main/group_vars/all/public_sharing.yml
+      aap:
+        baseUrl: https://automation.apps.ocp.igou.systems
+        clientId: ${RHDH_PUBLIC_SHARING_CLIENT_ID}
+        clientSecret: ${RHDH_PUBLIC_SHARING_CLIENT_SECRET}
+        templateName: vps_public_share
+      clusters:
+        ocp:
+          server: https://kubernetes.default.svc
+          tokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+          caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        vps:
+          server: https://vps-k3s-api.vps-secrets.svc.cluster.local:6443
+          tokenFile: /opt/app-root/src/public-sharing-vps-token
+          caFile: /opt/app-root/src/public-sharing-vps-ca.crt
     # RHBK (Keycloak) is the sign-in provider; `production` removes the Guest
     # login option. The single resolver matches the Keycloak username against
     # the user entities the keycloakOrg catalog provider provisions below —
