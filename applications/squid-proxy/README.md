@@ -24,8 +24,8 @@ receive `403 Forbidden`. The `api.ocp.igou.systems` and `10.10.9.10` entries kee
 the external OCP API name and the checked-in SRE Thanos HTTPS route
 (`thanos-querier-openshift-monitoring.apps.ocp.igou.systems`), respectively, on
 their direct paths; the latter is the documented OCP/apps-router VIP. There is
-no wrapper or alternate Cursor invocation; `cursor-agent` and other HTTP-aware
-clients use the standard environment.
+no wrapper or alternate Codex invocation; `codex` and other HTTP-aware clients
+use the standard environment.
 
 Squid currently allows arbitrary public HTTP on TCP/80 and HTTPS CONNECT on
 TCP/443. It denies private, cluster-internal, loopback, link-local, CGNAT,

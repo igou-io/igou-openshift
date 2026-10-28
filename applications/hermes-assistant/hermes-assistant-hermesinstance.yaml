@@ -286,16 +286,47 @@ spec:
         clarify_timeout: 600
         environment_probe: false
         max_turns: 150
-        reasoning_effort: high
+        reasoning_effort: medium
         restart_drain_timeout: 180
       approvals:
         mode: manual
         timeout: 60
+      # Keep every auxiliary inference task on the same model and effort.
       auxiliary:
+        vision: &sol_aux
+          provider: openai-codex
+          model: gpt-6.1-sol
+          reasoning_effort: medium
+        compression: *sol_aux
+        skills_hub: *sol_aux
+        approval: *sol_aux
+        review: *sol_aux
+        mcp: *sol_aux
+        title_generation: *sol_aux
+        memory_query_rewrite: *sol_aux
+        tts_audio_tags: *sol_aux
+        voice_chat: *sol_aux
+        triage_specifier: *sol_aux
+        kanban_decomposer: *sol_aux
+        profile_describer: *sol_aux
+        goal_judge: *sol_aux
+        curator: *sol_aux
+        monitor: *sol_aux
+        background_review: *sol_aux
         moa_aggregator:
+          provider: openai-codex
+          model: gpt-6.1-sol
           timeout: 600
+          extra_body:
+            reasoning:
+              effort: medium
         moa_reference:
+          provider: openai-codex
+          model: gpt-6.1-sol
           timeout: 600
+          extra_body:
+            reasoning:
+              effort: medium
       browser:
         cloud_provider: local
         use_gateway: false
@@ -343,9 +374,8 @@ spec:
             aggregator_temperature: 0.4
             reference_temperature: 0.6
       model:
-        base_url: https://opencode.ai/zen/go/v1
-        default: glm-5.3-flash
-        provider: opencode-go
+        default: gpt-6.1-sol
+        provider: openai-codex
       onboarding:
         seen:
           busy_input_prompt: true
@@ -515,7 +545,7 @@ spec:
                   # Coding-agent identities (the VM's docker_volumes bind-mount
                   # set), living on the PVC's home/ subtree so OAuth token
                   # refreshes persist across sessions. Enables dispatching
-                  # claude / codex / opencode / cursor-agent from sessions.
+                  # claude / codex / opencode from sessions.
                   - name: workspace
                     subPath: home/.claude
                     mountPath: /home/igou/.claude
@@ -531,13 +561,6 @@ spec:
                   - name: workspace
                     subPath: home/.local/share/opencode
                     mountPath: /home/igou/.local/share/opencode
-                  - name: workspace
-                    subPath: home/.config/cursor
-                    mountPath: /home/igou/.config/cursor
-                    readOnly: true
-                  - name: workspace
-                    subPath: home/.cursor
-                    mountPath: /home/igou/.cursor
                   - name: workspace
                     subPath: home/.gitconfig
                     mountPath: /home/igou/.gitconfig

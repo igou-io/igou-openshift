@@ -55,7 +55,7 @@ runtime dependency install.
 
 The `auth-login` Deployment uses the same `igou-devenv` image as terminal
 sessions and mounts this instance's persistent workspace `home/` subtree as
-its `HOME`. It normally has zero replicas. To refresh Cursor or Codex:
+its `HOME`. It normally has zero replicas. To refresh Codex:
 
 ```bash
 namespace=hermes-sre
@@ -69,9 +69,7 @@ shell receives the shared HTTP/HTTPS proxy environment; cluster-local names
 are bypassed through `NO_PROXY`. Use the normal CLI names:
 
 ```bash
-command -v cursor-agent codex
-NO_OPEN_BROWSER=1 cursor-agent login
-cursor-agent status
+command -v codex
 codex login --device-auth
 codex login status
 exit
@@ -143,8 +141,8 @@ Alert-path hardening (2026-08-30, second pass):
 Propose-fix (2026-08-31): the broker ceiling is now `contents: write` +
 `pull_requests: write` so the SRE can PROPOSE fixes as PRs (`propose-fix`
 skill: clone, branch, delegate implementation to
-`cursor-agent -p --force --trust --sandbox disabled --model cursor-grok-4.5-medium`
-(Grok 4.5 medium, not fast), validate,
+`codex exec --model gpt-6.1-sol -c 'model_reasoning_effort="high"' --dangerously-bypass-approvals-and-sandbox`
+(GPT-6.1 Sol, high reasoning), validate,
 push, PR, link on the incident issue). Never merges — by contract (SOUL +
 skill) AND by ruleset: every writable repo's `protect-default-branch`
 ruleset carries a restrict-updates rule whose bypass list is repo-admin +
@@ -157,7 +155,7 @@ them.
 
 Scheduled sweeps (native Hermes cron): four jobs run in fresh isolated agent
 sessions with the `sre-sweeps` skill, `/workspace` workdir, pinned
-`opencode-go/glm-5.3-flash` model, and direct delivery to
+`openai-codex/gpt-6.1-sol` model at medium reasoning, and direct delivery to
 the SRE Slack channel. `cron.max_parallel_jobs: 1` serializes them. Manage them
 with `hermes cron`; never patch `/opt/data/cron/jobs.json`. Issue #860 tracks a
 future operator API for declarative reconciliation.
