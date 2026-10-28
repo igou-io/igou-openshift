@@ -20,7 +20,7 @@ See `../hermes-sre/README.md` for the split and the sync-wave notes.
 
 The `auth-login` Deployment uses the same `igou-devenv` image as terminal
 sessions and mounts this instance's persistent workspace `home/` subtree as
-its `HOME`. It normally has zero replicas. To refresh Cursor or Codex:
+its `HOME`. It normally has zero replicas. To refresh Codex:
 
 ```bash
 namespace=hermes-developer
@@ -34,9 +34,7 @@ shell receives the shared HTTP/HTTPS proxy environment; cluster-local names
 are bypassed through `NO_PROXY`. Use the normal CLI names:
 
 ```bash
-command -v cursor-agent codex
-NO_OPEN_BROWSER=1 cursor-agent login
-cursor-agent status
+command -v codex
 codex login --device-auth
 codex login status
 exit
