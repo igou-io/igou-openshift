@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1beta1
+kind: ArgoCD
+metadata:
+  name: openshift-gitops
+  namespace: openshift-gitops
+spec:
+  extraConfig:
+    ui.cssurl: ./custom/saturn.css
+  server:
+    volumes:
+      - name: saturn-branding
+        configMap:
+          name: saturn-gitops-assets
+    volumeMounts:
+      - name: saturn-branding
+        mountPath: /shared/app/custom
+        readOnly: true

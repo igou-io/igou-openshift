@@ -1,0 +1,10 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: saturn-keycloak
+  namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: '10'
+spec:
+  lookupPolicy:
+    local: false

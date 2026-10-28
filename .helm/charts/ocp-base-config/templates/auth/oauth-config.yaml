@@ -6,6 +6,10 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: '1'
 spec:
+{{- with .Values.auth.templates }}
+  templates:
+{{ toYaml . | indent 4 }}
+{{- end }}
   identityProviders:
 {{- if .Values.auth.externalSecret }}
   - mappingMethod: claim

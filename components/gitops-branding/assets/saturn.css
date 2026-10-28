@@ -1,0 +1,38 @@
+/* Argo CD adapter: preserve semantic health and sync status colors. */
+:root {
+  --saturn-recess: #242521;
+  --saturn-panel: #393a35;
+  --saturn-shell: #454640;
+  --saturn-text: #f0f0e8;
+  --saturn-muted: #bcbeb1;
+  --saturn-line: #686a60;
+  --saturn-action: #a5a4cb;
+}
+body,.argo-container,.applications-list,.application-details,.settings-overview {
+  background: var(--saturn-recess);
+  color: var(--saturn-text);
+}
+.sidebar,.top-bar,.argo-container__top-bar,.header {background:#30312d;color:var(--saturn-text)}
+.sidebar__logo,.sidebar__logo img {content:url('./saturn-gitops-dark.png');object-fit:contain;width:190px;height:auto;max-width:100%}
+.sidebar__logo {min-height:48px;background:none}
+.white-box,.argo-table-list,.argo-table-list__row,.argo-table-list__head,.applications-list__entry,.application-details__summary,.argo-panel,
+.popup-container__content,.sliding-panel__body,.sliding-panel__header {
+  background:var(--saturn-panel);color:var(--saturn-text);border-color:var(--saturn-line)
+}
+a,.sidebar a,.argo-table-list a {color:#c4c2e0}
+a:hover {color:#dedcf5}
+.argo-button--base:not(.argo-button--danger):not(.argo-button--warning):not(.argo-button--success),
+.argo-button--primary:not(.argo-button--danger):not(.argo-button--warning):not(.argo-button--success) {
+  background:var(--saturn-action);color:#242521;border-color:var(--saturn-action)
+}
+.argo-button--base:not(.argo-button--danger):not(.argo-button--warning):not(.argo-button--success):hover,
+.argo-button--primary:not(.argo-button--danger):not(.argo-button--warning):not(.argo-button--success):hover {background:#c4c2e0;color:#242521}
+.argo-button:disabled {opacity:.55}
+input:not([type=checkbox]):not([type=radio]),textarea,select {
+  background:var(--saturn-recess);color:var(--saturn-text);border-color:var(--saturn-line)
+}
+:focus-visible {outline:3px solid #c4c2e0;outline-offset:3px}
+.login {background:var(--saturn-recess);color:var(--saturn-text)}
+.login__logo {background:url('./saturn-gitops-dark.png') center/contain no-repeat;width:300px;height:84px}
+.login__logo svg,.login__logo img {visibility:hidden}
+/* Explicit selectors avoid recoloring status glyphs and destructive actions. */
