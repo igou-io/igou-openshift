@@ -29,9 +29,8 @@ spec:
         - name: catalog-templates
       secrets:
         - name: rhdh-public-sharing-reader
-          key: public-sharing-vps-token
-        - name: rhdh-public-sharing-reader
-          key: public-sharing-vps-ca.crt
+          key: public-sharing-vps-token,public-sharing-vps-ca.crt
+          mountPath: /opt/app-root/src
     dynamicPluginsConfigMapName: dynamic-plugins-rhdh
     route:
       host: rhdh.apps.ocp.igou.systems
