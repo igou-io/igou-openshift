@@ -1,0 +1,28 @@
+---
+name: Renovate runtime tracking
+"on":
+  pull_request:
+    branches:
+      - main
+    paths:
+      - renovate.json
+      - clusters/ocp/pac-tenants/values.yaml
+      - scripts/test-renovate.mjs
+      - .github/workflows/renovate-check.yml
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    container:
+      image: docker.io/renovate/renovate:44.184.0@sha256:94cffc10fabc766716a4f37cd8ab2a75481da9d9b5a36dabe91630bd7b971b9a
+      options: --user 0
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Validate Renovate configuration
+        env:
+          GITHUB_COM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: renovate-config-validator renovate.json
+      - name: Verify vendor catalog and image updates
+        run: node scripts/test-renovate.mjs

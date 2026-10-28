@@ -31,8 +31,10 @@ tenants:
         # ansible-core content streams, so the tag must be explicit
         # (access.redhat.com/articles/4301321). `2.20` is the newest stable
         # AAP 2.7 core stream. Inherit its bundled Python and Ansible;
-        # scheduled re-import keeps pulling Red Hat's current builds.
-        from: registry.redhat.io/ansible-automation-platform-27/ee-minimal-rhel9:2.20
+        # Renovate checks the public Red Hat catalog daily and proposes a
+        # build tag + digest update. Python/Core stay vendor supplied.
+        # renovate: datasource=custom.redhat-ee depName=redhat-ee version=2.20-1792392312
+        from: registry.redhat.io/ansible-automation-platform-27/ee-minimal-rhel9@sha256:589645af49a6f902ed4ac9dadd435a408b3a44d78d8dae337eeae1f8252672c9
         # The in-cluster tag stays `latest`: igou-ansible's
         # execution-environments/igou-aap-ee-rhel9/execution-environment.yml
         # sets base_image to this ImageStream without a tag, which buildah

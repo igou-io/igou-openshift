@@ -22,6 +22,9 @@ spec:
     - name: IMAGE
       description: Reference of the image buildah will produce.
       type: string
+    - name: REVISION
+      description: Exact source commit resolved by git-clone.
+      type: string
     - name: BUILDER_IMAGE
       description: The location of the buildah builder image.
       type: string
@@ -69,6 +72,8 @@ spec:
       description: Digest of the image just built.
     - name: IMAGE_URL
       description: Image repository where the built image was pushed.
+    - name: RUNTIME_MANIFEST
+      description: Actual Python/Core versions, source revision and published digest as JSON.
   steps:
     - name: build-and-push
       image: $(params.BUILDER_IMAGE)
@@ -99,6 +104,8 @@ spec:
           value: $(params.TLSVERIFY)
         - name: PARAM_FORMAT
           value: $(params.FORMAT)
+        - name: PARAM_REVISION
+          value: $(params.REVISION)
       args:
         - $(params.BUILD_ARGS[*])
       script: |
@@ -119,6 +126,7 @@ spec:
 
         buildah "--storage-driver=${PARAM_STORAGE_DRIVER}" bud \
           "${build_args[@]}" \
+          --build-arg "RUNTIME_REVISION=${PARAM_REVISION}" \
           "--format=${PARAM_FORMAT}" \
           "--tls-verify=${PARAM_TLSVERIFY}" \
           -f "${PARAM_DOCKERFILE}" -t "${PARAM_IMAGE}" "${PARAM_CONTEXT}"
@@ -130,6 +138,14 @@ spec:
 
         tee "$(results.IMAGE_DIGEST.path)" < /tmp/image-digest
         printf '%s' "${PARAM_IMAGE}" | tee "$(results.IMAGE_URL.path)"
+
+        runtime_container=$(buildah "--storage-driver=${PARAM_STORAGE_DRIVER}" from "${PARAM_IMAGE}")
+        trap 'buildah "--storage-driver=${PARAM_STORAGE_DRIVER}" rm "$runtime_container" >/dev/null' EXIT
+        buildah "--storage-driver=${PARAM_STORAGE_DRIVER}" run "$runtime_container" -- \
+          /usr/bin/python3 /usr/local/libexec/igou-runtime-manifest.py \
+          --revision "$PARAM_REVISION" --image "$PARAM_IMAGE" --digest "$(cat /tmp/image-digest)" \
+          | tee "$(results.RUNTIME_MANIFEST.path)" \
+            "$(workspaces.source.path)/runtime-${PARAM_IMAGE##*:}.json"
       securityContext:
         # Same request the cluster buildah task makes: pipelines-scc is
         # anyuid + SETFCAP, so this is granted and privileged: true is not.
