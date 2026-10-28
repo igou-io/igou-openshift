@@ -30,10 +30,6 @@ spec:
     buildah, then run an advisory RHACS policy check.
   workspaces:
     - name: shared-workspace
-  results:
-    - name: RUNTIME_MANIFEST
-      description: Python/Core versions, source commit and published image digest as JSON.
-      value: "$(tasks.build-image.results.RUNTIME_MANIFEST)"
   params:
     # Literal source coordinates. The PaC run gets these from the webhook
     # payload ({{ repo_url }} / {{ revision }}); a scheduled run has no
@@ -116,8 +112,6 @@ spec:
         name: buildah-galaxy
         kind: Task
       params:
-        - name: REVISION
-          value: "$(tasks.fetch-source.results.COMMIT)"
         - name: IMAGE
           value: "$(params.IMAGE)"
         - name: DOCKERFILE

@@ -132,8 +132,6 @@ spec:
                     case "${status}" in
                       True)
                         echo "${run} succeeded; image pushed to internal Quay"
-                        oc get -n "${BUILD_NAMESPACE}" "${run}" \
-                          -o 'jsonpath={.status.results[?(@.name=="RUNTIME_MANIFEST")].value}{"\n"}'
                         exit 0
                         ;;
                       False)

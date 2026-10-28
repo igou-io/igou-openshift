@@ -6,17 +6,6 @@ ansible-builder, and builds and pushes
 `quay.apps.ocp.igou.systems/igou-io/igou-aap-ee-rhel9:latest`.
 The final RHACS check is advisory.
 
-The base ImageStream is pinned to a Red Hat build tag and digest in
-`clusters/ocp/pac-tenants/values.yaml`. Renovate checks Red Hat's public catalog
-for updates to the 2.20 stream; each runtime update requires review. Pulls still
-use the cluster's entitled registry credentials.
-
-Images contain `/usr/share/igou/runtime.json`. The build task also records the
-actual Python/RPM and Ansible Core versions, source commit, and published image
-digest as the `RUNTIME_MANIFEST` result and `runtime-<tag>.json` workspace file.
-The Pipeline forwards that result. This separates the vendor update PR from
-evidence that the resulting EE was built and published.
-
 Tekton does not provide a recurring-run resource in the installed OpenShift
 Pipelines 1.23.2 APIs. Upstream [TEP-0128: Scheduled Runs](https://github.com/tektoncd/community/blob/main/teps/0128-scheduled-runs.md)
 describes CronJobs creating PipelineRuns or calling EventListeners as the

@@ -1,15 +1,5 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "dependencyDashboard": true,
-  "customDatasources": {
-    "redhat-ee": {
-      "defaultRegistryUrlTemplate": "https://catalog.redhat.com/api/containers/v1/repositories/registry/registry.access.redhat.com/repository/ansible-automation-platform-27/ee-minimal-rhel9/tag/2.20?page_size=100",
-      "format": "json",
-      "transformTemplates": [
-        "($images := data[architecture=\"amd64\"]; $assert($count($images)=1, \"Expected one amd64 image for the Red Hat 2.20 stream\"); $repo := $images.repositories[repository=\"ansible-automation-platform-27/ee-minimal-rhel9\" and published=true]; $tag := $repo.tags.name[$match($, /^2[.]20-[0-9]+$/)]; $assert($count($repo)=1 and $count($tag)=1 and $exists($repo.manifest_list_digest) and $exists($match($repo.manifest_list_digest, /^sha256:[a-f0-9]{64}$/)), \"Missing Red Hat build tag or digest\"); {\"releases\": [{\"version\": $tag, \"digest\": $repo.manifest_list_digest, \"releaseTimestamp\": $repo.push_date}], \"sourceUrl\": \"https://catalog.redhat.com\"})"
-      ]
-    }
-  },
   "ignorePaths": [
     "/charts/ocp-base-config/"
   ],
@@ -78,21 +68,6 @@
       "matchFileNames": ["applications/openshell/kustomization.yaml"],
       "matchPackageNames": ["nvcr.io/nvidia/base/ubuntu"],
       "enabled": false
-    },
-    {
-      "description": "Review vendor EE updates daily without replacing its Python or Core",
-      "matchDepNames": [
-        "redhat-ee"
-      ],
-      "groupName": "Red Hat EE runtime",
-      "automerge": false,
-      "schedule": [
-        "at any time"
-      ],
-      "minimumReleaseAge": null,
-      "prBodyNotes": [
-        "Updates the entitled mirror to a published Red Hat 2.20 build by immutable digest. The rebuild records its inherited Python and Core versions."
-      ]
     }
   ],
   "customManagers": [
@@ -142,19 +117,6 @@
       "managerFilePatterns": ["/^applications/openshell/kustomization\\.yaml$/"],
       "matchStrings": ["repository: (?<depName>nvcr\\.io/nvidia/base/ubuntu)\\n(?<indentation>[ \\t]+)tag: [\"']?(?<currentValue>[^\\s\"'@]+)[\"']?\\n[ \\t]+digest: (?<currentDigest>sha256:[a-f0-9]{64})"],
       "datasourceTemplate": "docker"
-    },
-    {
-      "description": "Track Red Hat EE build tags and digests from its public catalog; pulls still use the entitled mirror",
-      "customType": "regex",
-      "managerFilePatterns": [
-        "/^clusters/ocp/pac-tenants/values\\.yaml$/"
-      ],
-      "matchStrings": [
-        "# renovate: datasource=custom.redhat-ee depName=redhat-ee version=(?<currentValue>[^\\s]+)\\n\\s*from: registry\\.redhat\\.io/ansible-automation-platform-27/ee-minimal-rhel9@(?<currentDigest>sha256:[a-f0-9]{64})"
-      ],
-      "datasourceTemplate": "custom.redhat-ee",
-      "depNameTemplate": "redhat-ee",
-      "versioningTemplate": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)-(?<build>\\d+)$"
     }
   ]
 }
