@@ -14,6 +14,30 @@ spec:
         template:
           spec:
             serviceAccountName: rhdh-public-sharing
+            containers:
+              - name: backstage-backend
+                volumeMounts:
+                  - name: public-sharing-ocp-reader
+                    mountPath: /var/run/public-sharing/ocp
+                    readOnly: true
+                  - name: public-sharing-vps-reader
+                    mountPath: /var/run/public-sharing/vps
+                    readOnly: true
+            volumes:
+              - name: public-sharing-ocp-reader
+                projected:
+                  sources:
+                    - serviceAccountToken:
+                        path: token
+                        expirationSeconds: 3600
+                    - configMap:
+                        name: kube-root-ca.crt
+                        items:
+                          - key: ca.crt
+                            path: ca.crt
+              - name: public-sharing-vps-reader
+                secret:
+                  secretName: rhdh-public-sharing-reader
   database:
     enableLocalDb: false
   monitoring:
@@ -27,10 +51,6 @@ spec:
       configMaps:
         - name: rbac-policies
         - name: catalog-templates
-      secrets:
-        - name: rhdh-public-sharing-reader
-          key: public-sharing-vps-token,public-sharing-vps-ca.crt
-          mountPath: /opt/app-root/src
     dynamicPluginsConfigMapName: dynamic-plugins-rhdh
     route:
       host: rhdh.apps.ocp.igou.systems

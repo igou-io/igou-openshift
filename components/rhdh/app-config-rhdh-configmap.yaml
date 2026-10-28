@@ -21,12 +21,12 @@ data:
       clusters:
         ocp:
           server: https://kubernetes.default.svc
-          tokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-          caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          tokenFile: /var/run/public-sharing/ocp/token
+          caFile: /var/run/public-sharing/ocp/ca.crt
         vps:
           server: https://vps-k3s-api.vps-secrets.svc.cluster.local:6443
-          tokenFile: /opt/app-root/src/public-sharing-vps-token
-          caFile: /opt/app-root/src/public-sharing-vps-ca.crt
+          tokenFile: /var/run/public-sharing/vps/public-sharing-vps-token
+          caFile: /var/run/public-sharing/vps/public-sharing-vps-ca.crt
     # RHBK (Keycloak) is the sign-in provider; `production` removes the Guest
     # login option. The single resolver matches the Keycloak username against
     # the user entities the keycloakOrg catalog provider provisions below —
