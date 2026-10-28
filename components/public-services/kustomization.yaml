@@ -5,3 +5,5 @@ resources:
   - aap-public-share-reader-serviceaccount.yaml
   - aap-public-share-reader-role.yaml
   - aap-public-share-reader-rolebinding.yaml
+  - rhdh-public-sharing-reader-role.yaml
+  - rhdh-public-sharing-reader-rolebinding.yaml

@@ -8,6 +8,12 @@ metadata:
     argocd.argoproj.io/sync-wave: '11'
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
+  deployment:
+    patch:
+      spec:
+        template:
+          spec:
+            serviceAccountName: rhdh-public-sharing
   database:
     enableLocalDb: false
   monitoring:
@@ -21,6 +27,11 @@ spec:
       configMaps:
         - name: rbac-policies
         - name: catalog-templates
+      secrets:
+        - name: rhdh-public-sharing-reader
+          key: public-sharing-vps-token
+        - name: rhdh-public-sharing-reader
+          key: public-sharing-vps-ca.crt
     dynamicPluginsConfigMapName: dynamic-plugins-rhdh
     route:
       host: rhdh.apps.ocp.igou.systems
@@ -31,3 +42,4 @@ spec:
         - name: rhdh-keycloak-credentials
         - name: rhdh-forgejo-credentials
         - name: rhdh-github-app
+        - name: rhdh-public-sharing-oauth

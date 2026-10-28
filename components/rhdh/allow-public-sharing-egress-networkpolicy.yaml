@@ -1,0 +1,25 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-public-sharing-egress
+  namespace: rhdh
+  annotations:
+    argocd.argoproj.io/sync-wave: "9"
+spec:
+  podSelector:
+    matchLabels:
+      rhdh.redhat.com/app: backstage-rhdh-developer-hub
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tailscale
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: vps-secrets
+      ports:
+        - protocol: TCP
+          port: 6443
