@@ -1,5 +1,5 @@
 ---
-# Production Hermes on the kubernetes terminal backend (fork build 94d95608,
+# Production Hermes on the kubernetes terminal backend (fork build 71fc5391,
 # david-igou/hermes-agent feat/kubernetes-terminal-backend). Replaced the
 # hermes VM (applications/hermes-agent, retired 2026-08-24) at the
 # 2026-08-14 cutover.
@@ -25,11 +25,11 @@ metadata:
     argocd.argoproj.io/sync-wave: '10'
 spec:
   image:
-    # Built by igou-containers from fork commit 94d95608.
+    # Built by igou-containers from fork commit 71fc5391.
     # Keep the agent, dashboard, and auth-sync on the same factory digest.
     repository: ghcr.io/igou-io/hermes-agent-k8s
-    tag: 0921ad26c361fc2a69ce5b13c04aa97b9f49fe9e@sha256:f5f57a622da275ea21b2bd999856d6b8eb13abc2d6f1262abeafe00c58878609
-    digest: sha256:f5f57a622da275ea21b2bd999856d6b8eb13abc2d6f1262abeafe00c58878609
+    tag: a297a1b418f5d8cf6b6aeb8db82705d62f5da07e@sha256:fc1bb56704fdfefa804ec19e364951b78113fed3a1f215db66d1d285eb41b204
+    digest: sha256:fc1bb56704fdfefa804ec19e364951b78113fed3a1f215db66d1d285eb41b204
     pullPolicy: IfNotPresent
   security:
     # We own the SA: the kubernetes backend needs pod create/get/list/delete
@@ -172,7 +172,7 @@ spec:
   # hermes-dashboard.service used; scrypt BasicAuth comes from hermes-env.
   sidecars:
     - name: dashboard
-      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:78ac8837c77ffa8996806b571e8e4a523795f6ca91b21bfd5320f88b3553e8e8
+      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:fc1bb56704fdfefa804ec19e364951b78113fed3a1f215db66d1d285eb41b204
       imagePullPolicy: IfNotPresent
       args:
         - dashboard
@@ -236,7 +236,7 @@ spec:
     # it copies Hermes-store tokens into the shared CLI file whenever the
     # store's last_refresh is strictly newer. Latest-wins in both directions.
     - name: codex-auth-sync
-      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:78ac8837c77ffa8996806b571e8e4a523795f6ca91b21bfd5320f88b3553e8e8
+      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:fc1bb56704fdfefa804ec19e364951b78113fed3a1f215db66d1d285eb41b204
       command:
         - python3
         - -u
