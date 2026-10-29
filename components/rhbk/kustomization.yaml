@@ -20,3 +20,21 @@ resources:
   - keycloak-tls-certificate.yaml
   - keycloak-keycloak.yaml
   - igou-keycloakrealmimport.yaml
+  - saturn-rhbk-registry-externalsecret.yaml
+  - saturn-keycloak-imagestream.yaml
+  - saturn-keycloak-buildconfig.yaml
+
+configMapGenerator:
+- name: saturn-keycloak-theme
+  namespace: keycloak
+  files:
+  - saturn-theme/favicon.ico
+  - saturn-theme/messages_en.properties
+  - saturn-theme/saturn-logo-dark.png
+  - saturn-theme/saturn-logo-light.png
+  - saturn-theme/saturn.css
+  - saturn-theme/theme.properties
+  options:
+    disableNameSuffixHash: true
+    annotations:
+      argocd.argoproj.io/sync-wave: '9'

@@ -1,0 +1,37 @@
+/* Saturn login: inherited templates and authentication behavior stay upstream. */
+:root,.pf-v5-theme-dark {
+  --keycloak-logo-url: url('../img/saturn-logo-dark.png');
+  --keycloak-bg-logo-url: none;
+  --keycloak-logo-height: 96px;
+  --keycloak-logo-width: 360px;
+  --keycloak-card-top-color: #a5a4cb;
+  --pf-v5-global--BackgroundColor--100: #393a35;
+  --pf-v5-global--BackgroundColor--200: #242521;
+  --pf-v5-global--Color--100: #f0f0e8;
+  --pf-v5-global--Color--200: #bcbeb1;
+  --pf-v5-global--primary-color--100: #a5a4cb;
+  --pf-v5-global--primary-color--200: #c4c2e0;
+  --pf-v5-global--active-color--100: #a5a4cb;
+  --pf-v5-global--BorderColor--100: #686a60;
+  --pf-v5-global--link--Color: #c4c2e0;
+  --pf-v5-global--link--Color--hover: #dedcf5;
+}
+.login-pf body {background:#242521;color:#f0f0e8}
+.pf-v5-c-login {background:#242521;color:#f0f0e8}
+.pf-v5-c-login__main {background:#393a35;color:#f0f0e8;border:1px solid #686a60;border-radius:12px;overflow:hidden}
+.pf-v5-c-login__main-header {border-top-color:#a5a4cb}
+.pf-v5-c-login__main-footer-band {background:#30312d;color:#f0f0e8}
+.pf-v5-c-button.pf-m-primary {background:#a5a4cb;color:#242521;--pf-v5-c-button--m-primary--BackgroundColor:#a5a4cb;--pf-v5-c-button--m-primary--Color:#242521}
+.pf-v5-c-button.pf-m-primary:hover {background:#c4c2e0;color:#242521}
+a {color:#c4c2e0}
+:focus-visible {outline:3px solid #c4c2e0;outline-offset:3px}
+@media(prefers-color-scheme:light) {
+  :root:not(.pf-v5-theme-dark) {--keycloak-logo-url:url('../img/saturn-logo-light.png');--pf-v5-global--Color--100:#272823;--pf-v5-global--Color--200:#55574e;--pf-v5-global--BackgroundColor--100:#f1f1eb;--pf-v5-global--BackgroundColor--200:#dedfd6}
+  html:not(.pf-v5-theme-dark) body,html:not(.pf-v5-theme-dark) .pf-v5-c-login {background:#dedfd6;color:#272823}
+  html:not(.pf-v5-theme-dark) .pf-v5-c-login__main {background:#f1f1eb;color:#272823;border-color:#8b8e81}
+  html:not(.pf-v5-theme-dark) .pf-v5-c-login__main-footer-band {background:#d0d2c7;color:#272823}
+  html:not(.pf-v5-theme-dark) a {color:#575174}
+}
+
+/* Keep the realm name available to assistive technology behind the visual mark. */
+div.kc-logo-text span {display:block;position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}

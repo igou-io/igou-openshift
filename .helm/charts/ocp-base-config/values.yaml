@@ -10,6 +10,8 @@ network:
   hostRouting: false
 
 auth:
+  # Optional existing Secret references for custom OAuth HTML templates.
+  templates: {}
   enabled: true
   htpasswdDisplayName: igou
   globalAdmins:

@@ -31,6 +31,14 @@ kustomize `helmCharts` field — render with
 - Postgres is chart-managed (1Gi PVC on the default StorageClass) — POC
   footing, not in OADP scope yet.
 
+The Saturn branding is configured through the chart's existing
+`redhat-developer-hub.upstream.backstage.appConfig.app` values. The packaged
+dependency is RHDH 1.10. Local rendering verified both light/dark graphite and
+lavender palettes and the exact automation logo data, while preserving the
+effective authentication and catalog configuration. AAP gateway sign-in is a
+separate UI. Operational rollout and rollback belong in
+`/workspace/igou-docs/openshift/Saturn Branding and Theme Controls.md`.
+
 Not configured yet (follow-ups): `secrets-scm` GitHub token for EE-builder
 push / content discovery, ServiceMonitor for the 9464 metrics port, dev1 /
 sandbox org exposure.

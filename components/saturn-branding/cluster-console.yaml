@@ -1,0 +1,37 @@
+apiVersion: operator.openshift.io/v1
+kind: Console
+metadata:
+  name: cluster
+spec:
+  customization:
+    customLogoFile: null
+    customProductName: Saturn · OpenShift
+    logos:
+    - type: Masthead
+      themes:
+      - mode: Light
+        source:
+          from: ConfigMap
+          configMap:
+            name: saturn-brand
+            key: saturn-masthead-light.svg
+      - mode: Dark
+        source:
+          from: ConfigMap
+          configMap:
+            name: saturn-brand
+            key: saturn-masthead-dark.svg
+    - type: Favicon
+      themes:
+      - mode: Light
+        source:
+          from: ConfigMap
+          configMap:
+            name: saturn-brand
+            key: saturn-favicon.svg
+      - mode: Dark
+        source:
+          from: ConfigMap
+          configMap:
+            name: saturn-brand
+            key: saturn-favicon.svg
