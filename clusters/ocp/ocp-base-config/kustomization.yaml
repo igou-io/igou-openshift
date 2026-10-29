@@ -16,4 +16,6 @@ secretGenerator:
   options:
     disableNameSuffixHash: true
     annotations:
+      # Embedded artwork exceeds the client-side apply annotation limit.
+      argocd.argoproj.io/sync-options: ServerSideApply=true
       argocd.argoproj.io/sync-wave: '-1'
