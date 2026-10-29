@@ -1,0 +1,42 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: saturn-keycloak
+  namespace: keycloak
+  annotations:
+    argocd.argoproj.io/sync-wave: '10'
+spec:
+  runPolicy: SerialLatestOnly
+  successfulBuildsHistoryLimit: 2
+  failedBuildsHistoryLimit: 2
+  source:
+    type: Dockerfile
+    dockerfile: |
+      FROM registry.redhat.io/rhbk/keycloak-rhel9@sha256:b55a3fdf5c836cca9d6b754dd27adbd8de28a27ca46e7d205ceb6c0d7ae35ab9
+      LABEL org.igou.saturn.theme-sha256="1e4679cc832b606bb5e647cad380b1bf58942b567d1b5f39a8d70d3dbb5e4d0b"
+      COPY --chown=1000:0 theme/theme.properties /opt/keycloak/themes/saturn/login/theme.properties
+      COPY --chown=1000:0 theme/saturn.css /opt/keycloak/themes/saturn/login/resources/css/saturn.css
+      COPY --chown=1000:0 theme/saturn-logo-dark.png theme/saturn-logo-light.png theme/favicon.ico /opt/keycloak/themes/saturn/login/resources/img/
+      COPY --chown=1000:0 theme/messages_en.properties /opt/keycloak/themes/saturn/login/messages/messages_en.properties
+      RUN /opt/keycloak/bin/kc.sh build --db=postgres --health-enabled=true --metrics-enabled=true
+    configMaps:
+    - configMap:
+        name: saturn-keycloak-theme
+      destinationDir: theme
+  strategy:
+    type: Docker
+    dockerStrategy:
+      pullSecret:
+        name: saturn-rhbk-registry
+  output:
+    to:
+      kind: ImageStreamTag
+      name: saturn-keycloak:26.6.7
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      memory: 2Gi
+  triggers:
+  - type: ConfigChange

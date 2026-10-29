@@ -29,3 +29,20 @@ helmCharts:
       # Lab-vault-scoped token — sandbox personas (dev1) stay off this list.
       opConnectUsers:
         - igou
+
+secretGenerator:
+- name: devspaces-dashboard-customization
+  namespace: openshift-devspaces
+  files:
+  - branding/che-logo.svg
+  - branding/loader.svg
+  - branding/favicon.ico
+  options:
+    disableNameSuffixHash: true
+    annotations:
+      che.eclipse.org/mount-as: subpath
+      che.eclipse.org/mount-path: /public/dashboard/assets/branding
+      argocd.argoproj.io/sync-wave: '10'
+    labels:
+      app.kubernetes.io/component: devspaces-dashboard-secret
+      app.kubernetes.io/part-of: che.eclipse.org

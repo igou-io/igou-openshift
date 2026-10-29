@@ -1,0 +1,14 @@
+{
+  "source_url": "https://sns.sega.jp/sp/dl/segasaturn_fb.pdf",
+  "source_sha256": "534d8bdc53c062c1b2d31beaa715ce3792a14324b04d016a86cb1a3d529419a5",
+  "page_index": 1,
+  "source_bounds_points": [
+    278.8949890136719,
+    335.6670227050781,
+    338.0530090332031,
+    350.4690246582031
+  ],
+  "original_path_items": 173,
+  "wordmark_path_sha256": "24ddeca6121b5b5ff4ea7b0a110248eda8703c211a0e650e43a6195e9dc65249",
+  "construction": "Original PDF clipping-path geometry, no tracing or font substitution. Source silver fill adapted for light/dark UI; the S accent follows the user reference. Only lettering is extracted; no PDF/reference planet geometry is included."
+}

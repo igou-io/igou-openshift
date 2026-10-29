@@ -26,3 +26,4 @@ resources:
   - rhdh-public-sharing-oauth-externalsecret.yaml
   - rhdh-public-sharing-reader-externalsecret.yaml
   - allow-public-sharing-egress-networkpolicy.yaml
+  - saturn-branding-configmap.yaml
