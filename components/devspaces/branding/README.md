@@ -1,6 +1,6 @@
 # Dev Spaces dashboard artwork
 
-The dashboard header uses a dark background. Use the dark-header lockup with silver-white lettering and a light subtitle; a light-background logo renders its lettering almost black on that header. Both SVG and gzip variants must carry the same artwork.
+The dashboard header uses a dark background. Its banner pairs the original blue planet with the silver-white platform name, Dev Spaces. Both SVG and gzip variants must carry the same artwork. The loader and favicon remain planet-only.
 
 Each generated branding Secret has one file. The running operator iterates Secret keys without stable ordering; a multi-file subpath Secret repeatedly reordered volume mounts and rolled the dashboard. Separate single-file Secrets keep the mount list stable.
 

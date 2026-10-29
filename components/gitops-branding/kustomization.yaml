@@ -8,6 +8,7 @@ configMapGenerator:
     files:
       - assets/saturn.css
       - assets/saturn-gitops-dark.png
+      - assets/saturn-planet.png
     options:
       disableNameSuffixHash: true
       annotations:
