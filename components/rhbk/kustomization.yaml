@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - default-deny-networkpolicy.yaml
   - allow-required-networkpolicy.yaml
+  - allow-build-registry-networkpolicy.yaml
   - keycloak-namespace.yaml
   - rhbk-operatorgroup.yaml
   - rhbk-operator-subscription.yaml

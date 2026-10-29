@@ -31,18 +31,32 @@ helmCharts:
         - igou
 
 secretGenerator:
-- name: devspaces-dashboard-customization
+- name: devspaces-dashboard-logo
   namespace: openshift-devspaces
   files:
   - branding/che-logo.svg
+- name: devspaces-dashboard-logo-gzip
+  namespace: openshift-devspaces
+  files:
+  - branding/che-logo.svg.gz
+- name: devspaces-dashboard-loader
+  namespace: openshift-devspaces
+  files:
   - branding/loader.svg
+- name: devspaces-dashboard-loader-gzip
+  namespace: openshift-devspaces
+  files:
+  - branding/loader.svg.gz
+- name: devspaces-dashboard-favicon
+  namespace: openshift-devspaces
+  files:
   - branding/favicon.ico
-  options:
-    disableNameSuffixHash: true
-    annotations:
-      che.eclipse.org/mount-as: subpath
-      che.eclipse.org/mount-path: /public/dashboard/assets/branding
-      argocd.argoproj.io/sync-wave: '10'
-    labels:
-      app.kubernetes.io/component: devspaces-dashboard-secret
-      app.kubernetes.io/part-of: che.eclipse.org
+generatorOptions:
+  disableNameSuffixHash: true
+  annotations:
+    che.eclipse.org/mount-as: subpath
+    che.eclipse.org/mount-path: /public/dashboard/assets/branding
+    argocd.argoproj.io/sync-wave: '10'
+  labels:
+    app.kubernetes.io/component: devspaces-dashboard-secret
+    app.kubernetes.io/part-of: che.eclipse.org

@@ -10,6 +10,7 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/sync-wave: '11'
 spec:
+  image: image-registry.openshift-image-registry.svc:5000/keycloak/saturn-keycloak@sha256:883efb6278442cdea431c10e0c120677b08120b96a2d1b69995447e669e9029d
   instances: 1
   db:
     vendor: postgres

@@ -4,7 +4,6 @@ metadata:
   name: cluster
 spec:
   customization:
-    customLogoFile: null
     customProductName: Saturn · OpenShift
     logos:
     - type: Masthead
