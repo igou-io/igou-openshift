@@ -43,7 +43,7 @@ helmCharts:
           backstage:
             appConfig:
               app:
-                title: Saturn · Automation Portal
+                title: Automation Portal - igou.systems
                 branding:
                   fullLogo:
                     dark: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAegAAAB4CAYAAAA5QWH7AABRV0lEQVR4nO19CZhkZXnud86pvbfqnpmeFaYHGDYFBgUJi9KDGBMFZ0hiYnIjNDdGk2jC8JiY6L2GRo0G\

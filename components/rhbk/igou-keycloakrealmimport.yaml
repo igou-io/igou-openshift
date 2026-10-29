@@ -69,6 +69,7 @@ spec:
     id: igou
     realm: igou
     displayName: Igou Lab
+    loginTheme: saturn
     enabled: true
     registrationAllowed: false
     resetPasswordAllowed: false
