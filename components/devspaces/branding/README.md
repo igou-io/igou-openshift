@@ -1,5 +1,7 @@
 # Dev Spaces dashboard artwork
 
+The dashboard header uses a dark background. Use the dark-header lockup with silver-white lettering and a light subtitle; a light-background logo renders its lettering almost black on that header. Both SVG and gzip variants must carry the same artwork.
+
 Each generated branding Secret has one file. The running operator iterates Secret keys without stable ordering; a multi-file subpath Secret repeatedly reordered volume mounts and rolled the dashboard. Separate single-file Secrets keep the mount list stable.
 
 Ship deterministic gzip siblings for the SVGs: the dashboard serves precompressed files to browsers that accept gzip. Without matching `.gz` replacements, requests can still receive the original Red Hat artwork. Regenerate with gzip mtime 0 when an SVG changes.
