@@ -13,7 +13,7 @@ spec:
     type: Dockerfile
     dockerfile: |
       FROM registry.redhat.io/rhbk/keycloak-rhel9@sha256:b55a3fdf5c836cca9d6b754dd27adbd8de28a27ca46e7d205ceb6c0d7ae35ab9
-      LABEL org.igou.saturn.theme-sha256="47ae91690c316d91fc293ad0faa680afb72350d001a72302039622dc8fbf8709"
+      LABEL org.igou.saturn.theme-sha256="1e4679cc832b606bb5e647cad380b1bf58942b567d1b5f39a8d70d3dbb5e4d0b"
       COPY --chown=1000:0 theme/theme.properties /opt/keycloak/themes/saturn/login/theme.properties
       COPY --chown=1000:0 theme/saturn.css /opt/keycloak/themes/saturn/login/resources/css/saturn.css
       COPY --chown=1000:0 theme/saturn-logo-dark.png theme/saturn-logo-light.png theme/favicon.ico /opt/keycloak/themes/saturn/login/resources/img/
