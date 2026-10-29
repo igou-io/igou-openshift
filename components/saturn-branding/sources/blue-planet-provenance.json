@@ -1,0 +1,21 @@
+{
+  "source_url": "https://images.squarespace-cdn.com/content/v1/51210ccfe4b0b5151b71cfa1/1361512512656-DT3DXZVWN97P9CJFNAL1/SegaSaturn.png?format=original",
+  "designer_portfolio": "https://kenloh.com/logos",
+  "source_dimensions": [
+    560,
+    340
+  ],
+  "crop_bounds": [
+    112,
+    60,
+    448,
+    272
+  ],
+  "planet_dimensions": [
+    336,
+    212
+  ],
+  "source_sha256": "2029d20d5976a5699c2827af8571fae6ba5967194a10a1855b68edd6b95fa4b5",
+  "planet_sha256": "81ace8dac58238b514fd88cbbc8600fa60d85335d520f088a71ee5b779ed79e3",
+  "construction": "Integer crop of native transparency bounds; original source pixels unchanged. Active banners pair this planet with outlined platform names. Login artwork contains only the planet."
+}
