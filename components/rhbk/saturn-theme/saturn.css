@@ -2,8 +2,8 @@
 :root,.pf-v5-theme-dark {
   --keycloak-logo-url: url('../img/saturn-logo-dark.png');
   --keycloak-bg-logo-url: none;
-  --keycloak-logo-height: 152px;
-  --keycloak-logo-width: 240px;
+  --keycloak-logo-height: calc(var(--keycloak-logo-width) * 0.630952381);
+  --keycloak-logo-width: min(420px, calc(100vw - 64px));
   --keycloak-card-top-color: #a5a4cb;
   --pf-v5-global--BackgroundColor--100: #393a35;
   --pf-v5-global--BackgroundColor--200: #242521;
@@ -35,7 +35,3 @@ a {color:#c4c2e0}
 
 /* Keep the realm name available to assistive technology behind the visual mark. */
 div.kc-logo-text span {display:block;position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-
-@media(max-width:600px) {
-  :root,.pf-v5-theme-dark {--keycloak-logo-width:210px;--keycloak-logo-height:133px}
-}

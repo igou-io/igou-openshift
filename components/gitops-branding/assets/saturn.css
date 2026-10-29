@@ -32,7 +32,17 @@ input:not([type=checkbox]):not([type=radio]),textarea,select {
   background:var(--saturn-recess);color:var(--saturn-text);border-color:var(--saturn-line)
 }
 :focus-visible {outline:3px solid #c4c2e0;outline-offset:3px}
-.login {background:var(--saturn-recess);color:var(--saturn-text)}
-.login__logo {background:url('./saturn-planet.png') center/contain no-repeat;width:200px;height:126px;max-width:100%;margin:0 auto 24px}
-.login__logo svg,.login__logo img {visibility:hidden}
+.login {background:var(--saturn-recess);color:var(--saturn-text);justify-content:center;align-items:center;padding:32px}
+.login__content {display:none}
+.login__box {float:none;min-height:0;min-width:0;width:486px;max-width:100%;margin:auto;padding:32px;background:var(--saturn-panel);border:1px solid var(--saturn-line);border-radius:12px;box-sizing:border-box}
+.login__box .width-control {max-width:100%}
+.login__box h3,.login__box h4,.login__box h5 {color:var(--saturn-text)}
+.login__footer {position:static;width:auto;margin:24px 0 0;text-align:center}
+.login__footer .ver,.login__footer__link {color:var(--saturn-muted)}
+.login__logo {background:url('./saturn-planet.png') center/contain no-repeat;width:420px;height:auto;aspect-ratio:336 / 212;max-width:100%;margin:0 auto 24px}
+.login__logo svg,.login__logo img {display:none}
+@media(max-width:600px) {
+  .login {padding:16px}
+  .login__box {padding:16px}
+}
 /* Explicit selectors avoid recoloring status glyphs and destructive actions. */

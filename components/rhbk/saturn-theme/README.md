@@ -1,6 +1,6 @@
 # Saturn login theme
 
-Extends the installed RHBK `keycloak.v2` login theme, retaining upstream forms, templates, password flows and CSRF handling. Only CSS, logos and favicon are added. The login shows the unchanged designer-source blue planet alone at 240×152 pixels (210×133 on narrow screens), approximately 3.5 times the previous planet's visible size. Provenance: `../../saturn-branding/README.md`.
+Extends the installed RHBK `keycloak.v2` login theme, retaining upstream forms, templates, password flows and CSRF handling. Only CSS, logos and favicon are added. The login shows the unchanged designer-source blue planet alone at 420×265 pixels on desktop. On narrow screens its width shrinks to the viewport minus 64px and its height follows the original 336:212 aspect ratio. Provenance: `../../saturn-branding/README.md`.
 
 `BuildConfig/saturn-keycloak` uses the exact running RHBK 26.6.7 image digest, the theme ConfigMap as build context, and the existing Red Hat registry item through an ExternalSecret. This authenticated product-image build runs inside OpenShift because the public container CI has no Red Hat registry login. Output is the internal `saturn-keycloak:26.6.7` ImageStreamTag. The Dockerfile in the BuildConfig is authoritative.
 
