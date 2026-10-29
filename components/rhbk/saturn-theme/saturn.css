@@ -2,8 +2,8 @@
 :root,.pf-v5-theme-dark {
   --keycloak-logo-url: url('../img/saturn-logo-dark.png');
   --keycloak-bg-logo-url: none;
-  --keycloak-logo-height: 96px;
-  --keycloak-logo-width: 360px;
+  --keycloak-logo-height: calc(var(--keycloak-logo-width) * 0.630952381);
+  --keycloak-logo-width: min(420px, calc(100vw - 64px));
   --keycloak-card-top-color: #a5a4cb;
   --pf-v5-global--BackgroundColor--100: #393a35;
   --pf-v5-global--BackgroundColor--200: #242521;
