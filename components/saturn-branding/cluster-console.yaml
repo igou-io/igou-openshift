@@ -4,7 +4,7 @@ metadata:
   name: cluster
 spec:
   customization:
-    customProductName: Saturn · OpenShift
+    customProductName: OpenShift - igou.systems
     logos:
     - type: Masthead
       themes:

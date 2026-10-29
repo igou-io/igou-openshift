@@ -8,7 +8,7 @@ metadata:
 data:
   app-config-saturn.yaml: |
     app:
-      title: Saturn · Developer Hub
+      title: Developer Hub - igou.systems
       branding:
         fullLogo:
           dark: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAegAAAB4CAYAAAA5QWH7AABS4UlEQVR4nO19CXhc5Xnud5ZZtY1kW17BMmC2BDAJhLIkyASaNoFg2qZNexsQt2nSNmmxn7Rpk3tTRJIu\

@@ -7,3 +7,5 @@ Initial adoption requires removing the live empty `customLogoFile` atomically wi
 The blue planet is the pixel-exact alpha crop from original designer [Ken Loh's portfolio](https://kenloh.com/logos), with 336×212 useful pixels. The SVGs embed that unchanged raster beside the original SEGA SATURN wordmark outlines extracted from page 2 of [Sega’s Saturn papercraft PDF](https://sns.sega.jp/sp/dl/segasaturn_fb.pdf). Only the lettering is extracted; the PDF planet is excluded. Dark/light lettering and a red S accent adapt the original geometry for the UI. Only the small application subtitle uses a UI font.
 
 [sources/official-wordmark-paths.svg](sources/official-wordmark-paths.svg) retains the original lettering geometry; [source evidence](sources/official-wordmark-provenance.json) records the PDF checksum, page, bounds and path checksum. Local regeneration and pixel-fidelity evidence remain in `/workspace/scratch/saturn-assets/theme-design/`.
+
+Public product names and browser titles use `<product> - igou.systems`. Saturn names identify the visual theme and internal resources.
