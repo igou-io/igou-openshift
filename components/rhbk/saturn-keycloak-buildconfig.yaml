@@ -18,7 +18,8 @@ spec:
       COPY --chown=1000:0 theme/saturn.css /opt/keycloak/themes/saturn/login/resources/css/saturn.css
       COPY --chown=1000:0 theme/saturn-logo-dark.png theme/saturn-logo-light.png theme/favicon.ico /opt/keycloak/themes/saturn/login/resources/img/
       COPY --chown=1000:0 theme/messages_en.properties /opt/keycloak/themes/saturn/login/messages/messages_en.properties
-      RUN /opt/keycloak/bin/kc.sh build --db=postgres --health-enabled=true --metrics-enabled=true
+      RUN chmod -R g+rX /opt/keycloak/themes/saturn && \
+          /opt/keycloak/bin/kc.sh build --db=postgres --health-enabled=true --metrics-enabled=true
     configMaps:
     - configMap:
         name: saturn-keycloak-theme
