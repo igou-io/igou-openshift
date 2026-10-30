@@ -1,21 +1,32 @@
 # rhacs-operator
 
-Red Hat Advanced Cluster Security (RHACS/StackRox) — **phase 1: minimal
-observe-only install** ([#381](https://github.com/igou-io/igou-openshift/issues/381)).
-Measures steady-state footprint for ~1 week to drive the placement/sizing/
-keep-vs-kill decisions before any enforcement or policy work.
+Red Hat Advanced Cluster Security (RHACS/StackRox), installed through the
+RHACS Operator. Admission enforcement remains observe-only. The original
+footprint assessment is recorded in
+[#381](https://github.com/igou-io/igou-openshift/issues/381).
 
 ## Shape
 
 - Operator: `stable` channel, Automatic approval, AllNamespaces OperatorGroup
   (the CSV supports no other install mode).
-- `Central` + `SecuredCluster` trimmed to ~2.2 cpu / ~7Gi requests cluster-wide
-  (plus ~150m/420Mi per node for Collector+compliance). Scanner V4 and
-  local/delegated scanning disabled on both CRs; admission controller deployed
-  with `enforcement: Disabled` (observe-only, fail-open).
+- Central's Scanner V4 has one indexer, one matcher, and a database with a
+  50Gi PVC on `freenas-nvmeof-ssd-csi`. Autoscaling is disabled; resource
+  requests/limits use RHACS 4.11 per-container defaults. Added requests are
+  3 CPU / 6Gi, plus the Operator's DB certificate watcher (10m / 16Mi).
+- SecuredCluster uses `scannerV4.scannerComponent: AutoSense` to share the
+  co-located Central scanner. The legacy Central scanner remains enabled
+  for RHACS 4.11 dependencies; a separate legacy secured-cluster scanner
+  remains disabled. Admission control has `enforcement: Disabled`
+  (observe-only, fail-open).
 - Placement: components schedule freely. The phase-1 `truenas-w1` hostname
   pins were removed after worker lifecycle operations stranded RHACS Pending
   (#604).
+
+The existing OpenShift monitoring integration covers Scanner V4. Its core
+traffic uses the existing namespace allowances for TCP 443/8443/5432;
+monitoring uses 9091. The Operator manages the workloads, services, TLS,
+ServiceMonitor, and database PVC. Resource comparison and rollback guidance
+live in the `igou-docs` note **RHACS Secured Cluster Bootstrap**.
 
 ## Bootstrap: cluster-init bundle (one-time, non-GitOps)
 

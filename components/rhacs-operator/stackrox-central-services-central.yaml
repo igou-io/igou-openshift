@@ -69,6 +69,40 @@ spec:
         limits:
           memory: 3Gi
   scannerV4:
-    # REQUIRED for the minimal footprint: new installs since 4.8 default to
-    # Enabled/AutoSense.
-    scannerComponent: Disabled
+    scannerComponent: Enabled
+    # One indexer/matcher for the lab, with RHACS 4.11 per-container defaults.
+    # Keep the legacy scanner above: Central still depends on it in 4.11.
+    indexer:
+      scaling:
+        autoScaling: Disabled
+        replicas: 1
+      resources:
+        requests:
+          cpu: 1500m
+          memory: 512Mi
+        limits:
+          cpu: '4'
+          memory: 3Gi
+    matcher:
+      scaling:
+        autoScaling: Disabled
+        replicas: 1
+      resources:
+        requests:
+          cpu: 500m
+          memory: 1536Mi
+        limits:
+          cpu: '1'
+          memory: 3Gi
+    db:
+      persistence:
+        persistentVolumeClaim:
+          size: 50Gi
+          storageClassName: freenas-nvmeof-ssd-csi
+      resources:
+        requests:
+          cpu: '1'
+          memory: 4Gi
+        limits:
+          cpu: '4'
+          memory: 8Gi
