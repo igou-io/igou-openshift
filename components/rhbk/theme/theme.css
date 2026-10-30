@@ -1,6 +1,6 @@
-/* Saturn login: inherited templates and authentication behavior stay upstream. */
+/* Platform login theme: inherited templates and authentication behavior stay upstream. */
 :root,.pf-v5-theme-dark {
-  --keycloak-logo-url: url('../img/saturn-logo-dark.png');
+  --keycloak-logo-url: url('../img/planet-dark.png');
   --keycloak-bg-logo-url: none;
   --keycloak-logo-height: calc(var(--keycloak-logo-width) * 0.630952381);
   --keycloak-logo-width: min(420px, calc(100vw - 64px));
@@ -26,7 +26,7 @@
 a {color:#c4c2e0}
 :focus-visible {outline:3px solid #c4c2e0;outline-offset:3px}
 @media(prefers-color-scheme:light) {
-  :root:not(.pf-v5-theme-dark) {--keycloak-logo-url:url('../img/saturn-logo-light.png');--pf-v5-global--Color--100:#272823;--pf-v5-global--Color--200:#55574e;--pf-v5-global--BackgroundColor--100:#f1f1eb;--pf-v5-global--BackgroundColor--200:#dedfd6}
+  :root:not(.pf-v5-theme-dark) {--keycloak-logo-url:url('../img/planet-light.png');--pf-v5-global--Color--100:#272823;--pf-v5-global--Color--200:#55574e;--pf-v5-global--BackgroundColor--100:#f1f1eb;--pf-v5-global--BackgroundColor--200:#dedfd6}
   html:not(.pf-v5-theme-dark) body,html:not(.pf-v5-theme-dark) .pf-v5-c-login {background:#dedfd6;color:#272823}
   html:not(.pf-v5-theme-dark) .pf-v5-c-login__main {background:#f1f1eb;color:#272823;border-color:#8b8e81}
   html:not(.pf-v5-theme-dark) .pf-v5-c-login__main-footer-band {background:#d0d2c7;color:#272823}

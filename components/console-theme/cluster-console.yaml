@@ -12,25 +12,25 @@ spec:
         source:
           from: ConfigMap
           configMap:
-            name: saturn-brand
-            key: saturn-masthead-light.svg
+            name: console-theme
+            key: masthead-light.svg
       - mode: Dark
         source:
           from: ConfigMap
           configMap:
-            name: saturn-brand
-            key: saturn-masthead-dark.svg
+            name: console-theme
+            key: masthead-dark.svg
     - type: Favicon
       themes:
       - mode: Light
         source:
           from: ConfigMap
           configMap:
-            name: saturn-brand
-            key: saturn-favicon.svg
+            name: console-theme
+            key: favicon.svg
       - mode: Dark
         source:
           from: ConfigMap
           configMap:
-            name: saturn-brand
-            key: saturn-favicon.svg
+            name: console-theme
+            key: favicon.svg

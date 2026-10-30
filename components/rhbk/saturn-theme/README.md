@@ -1,9 +1,0 @@
-# Saturn login theme
-
-Extends the installed RHBK `keycloak.v2` login theme, retaining upstream forms, templates, password flows and CSRF handling. Only CSS, logos and favicon are added. The login shows the unchanged designer-source blue planet alone at 420×265 pixels on desktop. On narrow screens its width shrinks to the viewport minus 64px and its height follows the original 336:212 aspect ratio. Provenance: `../../saturn-branding/README.md`.
-
-`BuildConfig/saturn-keycloak` uses the exact running RHBK 26.6.7 image digest, the theme ConfigMap as build context, and the existing Red Hat registry item through an ExternalSecret. This authenticated product-image build runs inside OpenShift because the public container CI has no Red Hat registry login. Output is the internal `saturn-keycloak:26.6.7` ImageStreamTag. The Dockerfile in the BuildConfig is authoritative.
-
-Update its theme-content hash when assets change to trigger a new build. The image build enables PostgreSQL, health and metrics support. The runtime image is pinned to build `saturn-keycloak-2`, digest `sha256:8f8774627c4a0db9284d79bd65f6a5b702235be8ec35a0b77e3ecd62deb2d477`. Its planet images and CSS were verified readable under restricted OpenShift UID 1001660000 before promotion. Future theme changes require a new build, the same restricted-UID check, and a runtime digest update. The build-only network policy allows internal registry TCP/5000 for pods carrying `openshift.io/build.name`. The existing `igou` realm already selects login theme `saturn`; `KeycloakRealmImport` does not update an existing realm. Restore the previous realm theme before removing the custom image during rollback.
-
-Only login is themed. Account/admin/email themes remain upstream. Build resources alone do not change the SSO deployment. Operational rollout and verification belong in `/workspace/igou-docs/openshift/Saturn Branding and Theme Controls.md`.

@@ -3,12 +3,12 @@ kind: Kustomization
 resources:
   - openshift-gitops-argocd.yaml
 configMapGenerator:
-  - name: saturn-gitops-assets
+  - name: gitops-theme-assets
     namespace: openshift-gitops
     files:
-      - assets/saturn.css
-      - assets/saturn-gitops-dark.png
-      - assets/saturn-planet.png
+      - assets/theme.css
+      - assets/masthead-dark.png
+      - assets/planet.png
     options:
       disableNameSuffixHash: true
       annotations:

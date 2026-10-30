@@ -7,7 +7,7 @@ helmCharts:
   valuesFile: values.yaml
 patches: []
 secretGenerator:
-- name: saturn-oauth-templates
+- name: oauth-theme-templates
   namespace: openshift-config
   files:
   - oauth-templates/login.html

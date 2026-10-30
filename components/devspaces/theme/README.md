@@ -1,4 +1,4 @@
-# Dev Spaces dashboard artwork
+# Dev Spaces dashboard theme
 
 The dashboard header uses a dark background. Its banner pairs the original blue planet with the silver-white platform name, Dev Spaces. Both SVG and gzip variants must carry the same artwork. The loader and favicon remain planet-only.
 
@@ -7,3 +7,5 @@ Each generated branding Secret has one file. The running operator iterates Secre
 Ship deterministic gzip siblings for the SVGs: the dashboard serves precompressed files to browsers that accept gzip. Without matching `.gz` replacements, requests can still receive the original Red Hat artwork. Regenerate with gzip mtime 0 when an SVG changes.
 
 During migration, retire the old `devspaces-dashboard-customization` Secret before mounting the new set to avoid duplicate mount paths. It contains only public image data. Operational recovery and verification are recorded in `/workspace/igou-docs/openshift/Saturn Branding and Theme Controls.md`.
+
+The `devspaces-theme-*` Secrets replace the old `devspaces-dashboard-*` artwork Secrets. Before syncing the renamed set, pause automatic reconciliation and retire the old five Secrets; keeping both sets causes duplicate mount paths. The vendor-defined file keys, mount directory and discovery labels remain unchanged. See the migration section in the operational guide above.
