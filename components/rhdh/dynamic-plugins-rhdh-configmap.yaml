@@ -17,7 +17,7 @@ data:
       - dynamic-plugins.default.yaml
     plugins:
       # Built from the reviewed source commit; both packages must move together.
-      - package: oci://ghcr.io/igou-io/rhdh-public-sharing:e2f5b8eadbeece61e8506feb57e619b481ced282!igou-plugin-public-sharing
+      - package: oci://ghcr.io/igou-io/rhdh-public-sharing@sha256:4dfa563f1c615ff9a6d7774d1f1b92dfdaebb74eeccab4afa969d920a6a6482f!igou-plugin-public-sharing
         disabled: false
         pluginConfig:
           dynamicPlugins:
@@ -29,7 +29,7 @@ data:
                     menuItem:
                       icon: language
                       text: Service sharing
-      - package: oci://ghcr.io/igou-io/rhdh-public-sharing:e2f5b8eadbeece61e8506feb57e619b481ced282!igou-plugin-public-sharing-backend
+      - package: oci://ghcr.io/igou-io/rhdh-public-sharing@sha256:4dfa563f1c615ff9a6d7774d1f1b92dfdaebb74eeccab4afa969d920a6a6482f!igou-plugin-public-sharing-backend
         disabled: false
       # Keycloak catalog provider: provisions igou realm users/groups into
       # the software catalog (config in app-config-rhdh).
