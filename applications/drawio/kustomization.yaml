@@ -7,6 +7,12 @@ resources:
   - drawio-ingress-networkpolicy.yaml
   - drawio-egress-networkpolicy.yaml
   - drawio-oidc-externalsecret.yaml
+  - drawio-github-externalsecret.yaml
+  - default-egressfirewall.yaml
+configMapGenerator:
+  - name: drawio-github-config
+    files:
+      - github-storage.sh
 helmCharts:
   - name: app-template
     namespace: drawio
@@ -37,11 +43,17 @@ helmCharts:
               image:
                 repository: docker.io/jgraph/drawio
                 tag: 32.6.1@sha256:3d0a5a5ffb4f76abcecd9d17ae1373e3eefd0db07b657c545637dc9c6a7412e1
+              command:
+                - /docker-entrypoint.sh
+              args:
+                - /bin/bash
+                - /opt/drawio/github-storage.sh
               env:
                 DRAWIO_SERVER_URL: https://drawio.apps.ocp.igou.systems/
                 DRAWIO_BASE_URL: https://drawio.apps.ocp.igou.systems
                 DRAWIO_VIEWER_URL: https://drawio.apps.ocp.igou.systems/js/viewer-static.min.js
                 DRAWIO_LIGHTBOX_URL: https://drawio.apps.ocp.igou.systems
+                DRAWIO_GITHUB_APP_URL: https://github.com/apps/david-igou-drawio
                 JAVA_OPTS: -Xms128m -Xmx512m
               ports:
                 - name: http
@@ -145,6 +157,27 @@ helmCharts:
                 capabilities:
                   drop:
                     - ALL
+      persistence:
+        github-config:
+          type: configMap
+          name: drawio-github-config
+          advancedMounts:
+            drawio:
+              app:
+                - path: /opt/drawio
+                  readOnly: true
+        github-credentials:
+          type: secret
+          name: drawio-github
+          advancedMounts:
+            drawio:
+              app:
+                - path: /usr/local/tomcat/webapps/draw/WEB-INF/github_client_id
+                  subPath: github_client_id
+                  readOnly: true
+                - path: /usr/local/tomcat/webapps/draw/WEB-INF/github_client_secret
+                  subPath: github_client_secret
+                  readOnly: true
       service:
         app:
           controller: drawio
