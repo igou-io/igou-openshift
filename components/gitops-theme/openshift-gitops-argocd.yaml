@@ -5,13 +5,13 @@ metadata:
   namespace: openshift-gitops
 spec:
   extraConfig:
-    ui.cssurl: ./custom/saturn.css
+    ui.cssurl: ./custom/theme.css
   server:
     volumes:
-      - name: saturn-branding
+      - name: gitops-theme
         configMap:
-          name: saturn-gitops-assets
+          name: gitops-theme-assets
     volumeMounts:
-      - name: saturn-branding
+      - name: gitops-theme
         mountPath: /shared/app/custom
         readOnly: true

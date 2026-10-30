@@ -3,12 +3,12 @@ kind: Kustomization
 resources:
 - cluster-console.yaml
 configMapGenerator:
-- name: saturn-brand
+- name: console-theme
   namespace: openshift-config
   files:
-  - assets/saturn-masthead-dark.svg
-  - assets/saturn-masthead-light.svg
-  - assets/saturn-favicon.svg
+  - assets/masthead-dark.svg
+  - assets/masthead-light.svg
+  - assets/favicon.svg
   options:
     disableNameSuffixHash: true
     annotations:
