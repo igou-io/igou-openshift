@@ -10,9 +10,8 @@ metadata:
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
     argocd.argoproj.io/sync-wave: '11'
 spec:
-  # Keep this verified image until the renamed keycloak-theme build is promoted.
-  # Its repository must remain available until the runtime digest is replaced.
-  image: image-registry.openshift-image-registry.svc:5000/keycloak/saturn-keycloak@sha256:8f8774627c4a0db9284d79bd65f6a5b702235be8ec35a0b77e3ecd62deb2d477
+  # Verified keycloak-theme build with restricted-UID-readable theme assets.
+  image: image-registry.openshift-image-registry.svc:5000/keycloak/keycloak-theme@sha256:2235cd3a78c8fd254d1daa28011c0fa7ffeb5ee23be1282ed9965e681195c38c
   instances: 1
   db:
     vendor: postgres
