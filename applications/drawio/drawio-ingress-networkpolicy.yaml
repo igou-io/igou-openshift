@@ -16,5 +16,3 @@ spec:
       ports:
         - port: 8080
           protocol: TCP
-        - port: 3001
-          protocol: TCP

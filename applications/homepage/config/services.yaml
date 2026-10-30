@@ -226,7 +226,7 @@
         icon: draw-io.svg
         href: https://drawio.apps.ocp.igou.systems
         siteMonitor: https://drawio.apps.ocp.igou.systems
-        description: diagrams and agent MCP tools
+        description: diagram editor
     - IT Tools:
         icon: it-tools.svg
         href: https://it-tools.apps.ocp.igou.systems
