@@ -11,7 +11,9 @@ footprint assessment is recorded in
   (the CSV supports no other install mode).
 - Central's Scanner V4 has one indexer, one matcher, and a database with a
   50Gi PVC on `freenas-nvmeof-ssd-csi`. Autoscaling is disabled; resource
-  requests/limits use RHACS 4.11 per-container defaults. Added requests are
+  requests/limits use RHACS 4.11 per-container defaults, except the matcher
+  memory limit is 6Gi after repeated OOM kills during the first RHEL VEX
+  import at 3Gi. Added requests are
   3 CPU / 6Gi, plus the Operator's DB certificate watcher (10m / 16Mi).
 - SecuredCluster uses `scannerV4.scannerComponent: AutoSense` to share the
   co-located Central scanner. The legacy Central scanner remains enabled
