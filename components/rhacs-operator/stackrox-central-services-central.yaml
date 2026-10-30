@@ -70,7 +70,8 @@ spec:
           memory: 3Gi
   scannerV4:
     scannerComponent: Enabled
-    # One indexer/matcher for the lab, with RHACS 4.11 per-container defaults.
+    # One indexer/matcher for the lab, with RHACS 4.11 resource defaults
+    # except for the matcher import headroom below.
     # Keep the legacy scanner above: Central still depends on it in 4.11.
     indexer:
       scaling:
@@ -93,7 +94,8 @@ spec:
           memory: 1536Mi
         limits:
           cpu: '1'
-          memory: 3Gi
+          # The first RHEL VEX import was OOMKilled twice at 3Gi.
+          memory: 6Gi
     db:
       persistence:
         persistentVolumeClaim:
