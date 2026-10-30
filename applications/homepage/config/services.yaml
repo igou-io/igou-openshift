@@ -64,6 +64,11 @@
         href: https://rhdh.apps.ocp.igou.systems
         siteMonitor: https://rhdh.apps.ocp.igou.systems
         description: developer hub
+    - Service sharing:
+        icon: https://rhdh.apps.ocp.igou.systems/favicon-192x192.png
+        href: https://rhdh.apps.ocp.igou.systems/public-sharing
+        siteMonitor: https://rhdh.apps.ocp.igou.systems/public-sharing
+        description: temporary public service access
     - Keycloak:
         icon: keycloak.png
         href: https://keycloak.apps.ocp.igou.systems
