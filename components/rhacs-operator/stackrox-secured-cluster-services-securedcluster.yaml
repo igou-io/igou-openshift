@@ -54,5 +54,5 @@ spec:
     # Local/delegated scanning off (default AutoSense).
     scannerComponent: Disabled
   scannerV4:
-    # Explicit — defaults to AutoSense on new installs since 4.8.
-    scannerComponent: Disabled
+    # Reuse Central's Scanner V4 in this namespace instead of deploying a copy.
+    scannerComponent: AutoSense
