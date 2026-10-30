@@ -5,8 +5,6 @@ resources:
   - drawio-namespace.yaml
   - default-deny-networkpolicy.yaml
   - drawio-ingress-networkpolicy.yaml
-  - drawio-egress-networkpolicy.yaml
-  - drawio-oidc-externalsecret.yaml
 helmCharts:
   - name: app-template
     namespace: drawio
@@ -79,79 +77,13 @@ helmCharts:
                 capabilities:
                   drop:
                     - ALL
-            auth:
-              image:
-                repository: quay.io/oauth2-proxy/oauth2-proxy
-                tag: v7.15.5@sha256:8498b0d0ef0a7b29686414000a08aee467f02d0299c9ed1e006a8f33fc017916
-              args:
-                - --provider=keycloak-oidc
-                - --client-id=drawio
-                - --oidc-issuer-url=https://keycloak.apps.ocp.igou.systems/realms/igou
-                - --redirect-url=https://drawio.apps.ocp.igou.systems/oauth2/callback
-                - --allowed-role=drawio:access
-                - --email-domain=*
-                - --scope=openid profile email
-                - --code-challenge-method=S256
-                - --insecure-oidc-skip-nonce=false
-                - --http-address=0.0.0.0:4180
-                - --upstream=http://127.0.0.1:8080
-                - --reverse-proxy=true
-                - --skip-provider-button=true
-                - --cookie-name=__Host-drawio_session
-                - --cookie-secure=true
-                - --cookie-samesite=lax
-                - --cookie-expire=8h
-                - --cookie-refresh=1m
-                - --pass-access-token=false
-                - --pass-authorization-header=false
-                - --pass-basic-auth=false
-                - --request-logging=false
-              envFrom:
-                - secretRef:
-                    name: drawio-oidc
-              ports:
-                - name: auth
-                  containerPort: 4180
-                  protocol: TCP
-              probes:
-                startup:
-                  enabled: true
-                  type: HTTP
-                  path: /ping
-                  port: 4180
-                  spec:
-                    failureThreshold: 30
-                    periodSeconds: 2
-                readiness:
-                  enabled: true
-                  type: HTTP
-                  path: /ready
-                  port: 4180
-                liveness:
-                  enabled: true
-                  type: HTTP
-                  path: /ping
-                  port: 4180
-              resources:
-                requests:
-                  cpu: 10m
-                  memory: 32Mi
-                limits:
-                  memory: 128Mi
-              securityContext:
-                allowPrivilegeEscalation: false
-                runAsNonRoot: true
-                readOnlyRootFilesystem: true
-                capabilities:
-                  drop:
-                    - ALL
       service:
         app:
           controller: drawio
           ports:
             http:
               port: 80
-              targetPort: 4180
+              targetPort: 8080
       ingress:
         app:
           className: openshift-default

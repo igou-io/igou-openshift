@@ -14,5 +14,5 @@ spec:
             matchLabels:
               policy-group.network.openshift.io/host-network: ""
       ports:
-        - port: 4180
+        - port: 8080
           protocol: TCP

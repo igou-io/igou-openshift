@@ -17,10 +17,6 @@ metadata:
 spec:
   keycloakCRName: keycloak
   placeholders:
-    DRAWIO_CLIENT_SECRET:
-      secret:
-        name: keycloak-application-secrets
-        key: DRAWIO_CLIENT_SECRET
     USER_PASSWORD:
       secret:
         name: keycloak-user-user
@@ -89,52 +85,12 @@ spec:
           include.in.token.scope: 'true'
           display.on.consent.screen: 'false'
     roles:
-      client:
-        drawio:
-          - name: access
-            description: Use the draw.io editor
       realm:
         - name: openshell-admin
           description: OpenShell platform administrator
         - name: openshell-user
           description: OpenShell workspace user
     clients:
-      - clientId: drawio
-        name: draw.io
-        enabled: true
-        protocol: openid-connect
-        publicClient: false
-        secret: "${DRAWIO_CLIENT_SECRET}"
-        standardFlowEnabled: true
-        directAccessGrantsEnabled: false
-        serviceAccountsEnabled: false
-        redirectUris:
-          - https://drawio.apps.ocp.igou.systems/oauth2/callback
-        defaultClientScopes:
-          - profile
-          - email
-          - roles
-        attributes:
-          pkce.code.challenge.method: S256
-        protocolMappers:
-          - name: drawio-audience
-            protocol: openid-connect
-            protocolMapper: oidc-audience-mapper
-            config:
-              included.client.audience: drawio
-              id.token.claim: 'true'
-              access.token.claim: 'true'
-          - name: drawio-access
-            protocol: openid-connect
-            protocolMapper: oidc-usermodel-client-role-mapper
-            config:
-              usermodel.clientRoleMapping.clientId: drawio
-              claim.name: resource_access.drawio.roles
-              jsonType.label: String
-              multivalued: 'true'
-              id.token.claim: 'true'
-              access.token.claim: 'true'
-              userinfo.token.claim: 'true'
       - clientId: calibre-web-automated
         name: Calibre-Web Automated
         enabled: true
@@ -331,9 +287,6 @@ spec:
           - /admins
         realmRoles:
           - openshell-admin
-        clientRoles:
-          drawio:
-            - access
         credentials:
           - type: password
             value: "${IGOU_TEMP_PASSWORD}"
@@ -362,9 +315,6 @@ spec:
         emailVerified: true
         groups:
           - /developers
-        clientRoles:
-          drawio:
-            - access
         credentials:
           - type: password
             value: "${AGENTS_TEMP_PASSWORD}"
