@@ -11,6 +11,7 @@ spec:
   dnsNames:
     - igou.io
     - '*.igou.io'
+    - '*.sharing.igou.io'
   issuerRef:
     kind: Issuer
     name: vps-acme
