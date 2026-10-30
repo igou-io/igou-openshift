@@ -191,21 +191,21 @@ applications:
     source:
       path: clusters/ocp/ocp-base-config
 
-  gitops-branding:
+  gitops-theme:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
       argocd.argoproj.io/sync-wave: '10'
     destination:
       namespace: openshift-gitops
     source:
-      path: components/gitops-branding
+      path: components/gitops-theme
 
-  saturn-branding:
+  console-theme:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
       argocd.argoproj.io/sync-wave: '10'
     source:
-      path: components/saturn-branding
+      path: components/console-theme
 
   image-registry:
     annotations:

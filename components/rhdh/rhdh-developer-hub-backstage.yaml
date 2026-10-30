@@ -46,7 +46,7 @@ spec:
     appConfig:
       configMaps:
         - name: app-config-rhdh
-        - name: saturn-branding
+        - name: rhdh-theme
     extraFiles:
       mountPath: /opt/app-root/src
       configMaps:

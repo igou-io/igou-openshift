@@ -33,11 +33,11 @@ network:
 auth:
   templates:
     login:
-      name: saturn-oauth-templates
+      name: oauth-theme-templates
     providerSelection:
-      name: saturn-oauth-templates
+      name: oauth-theme-templates
     error:
-      name: saturn-oauth-templates
+      name: oauth-theme-templates
   enabled: true
   # dev1 (and any other non-admin htpasswd persona) must not create arbitrary
   # projects; their workspaces are pre-provisioned with scoped RBAC instead.

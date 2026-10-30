@@ -31,26 +31,26 @@ helmCharts:
         - igou
 
 secretGenerator:
-- name: devspaces-dashboard-logo
+- name: devspaces-theme-logo
   namespace: openshift-devspaces
   files:
-  - branding/che-logo.svg
-- name: devspaces-dashboard-logo-gzip
+  - theme/che-logo.svg
+- name: devspaces-theme-logo-gzip
   namespace: openshift-devspaces
   files:
-  - branding/che-logo.svg.gz
-- name: devspaces-dashboard-loader
+  - theme/che-logo.svg.gz
+- name: devspaces-theme-loader
   namespace: openshift-devspaces
   files:
-  - branding/loader.svg
-- name: devspaces-dashboard-loader-gzip
+  - theme/loader.svg
+- name: devspaces-theme-loader-gzip
   namespace: openshift-devspaces
   files:
-  - branding/loader.svg.gz
-- name: devspaces-dashboard-favicon
+  - theme/loader.svg.gz
+- name: devspaces-theme-favicon
   namespace: openshift-devspaces
   files:
-  - branding/favicon.ico
+  - theme/favicon.ico
 generatorOptions:
   disableNameSuffixHash: true
   annotations:

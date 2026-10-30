@@ -31,7 +31,7 @@ kustomize `helmCharts` field — render with
 - Postgres is chart-managed (1Gi PVC on the default StorageClass) — POC
   footing, not in OADP scope yet.
 
-The Saturn branding is configured through the chart's existing
+The platform theme is configured through the chart's existing
 `redhat-developer-hub.upstream.backstage.appConfig.app` values. The packaged
 dependency is RHDH 1.10. Local rendering verified both light/dark graphite and
 lavender palettes and the exact automation logo data, while preserving the

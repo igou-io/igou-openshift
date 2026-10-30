@@ -4,7 +4,7 @@ kind: Kustomization
 resources:
   - default-deny-networkpolicy.yaml
   - allow-required-networkpolicy.yaml
-  - allow-build-registry-networkpolicy.yaml
+  - allow-theme-build-registry-networkpolicy.yaml
   - keycloak-namespace.yaml
   - rhbk-operatorgroup.yaml
   - rhbk-operator-subscription.yaml
@@ -21,20 +21,20 @@ resources:
   - keycloak-tls-certificate.yaml
   - keycloak-keycloak.yaml
   - igou-keycloakrealmimport.yaml
-  - saturn-rhbk-registry-externalsecret.yaml
-  - saturn-keycloak-imagestream.yaml
-  - saturn-keycloak-buildconfig.yaml
+  - keycloak-theme-registry-externalsecret.yaml
+  - keycloak-theme-imagestream.yaml
+  - keycloak-theme-buildconfig.yaml
 
 configMapGenerator:
-- name: saturn-keycloak-theme
+- name: keycloak-theme-assets
   namespace: keycloak
   files:
-  - saturn-theme/favicon.ico
-  - saturn-theme/messages_en.properties
-  - saturn-theme/saturn-logo-dark.png
-  - saturn-theme/saturn-logo-light.png
-  - saturn-theme/saturn.css
-  - saturn-theme/theme.properties
+  - theme/favicon.ico
+  - theme/messages_en.properties
+  - theme/planet-dark.png
+  - theme/planet-light.png
+  - theme/theme.css
+  - theme/theme.properties
   options:
     disableNameSuffixHash: true
     annotations:

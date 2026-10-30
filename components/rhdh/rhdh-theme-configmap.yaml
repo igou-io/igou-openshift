@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: saturn-branding
+  name: rhdh-theme
   namespace: rhdh
   annotations:
     argocd.argoproj.io/sync-wave: '10'
 data:
-  app-config-saturn.yaml: |
+  app-config-theme.yaml: |
     app:
       title: Developer Hub - igou.systems
       branding:

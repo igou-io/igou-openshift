@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-build-registry
+  name: allow-theme-build-registry
   namespace: keycloak
 spec:
   podSelector:
