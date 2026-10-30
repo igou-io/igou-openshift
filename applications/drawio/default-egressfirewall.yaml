@@ -1,0 +1,39 @@
+---
+apiVersion: k8s.ovn.org/v1
+kind: EgressFirewall
+metadata:
+  name: default
+  namespace: drawio
+spec:
+  egress:
+    # Cluster DNS pod addresses after Service DNAT; NetworkPolicy scopes the
+    # destination namespace. Keep this ahead of the final deny.
+    - type: Allow
+      to:
+        cidrSelector: 10.128.0.0/14
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+        - protocol: UDP
+          port: 5353
+        - protocol: TCP
+          port: 5353
+    - type: Allow
+      to:
+        cidrSelector: 10.10.9.10/32
+      ports:
+        - protocol: TCP
+          port: 443
+    # The servlet exchanges OAuth codes here; repository API calls originate
+    # in the user's browser, not in this namespace.
+    - type: Allow
+      to:
+        dnsName: github.com
+      ports:
+        - protocol: TCP
+          port: 443
+    - type: Deny
+      to:
+        cidrSelector: 0.0.0.0/0
