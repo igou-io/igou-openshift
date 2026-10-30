@@ -222,6 +222,11 @@
         href: https://sands-of-time.apps.ocp.igou.systems
         siteMonitor: https://sands-of-time.apps.ocp.igou.systems/api/summary
         description: price tracker
+    - draw.io:
+        icon: draw-io.svg
+        href: https://drawio.apps.ocp.igou.systems
+        siteMonitor: https://drawio.apps.ocp.igou.systems
+        description: diagrams and agent MCP tools
     - IT Tools:
         icon: it-tools.svg
         href: https://it-tools.apps.ocp.igou.systems
