@@ -1,0 +1,4 @@
+---
+# Required by Kustomize for app-template's empty upstream values.yaml.
+# All chart values live in kustomization.yaml.
+foo: bar

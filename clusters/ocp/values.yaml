@@ -682,6 +682,14 @@ applications:
     source:
       path: applications/sands-of-time
 
+  drawio:
+    project: cluster-apps
+    annotations:
+      argocd.argoproj.io/compare-options: IgnoreExtraneous
+      argocd.argoproj.io/sync-wave: '20'
+    source:
+      path: applications/drawio
+
   homepage:
     project: cluster-apps
     annotations:
