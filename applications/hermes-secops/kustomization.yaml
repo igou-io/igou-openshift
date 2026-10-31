@@ -6,7 +6,6 @@ resources:
   - hermes-agent-networkpolicy.yaml
   - hermes-agent-serviceaccount.yaml
   - hermes-env-externalsecret.yaml
-  - hermes-model-externalsecret.yaml
   - hermes-secops-context-configmap.yaml
   - hermes-secops-dashboard-route.yaml
   - hermes-secops-hermesinstance.yaml

@@ -34,7 +34,9 @@ data:
         access: READ_ACCESS
       - resource: Deployment
         access: READ_ACCESS
-      - resource: Policy
+      - resource: WorkflowAdministration
+        access: READ_ACCESS
+      - resource: CVE
         access: READ_ACCESS
       - resource: Alert
         access: READ_ACCESS
