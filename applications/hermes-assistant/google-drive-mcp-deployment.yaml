@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: google-drive-mcp
+  namespace: hermes-assistant
+  labels:
+    app: google-drive-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: google-drive-mcp
+  template:
+    metadata:
+      labels:
+        app: google-drive-mcp
+    spec:
+      automountServiceAccountToken: false
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: DoesNotExist
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: mcp
+          image: ghcr.io/igou-io/google-drive-mcp:latest
+          env:
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /etc/google-drive/service-account.json
+            - name: GOOGLE_DRIVE_MCP_SCOPES
+              value: drive,documents,spreadsheets,presentations
+            - name: HTTP_PROXY
+              value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+            - name: HTTPS_PROXY
+              value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+            - name: NO_PROXY
+              value: localhost,127.0.0.1,::1,.cluster.local,172.30.0.1
+            - name: NODE_USE_ENV_PROXY
+              value: '1'
+          ports:
+            - name: mcp
+              containerPort: 3100
+          startupProbe:
+            tcpSocket:
+              port: mcp
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            tcpSocket:
+              port: mcp
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: mcp
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 25m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: credentials
+              mountPath: /etc/google-drive
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: credentials
+          secret:
+            secretName: google-drive-mcp
+            defaultMode: 0444
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 128Mi

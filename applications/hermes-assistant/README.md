@@ -16,3 +16,21 @@ app tokens and the `hermes-dashboard` hostname at cutover.
 - Everything else mirrors `hermes-k8s` (regular Kubernetes sessions, egress, sizes).
 
 See `../hermes-sre/README.md` for the split and the sync-wave notes.
+
+## Google Drive
+
+The main assistant connects to Piotr Agier's Google Drive MCP server at
+`http://google-drive-mcp.hermes-assistant.svc.cluster.local:3100/mcp` through
+`spec.config.raw.mcp_servers.gdrive`. The server runs as its own Deployment;
+NetworkPolicy admits only the main assistant pod and sends external traffic
+through Squid. No public Route is created.
+
+External Secrets reads the `igou-gdrive-automation.json` document from
+`lab_external_api_keys/igou-gdrive-automation`. The key is mounted only into
+the MCP pod. It is not exposed to Hermes or its terminal session pods.
+
+Google sharing grants the service account Editor access to the `hermes` folder
+(`1d-peZiX5um4ivyx9XZ3eF73ffLtMP6s0`) and its descendants. There is no server-side
+folder allowlist: the account can access anything subsequently shared with it.
+The assistant can edit existing spreadsheets, including `hermes/test_sheet`.
+The user creates files in My Drive because service accounts cannot own them.
