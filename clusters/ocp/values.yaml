@@ -546,9 +546,8 @@ applications:
         jsonPointers:
           - /spec/replicas
 
-  # Scaffold only: move out of inactive/, update path, then enable after access verification.
   hermes-secops:
-    enabled: false
+    enabled: true
     project: cluster-apps
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous
@@ -556,7 +555,7 @@ applications:
     destination:
       namespace: hermes-secops
     source:
-      path: inactive/applications/hermes-secops
+      path: applications/hermes-secops
     ignoreDifferences:
       - group: ''
         kind: ServiceAccount

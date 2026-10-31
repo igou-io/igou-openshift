@@ -56,16 +56,14 @@ spec:
     - name: https_proxy
       value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
     - name: NO_PROXY
-      value: localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,api.ocp.igou.systems,10.10.9.10
+      value: localhost,127.0.0.1,::1,.cluster.local,.svc,172.30.0.1,api.ocp.igou.systems,10.10.9.10
     - name: no_proxy
-      value: localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,api.ocp.igou.systems,10.10.9.10
+      value: localhost,127.0.0.1,::1,.cluster.local,.svc,172.30.0.1,api.ocp.igou.systems,10.10.9.10
     - name: NODE_USE_ENV_PROXY
       value: '1'
   envFrom:
     - secretRef:
         name: hermes-env
-    - secretRef:
-        name: hermes-model
   # Prepare the empty workspace claim before any subPath mounts are used.
   initContainers:
     - name: workspace-init
@@ -150,8 +148,6 @@ spec:
       envFrom:
         - secretRef:
             name: hermes-env
-        - secretRef:
-            name: hermes-model
       ports:
         - name: dashboard
           containerPort: 9119
@@ -227,6 +223,15 @@ spec:
       approvals:
         mode: manual
         timeout: 60
+      auxiliary:
+        compression: &sol_aux
+          provider: openai-codex
+          model: gpt-6.1-sol
+          reasoning_effort: high
+        vision: *sol_aux
+        title_generation: *sol_aux
+        approval: *sol_aux
+        skills_hub: *sol_aux
       max_concurrent_sessions: '2'
       model:
         default: gpt-6.1-sol
@@ -302,9 +307,9 @@ spec:
                   - name: https_proxy
                     value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
                   - name: NO_PROXY
-                    value: localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,api.ocp.igou.systems,10.10.9.10
+                    value: localhost,127.0.0.1,::1,.cluster.local,.svc,172.30.0.1,api.ocp.igou.systems,10.10.9.10
                   - name: no_proxy
-                    value: localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,api.ocp.igou.systems,10.10.9.10
+                    value: localhost,127.0.0.1,::1,.cluster.local,.svc,172.30.0.1,api.ocp.igou.systems,10.10.9.10
                   - name: NODE_USE_ENV_PROXY
                     value: '1'
                   - name: HOME
@@ -314,7 +319,7 @@ spec:
                   - name: AGENT_PROFILE
                     value: none
                   - name: ROX_ENDPOINT
-                    value: central.stackrox.svc.cluster.local:443
+                    value: central.stackrox.svc:443
                   - name: ROX_CA_CERT_FILE
                     value: /etc/secops/rhacs/ca.pem
                   - name: ROX_API_TOKEN
