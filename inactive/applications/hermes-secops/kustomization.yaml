@@ -1,0 +1,24 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - default-deny-networkpolicy.yaml
+  - hermes-agent-networkpolicy.yaml
+  - hermes-agent-serviceaccount.yaml
+  - hermes-env-externalsecret.yaml
+  - hermes-model-externalsecret.yaml
+  - hermes-secops-context-configmap.yaml
+  - hermes-secops-dashboard-route.yaml
+  - hermes-secops-hermesinstance.yaml
+  - hermes-secops-namespace.yaml
+  - hermes-secops-rhacs-externalsecret.yaml
+  - hermes-secops-resourcequota.yaml
+  - hermes-secops-skill-assess-configmap.yaml
+  - hermes-session-exec-role.yaml
+  - hermes-session-exec-rolebinding.yaml
+  - hermes-session-networkpolicy.yaml
+  - hermes-session-noperms-serviceaccount.yaml
+  - hermes-workspace-pvc.yaml
+  - quay-local-pull-externalsecret.yaml
+  - system-openshift-scc-hermes-agent-root-rolebinding.yaml
+  - broker
