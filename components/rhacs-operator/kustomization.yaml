@@ -4,6 +4,7 @@ kind: Kustomization
 resources:
   - default-deny-networkpolicy.yaml
   - allow-observed-networkpolicy.yaml
+  - allow-hermes-secops-networkpolicy.yaml
   - rhacs-operator-namespace.yaml
   - stackrox-namespace.yaml
   - rhacs-operator-group-operatorgroup.yaml

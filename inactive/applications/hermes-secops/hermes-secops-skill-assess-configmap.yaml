@@ -1,0 +1,48 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hermes-secops-skill-assess
+  namespace: hermes-secops
+data:
+  SKILL.md: |
+    ---
+    name: assess
+    description: Read-only SBOM and ACS vulnerability and policy assessment for the allowed igou-* repositories.
+    ---
+
+    1. Read /workspace/AGENTS.md. Scope the requested repositories and time window.
+       If none are specified, use the broker's explicit allowlist; do not expand
+       to other organizations or the user's unrelated personal repositories.
+    2. Export each repository's SBOM using gh-app and contents=read. GitHub is
+       retiring the synchronous /dependency-graph/sbom endpoint on 2026-11-13;
+       prefer GET /repos/OWNER/REPO/dependency-graph/sbom/generate-report, then
+       poll the returned fetch-report URL with a bounded retry count. Record
+       unresolved 202s, 403s, 404s, disabled graphs, and old report timestamps as
+       gaps. Never interpret an inaccessible SBOM as a clean bill of health.
+       Never log signed download URLs or forward authorization to another host.
+    3. Read Dependabot alerts with vulnerability_alerts=read and code-scanning
+       alerts with security_events=read. Request these separately from SBOM
+       contents tokens. If the installed App lacks either permission, report
+       the gap and continue with SBOMs; do not substitute a broader identity.
+    4. In a terminal session, GET existing /v1/images, /v1/deployments,
+       /v1/policies and /v1/alerts from https://$ROX_ENDPOINT using the dedicated
+       token and ROX_CA_CERT_FILE. Paginate every list. curl supports
+       --cacert "$ROX_CA_CERT_FILE"; never disable TLS verification. Do not
+       request image scans or evaluate uploaded deployment manifests. ACS may
+       contain clusters beyond the currently secured OCP cluster; identify the
+       actual cluster coverage from /v1/clusters before reporting it.
+    5. Correlate package PURLs and advisory aliases, then join running image
+       digests to workloads from ACS. Keep source dependencies, embedded tools,
+       base-image RPMs, and deployed artifacts distinct. Check vendor backports
+       before assigning an RPM finding to an upstream semantic-version range.
+    6. Enrich CVEs from OSV, CISA KEV, FIRST EPSS, and primary vendor advisories.
+       Use only package coordinates/versions and CVE IDs in public API requests.
+       Record feed timestamps. KEV absence and low EPSS do not establish safety.
+    7. Write a dated report under /workspace/reports containing scope, collection
+       times, severity, evidence, running digests, fix availability, confidence,
+       and blind spots. Separate confirmed alerts from supplemental matches.
+       Classify proposals as dependency update, tool/vendor update, image rebuild,
+       rollout of an existing rebuilt image, upstream blocked, or investigation.
+       Return proposals to the user without creating issues, PRs, suppressions,
+       live changes, or notifications.

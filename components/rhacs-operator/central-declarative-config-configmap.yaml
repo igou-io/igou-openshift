@@ -24,3 +24,28 @@ data:
         role: Analyst
     openshift:
       enable: true
+  # Dedicated analyst identity: existing inventory and findings only. No
+  # image scan, enforcement, suppression, integration, token or access writes.
+  hermes-secops-permission-set.yaml: |
+    name: hermes-secops-reader
+    description: Existing vulnerability and policy evidence for Hermes SecOps
+    resources:
+      - resource: Image
+        access: READ_ACCESS
+      - resource: Deployment
+        access: READ_ACCESS
+      - resource: Policy
+        access: READ_ACCESS
+      - resource: Alert
+        access: READ_ACCESS
+      - resource: Cluster
+        access: READ_ACCESS
+      - resource: Namespace
+        access: READ_ACCESS
+      - resource: Node
+        access: READ_ACCESS
+  hermes-secops-role.yaml: |
+    name: hermes-secops-reader
+    description: Read security evidence across clusters already ingested by Central
+    permissionSet: hermes-secops-reader
+    accessScope: Unrestricted

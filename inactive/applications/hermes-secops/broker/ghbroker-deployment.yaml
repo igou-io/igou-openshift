@@ -1,0 +1,96 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ghbroker
+  namespace: hermes-secops-auth
+  labels:
+    app: ghbroker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ghbroker
+  template:
+    metadata:
+      labels:
+        app: ghbroker
+    spec:
+      terminationGracePeriodSeconds: 2
+      imagePullSecrets:
+        - name: quay-local-pull
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: ghbroker
+          image: quay.apps.ocp.igou.systems/igou-io/ghapp-broker@sha256:a7ee9ecb6303da9984e6896b131a3b57df4d228f7deca26697f734970825c3d7
+          args:
+            - --listen
+            - 0.0.0.0:8085
+            - --policy
+            - /etc/ghbroker-policy/policy.yaml
+          env:
+            - name: GHAPP_CONFIG
+              value: /etc/ghbroker/config.yaml
+            - name: HTTP_PROXY
+              value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+            - name: HTTPS_PROXY
+              value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+            - name: http_proxy
+              value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+            - name: https_proxy
+              value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+            - name: NO_PROXY
+              value: localhost,127.0.0.1,::1,.cluster.local,172.30.0.1
+            - name: no_proxy
+              value: localhost,127.0.0.1,::1,.cluster.local,172.30.0.1
+          ports:
+            - name: broker
+              containerPort: 8085
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: broker
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: broker
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: config
+              mountPath: /etc/ghbroker
+              readOnly: true
+            - name: policy
+              mountPath: /etc/ghbroker-policy
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: config
+          secret:
+            secretName: ghbroker-config
+            defaultMode: 440
+        - name: policy
+          configMap:
+            name: ghbroker-policy
+        - name: tmp
+          emptyDir: {}
+      automountServiceAccountToken: false
+      enableServiceLinks: false

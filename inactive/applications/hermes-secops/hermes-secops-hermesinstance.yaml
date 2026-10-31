@@ -1,0 +1,386 @@
+---
+apiVersion: hermes.agent/v1
+kind: HermesInstance
+metadata:
+  name: hermes-secops
+  namespace: hermes-secops
+  annotations:
+    argocd.argoproj.io/sync-wave: '10'
+spec:
+  image:
+    repository: ghcr.io/igou-io/hermes-agent-k8s
+    tag: a297a1b418f5d8cf6b6aeb8db82705d62f5da07e
+    digest: sha256:fc1bb56704fdfefa804ec19e364951b78113fed3a1f215db66d1d285eb41b204
+    pullPolicy: IfNotPresent
+  security:
+    rbac:
+      createServiceAccount: false
+      serviceAccountName: hermes-agent
+    podSecurityContext:
+      runAsNonRoot: false
+      runAsUser: 0
+      fsGroup: 1000
+      seccompProfile:
+        type: RuntimeDefault
+    containerSecurityContext:
+      readOnlyRootFilesystem: false
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+        add:
+          - CHOWN
+          - DAC_OVERRIDE
+          - FOWNER
+          - SETGID
+          - SETUID
+    networkPolicy:
+      enabled: false
+  env:
+    - name: TZ
+      value: America/New_York
+    - name: GATEWAY_HEALTH_URL
+      value: http://127.0.0.1:8642
+    - name: SEARXNG_URL
+      value: http://searxng.searxng.svc.cluster.local:8080
+    - name: HERMES_DASHBOARD_FILES_ROOT
+      value: /opt/data/dashboard-files
+    - name: GHAPP_BROKER_URL
+      value: http://ghbroker.hermes-secops-auth.svc.cluster.local:8085
+    - name: HTTP_PROXY
+      value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+    - name: HTTPS_PROXY
+      value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+    - name: http_proxy
+      value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+    - name: https_proxy
+      value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+    - name: NO_PROXY
+      value: localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,api.ocp.igou.systems,10.10.9.10
+    - name: no_proxy
+      value: localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,api.ocp.igou.systems,10.10.9.10
+    - name: NODE_USE_ENV_PROXY
+      value: '1'
+  envFrom:
+    - secretRef:
+        name: hermes-env
+    - secretRef:
+        name: hermes-model
+  # Prepare the empty workspace claim before any subPath mounts are used.
+  initContainers:
+    - name: workspace-init
+      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:fc1bb56704fdfefa804ec19e364951b78113fed3a1f215db66d1d285eb41b204
+      command:
+        - /bin/sh
+        - -ec
+        - |
+          mkdir -p /workspace-volume/repos /workspace-volume/output
+          chown 1000:1000 /workspace-volume /workspace-volume/repos /workspace-volume/output
+          chmod 0770 /workspace-volume /workspace-volume/repos /workspace-volume/output
+      resources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
+        limits:
+          cpu: 100m
+          memory: 64Mi
+      securityContext:
+        runAsUser: 0
+        runAsNonRoot: false
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+          add:
+            - CHOWN
+            - DAC_OVERRIDE
+            - FOWNER
+      volumeMounts:
+        - name: hermes-workspace
+          mountPath: /workspace-volume
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+    limits:
+      cpu: '2'
+      memory: 3Gi
+  observability:
+    metrics:
+      enabled: false
+    serviceMonitor:
+      enabled: false
+    prometheusRule:
+      enabled: false
+  networking:
+    service:
+      type: ClusterIP
+      ports:
+        - name: gateway
+          port: 8443
+          protocol: TCP
+          targetPort: 8443
+        - name: dashboard
+          port: 9119
+          protocol: TCP
+          targetPort: 9119
+  sidecars:
+    - name: dashboard
+      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:fc1bb56704fdfefa804ec19e364951b78113fed3a1f215db66d1d285eb41b204
+      imagePullPolicy: IfNotPresent
+      args:
+        - dashboard
+        - --host
+        - 0.0.0.0
+        - --port
+        - '9119'
+        - --skip-build
+        - --no-open
+      env:
+        - name: HERMES_HOME
+          value: /opt/data
+        - name: HERMES_UID
+          value: '1000'
+        - name: HERMES_GID
+          value: '1000'
+        - name: TZ
+          value: America/New_York
+        - name: HERMES_DASHBOARD_FILES_ROOT
+          value: /opt/data/dashboard-files
+      envFrom:
+        - secretRef:
+            name: hermes-env
+        - secretRef:
+            name: hermes-model
+      ports:
+        - name: dashboard
+          containerPort: 9119
+          protocol: TCP
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: '1'
+          memory: 1Gi
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: false
+        capabilities:
+          drop:
+            - ALL
+          add:
+            - CHOWN
+            - DAC_OVERRIDE
+            - FOWNER
+            - SETGID
+            - SETUID
+      volumeMounts:
+        - name: data
+          mountPath: /opt/data
+        - name: config
+          mountPath: /opt/data/config.yaml
+          subPath: config.yaml
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+  storage:
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClassName: freenas-nvmeof-ssd-csi
+  extraVolumes:
+    - name: secops-context
+      configMap:
+        name: hermes-secops-context
+    - name: hermes-workspace
+      persistentVolumeClaim:
+        claimName: hermes-workspace
+    - name: secops-skill
+      configMap:
+        name: hermes-secops-skill-assess
+  extraVolumeMounts:
+    - name: hermes-workspace
+      subPath: repos
+      mountPath: /workspace
+    - name: hermes-workspace
+      subPath: output
+      mountPath: /opt/data/cache/documents
+    - name: secops-context
+      subPath: SOUL.md
+      mountPath: /opt/data/SOUL.md
+      readOnly: true
+    - name: secops-context
+      subPath: AGENTS.md
+      mountPath: /workspace/AGENTS.md
+      readOnly: true
+    - name: secops-skill
+      mountPath: /opt/data/agent-skills/secops/assess
+      readOnly: true
+  config:
+    raw:
+      _config_version: 33
+      agent:
+        environment_probe: false
+        max_turns: 80
+        reasoning_effort: high
+      approvals:
+        mode: manual
+        timeout: 60
+      max_concurrent_sessions: '2'
+      model:
+        default: gpt-6.1-sol
+        provider: openai-codex
+      platforms:
+        api_server:
+          enabled: true
+          extra:
+            host: 127.0.0.1
+            port: 8642
+      platform_toolsets:
+        cli:
+          - file
+          - skills
+          - terminal
+          - web
+        webhook:
+          - file
+          - skills
+          - terminal
+          - web
+        cron:
+          - file
+          - skills
+          - terminal
+          - web
+      terminal:
+        backend: kubernetes
+        cwd: /workspace
+        timeout: 300
+        lifetime_seconds: 1800
+        kubernetes:
+          namespace: hermes-secops
+          ready_timeout_seconds: 300
+          spec:
+            priorityClassName: llmkube-low
+            affinity:
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                    - matchExpressions:
+                        - key: node-role.kubernetes.io/tenant
+                          operator: Exists
+            serviceAccountName: hermes-session-noperms
+            automountServiceAccountToken: false
+            enableServiceLinks: false
+            restartPolicy: Never
+            terminationGracePeriodSeconds: 1
+            activeDeadlineSeconds: 14400
+            securityContext:
+              runAsNonRoot: true
+              runAsUser: 1000
+              runAsGroup: 1000
+              fsGroup: 1000
+              seccompProfile:
+                type: RuntimeDefault
+            containers:
+              - name: workspace
+                image: ghcr.io/igou-io/igou-devenv:latest@sha256:d7add1ef963b73274b307353ccbc247204d916536323ce7ad37db558994971f2
+                command:
+                  - sleep
+                  - infinity
+                workingDir: /workspace
+                env:
+                  - name: GHAPP_BROKER_URL
+                    value: http://ghbroker.hermes-secops-auth.svc.cluster.local:8085
+                  - name: HTTP_PROXY
+                    value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+                  - name: HTTPS_PROXY
+                    value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+                  - name: http_proxy
+                    value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+                  - name: https_proxy
+                    value: http://squid-proxy.squid-proxy.svc.cluster.local:3128
+                  - name: NO_PROXY
+                    value: localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,api.ocp.igou.systems,10.10.9.10
+                  - name: no_proxy
+                    value: localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,api.ocp.igou.systems,10.10.9.10
+                  - name: NODE_USE_ENV_PROXY
+                    value: '1'
+                  - name: HOME
+                    value: /home/igou
+                  - name: BASH_ENV
+                    value: /home/igou/.bashrc
+                  - name: AGENT_PROFILE
+                    value: none
+                  - name: ROX_ENDPOINT
+                    value: central.stackrox.svc.cluster.local:443
+                  - name: ROX_CA_CERT_FILE
+                    value: /etc/secops/rhacs/ca.pem
+                  - name: ROX_API_TOKEN
+                    valueFrom:
+                      secretKeyRef:
+                        name: hermes-secops-rhacs
+                        key: ROX_API_TOKEN
+                volumeMounts:
+                  - name: workspace
+                    subPath: repos
+                    mountPath: /workspace
+                  - name: workspace
+                    subPath: output
+                    mountPath: /output
+                  - name: secops-context
+                    subPath: AGENTS.md
+                    mountPath: /workspace/AGENTS.md
+                    readOnly: true
+                  - name: rhacs-ca
+                    mountPath: /etc/secops/rhacs
+                    readOnly: true
+                  - name: hermes-sync
+                    mountPath: /workspace/.hermes
+                  - name: tmp
+                    mountPath: /tmp
+                resources:
+                  requests:
+                    cpu: 100m
+                    memory: 512Mi
+                  limits:
+                    cpu: '2'
+                    memory: 2Gi
+                    ephemeral-storage: 5Gi
+                securityContext:
+                  runAsNonRoot: true
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop:
+                      - ALL
+            volumes:
+              - name: workspace
+                persistentVolumeClaim:
+                  claimName: hermes-workspace
+              - name: secops-context
+                configMap:
+                  name: hermes-secops-context
+              - name: rhacs-ca
+                secret:
+                  secretName: hermes-secops-rhacs
+                  items:
+                    - key: ca.pem
+                      path: ca.pem
+              - name: hermes-sync
+                emptyDir: {}
+              - name: tmp
+                emptyDir: {}
+      skills:
+        external_dirs:
+          - /opt/data/agent-skills/secops
+        guard_agent_created: true
+        write_approval: true
+      tool_loop_guardrails:
+        hard_stop_enabled: true
+      web:
+        search_backend: searxng
+        keyless_fallback: false
+        use_gateway: false
+      updates:
+        pre_update_backup: false

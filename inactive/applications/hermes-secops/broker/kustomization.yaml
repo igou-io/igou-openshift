@@ -1,0 +1,12 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - default-deny-networkpolicy.yaml
+  - ghbroker-config-externalsecret.yaml
+  - ghbroker-deployment.yaml
+  - ghbroker-networkpolicy.yaml
+  - ghbroker-policy-configmap.yaml
+  - ghbroker-service.yaml
+  - hermes-secops-auth-namespace.yaml
+  - quay-local-pull-externalsecret.yaml

@@ -42,6 +42,8 @@ spec:
     - namespace: hermes-assistant
     - namespace: hermes-developer
     - namespace: hermes-operator
+    - namespace: hermes-secops
+    - namespace: hermes-secops-auth
     - namespace: hermes-sre
     - namespace: homepage
     - namespace: it-tools
