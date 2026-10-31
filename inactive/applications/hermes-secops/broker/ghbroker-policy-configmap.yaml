@@ -1,0 +1,25 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ghbroker-policy
+  namespace: hermes-secops-auth
+data:
+  policy.yaml: |
+    policy:
+      allowed_repos:
+        - igou-io/igou-ansible
+        - igou-io/igou-containers
+        - igou-io/igou-devenv
+        - igou-io/igou-docs
+        - igou-io/igou-inventory
+        - igou-io/igou-kubernetes
+        - igou-io/igou-openshift
+        - igou-io/igou-skills
+        - igou-io/igou-infrastructure
+      max_permissions:
+        contents: read
+        vulnerability_alerts: read
+        security_events: read
+      default_permissions:
+        contents: read

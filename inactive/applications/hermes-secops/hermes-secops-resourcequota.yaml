@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: hermes-secops
+  namespace: hermes-secops
+spec:
+  hard:
+    pods: '6'
+    persistentvolumeclaims: '2'
+    requests.storage: 20Gi

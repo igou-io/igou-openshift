@@ -1,0 +1,23 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-hermes-secops
+  namespace: stackrox
+spec:
+  podSelector:
+    matchLabels:
+      app: central
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-secops
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/managed-by: hermes-agent
+      ports:
+        - protocol: TCP
+          port: 8443

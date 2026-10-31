@@ -6,6 +6,7 @@ and validates their schemas. Renovate still maintains their dependencies.
 
 | Path | Purpose |
 | --- | --- |
+| `applications/hermes-secops/` | Read-only security analyst scaffold; dedicated credentials and live access verification pending |
 | `applications/lidarr/` | Music library management |
 | `applications/minecraft-server/` | Minecraft server and manual recovery helper |
 | `applications/ntfy/` | Push notifications |

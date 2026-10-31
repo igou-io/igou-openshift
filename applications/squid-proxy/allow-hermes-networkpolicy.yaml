@@ -90,6 +90,25 @@ spec:
           podSelector:
             matchLabels:
               app: igou-docs-sync
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-secops
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: hermes-secops
+              app.kubernetes.io/name: hermes-agent
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-secops
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/managed-by: hermes-agent
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-secops-auth
+          podSelector:
+            matchLabels:
+              app: ghbroker
       ports:
         - protocol: TCP
           port: 3128
