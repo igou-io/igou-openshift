@@ -26,6 +26,10 @@ resources:
   - quay-local-pull-externalsecret.yaml
   - hermes-env-externalsecret.yaml
   - gcp-sa-storescrape-externalsecret.yaml
+  - google-drive-mcp-externalsecret.yaml
+  - google-drive-mcp-deployment.yaml
+  - google-drive-mcp-service.yaml
+  - google-drive-mcp-networkpolicy.yaml
   - hermes-workspace-pvc.yaml
   - ghbroker-config-externalsecret.yaml
   - ghbroker-policy-configmap.yaml

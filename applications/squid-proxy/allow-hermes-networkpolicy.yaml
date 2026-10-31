@@ -17,6 +17,12 @@ spec:
     - from:
         - namespaceSelector:
             matchLabels:
+              kubernetes.io/metadata.name: hermes-assistant
+          podSelector:
+            matchLabels:
+              app: google-drive-mcp
+        - namespaceSelector:
+            matchLabels:
               kubernetes.io/metadata.name: hermes-developer
           podSelector:
             matchLabels:

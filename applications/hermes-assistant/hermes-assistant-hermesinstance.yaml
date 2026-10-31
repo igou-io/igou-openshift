@@ -366,6 +366,12 @@ spec:
         slack:
           - spotify
       max_concurrent_sessions: '0'
+      mcp_servers:
+        gdrive:
+          url: http://google-drive-mcp.hermes-assistant.svc.cluster.local:3100/mcp
+          trust: full
+          connect_timeout: 30
+          timeout: 60
       memory:
         write_approval: true
       moa:
@@ -389,6 +395,7 @@ spec:
           - cronjob
           - delegation
           - file
+          - gdrive
           - image_gen
           - memory
           - messaging
@@ -407,6 +414,7 @@ spec:
           - cronjob
           - delegation
           - file
+          - gdrive
           - image_gen
           - memory
           - messaging

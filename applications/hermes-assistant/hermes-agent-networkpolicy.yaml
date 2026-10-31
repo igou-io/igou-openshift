@@ -34,6 +34,13 @@ spec:
           port: 9119
   egress:
     - to:
+        - podSelector:
+            matchLabels:
+              app: google-drive-mcp
+      ports:
+        - protocol: TCP
+          port: 3100
+    - to:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: forgejo
