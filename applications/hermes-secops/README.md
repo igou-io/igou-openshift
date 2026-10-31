@@ -1,8 +1,8 @@
 # hermes-secops
 
-Security assessment Hermes instance under `inactive/`, scaffolded with ArgoCD
-`enabled: false`. Move it to `applications/hermes-secops` and update the source
-path before enabling it.
+Security assessment Hermes instance managed by ArgoCD, using `gpt-6.1-sol`
+through the `openai-codex` OAuth provider. Its Codex authentication is seeded
+directly into private persistent agent storage, outside Git and terminal pods.
 It exports SBOMs for nine explicitly listed `igou-io/igou-*` repositories and
 reads existing ACS vulnerability inventories, deployment attribution, policies,
 and violations. Reports stay in its workspace and authenticated dashboard.
@@ -42,7 +42,8 @@ investigation context. Context instructions constrain public advisory queries
 to package coordinates/versions and CVE IDs.
 
 The declarative ACS `hermes-secops-reader` role grants only `READ_ACCESS` on
-Image, Deployment, Policy, Alert, Cluster, Namespace, and Node, across the
+Image, Deployment, WorkflowAdministration (policy definitions), CVE, Alert,
+Cluster, Namespace, and Node, across the
 clusters already ingested by Central (`Unrestricted` is the data scope, not an
 administrative permission). No scan, suppression, policy change, access-control,
 integration, token-management, or enforcement writes are granted. Scheduled
@@ -50,18 +51,20 @@ report creation and other operations requiring write permissions are outside
 this scaffold. It does not reuse the CI token's image write permissions.
 
 No infrastructure bundle, SSH keys, 1Password token, registry API credentials,
-AAP, Forgejo, Slack, webhook ingress, scheduled investigations, coding-agent
-OAuth identities, or remediation tools are configured. Image pull credentials
+AAP, Forgejo, Slack, webhook ingress, scheduled investigations, terminal OAuth
+identities, or remediation tools are configured. Image pull credentials
 remain kubelet inputs, although gateway pod creation could mount namespace-local
 Secrets; they must therefore be pull-only.
 
 Operational access setup and activation requirements are documented in
 `igou-docs/security/Fleet Vulnerability Assessment.md`, under Hermes SecOps.
-Do not enable the app until those prerequisites and live positive/negative
-authorization checks are satisfied. Nothing in this scaffold creates the
-missing credentials or deploys the instance.
+Dedicated dashboard, ACS reader/CA, and pull-only registry credentials are
+referenced through ExternalSecrets. A copied Codex OAuth grant shares its
+refresh-token lineage with its source machine; a separate login is required
+for independent renewal. Authentication remains writable on the agent's data
+PVC and is never reconciled from Git or mounted in terminal sessions.
 
-Validate with `kustomize build inactive/applications/hermes-secops` and `make test`.
+Validate with `kustomize build applications/hermes-secops` and `make test`.
 GitHub's current [SBOM API](https://docs.github.com/en/rest/dependency-graph/sboms)
 uses `contents: read`; the assessment skill prefers its asynchronous export
 flow ahead of the synchronous endpoint's 2026-11-13 retirement.
