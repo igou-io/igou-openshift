@@ -5,7 +5,7 @@ flyers, sheets), sands-of-time (OSRS market), personal analysis, Slack Q&A. Take
 over the cron store, `agent-repos/storescrape`, `home/` CLI state, the shared Slack
 app tokens and the `hermes-dashboard` hostname at cutover.
 
-- Identity: Slack (after cutover), GCP `storescrape-sheets` SA, opencode-go key,
+- Identity: Slack (after cutover), Google Drive through the private MCP service, opencode-go key,
   ghbroker **read-only** (no repo writes from this instance). No Forgejo, no
   cluster credentials.
 - External HTTP/HTTPS from the Hermes agent and its generated sessions uses the
@@ -34,3 +34,17 @@ Google sharing grants the service account Editor access to the `hermes` folder
 folder allowlist: the account can access anything subsequently shared with it.
 The assistant can edit existing spreadsheets, including `hermes/test_sheet`.
 The user creates files in My Drive because service accounts cannot own them.
+
+The storescrape procedure in `storescrape/SKILL.md` is delivered by a generated
+ConfigMap as a read-only skill under
+`/opt/data/agent-skills/homelab/storescrape`. Scheduled grocery and chicken-thigh
+scans use `gdrive` MCP tools to update `hermes/meat-prices-23236`
+(`1cM4iq_iJyNS9peZvMSK9-kWqssUfupBEW-ERukle7Ss`) before delivery. Writes preserve
+historical rows and upsert by scan date, category, cut and merchant, with readback
+verification. The retired key-based helper and terminal credential mount are
+removed; the only Google credential belongs to the MCP pod.
+
+`storescrape/cron-jobs.json` holds the two meat-scan jobs' prompts and explicit
+toolsets. Apply these payloads to the existing native cron store with
+`cron.jobs.update_job`; retain IDs, schedules, enabled states, and delivery
+settings. The paused generic daily job and soda report retain their behavior.

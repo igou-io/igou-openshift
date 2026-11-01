@@ -262,10 +262,16 @@ spec:
   # documents at /opt/data/cache/documents; sessions see the same data at
   # /workspace and /output (see terminal.kubernetes.spec below).
   extraVolumes:
+    - name: skill-storescrape
+      configMap:
+        name: hermes-assistant-skill-storescrape
     - name: hermes-workspace
       persistentVolumeClaim:
         claimName: hermes-workspace
   extraVolumeMounts:
+    - name: skill-storescrape
+      mountPath: /opt/data/agent-skills/homelab/storescrape
+      readOnly: true
     - name: hermes-workspace
       subPath: repos
       mountPath: /opt/data/agent-repos
@@ -453,7 +459,6 @@ spec:
         external_dirs:
           - /opt/data/agent-skills/common
           - /opt/data/agent-skills/homelab
-          - /opt/data/agent-repos/storescrape/.hermes/skills
         guard_agent_created: true
         write_approval: true
       slack:
@@ -535,9 +540,7 @@ spec:
                     value: localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,.apps.ocp.igou.systems,api.ocp.igou.systems,10.10.9.10,truenas.igou.systems,prometheus.rk8s.igou.systems
                   - name: NODE_USE_ENV_PROXY
                     value: '1'
-                  # opencode's hosted-model key, same forward the VM's
-                  # docker_forward_env did. Same accepted tradeoff as the
-                  # gcp-sa mount: session-visible by design.
+                  # opencode's hosted-model key is session-visible by design.
                   - name: OPENCODE_GO_API_KEY
                     valueFrom:
                       secretKeyRef:
@@ -576,9 +579,6 @@ spec:
                   - name: workspace
                     subPath: home/.agents/skills
                     mountPath: /home/igou/.agents/skills
-                  - name: gcp-sa
-                    mountPath: /home/igou/.config/gcp-sa
-                    readOnly: true
                   # File sync writes many small files. Keep that traffic off
                   # the shared RWX workspace and isolate it per session pod.
                   - name: hermes-sync
@@ -604,9 +604,6 @@ spec:
               - name: workspace
                 persistentVolumeClaim:
                   claimName: hermes-workspace
-              - name: gcp-sa
-                secret:
-                  secretName: gcp-sa-storescrape
               - name: hermes-sync
                 emptyDir: {}
               - name: tmp
