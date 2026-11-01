@@ -67,7 +67,7 @@ spec:
   # Prepare the empty workspace claim before any subPath mounts are used.
   initContainers:
     - name: workspace-init
-      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:fc1bb56704fdfefa804ec19e364951b78113fed3a1f215db66d1d285eb41b204
+      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:7aeba1ed8ff9b76cfba31fcd97b18b653ded7df6eb312e9fb4dba42a625c211c
       command:
         - /bin/sh
         - -ec
@@ -124,7 +124,7 @@ spec:
           targetPort: 9119
   sidecars:
     - name: dashboard
-      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:fc1bb56704fdfefa804ec19e364951b78113fed3a1f215db66d1d285eb41b204
+      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:7aeba1ed8ff9b76cfba31fcd97b18b653ded7df6eb312e9fb4dba42a625c211c
       imagePullPolicy: IfNotPresent
       args:
         - dashboard
