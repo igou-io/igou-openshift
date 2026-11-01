@@ -46,3 +46,10 @@ has no OVN-level host allowlist.
 oc create secret generic sands-of-time-admin -n sands-of-time \
   --from-literal=token="$(openssl rand -hex 32)"
 ```
+
+## Private profiles
+
+The profile API uses a dedicated credential from the 1Password item
+`lab_openshift/sands-of-time-profile`, field `token`. The ExternalSecret
+`sands-of-time-profile` delivers it through `onepassword-lab-openshift` before
+the Deployment starts. The application reads it as `SOT_PROFILE_TOKEN`.
