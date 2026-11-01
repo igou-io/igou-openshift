@@ -32,8 +32,10 @@ spec:
         name: keycloak-theme-registry
   output:
     to:
-      kind: ImageStreamTag
-      name: keycloak-theme:26.6.7
+      kind: DockerImage
+      name: quay.apps.ocp.igou.systems/igou-io/keycloak-theme:26.6.7
+    pushSecret:
+      name: keycloak-theme-quay
   resources:
     requests:
       cpu: 100m
