@@ -1,5 +1,10 @@
 # Fedora Codex desktop
 
+This workload is inactive and unregistered. Its VM, runtime root disk,
+Services, and lifecycle RBAC were deprovisioned on 2026-11-01. The independent
+state PVC and namespace are retained for a future rebuild. Move this directory
+back to `applications/` and restore its Application registration before reuse.
+
 GitOps owns the namespace, VM definition, retained state PVC, scoped import and
 lifecycle RBAC, Services, NetworkPolicy, and
 ServiceMonitor. AAP creates/replaces the root DataVolume and configures the guest.
@@ -20,7 +25,7 @@ No root DataVolume URL or desktop image build is committed here.
 - `daily-apps` in `clusters/ocp/oadp` includes this namespace.
 
 ```bash
-kustomize build --enable-helm applications/codex-desktop
+kustomize build --enable-helm inactive/applications/codex-desktop
 ```
 
 Scheduling preferences live in the VM manifest. Desktop automation controls
