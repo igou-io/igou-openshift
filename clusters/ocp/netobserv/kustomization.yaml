@@ -7,4 +7,6 @@ resources:
   - netobserv-namespace.yaml
   - netobserv-loki-s3-externalsecret.yaml
   - netobserv-loki-lokistack.yaml
+  - netobserv-secret-watcher-rolebinding.yaml
+  - netobserv-secret-creator-rolebinding.yaml
   - cluster-flowcollector.yaml
