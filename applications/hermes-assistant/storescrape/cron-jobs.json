@@ -1,0 +1,22 @@
+[
+  {
+    "id": "653dbe585aee",
+    "name": "Weekly chicken thigh price scan 23236",
+    "prompt": "Weekly grocery price scan for ZIP code 23236.\n\nUse the storescrape skill/procedure to find current deals and best prices for chicken thighs in ZIP 23236. Search terms should include: \"chicken thighs,chicken thigh,thighs\". Query local grocery flyer/deal data with JSON output, validate/summarize current results, and produce a concise ranked list of the best prices.\n\nRequirements for the final response:\n- Include store/merchant name, item description, price, package size or unit if available, and validity dates.\n- Rank best values first; if package size/unit is ambiguous, mention that uncertainty.\n- Exclude clearly expired deals when validity data is available.\n- If no current deals are found, say that and mention what was searched.\n\nSPREADSHEET UPDATE IS MANDATORY AND COMES BEFORE DELIVERY: follow step 5b in the storescrape skill using only the main agent's gdrive MCP tools. Update the existing hermes/meat-prices-23236 spreadsheet, ID 1cM4iq_iJyNS9peZvMSK9-kWqssUfupBEW-ERukle7Ss, prices tab. Preserve history and other jobs' rows; upsert by scan date, category, normalized cut and merchant. Validate and sanitize cell values, avoid duplicate keys on retries, and verify written rows by reading them back. Never use a local Sheets writer, a service-account key, or direct Google API HTTP calls. After three failed MCP attempts, report ⚠ sheet update failed in the digest. Only write qualifying chicken-thigh deals; use category chicken and normalized cut chicken thigh. This job's existing report auto-delivery remains unchanged.",
+    "enabled_toolsets": [
+      "terminal",
+      "skills",
+      "gdrive"
+    ]
+  },
+  {
+    "id": "110315a89b06",
+    "name": "grocery-flyer-analysis-23236",
+    "prompt": "Grocery flyer analysis for ZIP 23236. Follow the 'Weekly Flyer Analysis (scheduled runs)' procedure in the storescrape skill exactly: run every per-protein deal sweep (beef, chicken, pork, shellfish, fish, specialty/game) plus the grocery category sweeps with the storescrape CLI, using the full synonym term lists and jq pipes from the skill verbatim, NO --limit flags, and always querying fresh (never reuse /tmp result files from previous runs). Clean, dedupe, and reassign items to the correct protein by their full name per the skill's filtering rules. Exclude Publix entirely. Keep Restaurant Depot out of the main retail sections and give it its own wholesale analysis block with bulk-vs-retail comparisons. SPREADSHEET UPDATE IS MANDATORY AND COMES BEFORE DELIVERY: follow step 5b in the storescrape skill using only the main agent's gdrive MCP tools. Update the existing hermes/meat-prices-23236 spreadsheet, ID 1cM4iq_iJyNS9peZvMSK9-kWqssUfupBEW-ERukle7Ss, prices tab. Preserve history and other jobs' rows; upsert by scan date, category, normalized cut and merchant. Validate and sanitize cell values, avoid duplicate keys on retries, and verify written rows by reading them back. Never use a local Sheets writer, a service-account key, or direct Google API HTTP calls. After three failed MCP attempts, report ⚠ sheet update failed in the digest. DELIVERY IS MANDATORY AND IS THE FINAL STEP: follow the skill's step 8 exactly — post a compact digest (under 3,500 chars) to Slack channel C0BDFHWRQM7 via curl chat.postMessage using $SLACK_BOT_TOKEN from the sandbox environment, then post the full report as a single reply in that thread using the returned ts as thread_ts. Never print or echo the token. Composing the report without posting it is a FAILED run. After both posts return ok:true, your final response must be exactly [SILENT]. If the anchor post fails, put the full report in your final response instead. Never expose secrets, raw API payloads, internal paths, or debug logs.",
+    "enabled_toolsets": [
+      "terminal",
+      "skills",
+      "gdrive"
+    ]
+  }
+]
