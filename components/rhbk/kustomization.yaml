@@ -22,7 +22,7 @@ resources:
   - keycloak-keycloak.yaml
   - igou-keycloakrealmimport.yaml
   - keycloak-theme-registry-externalsecret.yaml
-  - keycloak-theme-imagestream.yaml
+  - keycloak-theme-quay-externalsecret.yaml
   - keycloak-theme-buildconfig.yaml
 
 configMapGenerator:

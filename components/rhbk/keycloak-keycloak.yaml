@@ -11,7 +11,9 @@ metadata:
     argocd.argoproj.io/sync-wave: '11'
 spec:
   # Verified keycloak-theme build with restricted-UID-readable theme assets.
-  image: image-registry.openshift-image-registry.svc:5000/keycloak/keycloak-theme@sha256:2235cd3a78c8fd254d1daa28011c0fa7ffeb5ee23be1282ed9965e681195c38c
+  image: quay.apps.ocp.igou.systems/igou-io/keycloak-theme@sha256:9bf9151d0257eeed6a455f0c6c9b8e5c3e250ec5893af7238f14b4fadd022b21
+  imagePullSecrets:
+    - name: keycloak-theme-quay
   instances: 1
   db:
     vendor: postgres
