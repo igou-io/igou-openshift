@@ -35,7 +35,7 @@ data:
         namespace: omnigent-sandboxes
         service_account: omnigent-runner
         secret_name: omnigent-creds
-        image: ghcr.io/igou-io/igou-devenv@sha256:d7add1ef963b73274b307353ccbc247204d916536323ce7ad37db558994971f2
+        image: ghcr.io/igou-io/igou-devenv@sha256:65bcd19663c08ad23f7a35e5f1caa7a0615b94657f53e565b7c86de9575cc96b
         home_size_limit: 8Gi
         pvc_mounts:
           - claim_name: omnigent-sre-codex-auth
