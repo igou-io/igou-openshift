@@ -13,7 +13,7 @@ spec:
   runtime: llamacpp
   # Qwen3.8 hybrid arch + MTP speculative decoding need a 2026-08 llama.cpp
   # (MTP shipped in ggml-org/llama.cpp#22673); this is server-cuda13 b10454.
-  image: ghcr.io/ggml-org/llama.cpp:server-cuda13@sha256:2ac42bff86574137dd69b1c8ad85330729d8292e1b4fac0639b67a722c4e9558
+  image: ghcr.io/ggml-org/llama.cpp:server-cuda13@sha256:fc3c1a48c228d5e11b49f2921e144e00c876938b1e178936f9aecd7586f8a573
   # At rest this model is OFF (replicas: 0) so the casval burst baremetal node
   # stays scaled to zero — same contract as qwen3-35b-a3b: scale to 1 (live
   # patch) to bring it up; ArgoCD ignores /spec/replicas.
