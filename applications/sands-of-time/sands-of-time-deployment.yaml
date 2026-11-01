@@ -46,6 +46,11 @@ spec:
                   name: sands-of-time-admin
                   key: token
                   optional: true
+            - name: SOT_PROFILE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: sands-of-time-profile
+                  key: token
           volumeMounts:
             - name: data
               mountPath: /data

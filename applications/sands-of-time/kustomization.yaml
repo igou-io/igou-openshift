@@ -11,6 +11,7 @@ resources:
   - default-deny-networkpolicy.yaml
   - allow-observed-networkpolicy.yaml
   - sands-of-time-data-pvc.yaml
+  - sands-of-time-profile-externalsecret.yaml
   - sands-of-time-deployment.yaml
   - sands-of-time-service.yaml
   - sands-of-time-route.yaml
