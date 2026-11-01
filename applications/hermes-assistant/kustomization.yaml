@@ -25,7 +25,6 @@ resources:
   - hermes-session-networkpolicy.yaml
   - quay-local-pull-externalsecret.yaml
   - hermes-env-externalsecret.yaml
-  - gcp-sa-storescrape-externalsecret.yaml
   - google-drive-mcp-externalsecret.yaml
   - google-drive-mcp-deployment.yaml
   - google-drive-mcp-service.yaml
@@ -38,3 +37,12 @@ resources:
   - ghbroker-networkpolicy.yaml
   - hermes-assistant-hermesinstance.yaml
   - hermes-assistant-dashboard-route.yaml
+
+configMapGenerator:
+  - name: hermes-assistant-skill-storescrape
+    namespace: hermes-assistant
+    files:
+      - SKILL.md=storescrape/SKILL.md
+      - cron-jobs.json=storescrape/cron-jobs.json
+    options:
+      disableNameSuffixHash: true
