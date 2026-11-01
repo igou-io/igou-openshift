@@ -49,7 +49,5 @@ oc create secret generic sands-of-time-admin -n sands-of-time \
 
 ## Private profiles
 
-The profile API uses a dedicated credential from the 1Password item
-`lab_openshift/sands-of-time-profile`, field `token`. The ExternalSecret
-`sands-of-time-profile` delivers it through `onepassword-lab-openshift` before
-the Deployment starts. The application reads it as `SOT_PROFILE_TOKEN`.
+Saved profiles are listed directly in this private application. The profile
+API requires no application token or credential Secret.
