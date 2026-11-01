@@ -35,7 +35,7 @@ spec:
         - name: auth-login
           # Keep this pin aligned with terminal.kubernetes.spec in the
           # HermesInstance; this is the image that carries the coding CLIs.
-          image: ghcr.io/igou-io/igou-devenv:latest@sha256:d7add1ef963b73274b307353ccbc247204d916536323ce7ad37db558994971f2
+          image: ghcr.io/igou-io/igou-devenv:latest@sha256:65bcd19663c08ad23f7a35e5f1caa7a0615b94657f53e565b7c86de9575cc96b
           command:
             - sleep
             - infinity
