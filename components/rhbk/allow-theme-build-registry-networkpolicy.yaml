@@ -12,12 +12,9 @@ spec:
     - Egress
   egress:
     - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: openshift-image-registry
-          podSelector:
-            matchLabels:
-              docker-registry: default
+        # Quay's Route uses the host-network router, so match its LAN IP.
+        - ipBlock:
+            cidr: 10.10.9.10/32
       ports:
-        - port: 5000
+        - port: 443
           protocol: TCP
