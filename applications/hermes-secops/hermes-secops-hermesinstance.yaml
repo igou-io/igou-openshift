@@ -9,8 +9,8 @@ metadata:
 spec:
   image:
     repository: ghcr.io/igou-io/hermes-agent-k8s
-    tag: a297a1b418f5d8cf6b6aeb8db82705d62f5da07e@sha256:fc1bb56704fdfefa804ec19e364951b78113fed3a1f215db66d1d285eb41b204
-    digest: sha256:fc1bb56704fdfefa804ec19e364951b78113fed3a1f215db66d1d285eb41b204
+    tag: 9edde8ba4131d81c472ab910cc51ae940892afd6@sha256:bb75429809363c65e4b89be71a3b81e1090a478c062402bb852a82d6769acf85
+    digest: sha256:bb75429809363c65e4b89be71a3b81e1090a478c062402bb852a82d6769acf85
     pullPolicy: IfNotPresent
   security:
     rbac:
@@ -94,7 +94,7 @@ spec:
   # Prepare the empty workspace claim before any subPath mounts are used.
   initContainers:
     - name: workspace-init
-      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:7aeba1ed8ff9b76cfba31fcd97b18b653ded7df6eb312e9fb4dba42a625c211c
+      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:bb75429809363c65e4b89be71a3b81e1090a478c062402bb852a82d6769acf85
       command:
         - /bin/sh
         - -ec
@@ -151,7 +151,7 @@ spec:
           targetPort: 9119
   sidecars:
     - name: dashboard
-      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:7aeba1ed8ff9b76cfba31fcd97b18b653ded7df6eb312e9fb4dba42a625c211c
+      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:bb75429809363c65e4b89be71a3b81e1090a478c062402bb852a82d6769acf85
       imagePullPolicy: IfNotPresent
       args:
         - dashboard
