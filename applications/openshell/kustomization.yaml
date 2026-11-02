@@ -67,7 +67,7 @@ helmCharts:
         image:
           repository: nvcr.io/nvidia/base/ubuntu
           tag: "24.04"
-          digest: sha256:7e0f726d635d440d28a7f18e6498d3bdb76c7038bd4c90a090c21eb7c9f40686
+          digest: sha256:d9461f428eea54e553add3a5158a0f245c6e1ea73efc59fff8e98e3d4a38e378
       agentSandbox:
         # Kustomize renders offline. The live v1beta1 API was verified on ocp.
         preflight:
