@@ -1,0 +1,558 @@
+#!/usr/bin/env python3
+"""Bounded read-only security collection. No third-party Python dependencies."""
+
+import argparse
+import base64
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
+import hashlib
+import ipaddress
+import json
+import os
+from pathlib import Path
+import re
+import ssl
+import subprocess
+import time
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode, urlparse
+from urllib.request import (
+    HTTPSHandler, HTTPRedirectHandler, ProxyHandler, Request, build_opener,
+)
+
+
+def utc():
+    return datetime.now(timezone.utc).isoformat()
+
+
+class CollectionError(Exception):
+    """Messages are fixed labels: never include response bodies or request URLs."""
+
+
+class NoRedirect(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def public_https(url):
+    parsed = urlparse(url)
+    if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
+        raise CollectionError("invalid download origin")
+    if parsed.port not in (None, 443) or parsed.hostname.endswith((".svc", ".cluster.local", ".localhost")):
+        raise CollectionError("invalid download origin")
+    try:
+        if not ipaddress.ip_address(parsed.hostname).is_global:
+            raise CollectionError("private download origin")
+    except ValueError:
+        if "." not in parsed.hostname:
+            raise CollectionError("invalid download origin")
+    return url
+
+
+class Collector:
+    def __init__(self, budget=600, page_size=1000):
+        self.deadline = time.monotonic() + budget
+        self.page_size = page_size
+        self.started = utc()
+        self.requests = []
+        self.gaps = []
+        self.evidence = {"started": self.started, "acs_inventory": {}}
+        self.internal = build_opener(ProxyHandler({}), NoRedirect(), HTTPSHandler(
+            context=ssl.create_default_context(cafile=os.environ.get("ROX_CA_CERT_FILE"))))
+        # Public downloads use the configured Squid proxy, which denies private destinations.
+        self.public = build_opener(ProxyHandler(), NoRedirect())
+        self.central = "https://" + os.environ.get("ROX_ENDPOINT", "central.stackrox.svc:443").removeprefix("https://")
+
+    def remaining(self):
+        remaining = self.deadline - time.monotonic()
+        if remaining <= 0:
+            raise CollectionError("collection deadline exceeded")
+        return remaining
+
+    def request(self, source, url, *, headers=None, data=None, internal=False):
+        """Bound retries and response size; redact URLs, errors and bodies from the request log."""
+        for attempt in range(3):
+            status, result, response_headers = 0, None, {}
+            try:
+                request = Request(url, data=json.dumps(data).encode() if data is not None else None,
+                                  headers={"Content-Type": "application/json", **(headers or {})})
+                with (self.internal if internal else self.public).open(
+                        request, timeout=min(20, self.remaining())) as response:
+                    status, response_headers = response.status, dict(response.headers)
+                    raw = response.read(32 * 1024 * 1024 + 1)
+                    if len(raw) > 32 * 1024 * 1024:
+                        raise CollectionError("response exceeds size limit")
+                    result = json.loads(raw)
+            except HTTPError as error:
+                status, response_headers = error.code, dict(error.headers)
+                error.close()
+            except (URLError, TimeoutError, OSError, ValueError):
+                pass
+            self.requests.append({"source": source, "status": status, "attempt": attempt + 1, "time": utc()})
+            if status not in (0, 429, 500, 502, 503, 504) or attempt == 2:
+                return status, result, response_headers
+            delay = min(5, 2 ** attempt)
+            time.sleep(min(delay, self.remaining()))
+        raise CollectionError("retry limit exceeded")
+
+    def acs(self, path, params=None):
+        url = self.central + path + ("?" + urlencode(params) if params else "")
+        return self.request("acs:" + path, url, internal=True,
+                            headers={"Authorization": "Bearer " + os.environ["ROX_API_TOKEN"]})[:2]
+
+    def inventory(self, name):
+        """Retry inconsistent traversals; deduplication alone never proves completeness."""
+        observed = {}
+        for attempt in range(2):
+            before_status, before = self.acs("/v1/" + name + "count") if name not in ("clusters", "policies") else (404, None)
+            records, rows, exhausted, pages, missing_ids = {}, 0, False, [], 0
+            for page in range(100):
+                status, data = self.acs("/v1/" + name, {
+                    "pagination.limit": self.page_size, "pagination.offset": page * self.page_size})
+                items = data.get(name) if isinstance(data, dict) else None
+                if status != 200 or not isinstance(items, list):
+                    pages.append({"status": status, "offset": page * self.page_size})
+                    break
+                pages.append({"status": status, "offset": page * self.page_size, "rows": len(items)})
+                new = 0
+                for item in items:
+                    identifier = item.get("id")
+                    if not identifier:
+                        missing_ids += 1
+                        continue
+                    # V1 image lists count named references, not unique content.
+                    # A tag and a digest reference can legitimately share an ID.
+                    identity = (identifier, item.get("name", "")) if name == "images" else identifier
+                    new += identity not in records
+                    records[identity] = item
+                rows += len(items)
+                if len(items) < self.page_size:
+                    exhausted = True
+                    break
+                if not new:
+                    break
+            after_status, after = self.acs("/v1/" + name + "count") if before_status == 200 else (404, None)
+            count_before = before.get("count") if isinstance(before, dict) else None
+            count_after = after.get("count") if isinstance(after, dict) else None
+            counts_supported = before_status == after_status == 200
+            reconciled = counts_supported and count_before == count_after == len(records)
+            complete = exhausted and not missing_ids and rows == len(records) and (
+                reconciled or name in ("clusters", "policies"))
+            observed = {"items": list(records.values()), "unique": len(records), "rows": rows,
+                        "count_before": count_before, "count_after": count_after,
+                        "duplicates": rows - len(records) - missing_ids, "missing_ids": missing_ids,
+                        "pages": pages, "complete": complete, "attempts": attempt + 1,
+                        "count_reconciled": reconciled if counts_supported else None}
+            if name == "images":
+                observed["unique_digests"] = len({item["id"] for item in records.values()})
+                observed["alias_references"] = len(records) - observed["unique_digests"]
+            if complete:
+                return observed
+        self.gaps.append("ACS " + name + " enumeration incomplete or inconsistent")
+        return observed
+
+    def gh_command(self, *arguments):
+        try:
+            result = subprocess.run(["ghapp", *arguments], capture_output=True, text=True,
+                                    timeout=min(30, self.remaining()), check=False)
+        except (OSError, subprocess.TimeoutExpired):
+            raise CollectionError("GitHub broker command failed") from None
+        if result.returncode:
+            raise CollectionError("GitHub broker denied or failed token issuance")
+        return result.stdout.strip()
+
+    def github(self, repo, path, token):
+        if not path.startswith("/repos/" + repo + "/") and path != "/repos/" + repo:
+            raise CollectionError("GitHub path outside scoped repository")
+        return self.request("github:" + repo + ":" + path.split("?")[0],
+                            "https://api.github.com" + path, headers={
+                                "Authorization": "Bearer " + token,
+                                "Accept": "application/vnd.github+json"})
+
+    def sbom(self, repo, token):
+        prefix = "/repos/" + repo + "/dependency-graph/sbom/"
+        status, data, _ = self.github(repo, prefix + "generate-report", token)
+        if status not in (200, 201) or not isinstance(data, dict):
+            raise CollectionError("SBOM generation unavailable (HTTP " + str(status) + ")")
+        fetch_url = urlparse(data.get("sbom_url", ""))
+        if (fetch_url.scheme != "https" or fetch_url.netloc != "api.github.com"
+                or not fetch_url.path.startswith(prefix + "fetch-report/") or fetch_url.query):
+            raise CollectionError("invalid SBOM fetch origin or repository")
+        for _ in range(6):
+            status, data, headers = self.github(repo, fetch_url.path, token)
+            if status == 202:
+                time.sleep(min(2, self.remaining()))
+                continue
+            if status == 302:
+                download = headers.get("Location", headers.get("location", ""))
+                for _ in range(3):
+                    # Authorization is deliberately absent on every download hop.
+                    status, data, headers = self.request("github:sbom-download", public_https(download))
+                    if status not in (301, 302, 303, 307, 308):
+                        break
+                    download = headers.get("Location", headers.get("location", ""))
+            if status == 200 and isinstance(data, dict):
+                data = data.get("sbom", data)
+                if not isinstance(data.get("packages"), list):
+                    raise CollectionError("invalid SBOM document")
+                return data
+            raise CollectionError("SBOM fetch unavailable (HTTP " + str(status) + ")")
+        raise CollectionError("SBOM fetch still pending after bounded polling")
+
+    def repository(self, repo):
+        result = {"repo": repo, "complete": False, "alerts": {}, "purls": []}
+        try:
+            token = self.gh_command("token", "--repo", repo, "--permission", "contents=read")
+            status, metadata, _ = self.github(repo, "/repos/" + repo, token)
+            if status != 200 or not isinstance(metadata, dict):
+                raise CollectionError("repository metadata unavailable")
+            result["default_branch"] = metadata["default_branch"]
+            status, commit, _ = self.github(repo, "/repos/" + repo + "/commits/" + metadata["default_branch"], token)
+            result["observed_head"] = commit.get("sha") if status == 200 and isinstance(commit, dict) else None
+            document = self.sbom(repo, token)
+            result.update(complete=True, packages=len(document["packages"]),
+                          export_created=document.get("creationInfo", {}).get("created"),
+                          purls=sorted({r["referenceLocator"] for p in document["packages"]
+                                        for r in p.get("externalRefs", []) if r.get("referenceType") == "purl"}))
+        except CollectionError as error:
+            result["gap"] = str(error)
+        for permission, endpoint in (("vulnerability_alerts", "dependabot"), ("security_events", "code-scanning")):
+            alert_result = {"complete": False, "items": []}
+            try:
+                token = self.gh_command("token", "--repo", repo, "--permission", permission + "=read")
+                for page in range(1, 101):
+                    status, items, _ = self.github(repo, "/repos/" + repo + "/" + endpoint
+                                                   + "/alerts?state=open&per_page=100&page=" + str(page), token)
+                    if status != 200 or not isinstance(items, list):
+                        raise CollectionError("alert read unavailable (HTTP " + str(status) + ")")
+                    alert_result["items"].extend({"number": i.get("number"), "state": i.get("state"),
+                                                  "created_at": i.get("created_at"),
+                                                  "advisory": i.get("security_advisory", {}).get("ghsa_id"),
+                                                  "rule_id": i.get("rule", {}).get("id")} for i in items)
+                    if len(items) < 100:
+                        alert_result["complete"] = True
+                        break
+                if not alert_result["complete"]:
+                    raise CollectionError("alert pagination limit exceeded")
+            except CollectionError as error:
+                alert_result["gap"] = str(error)
+            result["alerts"][endpoint] = alert_result
+        return result
+
+    @staticmethod
+    def image(data):
+        findings = []
+        for component in (data.get("scan") or {}).get("components", []):
+            for vuln in component.get("vulns", []):
+                findings.append({"cve": vuln.get("cve"), "severity": vuln.get("severity"),
+                                 "cvss": vuln.get("cvss"), "fixed_by": vuln.get("fixedBy"),
+                                 "component": component.get("name"), "version": component.get("version"),
+                                 "source": component.get("source"), "location": component.get("location")})
+        return {"digest": data.get("id"), "name": data.get("name", {}).get("fullName"),
+                "scan_time": (data.get("scan") or {}).get("scanTime"), "notes": data.get("notes", []),
+                "operating_system": (data.get("scan") or {}).get("operatingSystem"), "findings": findings}
+
+    @staticmethod
+    def workload(data):
+        containers = []
+        for container in data.get("containers", []):
+            config = container.get("config", {})
+            security = container.get("securityContext", {})
+            containers.append({"name": container.get("name"), "image": container.get("image", {}).get("id"),
+                               "configured_uid": config.get("uid"),
+                               "security_context": {k: security.get(k) for k in (
+                                   "privileged", "addCapabilities", "dropCapabilities", "allowPrivilegeEscalation",
+                                   "readOnlyRootFilesystem", "seccompProfile")},
+                               "volumes": [{k: v.get(k) for k in ("type", "source", "destination", "readOnly")}
+                                           for v in container.get("volumes", [])]})
+        return {"id": data.get("id"), "name": data.get("name"), "namespace": data.get("namespace"),
+                "cluster": data.get("clusterName"), "cluster_id": data.get("clusterId"),
+                "replicas": data.get("replicas"), "inactive": data.get("inactive"), "containers": containers,
+                "service_account": data.get("serviceAccount"),
+                "service_account_permission_level": data.get("serviceAccountPermissionLevel"),
+                "automount_service_account_token": data.get("automountServiceAccountToken"),
+                "ports": [{k: p.get(k) for k in ("containerPort", "protocol", "exposure", "exposureInfos")}
+                          for p in data.get("ports", [])]}
+
+    def details(self, name, records):
+        references = {}
+        if name == "images":
+            for record in records:
+                references.setdefault(record["id"], set()).add(record.get("name", ""))
+            records = list({record["id"]: record for record in records}.values())
+        def fetch(record):
+            try:
+                status, data = self.acs("/v1/" + name + "/" + record["id"])
+                if status == 200 and isinstance(data, dict):
+                    result = self.image(data) if name == "images" else self.workload(data)
+                    if name == "images":
+                        result["references"] = sorted(references[record["id"]])
+                    return result
+            except CollectionError:
+                pass
+            return None
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            result = list(pool.map(fetch, records))
+        if any(x is None for x in result):
+            self.gaps.append("ACS " + name + " detail reads incomplete")
+        return [x for x in result if x is not None]
+
+    def osv(self, repositories):
+        # Never send source, full SBOMs, RPM versions or ACS records to OSV.
+        purls = sorted({p for r in repositories for p in r["purls"]
+                        if re.match(r"pkg:(pypi|npm|golang|cargo|maven|gem|nuget)/.+@[^/]+", p)})
+        matches, complete = [], True
+        for offset in range(0, len(purls), 100):
+            batch = purls[offset:offset + 100]
+            pending = [{"package": {"purl": p}} for p in batch]
+            indexes = list(range(len(batch)))
+            hits = {i: set() for i in indexes}
+            for _ in range(10):
+                status, data, _ = self.request("osv:querybatch", "https://api.osv.dev/v1/querybatch",
+                                               data={"queries": pending})
+                results = data.get("results") if isinstance(data, dict) else None
+                if status != 200 or not isinstance(results, list) or len(results) != len(pending):
+                    complete = False
+                    break
+                next_queries, next_indexes = [], []
+                for index, result in zip(indexes, results):
+                    hits[index].update(v["id"] for v in result.get("vulns", []))
+                    if result.get("next_page_token"):
+                        next_queries.append({"package": {"purl": batch[index]}, "page_token": result["next_page_token"]})
+                        next_indexes.append(index)
+                pending, indexes = next_queries, next_indexes
+                if not pending:
+                    break
+            if pending:
+                complete = False
+            matches.extend({"purl": batch[i], "advisory_ids": sorted(ids)} for i, ids in hits.items() if ids)
+        if not complete:
+            self.gaps.append("OSV queries incomplete")
+        # Public advisory identifiers only; fetch once per ID to capture aliases and fixes.
+        def advisory(identifier):
+            if not re.fullmatch(r"[A-Za-z0-9_.-]+", identifier):
+                return None
+            try:
+                status, data, _ = self.request("osv:advisory", "https://api.osv.dev/v1/vulns/" + identifier)
+                if status == 200 and isinstance(data, dict):
+                    return {k: data.get(k) for k in ("id", "aliases", "summary", "modified", "affected", "severity")}
+            except CollectionError:
+                pass
+            return None
+        ids = sorted({i for match in matches for i in match["advisory_ids"]})
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            advisories = list(pool.map(advisory, ids))
+        if any(a is None for a in advisories):
+            self.gaps.append("OSV full advisories incomplete")
+        return {"queried_coordinates": len(purls), "complete": complete and all(a is not None for a in advisories),
+                "matches": matches, "advisories": [a for a in advisories if a]}
+
+    def enrich(self, cves):
+        status, kev, _ = self.request("cisa:kev", "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json")
+        result = {"collected": utc(), "kev_complete": status == 200, "epss_complete": True, "epss": []}
+        if status == 200 and isinstance(kev, dict):
+            result["kev"] = {k: kev.get(k) for k in ("catalogVersion", "dateReleased")}
+            result["kev"]["matched_cves"] = sorted(v["cveID"] for v in kev.get("vulnerabilities", []) if v["cveID"] in cves)
+        else:
+            self.gaps.append("CISA KEV unavailable")
+        cves = sorted(cves)
+        for offset in range(0, len(cves), 100):
+            status, data, _ = self.request("first:epss", "https://api.first.org/data/v1/epss?" + urlencode({"cve": ",".join(cves[offset:offset + 100])}))
+            if status == 200 and isinstance(data, dict) and isinstance(data.get("data"), list):
+                result["epss"].extend({k: item.get(k) for k in ("cve", "epss", "percentile", "date")} for item in data["data"])
+            else:
+                result["epss_complete"] = False
+        if not result["epss_complete"]:
+            self.gaps.append("FIRST EPSS incomplete")
+        return result
+
+    def collect(self):
+        status = json.loads(self.gh_command("status"))
+        backend = status.get("backend", {})
+        repos = backend.get("policy", {}).get("allowed_repos", [])
+        if backend.get("backend") != "broker" or not repos or any(not re.fullmatch(r"igou-io/igou-[a-z0-9-]+", r) for r in repos):
+            raise CollectionError("explicit igou-* broker policy required")
+        inventory = {}
+        for name in ("clusters", "images", "deployments", "policies", "alerts"):
+            inventory[name] = self.inventory(name)
+            self.evidence["acs_inventory"][name] = {k: v for k, v in inventory[name].items() if k != "items"}
+        images = self.details("images", inventory["images"]["items"])
+        self.evidence["images"] = images
+        workloads = self.details("deployments", inventory["deployments"]["items"])
+        self.evidence["workloads"] = workloads
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            repositories = list(pool.map(self.repository, repos))
+        self.evidence["repositories"] = repositories
+        for repo in repositories:
+            if not repo["complete"]:
+                self.gaps.append(repo["repo"] + ": " + repo.get("gap", "SBOM incomplete"))
+            for name, alerts in repo["alerts"].items():
+                if not alerts["complete"]:
+                    self.gaps.append(repo["repo"] + ": " + name + " alerts unavailable")
+        osv = self.osv(repositories)
+        self.evidence["osv"] = osv
+        cves = {f["cve"] for image in images for f in image["findings"] if re.fullmatch(r"CVE-\d{4}-\d+", f.get("cve") or "")}
+        cves.update(a for v in osv["advisories"] for a in v.get("aliases") or [] if re.fullmatch(r"CVE-\d{4}-\d+", a))
+        enrichment = self.enrich(cves)
+        scan_coverage = {"missing": [], "older_than_seven_days": [], "freshness_heuristic_days": 7}
+        for image in images:
+            if not image["scan_time"]:
+                scan_coverage["missing"].append(image["digest"])
+                continue
+            try:
+                scanned = datetime.fromisoformat(image["scan_time"].replace("Z", "+00:00"))
+                if (datetime.now(timezone.utc) - scanned).days >= 7:
+                    scan_coverage["older_than_seven_days"].append(image["digest"])
+            except ValueError:
+                scan_coverage["missing"].append(image["digest"])
+        for label, count in (("image digests lack valid scan timestamps", len(scan_coverage["missing"])),
+                             ("image scans exceed the seven-day freshness heuristic", len(scan_coverage["older_than_seven_days"]))):
+            if count:
+                self.gaps.append(str(count) + " " + label)
+        expiry = None
+        try:
+            payload = os.environ["ROX_API_TOKEN"].split(".")[1]
+            expiry = datetime.fromtimestamp(json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4)))["exp"], timezone.utc)
+            if (expiry - datetime.now(timezone.utc)).days < 14:
+                self.gaps.append("ACS reader credential expires in fewer than 14 days")
+        except (KeyError, ValueError, IndexError):
+            self.gaps.append("ACS reader expiry could not be inspected")
+        digests = {i["digest"] for i in images}
+        missing = {c["image"] for w in workloads for c in w["containers"] if c["image"] and c["image"] not in digests}
+        if missing:
+            self.gaps.append("workload image digests missing from collected image details")
+        result = {"schema_version": 1, "started": self.started, "finished": utc(),
+                  "status": "PARTIAL" if self.gaps else "COMPLETE", "gaps": sorted(set(self.gaps)),
+                  "acs_inventory": {k: {a: b for a, b in v.items() if a != "items"} for k, v in inventory.items()},
+                  "acs_token_expires": expiry.isoformat() if expiry else None,
+                  "clusters": [{"id": c.get("id"), "name": c.get("name"),
+                                "health": c.get("healthStatus", {}).get("overallHealthStatus"),
+                                "last_contact": c.get("healthStatus", {}).get("lastContact")}
+                               for c in inventory["clusters"]["items"]],
+                  "images": images, "workloads": workloads, "repositories": repositories,
+                  "scan_coverage": scan_coverage,
+                  "policies": [{k: p.get(k) for k in ("id", "name", "severity", "disabled", "lifecycleStages")}
+                               for p in inventory["policies"]["items"]],
+                  "alerts": [{"id": a.get("id"), "policy": a.get("policy", {}).get("name"),
+                              "severity": a.get("policy", {}).get("severity"), "state": a.get("state"),
+                              "deployment_id": (a.get("deployment") or {}).get("id"), "time": a.get("time")}
+                             for a in inventory["alerts"]["items"]],
+                  "osv": osv, "enrichment": enrichment,
+                  "missing_workload_digests": sorted(missing)}
+        result["collector_sha256"] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+        result["acs_integrity"] = "COMPLETE" if (all(i["complete"] for i in inventory.values())
+            and len(images) == inventory["images"]["unique_digests"]
+            and len(workloads) == inventory["deployments"]["unique"] and not missing) else "PARTIAL"
+        return result
+
+
+def summarize(evidence):
+    """Small analyst entry point; full image/package evidence stays in evidence.json."""
+    workloads = evidence.get("workloads", [])
+    by_digest = {}
+    hardening = {"privileged_workloads": 0, "host_mount_workloads": 0, "added_capability_workloads": 0}
+    for workload in workloads:
+        ports = [p for p in workload["ports"] if p.get("exposure") in ("ROUTE", "EXTERNAL", "NODE", "HOST")]
+        reference = {k: workload.get(k) for k in ("id", "name", "namespace", "cluster", "replicas")}
+        reference["configured_exposure"] = sorted({p["exposure"] for p in ports})
+        for digest in {c["image"] for c in workload["containers"] if c["image"]}:
+            by_digest.setdefault(digest, []).append(reference)
+        containers = workload["containers"]
+        hardening["privileged_workloads"] += any(c["security_context"].get("privileged") for c in containers)
+        hardening["added_capability_workloads"] += any(c["security_context"].get("addCapabilities") for c in containers)
+        hardening["host_mount_workloads"] += any(v.get("type") == "HostPath" for c in containers for v in c["volumes"])
+    kev = set(evidence.get("enrichment", {}).get("kev", {}).get("matched_cves", []))
+    ranked = []
+    for image in evidence.get("images", []):
+        findings = image["findings"]
+        identifiers = {f["cve"] for f in findings if f["cve"]}
+        fixable = {f["cve"] for f in findings if f["fixed_by"] and f["cve"]}
+        critical = {f["cve"] for f in findings if f["severity"] == "CRITICAL_VULNERABILITY_SEVERITY"}
+        references = by_digest.get(image["digest"], [])
+        if not identifiers or not references:
+            continue
+        ranked.append({"digest": image["digest"], "references": image.get("references", []),
+                       "scan_time": image["scan_time"], "unique_cves": len(identifiers),
+                       "fixable_cves": len(fixable), "critical_cves": len(critical),
+                       "kev_cves": sorted(identifiers & kev), "workload_count": len(references),
+                       "workload_examples": references[:10],
+                       "has_configured_exposure": any(w["configured_exposure"] for w in references),
+                       "finding_examples": sorted(findings, key=lambda f: (
+                           f["cve"] in kev, f["severity"] == "CRITICAL_VULNERABILITY_SEVERITY", bool(f["fixed_by"])), reverse=True)[:5]})
+    ranked.sort(key=lambda i: (bool(i["kev_cves"]), i["has_configured_exposure"], i["critical_cves"], i["fixable_cves"]), reverse=True)
+    policies = {}
+    for alert in evidence.get("alerts", []):
+        key = (alert["policy"], alert["state"])
+        policies[key] = policies.get(key, 0) + 1
+    return {"status": evidence["status"], "acs_integrity": evidence.get("acs_integrity", "PARTIAL"),
+            "started": evidence["started"], "finished": evidence["finished"], "gaps": evidence["gaps"],
+            "acs_inventory": evidence.get("acs_inventory", {}), "clusters": evidence.get("clusters", []),
+            "acs_token_expires": evidence.get("acs_token_expires"), "scan_coverage": evidence.get("scan_coverage", {}),
+            "repositories": [{k: v for k, v in r.items() if k not in ("purls", "alerts")}
+                             for r in evidence.get("repositories", [])],
+            "osv_queried_coordinates": evidence.get("osv", {}).get("queried_coordinates"),
+            "osv_matched_coordinates": len(evidence.get("osv", {}).get("matches", [])),
+            "hardening": hardening, "triage_image_examples": ranked[:25],
+            "alert_groups": [{"policy": k[0], "state": k[1], "records": v}
+                             for k, v in sorted(policies.items(), key=lambda i: i[1], reverse=True)],
+            "sampling_notice": "Triage examples are bounded heuristics, not a complete risk ranking or exploitability proof. Full evidence is in evidence.json."}
+
+
+def write_artifacts(directory, evidence, requests):
+    directory.mkdir(mode=0o700, parents=True, exist_ok=False)
+    def write(name, text):
+        target = directory / name
+        with target.open("x", encoding="utf-8") as stream:
+            target.chmod(0o600)
+            stream.write(text)
+        return hashlib.sha256(text.encode()).hexdigest()
+    hashes = {}
+    for name, data in (("evidence.json", evidence), ("summary.json", summarize(evidence)), ("requests.json", requests)):
+        hashes[name] = write(name, json.dumps(data, indent=2) + "\n")
+    inventory = evidence.get("acs_inventory", {})
+    lines = ["# SecOps collection", "", "Status: **" + evidence["status"] + "**", "",
+             "Collected: " + evidence["started"] + " through " + evidence["finished"], "",
+             "This is collection evidence for analyst review, not an exploitability assessment.", ""]
+    for name, item in inventory.items():
+        lines.append(f"- ACS {name}: {item['unique']} distinct records; reconciled={item['count_reconciled']}; enumeration complete={item['complete']}.")
+        if name == "images":
+            lines.append(f"  These are named image references covering {item['unique_digests']} unique digests; {item['alias_references']} additional references share content.")
+    lines.extend(["", "Coverage gaps:", "", *["- " + gap for gap in evidence["gaps"]], "",
+                  "Start with summary.json; query evidence.json selectively for full digest joins, scans and advisory records.",
+                  "ACS UID fields describe reported configuration. Route/external-service fields do not prove Internet reachability.",
+                  "Repository SBOM generation times do not establish snapshot freshness or equivalence to deployed digests.", ""])
+    hashes["report.md"] = write("report.md", "\n".join(lines))
+    write("sha256.json", json.dumps(hashes, indent=2) + "\n")
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--run-id", default=datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ"))
+    parser.add_argument("--budget-seconds", type=int, default=600, choices=range(30, 901), metavar="30..900")
+    args = parser.parse_args()
+    if not re.fullmatch(r"[a-zA-Z0-9_-]{1,80}", args.run_id):
+        parser.error("run ID must contain only letters, digits, underscores and hyphens")
+    if os.environ.get("AGENT_PROFILE") != "none" or not os.environ.get("GHAPP_BROKER_URL"):
+        parser.error("requires the scoped none profile and configured GitHub broker")
+    os.umask(0o077)
+    directory = Path("/output") / args.run_id
+    if directory.exists():
+        parser.error("run ID already exists; previous evidence will not be overwritten")
+    collector = None
+    try:
+        collector = Collector(args.budget_seconds)
+        evidence = collector.collect()
+    except Exception as error:
+        # Unexpected library/transport errors can embed credentials or signed URLs.
+        evidence = {**(collector.evidence if collector else {"started": utc()}),
+                    "finished": utc(), "status": "PARTIAL", "acs_integrity": "PARTIAL",
+                    "gaps": sorted(set((collector.gaps if collector else []) + [
+                        str(error) if isinstance(error, CollectionError) else "collection failed (" + type(error).__name__ + ")"]))}
+    write_artifacts(directory, evidence, collector.requests if collector else [])
+    print(json.dumps({"status": evidence["status"], "report": str(directory / "report.md"),
+                      "evidence": str(directory / "evidence.json"), "gaps": evidence["gaps"]}))
+    return 0 if evidence["status"] == "COMPLETE" else 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
