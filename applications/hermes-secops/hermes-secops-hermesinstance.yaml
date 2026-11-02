@@ -48,6 +48,21 @@ spec:
     # File-tool policy is evaluated by the gateway; I/O runs in the terminal pod.
     - name: HERMES_WRITE_SAFE_ROOT
       value: /workspace/reports:/output
+    - name: SLACK_ALLOWED_USERS
+      valueFrom:
+        secretKeyRef:
+          name: hermes-slack-routing
+          key: SLACK_ALLOWED_USERS
+    - name: SLACK_HOME_CHANNEL
+      valueFrom:
+        secretKeyRef:
+          name: hermes-slack-routing
+          key: SLACK_HOME_CHANNEL
+    - name: SLACK_ALLOWED_CHANNELS
+      valueFrom:
+        secretKeyRef:
+          name: hermes-slack-routing
+          key: SLACK_ALLOWED_CHANNELS
     - name: GHAPP_BROKER_URL
       value: http://ghbroker.hermes-secops-auth.svc.cluster.local:8085
     - name: HTTP_PROXY
@@ -67,6 +82,15 @@ spec:
   envFrom:
     - secretRef:
         name: hermes-env
+  gateways:
+    slack:
+      enabled: true
+      botTokenSecretRef:
+        name: hermes-slack
+        key: SLACK_BOT_TOKEN
+      appTokenSecretRef:
+        name: hermes-slack
+        key: SLACK_APP_TOKEN
   # Prepare the empty workspace claim before any subPath mounts are used.
   initContainers:
     - name: workspace-init
@@ -255,6 +279,11 @@ spec:
           - skills
           - terminal
           - web
+        slack:
+          - file
+          - skills
+          - terminal
+          - web
         webhook:
           - file
           - skills
@@ -265,6 +294,8 @@ spec:
           - skills
           - terminal
           - web
+      slack:
+        require_mention: true
       terminal:
         backend: kubernetes
         cwd: /workspace
