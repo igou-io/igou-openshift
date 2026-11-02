@@ -80,6 +80,61 @@ class InventoryTests(unittest.TestCase):
 
 
 class TransportTests(unittest.TestCase):
+    def test_alerts_follow_cursor_link_even_with_short_page(self):
+        collector = fixture_collector()
+        collector.gh_command = unittest.mock.Mock(return_value="secret-token")
+        collector.sbom = unittest.mock.Mock(return_value={"packages": []})
+        endpoint = "/repos/igou-io/igou-docs/dependabot/alerts"
+        collector.github = unittest.mock.Mock(side_effect=[
+            (200, {"default_branch": "main"}, {}), (200, {"sha": "head"}, {}),
+            (200, [{"number": 1}], {"Link": '<https://api.github.com' + endpoint + '?after=cursor>; rel="next"'}),
+            (200, [{"number": 2}], {}), (200, [], {}),
+        ])
+        result = collector.repository("igou-io/igou-docs")
+        self.assertTrue(result["alerts"]["dependabot"]["complete"])
+        self.assertEqual([a["number"] for a in result["alerts"]["dependabot"]["items"]], [1, 2])
+        paths = [call.args[1] for call in collector.github.call_args_list]
+        self.assertIn(endpoint + "?after=cursor", paths)
+        self.assertTrue(all("&page=" not in p for p in paths))
+
+    def test_alert_cursor_canonical_repository_id_stays_scoped(self):
+        collector = fixture_collector()
+        collector.gh_command = unittest.mock.Mock(return_value="secret-token")
+        collector.sbom = unittest.mock.Mock(return_value={"packages": []})
+        collector.github = unittest.mock.Mock(side_effect=[
+            (200, {"default_branch": "main", "id": 123}, {}), (200, {"sha": "head"}, {}),
+            (200, [], {"Link": '<https://api.github.com/repositories/123/dependabot/alerts?after=cursor>; rel="next"'}),
+            (200, [], {}), (200, [], {}),
+        ])
+        result = collector.repository("igou-io/igou-docs")
+        self.assertTrue(result["alerts"]["dependabot"]["complete"])
+        self.assertEqual(collector.github.call_args_list[3].args[1], "/repos/igou-io/igou-docs/dependabot/alerts?after=cursor")
+
+    def test_alert_pagination_rejects_cross_origin_and_repository(self):
+        for url in ("https://evil.example/alerts", "https://api.github.com/repos/other/repo/dependabot/alerts"):
+            collector = fixture_collector()
+            collector.gh_command = unittest.mock.Mock(return_value="secret-token")
+            collector.sbom = unittest.mock.Mock(return_value={"packages": []})
+            collector.github = unittest.mock.Mock(side_effect=[
+                (200, {"default_branch": "main"}, {}), (200, {"sha": "head"}, {}),
+                (200, [], {"Link": '<' + url + '>; rel="next"'}), (200, [], {}),
+            ])
+            result = collector.repository("igou-io/igou-docs")
+            self.assertFalse(result["alerts"]["dependabot"]["complete"])
+            self.assertEqual(collector.github.call_count, 4)
+
+    def test_alert_pagination_cycle_remains_partial(self):
+        collector = fixture_collector()
+        collector.gh_command = unittest.mock.Mock(return_value="secret-token")
+        collector.sbom = unittest.mock.Mock(return_value={"packages": []})
+        collector.github = unittest.mock.Mock(side_effect=[
+            (200, {"default_branch": "main"}, {}), (200, {"sha": "head"}, {}),
+            (200, [], {"link": '<https://api.github.com/repos/igou-io/igou-docs/dependabot/alerts?state=open&per_page=100>; rel="next"'}),
+            (200, [], {}),
+        ])
+        result = collector.repository("igou-io/igou-docs")
+        self.assertEqual(result["alerts"]["dependabot"]["gap"], "alert pagination cycle")
+
     def test_redirect_never_forwards_authorization(self):
         collector = fixture_collector()
         collector.github = unittest.mock.Mock(side_effect=[
