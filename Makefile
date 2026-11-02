@@ -40,8 +40,12 @@ validate-hermes-proxy: ## Ensure Hermes bypasses Squid for the in-cluster API se
 			} \
 		} END { exit failed }' {} +
 
+.PHONY: test-secops-collector
+test-secops-collector: ## Verify read-only collection, coverage accounting, and artifact handling
+	$(PYTHON) -m unittest discover -s applications/hermes-secops/collector -p 'test_*.py'
+
 .PHONY: test
-test: lint lint-helm validate-manifest-files validate-hermes-proxy validate-schemas ## Run all standard validation checks (one render per Kustomization)
+test: lint lint-helm validate-manifest-files validate-hermes-proxy test-secops-collector validate-schemas ## Run all standard validation checks (one render per Kustomization)
 
 .PHONY: clean
 clean: ## Remove charts/ directories left behind by kustomize build (excludes .helm/charts)

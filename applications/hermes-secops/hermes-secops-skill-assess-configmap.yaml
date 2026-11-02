@@ -14,35 +14,53 @@ data:
     1. Read /workspace/AGENTS.md. Scope the requested repositories and time window.
        If none are specified, use the broker's explicit allowlist; do not expand
        to other organizations or the user's unrelated personal repositories.
-    2. Export each repository's SBOM using gh-app and contents=read. GitHub is
-       retiring the synchronous /dependency-graph/sbom endpoint on 2026-11-13;
-       prefer GET /repos/OWNER/REPO/dependency-graph/sbom/generate-report, then
-       poll the returned fetch-report URL with a bounded retry count. Record
-       unresolved 202s, 403s, 404s, disabled graphs, and old report timestamps as
-       gaps. Never interpret an inaccessible SBOM as a clean bill of health.
-       Never log signed download URLs or forward authorization to another host.
-    3. Read Dependabot alerts with vulnerability_alerts=read and code-scanning
-       alerts with security_events=read. Request these separately from SBOM
-       contents tokens. If the installed App lacks either permission, report
-       the gap and continue with SBOMs; do not substitute a broader identity.
-    4. In a terminal session, GET existing /v1/images, /v1/deployments,
-       /v1/policies and /v1/alerts from https://$ROX_ENDPOINT using the dedicated
-       token and ROX_CA_CERT_FILE. Paginate every list. curl supports
-       --cacert "$ROX_CA_CERT_FILE"; never disable TLS verification. Do not
-       request image scans or evaluate uploaded deployment manifests. ACS may
-       contain clusters beyond the currently secured OCP cluster; identify the
-       actual cluster coverage from /v1/clusters before reporting it.
-    5. Correlate package PURLs and advisory aliases, then join running image
-       digests to workloads from ACS. Keep source dependencies, embedded tools,
-       base-image RPMs, and deployed artifacts distinct. Check vendor backports
-       before assigning an RPM finding to an upstream semantic-version range.
+    2. Run `secops-collect --budget-seconds 600` in a fresh terminal session.
+       The read-only collector is mounted from the GitOps-owned ConfigMap;
+       do not rewrite it, install a replacement, or reconstruct collection code.
+       It uses only the explicit broker allowlist, repository-scoped read tokens,
+       asynchronous SBOM exports, existing ACS GET endpoints with verified TLS,
+       and public advisory queries. No alternate identity is permitted.
+       Exit 2 means PARTIAL: read the emitted evidence and every gap, then
+       continue the assessment without presenting inaccessible sources as clean.
+       A deadline failure retains available sanitized evidence. Do not retry
+       indefinitely or launch scans, rescans, or ACS report-generation writes.
+    3. Read the emitted summary.json and report.md under /output/<run-id>.
+       Query evidence.json selectively with the terminal JSON parser for the
+       relevant digests/advisories; do not dump the full evidence into context.
+       Check acs_integrity, per-source completeness, distinct counts, duplicates,
+       before/after server totals, missing details, scan timestamps, export times,
+       reader-token expiry, and the observed cluster coverage. Counts may change
+       between runs; compare each run with its own server totals. The collection
+       is not a transactional snapshot. Missing GitHub alert grants, repository
+       access, SBOMs or scans remain coverage gaps. An exported SBOM's creation
+       time is not the freshness of every submitted dependency snapshot.
+    4. Use the collector's image/deployment digest joins and sanitized security
+       context, policy and alert metadata for hardening/exposure triage.
+       Configured UID 0 is not observed process identity. Required operator/CSI
+       privileges are not automatically excess access. ROUTE, EXTERNAL and NODE
+       are configured exposure, not proof of public Internet reachability.
+    5. Correlate PURLs and advisory aliases; count a CVE once per affected image.
+       Keep source dependencies, embedded tools, base-image RPMs, and deployed
+       artifacts distinct. A current repository-wide SBOM is not proof of the
+       contents of an older running image digest. Check vendor backports before
+       assigning an RPM finding to an upstream semantic-version range.
     6. Enrich CVEs from OSV, CISA KEV, FIRST EPSS, and primary vendor advisories.
-       Use only package coordinates/versions and CVE IDs in public API requests.
+       Use only package coordinates/versions and public advisory IDs in public
+       API requests. The collector handles positional OSV results and pagination;
+       its supplemental matches are not confirmed GitHub alerts. Verify the top
+       findings against primary vendor advisories before recommending fixes.
        Record feed timestamps. KEV absence and low EPSS do not establish safety.
-    7. Write a dated report under /workspace/reports containing scope, collection
-       times, severity, evidence, running digests, fix availability, confidence,
-       and blind spots. Separate confirmed alerts from supplemental matches.
-       Classify proposals as dependency update, tool/vendor update, image rebuild,
-       rollout of an existing rebuilt image, upstream blocked, or investigation.
-       Return proposals to the user without creating issues, PRs, suppressions,
-       live changes, or notifications.
+    7. Write assessment.md beside evidence.json under /output/<run-id>, containing
+       scope, collection times, severity, evidence, image digests, fix availability,
+       confidence, and blind spots. Separate confirmed alerts from supplemental
+       matches. Classify proposals as dependency update, tool/vendor update,
+       image rebuild, rollout of an existing rebuilt image, upstream blocked,
+       or investigation. Do not invent replacement tags/digests or claim a
+       package match proves exploitability.
+       The shared output appears in the authenticated dashboard Files browser
+       under <run-id>/ and in the gateway at /opt/data/cache/documents/<run-id>/.
+       Return those artifact paths. Do not connect to the dashboard from the
+       isolated terminal or widen network access to deliver artifacts.
+       Keep credentials, raw deployment environment values, signed URLs and
+       private source out of artifacts. Do not create issues, PRs, suppressions,
+       live changes, notifications, scheduled jobs, or self-modified skills.

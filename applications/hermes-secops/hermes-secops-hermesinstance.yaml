@@ -45,6 +45,9 @@ spec:
       value: http://searxng.searxng.svc.cluster.local:8080
     - name: HERMES_DASHBOARD_FILES_ROOT
       value: /opt/data/dashboard-files
+    # File-tool policy is evaluated by the gateway; I/O runs in the terminal pod.
+    - name: HERMES_WRITE_SAFE_ROOT
+      value: /workspace/reports:/output
     - name: GHAPP_BROKER_URL
       value: http://ghbroker.hermes-secops-auth.svc.cluster.local:8085
     - name: HTTP_PROXY
@@ -72,9 +75,9 @@ spec:
         - /bin/sh
         - -ec
         - |
-          mkdir -p /workspace-volume/repos /workspace-volume/output
-          chown 1000:1000 /workspace-volume /workspace-volume/repos /workspace-volume/output
-          chmod 0770 /workspace-volume /workspace-volume/repos /workspace-volume/output
+          mkdir -p /workspace-volume/repos/reports /workspace-volume/output
+          chown 1000:1000 /workspace-volume /workspace-volume/repos /workspace-volume/repos/reports /workspace-volume/output
+          chmod 0770 /workspace-volume /workspace-volume/repos /workspace-volume/repos/reports /workspace-volume/output
       resources:
         requests:
           cpu: 10m
@@ -174,6 +177,10 @@ spec:
       volumeMounts:
         - name: data
           mountPath: /opt/data
+        - name: hermes-workspace
+          subPath: output
+          mountPath: /opt/data/dashboard-files
+          readOnly: true
         - name: config
           mountPath: /opt/data/config.yaml
           subPath: config.yaml
@@ -296,6 +303,8 @@ spec:
                   - infinity
                 workingDir: /workspace
                 env:
+                  - name: HERMES_WRITE_SAFE_ROOT
+                    value: /workspace/reports:/output
                   - name: GHAPP_BROKER_URL
                     value: http://ghbroker.hermes-secops-auth.svc.cluster.local:8085
                   - name: HTTP_PROXY
@@ -328,6 +337,10 @@ spec:
                         name: hermes-secops-rhacs
                         key: ROX_API_TOKEN
                 volumeMounts:
+                  - name: secops-collector
+                    mountPath: /usr/local/bin/secops-collect
+                    subPath: secops-collect
+                    readOnly: true
                   - name: workspace
                     subPath: repos
                     mountPath: /workspace
@@ -360,6 +373,10 @@ spec:
                     drop:
                       - ALL
             volumes:
+              - name: secops-collector
+                configMap:
+                  name: hermes-secops-collector
+                  defaultMode: 0555
               - name: workspace
                 persistentVolumeClaim:
                   claimName: hermes-workspace
