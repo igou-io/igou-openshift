@@ -1,0 +1,47 @@
+_metadata:
+  major_version: 1
+  minor_version: 1
+display_information:
+  name: Hermes SecOps
+  description: Hermes SecOps security assessments for igou projects and cluster workloads
+  background_color: '#1a1a2e'
+features:
+  app_home:
+    home_tab_enabled: false
+    messages_tab_enabled: true
+    messages_tab_read_only_enabled: false
+  bot_user:
+    display_name: Hermes SecOps
+    always_online: true
+  assistant_view:
+    assistant_description: Chat with Hermes in threads and DMs.
+oauth_config:
+  scopes:
+    bot:
+      - app_mentions:read
+      - assistant:write
+      - channels:history
+      - channels:read
+      - chat:write
+      - files:read
+      - files:write
+      - groups:history
+      - groups:read
+      - im:history
+      - im:read
+      - im:write
+      - users:read
+settings:
+  event_subscriptions:
+    bot_events:
+      - app_mention
+      - assistant_thread_context_changed
+      - assistant_thread_started
+      - message.channels
+      - message.groups
+      - message.im
+  interactivity:
+    is_enabled: true
+  org_deploy_enabled: false
+  socket_mode_enabled: true
+  token_rotation_enabled: false

@@ -5,7 +5,8 @@ through the `openai-codex` OAuth provider. Its Codex authentication is seeded
 directly into private persistent agent storage, outside Git and terminal pods.
 It requests SBOMs for nine explicitly listed `igou-io/igou-*` repositories and
 reads existing ACS vulnerability inventories, deployment attribution, policies,
-and violations. Reports stay in its workspace and authenticated dashboard.
+and violations. Reports stay in its workspace and authenticated dashboard;
+its dedicated Slack app provides scoped assessment requests and summaries.
 Public OSV, CISA KEV, FIRST EPSS, and vendor advisories provide enrichment.
 
 The `HermesInstance` uses the shared Hermes operator and root-bootstrap SCC.
@@ -51,7 +52,7 @@ report creation and other operations requiring write permissions are outside
 this scaffold. It does not reuse the CI token's image write permissions.
 
 No infrastructure bundle, SSH keys, 1Password token, registry API credentials,
-AAP, Forgejo, Slack, webhook ingress, scheduled investigations, terminal OAuth
+AAP, Forgejo, webhook ingress, scheduled investigations, terminal OAuth
 identities, or remediation tools are configured. Image pull credentials
 remain kubelet inputs, although gateway pod creation could mount namespace-local
 Secrets; they must therefore be pull-only.
@@ -63,6 +64,32 @@ referenced through ExternalSecrets. A copied Codex OAuth grant shares its
 refresh-token lineage with its source machine; a separate login is required
 for independent renewal. Authentication remains writable on the agent's data
 PVC and is never reconciled from Git or mounted in terminal sessions.
+
+## Slack
+
+The dedicated **Hermes SecOps** app uses Socket Mode, following Hermes SRE's
+one-app-per-instance setup. `slack-app-manifest.yaml` is the Slack setup
+manifest, not a Kustomize resource. The `hermes-slack` ExternalSecret maps only
+`slack_app_token` and `slack_bot_token` from `lab_agents/hermes-secops`; the
+operator injects them through `spec.gateways.slack` into the gateway, not the
+dashboard or terminal pod. Neither token is copied into the broad env Secret.
+
+`SLACK_ALLOWED_USERS`, `SLACK_ALLOWED_CHANNELS` and `SLACK_HOME_CHANNEL`
+come from required keys in the separate `hermes-slack-routing` Secret,
+populated from concealed fields in `lab_agents/hermes-secops`. They limit the
+runtime to the existing authorized user, `#igoucloud-hermes-secops` and that user's DMs.
+Channel requests require a mention. The Slack toolset remains file, skills,
+terminal and web; it adds no generic messaging, scheduling or remediation
+tools. Summaries reply in the requesting thread/DM with status, collection
+time, priorities, coverage gaps and the authenticated report location.
+Scheduled or unsolicited notifications are not configured.
+
+The Slack manifest preserves SRE's scopes and events, including channel/DM
+history, assistant UI and file APIs. Runtime allowlists do not narrow the
+Slack token's API grants. Invite this bot only to its intended channel, keep
+its two tokens separate from SRE's, and verify channel/user checks and token
+absence from a fresh investigation session after rollout. Public Slack HTTP
+and WebSocket traffic uses the existing proxy; no network policy is widened.
 
 ## Collection and artifacts
 
