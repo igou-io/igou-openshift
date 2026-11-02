@@ -7,7 +7,7 @@ resources:
 helmCharts:
   - name: connect
     repo: https://1password.github.io/connect-helm-charts
-    version: 2.4.1
+    version: 2.4.3
     skipTests: true                # drop the helm.sh/hook:test health-check Pod
     releaseName: onepassword-connect
     namespace: onepassword-connect
