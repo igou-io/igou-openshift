@@ -201,11 +201,13 @@ class Collector:
 
     def repository(self, repo):
         result = {"repo": repo, "complete": False, "alerts": {}, "purls": []}
+        repository_id = None
         try:
             token = self.gh_command("token", "--repo", repo, "--permission", "contents=read")
             status, metadata, _ = self.github(repo, "/repos/" + repo, token)
             if status != 200 or not isinstance(metadata, dict):
                 raise CollectionError("repository metadata unavailable")
+            repository_id = metadata.get("id")
             result["default_branch"] = metadata["default_branch"]
             status, commit, _ = self.github(repo, "/repos/" + repo + "/commits/" + metadata["default_branch"], token)
             result["observed_head"] = commit.get("sha") if status == 200 and isinstance(commit, dict) else None
@@ -220,18 +222,32 @@ class Collector:
             alert_result = {"complete": False, "items": []}
             try:
                 token = self.gh_command("token", "--repo", repo, "--permission", permission + "=read")
-                for page in range(1, 101):
-                    status, items, _ = self.github(repo, "/repos/" + repo + "/" + endpoint
-                                                   + "/alerts?state=open&per_page=100&page=" + str(page), token)
+                alert_path = "/repos/" + repo + "/" + endpoint + "/alerts"
+                path = alert_path + "?state=open&per_page=100"
+                seen = set()
+                for _ in range(100):
+                    if path in seen:
+                        raise CollectionError("alert pagination cycle")
+                    seen.add(path)
+                    status, items, headers = self.github(repo, path, token)
                     if status != 200 or not isinstance(items, list):
                         raise CollectionError("alert read unavailable (HTTP " + str(status) + ")")
                     alert_result["items"].extend({"number": i.get("number"), "state": i.get("state"),
                                                   "created_at": i.get("created_at"),
                                                   "advisory": i.get("security_advisory", {}).get("ghsa_id"),
                                                   "rule_id": i.get("rule", {}).get("id")} for i in items)
-                    if len(items) < 100:
+                    link = re.search(r'<([^>]+)>;\s*rel="next"', headers.get("Link", headers.get("link", "")))
+                    if not link:
                         alert_result["complete"] = True
                         break
+                    next_url = urlparse(link.group(1))
+                    allowed_paths = {alert_path}
+                    if repository_id is not None:
+                        allowed_paths.add("/repositories/" + str(repository_id) + "/" + endpoint + "/alerts")
+                    if (next_url.scheme != "https" or next_url.netloc != "api.github.com"
+                            or next_url.path not in allowed_paths or next_url.fragment):
+                        raise CollectionError("invalid alert pagination origin or repository")
+                    path = alert_path + "?" + next_url.query
                 if not alert_result["complete"]:
                     raise CollectionError("alert pagination limit exceeded")
             except CollectionError as error:
