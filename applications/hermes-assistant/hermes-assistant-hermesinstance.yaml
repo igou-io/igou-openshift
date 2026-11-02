@@ -103,9 +103,15 @@ spec:
       value: '1'
     # Slack: this instance holds the shared app's tokens (see hermes-env).
     - name: SLACK_ALLOWED_USERS
-      value: REDACTED_SLACK_USER_ID
+      valueFrom:
+        secretKeyRef:
+          name: hermes-slack-routing
+          key: SLACK_ALLOWED_USERS
     - name: SLACK_HOME_CHANNEL
-      value: REDACTED_SLACK_CHANNEL_ID
+      valueFrom:
+        secretKeyRef:
+          name: hermes-slack-routing
+          key: SLACK_HOME_CHANNEL
   envFrom:
     # API_SERVER_KEY, dashboard BasicAuth trio, Slack tokens,
     # OPENCODE_GO_API_KEY — see hermes-env-externalsecret.yaml.
@@ -540,6 +546,11 @@ spec:
                     value: localhost,127.0.0.1,::1,.cluster.local,172.30.0.1,.apps.ocp.igou.systems,api.ocp.igou.systems,10.10.9.10,truenas.igou.systems,prometheus.rk8s.igou.systems
                   - name: NODE_USE_ENV_PROXY
                     value: '1'
+                  - name: SLACK_HOME_CHANNEL
+                    valueFrom:
+                      secretKeyRef:
+                        name: hermes-slack-routing
+                        key: SLACK_HOME_CHANNEL
                   # opencode's hosted-model key is session-visible by design.
                   - name: OPENCODE_GO_API_KEY
                     valueFrom:

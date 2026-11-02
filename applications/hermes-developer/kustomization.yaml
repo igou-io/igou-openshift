@@ -25,6 +25,7 @@ resources:
   - hermes-session-networkpolicy.yaml
   - quay-local-pull-externalsecret.yaml
   - hermes-env-externalsecret.yaml
+  - hermes-slack-routing-externalsecret.yaml
   - hermes-session-readonly-externalsecret.yaml
   - hermes-session-readonly-rk8s-externalsecret.yaml
   - hermes-session-readonly-routeros-externalsecret.yaml

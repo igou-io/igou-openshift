@@ -136,9 +136,9 @@ If any query's JSON output comes back truncated (parse error / output cut off), 
    1. Write the compact digest to a file, then post it as the anchor message. Digest contents: the headline deal, one best pick per protein, the best-store recommendation, and a final line `🧵 Full report in thread`. MUST be under 3,500 characters. `$SLACK_BOT_TOKEN` is present in the sandbox environment — reference it, NEVER echo/print it.
 
 ```bash
-cat > /tmp/digest.json <<'JSON'
-{"channel": "REDACTED_SLACK_CHANNEL_ID", "text": "<digest text here, \n for newlines>"}
-JSON
+test -n "$SLACK_HOME_CHANNEL" || exit 1
+jq -n --arg channel "$SLACK_HOME_CHANNEL" --arg text '<digest text here>' \
+  '{channel: $channel, text: $text}' > /tmp/digest.json
 curl -s -X POST https://slack.com/api/chat.postMessage \
   -H "Authorization: Bearer $SLACK_BOT_TOKEN" -H "Content-Type: application/json" \
   -d @/tmp/digest.json | jq '{ok, ts, error}'

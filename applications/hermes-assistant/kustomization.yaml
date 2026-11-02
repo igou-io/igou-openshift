@@ -25,6 +25,7 @@ resources:
   - hermes-session-networkpolicy.yaml
   - quay-local-pull-externalsecret.yaml
   - hermes-env-externalsecret.yaml
+  - hermes-slack-routing-externalsecret.yaml
   - google-drive-mcp-externalsecret.yaml
   - google-drive-mcp-deployment.yaml
   - google-drive-mcp-service.yaml

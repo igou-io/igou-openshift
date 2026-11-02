@@ -85,11 +85,20 @@ spec:
     # GHAPP_BROKER_SOCKET bind mount.
     # Slack: own app, answers only in #igoucloud-hermes-developer and DMs.
     - name: SLACK_ALLOWED_USERS
-      value: REDACTED_SLACK_USER_ID
+      valueFrom:
+        secretKeyRef:
+          name: hermes-slack-routing
+          key: SLACK_ALLOWED_USERS
     - name: SLACK_HOME_CHANNEL
-      value: REDACTED_SLACK_CHANNEL_ID
+      valueFrom:
+        secretKeyRef:
+          name: hermes-slack-routing
+          key: SLACK_HOME_CHANNEL
     - name: SLACK_ALLOWED_CHANNELS
-      value: REDACTED_SLACK_CHANNEL_ID
+      valueFrom:
+        secretKeyRef:
+          name: hermes-slack-routing
+          key: SLACK_ALLOWED_CHANNELS
     - name: GHAPP_BROKER_URL
       value: http://ghbroker.hermes-developer.svc.cluster.local:8085
     # HTTP-aware clients use the shared cluster-local proxy for external

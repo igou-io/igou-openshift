@@ -32,6 +32,7 @@ resources:
   - igou-docs-sync-networkpolicy.yaml
   - quay-local-pull-externalsecret.yaml
   - hermes-env-externalsecret.yaml
+  - hermes-slack-routing-externalsecret.yaml
   - hermes-sre-slack-webhook-externalsecret.yaml
   - hermes-slack-externalsecret.yaml
   - hermes-session-readonly-externalsecret.yaml
