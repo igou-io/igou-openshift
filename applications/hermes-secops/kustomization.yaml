@@ -4,10 +4,40 @@ kind: Kustomization
 configMapGenerator:
   - name: hermes-secops-collector
     namespace: hermes-secops
+    options:
+      disableNameSuffixHash: true
     files:
       - secops-collect=collector/secops-collect
-generatorOptions:
-  disableNameSuffixHash: true
+  - name: hermes-secops-scheduled-skills
+    namespace: hermes-secops
+    options:
+      disableNameSuffixHash: false
+    files:
+      - security-brief.md=skills/security-brief/SKILL.md
+      - kev-watch.md=skills/kev-watch/SKILL.md
+      - scan-coverage.md=skills/scan-coverage/SKILL.md
+      - hardening-review.md=skills/hardening-review/SKILL.md
+      - runtime-triage.md=skills/runtime-triage/SKILL.md
+      - security-trends.md=skills/security-trends/SKILL.md
+      - access-health.md=skills/access-health/SKILL.md
+  - name: hermes-secops-schedules
+    namespace: hermes-secops
+    options:
+      disableNameSuffixHash: false
+    files:
+      - schedules/jobs.yaml
+      - schedules/install.py
+      - schedules/secops_schedule.py
+      - schedules/security-brief.py
+      - schedules/kev-watch.py
+      - schedules/kev-monitor.py
+      - schedules/scan-coverage.py
+      - schedules/hardening-review.py
+      - schedules/runtime-triage.py
+      - schedules/security-trends.py
+      - schedules/access-health.py
+configurations:
+  - kustomizeconfig.yaml
 resources:
   - default-deny-networkpolicy.yaml
   - hermes-agent-networkpolicy.yaml

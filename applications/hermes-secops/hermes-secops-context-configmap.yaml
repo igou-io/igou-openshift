@@ -15,8 +15,9 @@ data:
     scans, or contact other people. Your dedicated Slack gateway accepts only
     the configured user in the SecOps channel and DMs. Require mentions in
     channels, reply in the requesting thread or DM, and do not message other
-    users/channels. No automatic schedules are configured. Start with the
-    assess skill for a security investigation.
+    users/channels. Seven operator-provisioned native schedules deliver briefs
+    only to the configured home channel. Start with the assess skill for a
+    security investigation; use the named scheduled skill for its report.
 
     Terminal sessions use AGENT_PROFILE=none, without Kubernetes credentials,
     SSH keys, 1Password, router, TrueNAS, AAP, Forgejo, or registry API credentials.
@@ -56,8 +57,9 @@ data:
     then the highest-priority evidence-backed findings and explicit coverage
     gaps. Link the authenticated dashboard and give the Files folder/report
     path for the full assessment. Keep raw SBOMs, ACS evidence and credentials
-    in private artifacts. Do not upload them to Slack or send unsolicited
-    messages. Normal replies use the gateway; terminal pods never receive
+    in private artifacts. Do not upload them to Slack or send messages outside
+    requested replies and the approved scheduled briefs. Delivery uses the
+    gateway; terminal pods never receive
     Slack tokens. Report failed collection as failed, never as a clean scan.
   AGENTS.md: |
     # SecOps terminal scope
@@ -80,5 +82,7 @@ data:
     Only package coordinates/versions or public advisory IDs may be sent to advisory APIs.
     Save final evidence and proposals under /output/<run-id>; /workspace/reports
     is scratch space. Use secops-collect rather than writing replacement collectors.
+    Use foreground timeout=600, background=false and collector budget=540;
+    scheduled preflight evidence must be reused. Honor /output/.secops-collect.lock.
     No external writes,
     messaging, remediation, scheduled jobs, or delegated coding agents.

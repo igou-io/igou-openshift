@@ -123,6 +123,39 @@ spec:
       volumeMounts:
         - name: hermes-workspace
           mountPath: /workspace-volume
+    # Native cron API owns its store and preserves execution history and pauses.
+    - name: secops-schedules
+      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:bb75429809363c65e4b89be71a3b81e1090a478c062402bb852a82d6769acf85
+      command:
+        - /opt/hermes/.venv/bin/python
+        - /opt/data/scripts/secops/install.py
+      env:
+        - name: HERMES_HOME
+          value: /opt/data
+        - name: PYTHONPATH
+          value: /opt/hermes
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+      volumeMounts:
+        - name: data
+          mountPath: /opt/data
+        - name: hermes-workspace
+          subPath: repos
+          mountPath: /workspace
+        - name: config
+          mountPath: /opt/data/config.yaml
+          subPath: config.yaml
+          readOnly: true
+        - name: secops-schedules
+          mountPath: /opt/data/scripts/secops
+          readOnly: true
+
   resources:
     requests:
       cpu: 250m
@@ -226,6 +259,12 @@ spec:
     - name: secops-skill
       configMap:
         name: hermes-secops-skill-assess
+    - name: secops-scheduled-skills
+      configMap:
+        name: hermes-secops-scheduled-skills
+    - name: secops-schedules
+      configMap:
+        name: hermes-secops-schedules
   extraVolumeMounts:
     - name: hermes-workspace
       subPath: repos
@@ -243,6 +282,37 @@ spec:
       readOnly: true
     - name: secops-skill
       mountPath: /opt/data/agent-skills/secops/assess
+      readOnly: true
+    - name: secops-schedules
+      mountPath: /opt/data/scripts/secops
+      readOnly: true
+    - name: secops-scheduled-skills
+      subPath: security-brief.md
+      mountPath: /opt/data/agent-skills/secops/security-brief/SKILL.md
+      readOnly: true
+    - name: secops-scheduled-skills
+      subPath: kev-watch.md
+      mountPath: /opt/data/agent-skills/secops/kev-watch/SKILL.md
+      readOnly: true
+    - name: secops-scheduled-skills
+      subPath: scan-coverage.md
+      mountPath: /opt/data/agent-skills/secops/scan-coverage/SKILL.md
+      readOnly: true
+    - name: secops-scheduled-skills
+      subPath: hardening-review.md
+      mountPath: /opt/data/agent-skills/secops/hardening-review/SKILL.md
+      readOnly: true
+    - name: secops-scheduled-skills
+      subPath: runtime-triage.md
+      mountPath: /opt/data/agent-skills/secops/runtime-triage/SKILL.md
+      readOnly: true
+    - name: secops-scheduled-skills
+      subPath: security-trends.md
+      mountPath: /opt/data/agent-skills/secops/security-trends/SKILL.md
+      readOnly: true
+    - name: secops-scheduled-skills
+      subPath: access-health.md
+      mountPath: /opt/data/agent-skills/secops/access-health/SKILL.md
       readOnly: true
   config:
     raw:
@@ -264,6 +334,10 @@ spec:
         approval: *sol_aux
         skills_hub: *sol_aux
       max_concurrent_sessions: '2'
+      cron:
+        max_parallel_jobs: 1
+        catch_up_missed: false
+        script_timeout_seconds: 900
       model:
         default: gpt-6.1-sol
         provider: openai-codex

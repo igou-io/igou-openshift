@@ -82,7 +82,49 @@ Channel requests require a mention. The Slack toolset remains file, skills,
 terminal and web; it adds no generic messaging, scheduling or remediation
 tools. Summaries reply in the requesting thread/DM with status, collection
 time, priorities, coverage gaps and the authenticated report location.
-Scheduled or unsolicited notifications are not configured.
+Seven operator-provisioned schedules deliver briefs to the configured home
+channel. The agent cannot create additional schedules or message other channels.
+
+## Scheduled assessments
+
+`schedules/jobs.yaml` defines the seven native Hermes jobs, all explicitly in UTC:
+
+| Skill | Schedule |
+|---|---|
+| `security-brief` | Weekdays 13:00 |
+| `kev-watch` | Hourly at :05 |
+| `scan-coverage` | Daily 12:30 |
+| `hardening-review` | Monday 14:00 |
+| `runtime-triage` | Wednesday 14:00 |
+| `security-trends` | Friday 14:00 |
+| `access-health` | Friday 15:00 |
+
+Skills are read-only ConfigMap mounts. The `secops-schedules` init container
+reconciles operator-owned job definitions with native `create_job`/`update_job`
+APIs, preserving IDs, execution history, unchanged next fires and operator pauses.
+No job-store JSON is edited directly. `cron.max_parallel_jobs: 1` serializes
+scheduled work. Hashed skill/script ConfigMaps are referenced through Kustomize
+name-reference configuration so definition changes roll the pod and rerun reconciliation.
+Missed occurrences are skipped rather than replayed in bulk.
+Gateway delivery uses `deliver: slack` and `failure_deliver: slack`, resolving the
+home channel from private runtime configuration. Terminals receive no Slack tokens.
+
+Each preflight reuses a checksummed collection at most 45 minutes old, or invokes
+the existing tokenless Kubernetes terminal with a 540-second collector budget,
+600-second foreground timeout and a shared collection lock. Exit 2 retains partial
+evidence; background-start acknowledgements and missing/corrupted artifacts fail
+the job. The KEV monitor compares all live image/workload joins and configured
+exposure plus coverage; unchanged results skip the model and Slack notification.
+Its first run establishes a baseline. Native monitor detection advances before
+analysis, so inspect failed-run notices before considering a changed baseline
+successfully reported. Reports use `<skill>.md` beside the shared evidence.
+
+Native cron records execution and delivery outcomes on the data PVC. This is not
+checkpoint/resume of model reasoning: container restart can interrupt a run, and
+abandoned attempts become `unknown` rather than silently replaying. Use native
+`hermes cron runs`, `hermes cron incidents` and `hermes cron run <job-name>` for
+inspection or an explicit retry. Final delivery and failure notices use the
+scheduler; it does not promise periodic Slack heartbeats during analysis.
 
 The Slack manifest preserves SRE's scopes and events, including channel/DM
 history, assistant UI and file APIs. Runtime allowlists do not narrow the
@@ -101,7 +143,7 @@ its reference is inside the operator's raw PodSpec. Create a fresh session after
 collector changes; the evidence records the script's SHA-256.
 
 ```sh
-secops-collect --budget-seconds 600
+flock -n /output/.secops-collect.lock secops-collect --budget-seconds 540
 ```
 
 The command uses only the broker's explicit allowlist, separate read tokens for
