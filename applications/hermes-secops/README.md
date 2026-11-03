@@ -92,12 +92,15 @@ channel. The agent cannot create additional schedules or message other channels.
 | Skill | Schedule |
 |---|---|
 | `security-brief` | Weekdays 13:00 |
-| `kev-watch` | Hourly at :05 |
+| `kev-watch` | Every 48 hours |
 | `scan-coverage` | Daily 12:30 |
 | `hardening-review` | Monday 14:00 |
 | `runtime-triage` | Wednesday 14:00 |
 | `security-trends` | Friday 14:00 |
 | `access-health` | Friday 15:00 |
+
+The KEV watch uses an elapsed 48-hour interval across month boundaries.
+Reconciliation preserves its next fire when the interval is unchanged.
 
 Skills are read-only ConfigMap mounts. The `secops-schedules` init container
 reconciles operator-owned job definitions with native `create_job`/`update_job`
