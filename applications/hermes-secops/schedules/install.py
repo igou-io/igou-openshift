@@ -8,14 +8,16 @@ import yaml
 
 
 def install(paused=False):
-    from cron.jobs import create_job, list_jobs, update_job
+    from cron.jobs import create_job, list_jobs, parse_schedule, update_job
 
     definitions = yaml.safe_load(Path(__file__).with_name("jobs.yaml").read_text())["jobs"]
     existing = list_jobs(include_disabled=True)
     for definition in definitions:
+        schedule = parse_schedule(definition["schedule"])
         fields = {"model": "gpt-6.1-sol", "provider": "openai-codex",
                   "enabled_toolsets": ["file", "skills", "terminal", "web"],
-                  "timezone": "UTC", "catch_up": False, "grace_minutes": 15,
+                  "timezone": "UTC", "catch_up": False,
+                  "grace_minutes": 15 if schedule["kind"] == "cron" else None,
                   "deliver": "slack", "failure_deliver": "slack", "workdir": "/workspace",
                   "skills": ["assess", definition["skill"]],
                   "script": "secops/" + definition["skill"] + ".py",
@@ -31,9 +33,8 @@ def install(paused=False):
             updates = {}
             for key, value in fields.items():
                 previous = current.get(key)
-                if key == "schedule" and isinstance(previous, dict):
-                    previous = previous.get("expr")
-                if previous != value:
+                expected = parse_schedule(value) if key == "schedule" else value
+                if previous != expected:
                     updates[key] = value
             job = update_job(current["id"], updates) if updates else current
         else:

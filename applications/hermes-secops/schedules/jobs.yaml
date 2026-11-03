@@ -10,7 +10,7 @@ jobs:
       time, affected workloads, verified remediation paths, coverage gaps and the report location.
   - name: secops-kev-watch
     skill: kev-watch
-    schedule: '5 * * * *'
+    schedule: every 2d
     prompt: >-
       The native monitor detected a changed KEV exposure or coverage baseline. Review the supplied
       diff against fresh preflight evidence. Describe newly affected workloads, changed image digests,
