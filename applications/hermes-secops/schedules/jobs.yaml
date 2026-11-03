@@ -1,0 +1,59 @@
+---
+jobs:
+  - name: secops-security-brief
+    skill: security-brief
+    schedule: '0 13 * * 1-5'
+    prompt: >-
+      Produce the weekday security brief from the preflight evidence. Compare with the previous
+      security-brief report, prioritize five actionable changes, and distinguish new, persistent,
+      resolved and unknown findings. Save and verify security-brief.md. Return status, UTC collection
+      time, affected workloads, verified remediation paths, coverage gaps and the report location.
+  - name: secops-kev-watch
+    skill: kev-watch
+    schedule: '5 * * * *'
+    prompt: >-
+      The native monitor detected a changed KEV exposure or coverage baseline. Review the supplied
+      diff against fresh preflight evidence. Describe newly affected workloads, changed image digests,
+      resolved matches or degraded coverage. Verify material advisory claims, save kev-watch.md and
+      return a concise notification. A KEV match is evidence of known exploitation of the CVE,
+      not proof this workload is exploitable. Never claim clean coverage from missing scans.
+  - name: secops-scan-coverage
+    skill: scan-coverage
+    schedule: '30 12 * * *'
+    prompt: >-
+      Audit collection integrity and scan/SBOM coverage using the preflight evidence. Identify missing
+      and stale scans, inaccessible sources, mismatched counts and expiring reader credentials.
+      Compare the previous scan-coverage report. Save scan-coverage.md and return the concrete gaps,
+      their impact on assessment confidence, responsible source and UTC collection time.
+  - name: secops-hardening-review
+    skill: hardening-review
+    schedule: '0 14 * * 1'
+    prompt: >-
+      Review ACS workload hardening evidence, emphasizing live workloads and changes since the prior
+      hardening-review report. Explain justified operator/CSI privileges separately from application
+      exceptions. Save hardening-review.md and return the five most actionable proposals with evidence,
+      confidence, caveats and report location. Propose changes only; never remediate.
+  - name: secops-runtime-triage
+    skill: runtime-triage
+    schedule: '0 14 * * 3'
+    prompt: >-
+      Correlate repository dependency alerts with deployed image findings using preflight evidence.
+      Keep confirmed runtime matches, source-only alerts and unknown attribution separate. Classify
+      remediation as dependency/tool/base-image update, rebuild, rollout, upstream blocked or
+      investigation. Save runtime-triage.md and return the prioritized decisions and coverage gaps.
+  - name: secops-security-trends
+    skill: security-trends
+    schedule: '0 14 * * 5'
+    prompt: >-
+      Compare the current preflight evidence with a verified snapshot closest to seven days earlier.
+      Account for changed scope, scans and source access before presenting new/resolved findings,
+      fixable vulnerability age and hardening trends. Save security-trends.md. If no comparable older
+      evidence exists, establish an explicit baseline instead of inventing a trend.
+  - name: secops-access-health
+    skill: access-health
+    schedule: '0 15 * * 5'
+    prompt: >-
+      Review source readability and ACS reader expiry from the fresh preflight evidence. Report each
+      allowed repository/source as readable, disabled, denied or unknown with evidence; prioritize
+      expiry within 14 days. Save access-health.md and return failures and the next operator action.
+      Do not retrieve credentials, inspect 1Password, rotate tokens, broaden grants or test writes.

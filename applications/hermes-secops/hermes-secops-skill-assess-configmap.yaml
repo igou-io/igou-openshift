@@ -14,7 +14,14 @@ data:
     1. Read /workspace/AGENTS.md. Scope the requested repositories and time window.
        If none are specified, use the broker's explicit allowlist; do not expand
        to other organizations or the user's unrelated personal repositories.
-    2. Run `secops-collect --budget-seconds 600` in a fresh terminal session.
+    2. A scheduled preflight supplies checksummed fresh evidence and its output
+       directory. Reuse it; never launch a duplicate collection for that run.
+       Otherwise run `flock -n /output/.secops-collect.lock secops-collect --budget-seconds 540`
+       in a fresh terminal with timeout=600 and background=false. Never request
+       a timeout above 600: that silently promotes the command to background.
+       A busy lock means another collection is active; report that status rather
+       than starting parallel work. Verify actual completion and output artifacts;
+       a background-start acknowledgement is not a completed assessment.
        The read-only collector is mounted from the GitOps-owned ConfigMap;
        do not rewrite it, install a replacement, or reconstruct collection code.
        It uses only the explicit broker allowlist, repository-scoped read tokens,
@@ -63,4 +70,7 @@ data:
        isolated terminal or widen network access to deliver artifacts.
        Keep credentials, raw deployment environment values, signed URLs and
        private source out of artifacts. Do not create issues, PRs, suppressions,
-       live changes, notifications, scheduled jobs, or self-modified skills.
+       live changes, additional notifications, scheduled jobs, or self-modified skills.
+       Only operator-provisioned native schedules may deliver their final briefs
+       through the gateway to the configured SecOps home channel. Do not send
+       Slack API messages from terminals or grant them Slack credentials.

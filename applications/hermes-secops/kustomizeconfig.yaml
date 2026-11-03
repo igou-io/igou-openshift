@@ -1,0 +1,6 @@
+---
+nameReference:
+  - kind: ConfigMap
+    fieldSpecs:
+      - kind: HermesInstance
+        path: spec/extraVolumes/configMap/name
