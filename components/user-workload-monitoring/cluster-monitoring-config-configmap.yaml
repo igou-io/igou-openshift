@@ -10,6 +10,16 @@ metadata:
 data:
   config.yaml: |
     enableUserWorkload: true
+    prometheusK8s:
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          volumeMode: Filesystem
+          storageClassName: freenas-nvmeof-ssd-csi
+          resources:
+            requests:
+              storage: 100Gi
     # NOTE: do NOT set prometheusK8s.externalLabels.cluster — the
     # monitoringconfigmaps.openshift.io admission webhook reserves
     # prometheus/prometheus_replica/cluster and rejects the ConfigMap,
