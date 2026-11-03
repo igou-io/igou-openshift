@@ -89,6 +89,21 @@ route:
         - alertname = TargetDown
         - namespace = automation-orchestrator
       receiver: 'null'
+    # Operator lifecycle events are informational pushes. Deliver them before
+    # the severity routes, with no resolved push or incident automation.
+    - matchers:
+        - alertname =~ "OperatorUpdateAvailable|OperatorUpdateCompleted"
+        - severity = info
+      receiver: operator-update-notifications
+      group_by:
+        - alertname
+        - subscription_namespace
+        - subscription
+        - current_csv
+        - installed_csv
+      group_wait: 10s
+      group_interval: 1m
+      repeat_interval: 24h
     - matchers:
         - severity =~ "critical|warning"
       receiver: eda-github-issue
@@ -134,6 +149,10 @@ receivers:
     webhook_configs:
       - url: http://alertmanager-gotify-bridge.gotify.svc:8080/gotify_webhook
         send_resolved: true
+  - name: operator-update-notifications
+    webhook_configs:
+      - url: http://alertmanager-gotify-bridge.gotify.svc:8080/gotify_webhook
+        send_resolved: false
   - name: eda-github-issue
     webhook_configs:
       - url_file: /etc/alertmanager/secrets/alertmanager-eda-event-stream/url

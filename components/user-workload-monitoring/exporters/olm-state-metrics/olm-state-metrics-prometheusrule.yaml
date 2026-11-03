@@ -1,13 +1,7 @@
 ---
-# Alerts on OLM subscription state. `for: 1h` on OperatorUpdatePending is
-# deliberate: Automatic-approval subscriptions pass through UpgradePending
-# only transiently mid-upgrade; the persistent case is a Manual-approval
-# namespace waiting on a human (OLM quirk: ONE Manual subscription in a
-# namespace makes EVERY InstallPlan there require approval — today that is
-# openshift-operators via servicemeshoperator3). severity warning routes to
-# Gotify/Slack (and the EDA GitHub-issue pipeline once its Alertmanager
-# route is restored). olm_* series only exist in the UWM leaf Prometheus,
-# hence the leaf-prometheus evaluation-scope label.
+# Informational notifications report available and completed OLM updates.
+# Existing warning alerts cover updates stuck pending or failing. olm_*
+# series only exist in UWM, hence the leaf-prometheus evaluation-scope label.
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -32,6 +26,60 @@ spec:
               update availability is invisible until this recovers.
     - name: olm-state-metrics.updates
       rules:
+        # Compare CSV labels, not the constant value of an info metric.
+        # Hold brief automatic updates long enough for Alertmanager delivery.
+        - alert: OperatorUpdateAvailable
+          expr: |
+            max by (subscription_namespace, subscription, installed_csv, current_csv) (
+              olm_subscription_info{installed_csv!="", current_csv!=""}
+            )
+            unless on (subscription_namespace, subscription, current_csv)
+            label_replace(
+              olm_subscription_info{installed_csv!=""},
+              "current_csv", "$1", "installed_csv", "(.+)"
+            )
+          keep_firing_for: 15m
+          labels:
+            severity: info
+          annotations:
+            summary: >-
+              Operator update available: {{ $labels.subscription_namespace }}/{{ $labels.subscription }}
+              {{ $labels.installed_csv }} -> {{ $labels.current_csv }}
+            description: |
+              OLM has discovered {{ $labels.current_csv }} for
+              {{ $labels.subscription_namespace }}/{{ $labels.subscription }};
+              the installed version is {{ $labels.installed_csv }}.
+              Automatic subscriptions install without approval. Inspect manual plans with:
+              oc get installplans -n {{ $labels.subscription_namespace }}
+        # A version must have existed 15m ago: initial installs and exporter
+        # startup without history do not count as completed updates. Aggregate
+        # away channel, plan and scrape labels before comparing versions.
+        - alert: OperatorUpdateCompleted
+          expr: |
+            (
+              max by (subscription_namespace, subscription, installed_csv) (
+                olm_subscription_info{installed_csv!=""}
+              )
+              unless on (subscription_namespace, subscription, installed_csv)
+              max by (subscription_namespace, subscription, installed_csv) (
+                olm_subscription_info{installed_csv!=""} offset 15m
+              )
+            )
+            and on (subscription_namespace, subscription)
+            max by (subscription_namespace, subscription) (
+              olm_subscription_info{installed_csv!=""} offset 15m
+            )
+          labels:
+            severity: info
+          annotations:
+            summary: >-
+              Operator update completed: {{ $labels.subscription_namespace }}/{{ $labels.subscription }}
+              {{ $labels.installed_csv }} installed
+            description: |
+              OLM reports {{ $labels.installed_csv }} installed for
+              {{ $labels.subscription_namespace }}/{{ $labels.subscription }}
+              after a version change within the last 15 minutes.
+              This reports the operator installation, not completion of every operand rollout.
         - alert: OperatorUpdatePending
           expr: olm_subscription_state{state="UpgradePending"} == 1
           for: 1h
