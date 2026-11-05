@@ -1,13 +1,23 @@
 # hermes-secops
 
 Security assessment Hermes instance managed by ArgoCD, using `gpt-6.1-sol`
-through the `openai-codex` OAuth provider. Its Codex authentication is seeded
-directly into private persistent agent storage, outside Git and terminal pods.
+through the `openai-codex` OAuth provider. Its Codex authentication uses a separate
+OAuth session in private persistent agent storage, outside Git and terminal pods.
 It requests SBOMs for nine explicitly listed `igou-io/igou-*` repositories and
 reads existing ACS vulnerability inventories, deployment attribution, policies,
 and violations. Reports stay in its workspace and authenticated dashboard;
 its dedicated Slack app provides scoped assessment requests and summaries.
 Public OSV, CISA KEV, FIRST EPSS, and vendor advisories provide enrichment.
+
+To sign in, run the following and complete the displayed browser sign-in:
+
+```bash
+oc -n hermes-secops exec -it hermes-secops-0 -c hermes -- \
+  hermes auth add openai-codex --type oauth --label hermes-secops --no-browser
+```
+
+Never copy another instance's auth file: each instance must rotate its own refresh
+tokens. Automatic adoption of external CLI logins is disabled.
 
 The `HermesInstance` uses the shared Hermes operator and root-bootstrap SCC.
 Its gateway can create/get/list/delete pods and exec only in `hermes-secops`;

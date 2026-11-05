@@ -49,6 +49,14 @@ oc -n hermes-developer scale deployment/auth-login --replicas=0
 ```
 
 Credentials persist on `hermes-workspace` and are immediately visible to new
-terminal sessions. Codex is also shared with Hermes through `/opt/data/.codex`;
-the `codex-auth-sync` sidecar keeps later single-use refresh-token rotations in
-sync.
+terminal sessions. Hermes model authentication has its own OAuth session in
+private agent storage; it never imports or exports terminal Codex credentials.
+Refresh model authentication with a separate sign-in inside the agent:
+
+```bash
+oc -n hermes-developer exec -it hermes-developer-0 -c hermes -- \
+  hermes auth add openai-codex --type oauth --label hermes-developer --no-browser
+```
+
+Complete the displayed browser sign-in. Never copy another instance's auth file:
+each instance must rotate its own refresh tokens.

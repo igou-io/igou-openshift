@@ -84,9 +84,17 @@ oc -n hermes-sre scale deployment/auth-login --replicas=0
 ```
 
 Credentials persist on `hermes-workspace` and are immediately visible to new
-terminal sessions. Codex is also shared with Hermes through `/opt/data/.codex`;
-the `codex-auth-sync` sidecar keeps later single-use refresh-token rotations in
-sync.
+terminal sessions. Hermes model authentication has its own OAuth session in
+private agent storage; it never imports or exports terminal Codex credentials.
+Refresh model authentication with a separate sign-in inside the agent:
+
+```bash
+oc -n hermes-sre exec -it hermes-sre-0 -c hermes -- \
+  hermes auth add openai-codex --type oauth --label hermes-sre --no-browser
+```
+
+Complete the displayed browser sign-in. Never copy another instance's auth file:
+each instance must rotate its own refresh tokens.
 
 Shared with `hermes-k8s` (owned there): the operator (ns `hermes-operator`) and the
 `hermes-agent-root` SCC. The instance keeps the same image, security context and

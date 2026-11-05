@@ -317,6 +317,8 @@ spec:
   config:
     raw:
       _config_version: 33
+      auth:
+        adopt_external_logins: false
       agent:
         environment_probe: false
         max_turns: 80

@@ -17,6 +17,17 @@ app tokens and the `hermes-dashboard` hostname at cutover.
 
 See `../hermes-sre/README.md` for the split and the sync-wave notes.
 
+Hermes model authentication uses a separate OAuth session in private agent
+storage. It never imports or exports terminal Codex credentials. To sign in:
+
+```bash
+oc -n hermes-assistant exec -it hermes-assistant-0 -c hermes -- \
+  hermes auth add openai-codex --type oauth --label hermes-assistant --no-browser
+```
+
+Complete the displayed browser sign-in. Never copy another instance's auth file:
+each instance must rotate its own refresh tokens.
+
 ## Google Drive
 
 The main assistant connects to Piotr Agier's Google Drive MCP server at
