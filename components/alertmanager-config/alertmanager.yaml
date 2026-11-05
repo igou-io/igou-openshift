@@ -95,6 +95,8 @@ route:
         - alertname =~ "OperatorUpdateAvailable|OperatorUpdateCompleted"
         - severity = info
       receiver: operator-update-notifications
+      # Also deliver these info alerts to the Slack severity receiver below.
+      continue: true
       group_by:
         - alertname
         - subscription_namespace
@@ -128,7 +130,7 @@ route:
       receiver: gotify-and-slack-warning
     - matchers:
         - severity = info
-      receiver: 'null'
+      receiver: slack-info
 receivers:
   - name: 'null'
   - name: hermes-sre
@@ -161,7 +163,7 @@ receivers:
           authorization:
             type: Bearer
             credentials_file: /etc/alertmanager/secrets/alertmanager-eda-event-stream/token
-  # Severity receivers fan out to both Gotify (push) and Slack. Bridge
+  # Critical/warning receivers fan out to both Gotify (push) and Slack. Bridge
   # v2.3.2 still returns HTTP 400 on alerts missing the `description`
   # annotation, but the `Alertmanager(Cluster)?FailedToSendAlerts
   # integration=webhook` route above null-routes the resulting flap, and
@@ -189,6 +191,19 @@ receivers:
     slack_configs:
       - api_url: https://slack.com/api/chat.postMessage
         channel: '#igoucloud-alerts-warning'
+        http_config:
+          authorization:
+            credentials_file: /etc/alertmanager/secrets/alertmanager-slack-bot-token/password
+        send_resolved: true
+        title: '[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}'
+        text: |-
+          {{ range .Alerts }}*{{ .Annotations.summary }}*
+          {{ .Annotations.description }}
+          {{ end }}
+  - name: slack-info
+    slack_configs:
+      - api_url: https://slack.com/api/chat.postMessage
+        channel: '#igoucloud-notifications'
         http_config:
           authorization:
             credentials_file: /etc/alertmanager/secrets/alertmanager-slack-bot-token/password
