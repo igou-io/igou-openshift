@@ -9,8 +9,8 @@ metadata:
 spec:
   image:
     repository: ghcr.io/igou-io/hermes-agent-k8s
-    tag: 9edde8ba4131d81c472ab910cc51ae940892afd6@sha256:bb75429809363c65e4b89be71a3b81e1090a478c062402bb852a82d6769acf85
-    digest: sha256:bb75429809363c65e4b89be71a3b81e1090a478c062402bb852a82d6769acf85
+    tag: c085af4a9e89164b35e9c708329b5020e028e222@sha256:824fca9377624e2dd182301d13ad6ca835f20fc09ec3e16d4ceb104a56c4d5fe
+    digest: sha256:824fca9377624e2dd182301d13ad6ca835f20fc09ec3e16d4ceb104a56c4d5fe
     pullPolicy: IfNotPresent
   security:
     rbac:
@@ -94,7 +94,7 @@ spec:
   # Prepare the empty workspace claim before any subPath mounts are used.
   initContainers:
     - name: workspace-init
-      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:bb75429809363c65e4b89be71a3b81e1090a478c062402bb852a82d6769acf85
+      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:824fca9377624e2dd182301d13ad6ca835f20fc09ec3e16d4ceb104a56c4d5fe
       command:
         - /bin/sh
         - -ec
@@ -125,7 +125,7 @@ spec:
           mountPath: /workspace-volume
     # Native cron API owns its store and preserves execution history and pauses.
     - name: secops-schedules
-      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:bb75429809363c65e4b89be71a3b81e1090a478c062402bb852a82d6769acf85
+      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:824fca9377624e2dd182301d13ad6ca835f20fc09ec3e16d4ceb104a56c4d5fe
       command:
         - /opt/hermes/.venv/bin/python
         - /opt/data/scripts/secops/install.py
@@ -184,7 +184,7 @@ spec:
           targetPort: 9119
   sidecars:
     - name: dashboard
-      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:bb75429809363c65e4b89be71a3b81e1090a478c062402bb852a82d6769acf85
+      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:824fca9377624e2dd182301d13ad6ca835f20fc09ec3e16d4ceb104a56c4d5fe
       imagePullPolicy: IfNotPresent
       args:
         - dashboard
