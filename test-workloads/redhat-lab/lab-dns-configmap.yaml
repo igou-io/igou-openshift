@@ -10,8 +10,10 @@ data:
         errors
         health :8080
         ready :8181
+        reload
         hosts {
             192.168.240.10 idm.lab.igou.systems
+            192.168.240.15 rhds.lab.igou.systems
             192.168.240.20 satellite.lab.igou.systems
             192.168.240.31 client1.lab.igou.systems
             192.168.240.32 client2.lab.igou.systems
