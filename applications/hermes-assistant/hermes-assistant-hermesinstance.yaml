@@ -143,7 +143,7 @@ spec:
   # hermes-dashboard.service used; scrypt BasicAuth comes from hermes-env.
   sidecars:
     - name: dashboard
-      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:bb75429809363c65e4b89be71a3b81e1090a478c062402bb852a82d6769acf85
+      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:80f41ad2ab24a31f217198a6dae2980fbd988e4c609c4fd238219e86cb4f76a2
       imagePullPolicy: IfNotPresent
       args:
         - dashboard
