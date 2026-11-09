@@ -9,8 +9,8 @@ metadata:
 spec:
   image:
     repository: ghcr.io/igou-io/hermes-agent-k8s
-    tag: c085af4a9e89164b35e9c708329b5020e028e222@sha256:824fca9377624e2dd182301d13ad6ca835f20fc09ec3e16d4ceb104a56c4d5fe
-    digest: sha256:824fca9377624e2dd182301d13ad6ca835f20fc09ec3e16d4ceb104a56c4d5fe
+    tag: latest
+    digest: sha256:80f41ad2ab24a31f217198a6dae2980fbd988e4c609c4fd238219e86cb4f76a2
     pullPolicy: IfNotPresent
   security:
     rbac:

@@ -43,7 +43,10 @@ data:
     ```bash
     REPO=igou-io/igou-openshift            # the repo you diagnosed
     export GH_TOKEN=$(ghapp token --repo "$REPO" --permission contents=write --permission pull_requests=write)
-    cd /tmp && git clone --depth 20 "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" repo && cd repo
+    mkdir -p /workspace/checkouts
+    WORKDIR=$(mktemp -d /workspace/checkouts/propose-fix-XXXXXX)
+    git clone --depth 20 "https://github.com/${REPO}.git" "$WORKDIR/repo"
+    cd "$WORKDIR/repo"
     git checkout -b sre/<short-slug>
     git config user.name "hermes-sre" && git config user.email "hermes-sre@igou.systems"
     ```
@@ -60,13 +63,14 @@ data:
     ```text
     terminal(
       command="codex exec --model gpt-6.1-sol -c 'model_reasoning_effort=\"high\"' --dangerously-bypass-approvals-and-sandbox '<spec>'",
-      workdir="/tmp/repo",
+      workdir="<absolute checkout path printed by pwd>",
       background=true,
       notify=true
     )
     ```
 
-    Save the returned `session_id`. Do not run Codex in a foreground
+    Set `workdir` to the checkout's `pwd` output. Keep repositories out of `/output`,
+    which is the synchronized document cache. Save the returned `session_id`. Do not run Codex in a foreground
     terminal call: implementation regularly exceeds the sequential tool
     deadline. Let the completion notification resume the turn; use
     `process(action="poll", session_id="<id>")` or

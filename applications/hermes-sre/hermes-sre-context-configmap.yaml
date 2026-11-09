@@ -29,11 +29,15 @@ data:
       `ocp-cluster-reader` (current) and `rk8s-cluster-reader`
       (`kubectl --context rk8s-cluster-reader ...`). RouterOS and TrueNAS
       credentials are read-only API identities used only by the CLIs below.
-    - Session cwd is `/workspace`. `/workspace/igou-docs` is a read-only mirror of
-      the operator's knowledge base (synced every 30 min); `/output` is shared with
-      the agent side at `/opt/data/cache/documents`. Writes from the agent side are
-      restricted to `/opt/data`; use `/opt/data/cache/documents` for notes and
-      hand-offs, never `/tmp` or `/workspace`.
+    - Session cwd is `/workspace`, backed by the persistent workspace PVC. Put Git
+      checkouts and build trees in a unique directory under `/workspace/checkouts`.
+      `/workspace/igou-docs` is a read-only mirror of the operator's knowledge base
+      (synced every 30 min); do not modify that mirror.
+    - `/output` is shared with the agent side at `/opt/data/cache/documents`. Use
+      it only for reports, collected evidence and hand-offs. Never clone repositories
+      or put build trees there: Hermes synchronizes this document cache into each
+      terminal session. Agent-side file tools write under `/opt/data`; use the
+      terminal tool for repository work under `/workspace`.
     - Operational skills under `/opt/data/agent-skills/homelab` are immutable and
       GitOps-owned: never patch, rewrite or delete them. New agent-created skills
       belong under the separate writable `/opt/data/skills` directory. When an
@@ -147,6 +151,9 @@ data:
     - Metrics: Thanos route with `oc whoami -t`; `https://prometheus.rk8s.igou.systems`
     - Knowledge base: `/workspace/igou-docs` (start at `Home.md` and
       `reference/Symptom-Keyed Troubleshooting.md`)
-    - Write files only under `/output`; nothing else persists.
+    - `/workspace` persists. Put Git checkouts and build trees in unique directories
+      under `/workspace/checkouts`; leave `/workspace/igou-docs` unchanged.
+    - Reserve `/output` for reports and evidence. It is the gateway's synchronized
+      document cache; never clone repositories or put build trees there.
     - Do not attempt mutations (`apply`, `patch`, `delete`, `scale`, `exec`,
       `port-forward`); RBAC refuses them.

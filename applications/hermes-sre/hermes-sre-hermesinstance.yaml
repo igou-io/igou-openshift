@@ -1,5 +1,5 @@
 ---
-# Production Hermes on the kubernetes terminal backend (fork build 7f5be99e,
+# Production Hermes on the kubernetes terminal backend (fork build 4048e3fc,
 # david-igou/hermes-agent feat/kubernetes-terminal-backend). Replaced the
 # hermes VM (applications/hermes-agent, retired 2026-08-24) at the
 # 2026-08-14 cutover.
@@ -25,11 +25,11 @@ metadata:
     argocd.argoproj.io/sync-wave: '10'
 spec:
   image:
-    # Built by igou-containers from fork commit 7f5be99e.
+    # Built by igou-containers from fork commit 4048e3fc.
     # Keep the agent, dashboard, and auth-sync on the same factory digest.
     repository: ghcr.io/igou-io/hermes-agent-k8s
-    tag: 9edde8ba4131d81c472ab910cc51ae940892afd6@sha256:bb75429809363c65e4b89be71a3b81e1090a478c062402bb852a82d6769acf85
-    digest: sha256:bb75429809363c65e4b89be71a3b81e1090a478c062402bb852a82d6769acf85
+    tag: latest
+    digest: sha256:80f41ad2ab24a31f217198a6dae2980fbd988e4c609c4fd238219e86cb4f76a2
     pullPolicy: IfNotPresent
   security:
     # We own the SA: the kubernetes backend needs pod create/get/list/delete
