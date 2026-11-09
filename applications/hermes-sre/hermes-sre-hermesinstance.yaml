@@ -31,6 +31,15 @@ spec:
     tag: latest
     digest: sha256:80f41ad2ab24a31f217198a6dae2980fbd988e4c609c4fd238219e86cb4f76a2
     pullPolicy: IfNotPresent
+  probes:
+    # Allow UID remapping and data initialization before liveness starts.
+    startup:
+      httpGet:
+        path: /health
+        port: gateway
+      failureThreshold: 30
+      periodSeconds: 10
+      timeoutSeconds: 2
   security:
     # We own the SA: the kubernetes backend needs pod create/get/list/delete
     # and pods/exec get+create, which the operator's RBACSpec cannot express.
@@ -47,6 +56,7 @@ spec:
       # The agent drops to uid 1000 but the projected SA token is root-only;
       # fsGroup makes kubelet group-own the projected volume.
       fsGroup: 1000
+      fsGroupChangePolicy: OnRootMismatch
       seccompProfile:
         type: RuntimeDefault
     containerSecurityContext:
