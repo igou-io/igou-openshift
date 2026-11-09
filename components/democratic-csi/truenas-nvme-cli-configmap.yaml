@@ -39,5 +39,9 @@ data:
     for device in /sys/class/block/nvme*n*; do
       [ -r "$device/queue/read_ahead_kb" ] || continue
       [ "$(cat "$device/device/subsysnqn" 2>/dev/null)" = "$nqn" ] || continue
+      # Cap each transfer to avoid high-order scatterlist allocations on TrueNAS.
+      if [ "$(cat "$device/queue/max_sectors_kb")" -gt 1024 ]; then
+        printf '1024\n' > "$device/queue/max_sectors_kb" || exit 1
+      fi
       printf '1024\n' > "$device/queue/read_ahead_kb" || exit 1
     done
