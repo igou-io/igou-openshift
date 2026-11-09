@@ -1,24 +1,25 @@
-# Disposable RHEL IdM and Satellite lab
+# Disposable RHEL IdM, Directory Server, and Satellite lab
 
-Four clean RHEL 9 guests in namespace `redhat-lab`, pinned to
-`casval.igou.systems`. Install IdM and Satellite yourself; cloud-init only
+Five clean RHEL 9 guests in namespace `redhat-lab`, pinned to
+`casval.igou.systems`. Install IdM, Red Hat Directory Server (RHDS), and Satellite yourself; cloud-init only
 prepares networking, SSH access, swap, and Satellite's content disk.
 
 | Guest | FQDN | Private address | vCPU | RAM | Disks |
 |---|---|---|---|---|---|
 | idm | idm.lab.igou.systems | 192.168.240.10 | 2 | 6 GiB | 40 GiB |
+| rhds | rhds.lab.igou.systems | 192.168.240.15 | 2 | 4 GiB | 30 GiB |
 | satellite | satellite.lab.igou.systems | 192.168.240.20 | 8 | 32 GiB | 80 GiB root + 100 GiB Pulp |
 | client1 | client1.lab.igou.systems | 192.168.240.31 | 2 | 4 GiB | 30 GiB |
 | client2 | client2.lab.igou.systems | 192.168.240.32 | 2 | 4 GiB | 30 GiB |
 
-IdM and Satellite each get 4 GiB swap. Total guest RAM is 46 GiB; allow
+IdM and Satellite each get 4 GiB swap. Total guest RAM is 50 GiB; allow
 additional VM overhead. All disks use TrueNAS
 `freenas-nvmeof-ssd-csi`, not Casval's ephemeral local disks.
-Nominal guest disk capacity is 280 GiB: 40 + 80 + 100 + 30 + 30.
+Nominal guest disk capacity is 310 GiB: 40 + 30 + 80 + 100 + 30 + 30.
 CDI adds filesystem-volume overhead to the server root PVC requests.
 The 40/80 GiB server roots use filesystem volumes with CDI copies: raw-block
 snapshot clones requiring expansion hit this driver's NodeExpand mount-path
-error. The 30 GiB client roots still use block snapshot clones, and the blank
+error. The 30 GiB RHDS and client roots use block snapshot clones, and the blank
 Pulp disk is block-backed. CDI helper pods alone can reach the API and accept
 image transfers from the boot-image namespace.
 
@@ -73,6 +74,7 @@ Load its matching private key into the SSH agent:
 ```bash
 ssh-use ansible
 virtctl ssh -n redhat-lab igou@vm/idm
+virtctl ssh -n redhat-lab igou@vm/rhds
 virtctl ssh -n redhat-lab igou@vm/satellite
 virtctl ssh -n redhat-lab igou@vm/client1
 virtctl ssh -n redhat-lab igou@vm/client2
@@ -82,7 +84,7 @@ Fresh clones get new SSH host keys. With virtctl's local OpenSSH client,
 remove the old lab records after a reset before reconnecting:
 
 ```bash
-for vm in idm satellite client1 client2; do
+for vm in idm rhds satellite client1 client2; do
   ssh-keygen -R "vm.$vm.redhat-lab"
 done
 ```
@@ -125,6 +127,7 @@ No lab hosts are statically listed in `igou-inventory/inventory.yaml`.
 | Inventory host | Groups while Ready |
 |---|---|
 | idm-redhat-lab | redhat_lab, redhat_lab_idm |
+| rhds-redhat-lab | redhat_lab |
 | satellite-redhat-lab | redhat_lab, redhat_lab_satellite |
 | client1-redhat-lab | redhat_lab, redhat_lab_clients |
 | client2-redhat-lab | redhat_lab, redhat_lab_clients |
@@ -179,9 +182,11 @@ pods in `openshift-cnv`, which relay those tunnels to the launcher pod.
 Do not enable guest routing between the two interfaces.
 
 A small CoreDNS pod on the control-plane node supplies initial A/PTR records
-for all four hosts and forwards other queries to cluster DNS. Its Service is
+for all five hosts and forwards other queries to cluster DNS. Its Service is
 `172.30.250.53`; `labctl up` refuses a conflicting allocation. KubeVirt
 passes this resolver to each guest through uplink DHCP.
+The CoreDNS `reload` plugin picks up subsequent ConfigMap changes. An existing
+DNS pod started before `reload` was added needs one rollout restart to activate it.
 
 Use `lab.igou.systems` as the IdM domain and `LAB.IGOU.SYSTEMS` as the realm.
 When installing IdM with integrated DNS, select its private address explicitly
@@ -214,7 +219,13 @@ and content synchronization are part of the exercises.
    client2; practice patching and remote execution.
 5. Integrate Satellite realm enrollment with IdM. Later add an IdM replica,
    Capsule, or an uninstalled PXE target as separate optional guests.
-6. Destroy the namespace and repeat the installation from fresh clones.
+6. Install RHDS on its dedicated guest. Create a separate LDAP suffix and test
+   users; practice TLS, POSIX attributes, access controls, and backup/restore.
+   Configure client2 to authenticate through SSSD over TLS and add RHDS as a
+   Satellite LDAP authentication source. RHDS provides directory services;
+   IdM continues to provide the IdM realm and DNS. When adding RHDS after IdM
+   DNS is installed, create its A/PTR records in IdM too.
+7. Destroy the namespace and repeat the installation from fresh clones.
 
 ## Validation and references
 
@@ -237,5 +248,6 @@ and is not an empty-install content requirement.
 
 - [Satellite installation requirements](https://docs.redhat.com/en/documentation/red_hat_satellite/6.19/html/installing_satellite_server_in_a_connected_network_environment/planning-satellite-server-installation_satellite)
 - [Installing Identity Management on RHEL 9](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/installing_identity_management/index)
+- [Installing Red Hat Directory Server](https://docs.redhat.com/en/documentation/red_hat_directory_server/12/html-single/installing_red_hat_directory_server/index)
 - [Satellite content and subscription manifests](https://docs.redhat.com/en/documentation/red_hat_satellite/6.19/html-single/managing_content/index)
 - [OVN secondary Layer2 networks](https://github.com/ovn-kubernetes/ovn-kubernetes/blob/master/docs/features/multiple-networks/multi-homing.md)

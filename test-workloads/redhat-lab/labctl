@@ -6,6 +6,7 @@ lab_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 lab_namespace=redhat-lab
 lab_dns_ip=172.30.250.53
 lab_lease_id=redhat-lab
+lab_vms=(idm rhds satellite client1 client2)
 
 die() { echo "$*" >&2; exit 1; }
 
@@ -157,7 +158,7 @@ case "${1:-help}" in
     oc wait node/casval.igou.systems --for=condition=Ready --timeout=60s
     kustomize build "$lab_dir" | oc apply -f -
     oc rollout status deployment/lab-dns -n "$lab_namespace" --timeout=120s
-    for vm in idm satellite client1 client2; do
+    for vm in "${lab_vms[@]}"; do
       oc wait "vm/$vm" -n "$lab_namespace" --for=condition=Ready --timeout=900s
     done
     sync_inventory
@@ -169,7 +170,7 @@ case "${1:-help}" in
     check_inventory_source
     # Delete guests normally first so their grace period completes before the
     # namespace removes DNS and storage. Never force-delete virt-launcher.
-    oc delete vm idm satellite client1 client2 -n "$lab_namespace" \
+    oc delete vm "${lab_vms[@]}" -n "$lab_namespace" \
       --ignore-not-found --wait=true --timeout=300s
     oc delete namespace "$lab_namespace" --ignore-not-found --wait=true --timeout=600s
     sync_inventory

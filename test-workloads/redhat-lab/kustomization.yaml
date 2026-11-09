@@ -10,6 +10,7 @@ resources:
   - lab-network-networkpolicy.yaml
   - lab-clone-helpers-networkpolicy.yaml
   - idm-virtualmachine.yaml
+  - rhds-virtualmachine.yaml
   - satellite-virtualmachine.yaml
   - client1-virtualmachine.yaml
   - client2-virtualmachine.yaml
