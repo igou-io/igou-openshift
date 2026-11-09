@@ -12,6 +12,19 @@ GitOps repository for OpenShift managed by ArgoCD. This repository can support m
 
 - **clusters/ocp/** — This is the primary cluster (single-master OpenShift; control-plane on the MS-01, mini-pc based worker nodes. plus an on-demand CAPI burst worker `casval` scaled 0→1). Runs ArgoCD, ACM, and all platform operators. App-of-apps root. Unless specified otherwise, ocp is probably the cluster you are working with
 
+# Node management and recovery
+
+Before node maintenance, upgrades, reboots, reimaging, or BIOS work, read
+[OpenShift Node and Cluster Maintenance](https://github.com/igou-io/igou-docs/blob/main/openshift/OpenShift%20Node%20and%20Cluster%20Maintenance.md#remote-management-routes---verified-2026-11-08)
+in `/workspace/igou-docs`. It records the AMT endpoints, JetKVM, PDU outlets,
+credential references, and verification evidence. Consult it before concluding
+that a physical console is required. MS-01 has unattended AMT Linux/BIOS console
+access; HP needs local consent; P330 has broken AMT power services and a BIOS
+video/GPU tradeoff. An API outage does not mean these paths are unavailable.
+Establish console and credential access before the sole control plane reboots;
+primary Connect is hosted there too. Follow current-request authorization,
+workload evacuation, local-disk PXE defaults, and post-maintenance health checks.
+
 # Layout
 
 - **clusters/** — Per-cluster config. Each cluster has its own `values.yaml` for the app-of-apps pattern. This repository is single cluster
