@@ -27,6 +27,11 @@ route:
     - matchers:
         - alertname = Watchdog
       receiver: 'null'
+    # OSC's vector(1) heartbeat is always firing while its rule is evaluated.
+    # Suppress notifications before the general severity routes.
+    - matchers:
+        - alertname = kata_active_instance
+      receiver: 'null'
     - matchers:
         - alertname = AlertmanagerReceiversNotConfigured
       receiver: 'null'
