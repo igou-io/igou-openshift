@@ -1,5 +1,5 @@
 ---
-# Production Hermes on the kubernetes terminal backend (fork build 7f5be99e,
+# Production Hermes on the kubernetes terminal backend (fork build eb037658,
 # david-igou/hermes-agent feat/kubernetes-terminal-backend). Replaced the
 # hermes VM (applications/hermes-agent, retired 2026-08-24) at the
 # 2026-08-14 cutover.
@@ -23,12 +23,21 @@ metadata:
     argocd.argoproj.io/sync-wave: '10'
 spec:
   image:
-    # Built by igou-containers from fork commit 7f5be99e.
+    # Built by igou-containers from fork commit eb037658.
     # Keep the agent, dashboard, and auth-sync on the same factory digest.
     repository: ghcr.io/igou-io/hermes-agent-k8s
-    tag: 9edde8ba4131d81c472ab910cc51ae940892afd6@sha256:bb75429809363c65e4b89be71a3b81e1090a478c062402bb852a82d6769acf85
-    digest: sha256:bb75429809363c65e4b89be71a3b81e1090a478c062402bb852a82d6769acf85
+    tag: latest
+    digest: sha256:dff2bcea89b31026fd12e4555af23b461f9e17d0a08ae05d21b997c41885177d
     pullPolicy: IfNotPresent
+  probes:
+    # Allow UID remapping and data initialization before liveness starts.
+    startup:
+      httpGet:
+        path: /health
+        port: gateway
+      failureThreshold: 30
+      periodSeconds: 10
+      timeoutSeconds: 2
   security:
     # We own the SA: the kubernetes backend needs pod create/get/list/delete
     # and pods/exec get+create, which the operator's RBACSpec cannot express.
@@ -45,6 +54,7 @@ spec:
       # The agent drops to uid 1000 but the projected SA token is root-only;
       # fsGroup makes kubelet group-own the projected volume.
       fsGroup: 1000
+      fsGroupChangePolicy: OnRootMismatch
       seccompProfile:
         type: RuntimeDefault
     containerSecurityContext:
@@ -148,7 +158,7 @@ spec:
   # hermes-dashboard.service used; scrypt BasicAuth comes from hermes-env.
   sidecars:
     - name: dashboard
-      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:80f41ad2ab24a31f217198a6dae2980fbd988e4c609c4fd238219e86cb4f76a2
+      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:dff2bcea89b31026fd12e4555af23b461f9e17d0a08ae05d21b997c41885177d
       imagePullPolicy: IfNotPresent
       args:
         - dashboard

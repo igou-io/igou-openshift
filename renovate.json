@@ -17,6 +17,13 @@
   },
   "packageRules": [
     {
+      "description": "HermesInstance agent pins use separate tag and digest fields; the regex manager updates the digest consumed by the operator",
+      "matchManagers": ["helm-values"],
+      "matchFileNames": ["applications/hermes-*/hermes-*-hermesinstance.yaml"],
+      "matchPackageNames": ["ghcr.io/igou-io/hermes-agent-k8s"],
+      "enabled": false
+    },
+    {
       "description": "democratic-csi next builds require TrueNAS >=26; keep the validated image on TrueNAS 25.x and update manually after compatibility testing (incident #1084).",
       "matchDatasources": ["docker"],
       "matchPackageNames": ["ghcr.io/democratic-csi/democratic-csi"],
@@ -71,6 +78,15 @@
     }
   ],
   "customManagers": [
+    {
+      "description": "HermesInstance agent images: track latest in the separate digest field rather than updating only sidecar image strings",
+      "customType": "regex",
+      "managerFilePatterns": ["/^applications/hermes-[^/]+/hermes-[^/]+-hermesinstance\\.yaml$/"],
+      "matchStrings": [
+        "repository: (?<depName>ghcr\\.io/igou-io/hermes-agent-k8s)\\n[ \\t]+tag: (?<currentValue>[^\\s@]+)\\n[ \\t]+digest: (?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker"
+    },
     {
       "description": "democratic-csi driver image pinned via shared tag@sha256 values (chart's nonstandard image.registry+image.tag schema isn't picked up by helm-values manager)",
       "customType": "regex",
