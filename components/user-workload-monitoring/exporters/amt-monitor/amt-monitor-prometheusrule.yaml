@@ -11,6 +11,15 @@ spec:
   groups:
     - name: amt-health
       rules:
+        - alert: AMTMonitorUnavailable
+          expr: up{job="amt-monitor"} == 0 or absent(up{job="amt-monitor"})
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: The AMT health monitor is not being scraped.
+            description: Endpoint health and policy alerts require this monitor.
+              Check its Deployment, ServiceMonitor, and scrape target.
         - alert: AMTEndpointUnavailable
           expr: amt_up == 0
           for: 10m

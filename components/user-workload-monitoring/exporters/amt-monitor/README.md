@@ -13,7 +13,7 @@ before sending HTTP; certificate rotation requires updating `targets.json`.
 
 KVM EnabledState 2 (enabled/active) and 6 (enabled but offline/idle) are both
 healthy. Failed reads set `amt_up` to zero and omit policy values. Alerts
-cover authentication/read failures, consent enabled, control mode drift,
+cover monitor scrape failure/absence, authentication/read failures, consent enabled, control mode drift,
 disabled KVM, and checks older than 15 minutes. The client uses the firmware's
 supported SOAP operation timeout while bounding each network call to 10 seconds.
 
