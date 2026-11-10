@@ -6,7 +6,6 @@ resources:
   - user-workload-monitoring-config-configmap.yaml
   - exporters/adb-exporter
   - exporters/blackbox-exporter
-  - exporters/amt-monitor
   - exporters/mktxp
   - exporters/mx3d
   - exporters/olm-state-metrics
