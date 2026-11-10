@@ -1,0 +1,23 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: apc-pdu-http
+  namespace: blackbox-exporter
+  labels:
+    app.kubernetes.io/name: blackbox-exporter
+spec:
+  interval: 60s
+  scrapeTimeout: 15s
+  module: pdu_management_http
+  prober:
+    url: blackbox-exporter.blackbox-exporter.svc:9115
+  targets:
+    staticConfig:
+      static:
+      - http://10.10.60.22/logon.htm
+      labels:
+        tier: standard
+        category: power
+        owner: platform
+        device: AP7900

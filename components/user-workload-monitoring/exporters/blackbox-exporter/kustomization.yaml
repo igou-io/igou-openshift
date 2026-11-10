@@ -7,6 +7,7 @@ resources:
   - blackbox-exporter-namespace.yaml
   - blackbox-exporter-prometheusrule.yaml
   - probes/infra-https-probe.yaml
+  - probes/apc-pdu-http-probe.yaml
   - probes/infra-https-homepage-biscuit-probe.yaml
   - probes/infra-https-401-ok-probe.yaml
   - probes/saas-https-probe.yaml
@@ -66,6 +67,17 @@ helmCharts:
               fail_if_not_ssl: false
               tls_config:
                 insecure_skip_verify: false
+          pdu_management_http:
+            prober: http
+            timeout: 10s
+            http:
+              method: GET
+              preferred_ip_protocol: ip4
+              valid_status_codes:
+                - 200
+                - 403
+              fail_if_body_not_matches_regexp:
+                - "/Forms/login1|Someone is currently logged into"
           http_401_ok:
             prober: http
             timeout: 10s
