@@ -1,0 +1,19 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: amt-monitor
+resources:
+  - amt-monitor-namespace.yaml
+  - amt-ms01-externalsecret.yaml
+  - amt-hpg5-externalsecret.yaml
+  - amt-p330-externalsecret.yaml
+  - amt-monitor-deployment.yaml
+  - amt-monitor-service.yaml
+  - amt-monitor-servicemonitor.yaml
+  - amt-monitor-prometheusrule.yaml
+  - amt-monitor-networkpolicy.yaml
+configMapGenerator:
+  - name: amt-monitor
+    files:
+      - monitor.py
+      - targets.json

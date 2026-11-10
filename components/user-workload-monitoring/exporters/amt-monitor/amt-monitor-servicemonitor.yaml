@@ -1,0 +1,17 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: amt-monitor
+  namespace: amt-monitor
+  labels:
+    app.kubernetes.io/part-of: amt-monitor
+spec:
+  jobLabel: app.kubernetes.io/name
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: amt-monitor
+  endpoints:
+    - port: metrics
+      interval: 60s
+      scrapeTimeout: 10s
