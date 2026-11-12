@@ -45,7 +45,11 @@ test-secops-collector: ## Verify read-only collection, coverage accounting, and 
 	$(PYTHON) -m unittest discover -s applications/hermes-secops/collector -p 'test_*.py'
 
 .PHONY: test
-test: lint lint-helm validate-manifest-files validate-hermes-proxy test-secops-collector validate-schemas ## Run all standard validation checks (one render per Kustomization)
+test: lint lint-helm validate-manifest-files validate-hermes-proxy test-secops-collector test-hpg5-link-recovery validate-schemas ## Run all standard validation checks (one render per Kustomization)
+
+.PHONY: test-hpg5-link-recovery
+test-hpg5-link-recovery: ## Exercise HP boot link recovery with simulated NIC state
+	PYTHON="$(PYTHON)" bash scripts/tests/hpg5-link-recovery.sh
 
 .PHONY: clean
 clean: ## Remove charts/ directories left behind by kustomize build (excludes .helm/charts)

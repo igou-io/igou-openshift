@@ -8,6 +8,9 @@ metadata:
 spec:
   nodeDisruptionPolicy:
     files:
+      - path: /usr/local/bin/hpg5-link-recovery
+        actions:
+          - type: None
       - path: /usr/local/bin/igou-nvme-is-tcp
         actions:
           - type: None
@@ -20,6 +23,15 @@ spec:
             restart:
               serviceName: systemd-udevd.service
     units:
+      - name: hpg5-link-recovery.service
+        actions:
+          - type: DaemonReload
+      - name: hpg5-link-recovery.timer
+        actions:
+          - type: DaemonReload
+          - type: Restart
+            restart:
+              serviceName: hpg5-link-recovery.timer
       - name: truenas-nvme-readahead.service
         actions:
           - type: DaemonReload
