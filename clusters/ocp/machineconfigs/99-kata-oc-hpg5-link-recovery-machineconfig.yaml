@@ -1,0 +1,45 @@
+---
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  name: 99-kata-oc-hpg5-link-recovery
+  labels:
+    machineconfiguration.openshift.io/role: kata-oc
+spec:
+  config:
+    ignition:
+      version: 3.4.0
+    storage:
+      files:
+        # Source: files/hpg5-link-recovery.sh. The behavioral check verifies parity.
+        - path: /usr/local/bin/hpg5-link-recovery
+          mode: 493
+          overwrite: true
+          contents:
+            source: data:;base64,IyEvYmluL2Jhc2gKIyBBTVQgY2FuIGxlYXZlIHRoZSBIUCBJMjE5LUxNIGF0IDEwIE1iL3MgYWZ0ZXIgYmxvY2tpbmcgUEhZIHNldHVwIGF0IGJvb3QuCnNldCAtdW8gcGlwZWZhaWwKCmRldmljZV9tYXRjaGVzKCkgewogIFtbICQoY2F0IC9zeXMvY2xhc3MvbmV0L2VubzEvYWRkcmVzcyAyPi9kZXYvbnVsbCkgPT0gZjg6YjQ6NmE6YWI6NTU6YzcgXV0KfQoKYm9vdF9zZWNvbmRzKCkgewogIGxvY2FsIHVwdGltZQogIHJlYWQgLXIgdXB0aW1lIF8gPCAvcHJvYy91cHRpbWUgfHwgcmV0dXJuIDEKICBwcmludGYgJyVzXG4nICIke3VwdGltZSUlLip9Igp9CgphbHJlYWR5X2F0dGVtcHRlZCgpIHsKICBbWyAtZSAvcnVuL2hwZzUtbGluay1yZWNvdmVyeS5hdHRlbXB0ZWQgXV0KfQoKbWFya19hdHRlbXB0ZWQoKSB7CiAgKHNldCAtbyBub2Nsb2JiZXI7IDogPiAvcnVuL2hwZzUtbGluay1yZWNvdmVyeS5hdHRlbXB0ZWQpCn0KCmxpbmtfc3BlZWQoKSB7CiAgbG9jYWwgY2FycmllciBzcGVlZAogIGNhcnJpZXI9JChjYXQgL3N5cy9jbGFzcy9uZXQvZW5vMS9jYXJyaWVyIDI+L2Rldi9udWxsKSB8fCByZXR1cm4gMQogIHNwZWVkPSQoY2F0IC9zeXMvY2xhc3MvbmV0L2VubzEvc3BlZWQgMj4vZGV2L251bGwpIHx8IHJldHVybiAxCiAgW1sgJGNhcnJpZXIgPT0gMSAmJiAkc3BlZWQgPX4gXlswLTldKyQgJiYgJHNwZWVkIC1ndCAwIF1dIHx8IHJldHVybiAxCiAgcHJpbnRmICclc1xuJyAiJHNwZWVkIgp9CgpyZW5lZ290aWF0ZSgpIHsKICB0aW1lb3V0IDE1IGV0aHRvb2wgLXIgZW5vMQp9CgptYWluKCkgewogIGxvY2FsIHVwdGltZSBzcGVlZCBhdHRlbXB0CiAgZGV2aWNlX21hdGNoZXMgfHwgeyBlY2hvICdTa2lwcGluZzogSFAgZW5vMSBNQUMgZG9lcyBub3QgbWF0Y2guJzsgcmV0dXJuIDA7IH0KICB1cHRpbWU9JChib290X3NlY29uZHMpIHx8IHJldHVybiAxCiAgW1sgJHVwdGltZSA9fiBeWzAtOV0rJCBdXSB8fCByZXR1cm4gMQogICMgSW5zdGFsbGluZyBvciByZXN0YXJ0aW5nIHRoZSB0aW1lciBvbiBhIHJ1bm5pbmcgd29ya2VyIG11c3Qgbm90IHJlc2V0IGl0LgogICgoIHVwdGltZSA8PSA2MDAgKSkgfHwgeyBlY2hvICdTa2lwcGluZzogYm9vdCByZWNvdmVyeSB3aW5kb3cgaGFzIGVuZGVkLic7IHJldHVybiAwOyB9CiAgYWxyZWFkeV9hdHRlbXB0ZWQgJiYgeyBlY2hvICdTa2lwcGluZzogcmVjb3Zlcnkgd2FzIGFscmVhZHkgYXR0ZW1wdGVkIHRoaXMgYm9vdC4nOyByZXR1cm4gMDsgfQogIHNwZWVkPSQobGlua19zcGVlZCkgfHwgeyBlY2hvICdMaW5rIGRvd24gb3Igc3BlZWQgdW5rbm93bjsgbGVhdmluZyBlbm8xIGFsb25lLicgPiYyOyByZXR1cm4gMTsgfQogICgoIHNwZWVkID49IDEwMDAgKSkgJiYgeyBlY2hvICJlbm8xIGlzIGhlYWx0aHkgYXQgJHtzcGVlZH0gTWIvcy4iOyByZXR1cm4gMDsgfQogIG1hcmtfYXR0ZW1wdGVkIHx8IHsgZWNobyAnQ2Fubm90IHJlc2VydmUgdGhlIHJlY292ZXJ5IGF0dGVtcHQuJyA+JjI7IHJldHVybiAxOyB9CiAgZm9yIGF0dGVtcHQgaW4gMSAyOyBkbwogICAgZWNobyAiZW5vMSBpcyBhdCAke3NwZWVkfSBNYi9zOyByZW5lZ290aWF0aW9uIGF0dGVtcHQgJHthdHRlbXB0fS8yLiIKICAgIHJlbmVnb3RpYXRlIHx8IGVjaG8gJ1JlbmVnb3RpYXRpb24gY29tbWFuZCBmYWlsZWQ7IGNoZWNraW5nIHRoZSBsaW5rLicgPiYyCiAgICBzbGVlcCAxMAogICAgc3BlZWQ9JChsaW5rX3NwZWVkKSB8fCB7IGVjaG8gJ0xpbmsgZG93biBvciBzcGVlZCB1bmtub3duIGFmdGVyIHJlc2V0OyBzdG9wcGluZy4nID4mMjsgcmV0dXJuIDE7IH0KICAgICgoIHNwZWVkID49IDEwMDAgKSkgJiYgeyBlY2hvICJlbm8xIHJlY292ZXJlZCB0byAke3NwZWVkfSBNYi9zLiI7IHJldHVybiAwOyB9CiAgZG9uZQogIGVjaG8gImVubzEgcmVtYWlucyBhdCAke3NwZWVkfSBNYi9zOyBubyBmdXJ0aGVyIHJlc2V0cyB0aGlzIGJvb3QuIENoZWNrIEFNVCByZWRpcmVjdGlvbiBhbmQgdGhlIGxpbmsuIiA+JjIKICByZXR1cm4gMQp9CgppZiBbWyAke0JBU0hfU09VUkNFWzBdOi0kMH0gPT0gIiQwIiBdXTsgdGhlbgogIG1haW4KZmkK
+    systemd:
+      units:
+        - name: hpg5-link-recovery.service
+          contents: |
+            [Unit]
+            Description=Recover HP I219-LM link speed once after boot
+            ConditionHost=hpg5.igou.systems
+            After=network-online.target
+            Wants=network-online.target
+            [Service]
+            Type=oneshot
+            RemainAfterExit=yes
+            Environment=PATH=/usr/sbin:/usr/bin:/sbin:/bin
+            ExecStart=/usr/local/bin/hpg5-link-recovery
+            TimeoutStartSec=60s
+        - name: hpg5-link-recovery.timer
+          enabled: true
+          contents: |
+            [Unit]
+            Description=Check HP link speed after boot networking settles
+            ConditionHost=hpg5.igou.systems
+            [Timer]
+            OnBootSec=90s
+            AccuracySec=1s
+            [Install]
+            WantedBy=timers.target
