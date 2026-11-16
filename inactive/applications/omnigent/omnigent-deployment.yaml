@@ -26,7 +26,7 @@ spec:
         runAsNonRoot: true
       containers:
         - name: omnigent
-          image: ghcr.io/omnigent-ai/omnigent-server-kubernetes@sha256:d83a3dce03e2cd2e3e1a8cdf8b20d9696838dcbfbc6ceee3cabe5fbc0c23b657
+          image: ghcr.io/omnigent-ai/omnigent-server-kubernetes@sha256:348434142bf81e512258dab238b32e496e3ebcb262347ed51d37ad840f9caabb
           ports:
             - name: http
               containerPort: 8000
