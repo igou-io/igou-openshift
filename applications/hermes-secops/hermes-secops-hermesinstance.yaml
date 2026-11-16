@@ -10,7 +10,7 @@ spec:
   image:
     repository: ghcr.io/igou-io/hermes-agent-k8s
     tag: latest
-    digest: sha256:dff2bcea89b31026fd12e4555af23b461f9e17d0a08ae05d21b997c41885177d
+    digest: sha256:cf4dbba8c370d5479aeb73964ee133814b82761ba7e4a05a3274b5537875f3e6
     pullPolicy: IfNotPresent
   probes:
     # Allow UID remapping and data initialization before liveness starts.
