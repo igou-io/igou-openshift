@@ -266,6 +266,7 @@ spec:
         serviceAccountsEnabled: true
         redirectUris:
           - https://rhdh.apps.ocp.igou.systems/api/auth/oidc/handler/frame
+          - https://rhdh.apps.ocp.igou.systems/api/auth/keycloak/handler/frame
         webOrigins:
           - https://rhdh.apps.ocp.igou.systems
       - clientId: openshell-cli
