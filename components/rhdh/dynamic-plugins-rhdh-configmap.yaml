@@ -1,9 +1,4 @@
 ---
-# Custom dynamic-plugins config, referenced by the Backstage CR. Setting
-# dynamicPluginsConfigMapName REPLACES the operator-generated default
-# ConfigMap, so the two lightspeed entries the 1.10 operator profile adds by
-# default are carried over verbatim ({{inherit}} resolves the version from
-# dynamic-plugins.default.yaml) to keep plugin parity.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -16,42 +11,32 @@ data:
     includes:
       - dynamic-plugins.default.yaml
     plugins:
-      # Built from the reviewed source commit; both packages must move together.
-      - package: oci://ghcr.io/igou-io/rhdh-public-sharing@sha256:4dfa563f1c615ff9a6d7774d1f1b92dfdaebb74eeccab4afa969d920a6a6482f!igou-plugin-public-sharing
-        disabled: false
-        pluginConfig:
-          dynamicPlugins:
-            frontend:
-              igou.plugin-public-sharing:
-                dynamicRoutes:
-                  - path: /public-sharing
-                    importName: PublicSharingPage
-                    menuItem:
-                      icon: language
-                      text: Service sharing
-      - package: oci://ghcr.io/igou-io/rhdh-public-sharing@sha256:4dfa563f1c615ff9a6d7774d1f1b92dfdaebb74eeccab4afa969d920a6a6482f!igou-plugin-public-sharing-backend
-        disabled: false
-      # Keycloak catalog provider: provisions igou realm users/groups into
-      # the software catalog (config in app-config-rhdh).
-      - package: ./dynamic-plugins/dist/backstage-community-plugin-catalog-backend-module-keycloak-dynamic
-        disabled: false
-      # http:backstage:request scaffolder action — drives the Forgejo
-      # template-generate API through the /forgejo backend proxy.
-      - package: ./dynamic-plugins/dist/roadiehq-scaffolder-backend-module-http-request-dynamic
-        disabled: false
-      # RBAC frontend/backend (permission framework config in app-config-rhdh).
-      - package: ./dynamic-plugins/dist/backstage-community-plugin-rbac
-        disabled: false
-      # publish:github scaffolder action — GitHub destination on the golden
-      # paths (integrations.github App creds in app-config-rhdh).
-      - package: ./dynamic-plugins/dist/backstage-plugin-scaffolder-backend-module-github-dynamic
-        disabled: false
-      # Telemetry off — this lab does not phone home.
-      - package: ./dynamic-plugins/dist/backstage-plugin-analytics-provider-segment
-        disabled: true
-      # Operator-profile defaults (lightspeed), preserved from the generated
-      # default ConfigMap.
-      - package: oci://registry.access.redhat.com/rhdh/red-hat-developer-hub-backstage-plugin-lightspeed:{{inherit}}
-        disabled: false
-      - package: oci://registry.access.redhat.com/rhdh/red-hat-developer-hub-backstage-plugin-lightspeed-backend:{{inherit}}
-        disabled: false
+      # Both custom artifacts were published from containers commit 61f7c14.
+      - package: oci://ghcr.io/igou-io/rhdh-public-sharing@sha256:8e3ebda1fcf82e01b4184c2c99a42726133b48f1ec6f9938a1cb895b7745a576
+        enabled: true
+      - package: oci://ghcr.io/igou-io/rhdh-public-sharing-backend@sha256:1ab828ff19b03eea4fbe7daf896a97f3f03dc87ccc8d206d6d92e2c97e9d84c2
+        enabled: true
+      - package: ref://backstage-community-plugin-auth-backend-module-keycloak-provider
+        enabled: true
+      - package: ref://backstage-community-plugin-catalog-backend-module-keycloak
+        enabled: true
+      - package: ref://roadiehq-scaffolder-backend-module-http-request
+        enabled: true
+      - package: ref://backstage-community-plugin-rbac
+        enabled: true
+      - package: ref://backstage-plugin-scaffolder-backend-module-github
+        enabled: true
+      # Preserve the existing external analytics opt-out.
+      - package: ref://backstage-community-plugin-analytics-provider-segment
+        enabled: false
+      - package: ref://red-hat-developer-hub-backstage-plugin-intelligent-assistant
+        enabled: true
+      - package: ref://red-hat-developer-hub-backstage-plugin-intelligent-assistant-backend
+        enabled: true
+      # RHDH 2.1 enables adoption analytics by default; retain the lab opt-out.
+      - package: ref://red-hat-developer-hub-backstage-plugin-adoption-insights
+        enabled: false
+      - package: ref://red-hat-developer-hub-backstage-plugin-adoption-insights-backend
+        enabled: false
+      - package: ref://red-hat-developer-hub-backstage-plugin-analytics-module-adoption-insights
+        enabled: false

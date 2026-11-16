@@ -32,15 +32,16 @@ data:
     # the user entities the keycloakOrg catalog provider provisions below —
     # no dangerouslyAllowSignInWithoutUserInCatalog, so only provisioned realm
     # users can sign in.
-    signInPage: oidc
+    signInPage: keycloak
     auth:
       environment: production
       session:
         secret: ${SESSION_SECRET}
       providers:
-        oidc:
+        keycloak:
           production:
-            metadataUrl: https://keycloak.apps.ocp.igou.systems/realms/igou
+            baseUrl: https://keycloak.apps.ocp.igou.systems
+            realm: igou
             clientId: rhdh
             clientSecret: ${KEYCLOAK_CLIENT_SECRET}
             prompt: auto
