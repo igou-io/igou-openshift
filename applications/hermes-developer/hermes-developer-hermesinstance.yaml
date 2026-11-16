@@ -1,5 +1,5 @@
 ---
-# Production Hermes on the kubernetes terminal backend (fork build eb037658,
+# Production Hermes on the kubernetes terminal backend (fork build 1e9de575c3,
 # david-igou/hermes-agent feat/kubernetes-terminal-backend). Replaced the
 # hermes VM (applications/hermes-agent, retired 2026-08-24) at the
 # 2026-08-14 cutover.
@@ -23,11 +23,11 @@ metadata:
     argocd.argoproj.io/sync-wave: '10'
 spec:
   image:
-    # Built by igou-containers from fork commit eb037658.
-    # Keep the agent, dashboard, and auth-sync on the same factory digest.
+    # Built by igou-containers from fork commit 1e9de575c3.
+    # Keep the agent and all image-based helpers on the same factory digest.
     repository: ghcr.io/igou-io/hermes-agent-k8s
-    tag: latest
-    digest: sha256:cf4dbba8c370d5479aeb73964ee133814b82761ba7e4a05a3274b5537875f3e6
+    tag: a4dfb78b8aa8333852a722762b377fe064f115c2
+    digest: sha256:19139e0d3cbb0e92d3ea2ae1a53c1cd2239483d2e335784ddc8e9e34e93ab3c5
     pullPolicy: IfNotPresent
   probes:
     # Allow UID remapping and data initialization before liveness starts.
@@ -158,7 +158,7 @@ spec:
   # hermes-dashboard.service used; scrypt BasicAuth comes from hermes-env.
   sidecars:
     - name: dashboard
-      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:cf4dbba8c370d5479aeb73964ee133814b82761ba7e4a05a3274b5537875f3e6
+      image: ghcr.io/igou-io/hermes-agent-k8s@sha256:19139e0d3cbb0e92d3ea2ae1a53c1cd2239483d2e335784ddc8e9e34e93ab3c5
       imagePullPolicy: IfNotPresent
       args:
         - dashboard
