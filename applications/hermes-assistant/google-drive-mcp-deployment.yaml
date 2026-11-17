@@ -30,7 +30,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: mcp
-          image: ghcr.io/igou-io/google-drive-mcp:54da8babc0d57d29a7566cf83b4f8d7c259c2d0f@sha256:5af6ed019eac66d7600e8296232f335b12d781f73101865de8670445e66a2f69
+          image: ghcr.io/igou-io/google-drive-mcp:6af41d051935e67c56770057a6a9dcc5f9603e78@sha256:ac8539190a51ad311bb4441ce326c8f17001ac0fba86ef6bed820179fade5ea0
           env:
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /etc/google-drive/service-account.json
