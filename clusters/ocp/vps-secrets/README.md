@@ -3,6 +3,9 @@
 The primary OpenShift Argo CD instance owns this bundle. Connection/source
 Secrets and pushes are in `openshift-gitops`; the private API egress Service
 is in `vps-secrets`, and the remote registration is in `vps-gitops`.
+PushSecrets deliver only the public TLS bundle (`vps-public-tls`) and Gotify
+credentials (`vps-gotify`) to the VPS mirror pool; no Tailscale OAuth client
+is pushed.
 
 The metrics Service, five ServiceMonitors and imported monitoring credential
 live in OpenShift `tailscale`, where the API egress proxy pods run. UWM ignores

@@ -8,36 +8,6 @@ metadata:
     argocd.argoproj.io/sync-wave: '11'
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
-  deployment:
-    patch:
-      spec:
-        template:
-          spec:
-            serviceAccountName: rhdh-public-sharing
-            containers:
-              - name: backstage-backend
-                volumeMounts:
-                  - name: public-sharing-ocp-reader
-                    mountPath: /var/run/public-sharing/ocp
-                    readOnly: true
-                  - name: public-sharing-vps-reader
-                    mountPath: /var/run/public-sharing/vps
-                    readOnly: true
-            volumes:
-              - name: public-sharing-ocp-reader
-                projected:
-                  sources:
-                    - serviceAccountToken:
-                        path: token
-                        expirationSeconds: 3600
-                    - configMap:
-                        name: kube-root-ca.crt
-                        items:
-                          - key: ca.crt
-                            path: ca.crt
-              - name: public-sharing-vps-reader
-                secret:
-                  secretName: rhdh-public-sharing-reader
   database:
     enableLocalDb: false
   monitoring:
@@ -62,4 +32,3 @@ spec:
         - name: rhdh-keycloak-credentials
         - name: rhdh-forgejo-credentials
         - name: rhdh-github-app
-        - name: rhdh-public-sharing-oauth

@@ -1,46 +1,4 @@
 applications:
-  rust-server:
-    annotations:
-      argocd.argoproj.io/sync-wave: '20'
-    destination:
-      namespace: public-services
-    source:
-      path: applications/rust-server
-
-  public-services:
-    annotations:
-      argocd.argoproj.io/sync-wave: '10'
-    destination:
-      namespace: public-services
-    source:
-      path: .helm/charts/tailscale-public-services
-      extraSourceFields: |
-        helm:
-          valuesObject:
-            quota:
-              requests.cpu: '4'
-              requests.memory: 12Gi
-              limits.cpu: '8'
-              limits.memory: 16Gi
-              requests.ephemeral-storage: 24Gi
-              limits.ephemeral-storage: 48Gi
-
-  public-services-examples:
-    annotations:
-      argocd.argoproj.io/sync-wave: '11'
-    destination:
-      namespace: public-services
-    source:
-      path: test-workloads/public-services
-
-  public-services-reader:
-    annotations:
-      argocd.argoproj.io/sync-wave: '11'
-    destination:
-      namespace: public-services
-    source:
-      path: components/public-services
-
   external-secrets-operator:
     annotations:
       argocd.argoproj.io/compare-options: IgnoreExtraneous

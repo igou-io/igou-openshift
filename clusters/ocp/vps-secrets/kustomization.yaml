@@ -11,8 +11,6 @@ resources:
   - vps-acme-issuer.yaml
   - vps-public-tls-certificate.yaml
   - vps-public-tls-pushsecret.yaml
-  - vps-tailscale-source-externalsecret.yaml
-  - vps-tailscale-pushsecret.yaml
   - vps-gotify-source-externalsecret.yaml
   - vps-gotify-pushsecret.yaml
   - vps-monitoring-clustersecretstore.yaml
