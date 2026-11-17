@@ -19,6 +19,7 @@ OpenShift cert-manager performs Cloudflare DNS-01 issuance and renewal for
 in `openshift-gitops`. ESO pushes only a single JSON certificate/private-key
 bundle to the VPS mirror pool; local VPS ESO creates the Gateway TLS Secret.
 There is no cert-manager Application or Cloudflare-token push to the VPS.
+The VPS runs no Tailscale operator, so no Tailscale OAuth client is pushed.
 Renewal delivery depends on OpenShift/Tailscale; retained certificates keep
 public HTTPS serving until expiry during an outage.
 

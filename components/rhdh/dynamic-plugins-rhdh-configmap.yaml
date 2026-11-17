@@ -11,11 +11,6 @@ data:
     includes:
       - dynamic-plugins.default.yaml
     plugins:
-      # Both custom artifacts were published from containers commit 61f7c14.
-      - package: oci://ghcr.io/igou-io/rhdh-public-sharing@sha256:8e3ebda1fcf82e01b4184c2c99a42726133b48f1ec6f9938a1cb895b7745a576
-        enabled: true
-      - package: oci://ghcr.io/igou-io/rhdh-public-sharing-backend@sha256:1ab828ff19b03eea4fbe7daf896a97f3f03dc87ccc8d206d6d92e2c97e9d84c2
-        enabled: true
       - package: ref://backstage-community-plugin-auth-backend-module-keycloak-provider
         enabled: true
       - package: ref://backstage-community-plugin-catalog-backend-module-keycloak

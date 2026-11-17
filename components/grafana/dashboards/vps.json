@@ -2608,7 +2608,7 @@
       },
       "id": 36,
       "options": {
-        "content": "Host and workload metrics run on the VPS; Argo CD and monitoring run on OpenShift. The namespace selector filters workload panels only. **Tailscale:** proxy metrics are enabled by the default ProxyClass, but service proxies need explicit scrape wiring before their metrics can appear here. Missing telemetry is shown as unavailable, never a synthetic healthy zero.",
+        "content": "Host and workload metrics run on the VPS; Argo CD and monitoring run on OpenShift. The namespace selector filters workload panels only. Missing telemetry is shown as unavailable, never a synthetic healthy zero.",
         "mode": "markdown"
       },
       "title": "Metric scope",
