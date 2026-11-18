@@ -24,7 +24,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: ghbroker
-          image: quay.apps.ocp.igou.systems/igou-io/ghapp-broker@sha256:a7ee9ecb6303da9984e6896b131a3b57df4d228f7deca26697f734970825c3d7
+          image: quay.apps.ocp.igou.systems/igou-io/ghapp-broker@sha256:9e7db2fed5506957782f07ca379232552c5ea0230571b19fc330040f4fcc2707
           args:
             - --listen
             - 0.0.0.0:8085
