@@ -9,8 +9,6 @@ spec:
   sourceRepos:
     - https://github.com/igou-io/igou-kubernetes.git
   destinations:
-    - namespace: public-services
-      server: https://vps-k3s-api.vps-secrets.svc.cluster.local:6443
     - namespace: monitoring
       server: https://vps-k3s-api.vps-secrets.svc.cluster.local:6443
     - namespace: kube-state-metrics
@@ -21,8 +19,6 @@ spec:
       server: https://vps-k3s-api.vps-secrets.svc.cluster.local:6443
     - namespace: node-exporter
       server: https://vps-k3s-api.vps-secrets.svc.cluster.local:6443
-    - namespace: tailscale
-      server: https://vps-k3s-api.vps-secrets.svc.cluster.local:6443
     - namespace: nginx-gateway
       server: https://vps-k3s-api.vps-secrets.svc.cluster.local:6443
     - namespace: igou-io
@@ -30,8 +26,6 @@ spec:
     - namespace: gotify
       server: https://vps-k3s-api.vps-secrets.svc.cluster.local:6443
   clusterResourceWhitelist:
-    - group: tailscale.com
-      kind: ProxyClass
     - group: external-secrets.io
       kind: ClusterSecretStore
     - group: ''
@@ -48,8 +42,6 @@ spec:
       kind: ValidatingAdmissionPolicy
     - group: admissionregistration.k8s.io
       kind: ValidatingAdmissionPolicyBinding
-    - group: networking.k8s.io
-      kind: IngressClass
   namespaceResourceWhitelist:
     - group: '*'
       kind: '*'
