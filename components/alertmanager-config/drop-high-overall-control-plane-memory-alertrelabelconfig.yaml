@@ -1,0 +1,23 @@
+# Drop HighOverallControlPlaneMemory on the Prometheus -> Alertmanager path.
+# The MCO rule fires when control-plane memory use exceeds 60% for 1h, a
+# threshold sized for dedicated three-master clusters. ocp.igou.systems is the
+# only control-plane node and is also a schedulable worker (94 GiB; ~42 GiB
+# platform + ~17 GiB user workloads), so it sits at 59-63% steadily and the
+# alert flaps with no leak or growth behind it. Node memory exhaustion is
+# still covered by the generic node memory alerts.
+#
+# NOTE: AlertRelabelConfig only relabels alerts on the Prometheus ->
+# Alertmanager path. Dropped alerts still show in the web console
+# Observe > Alerting list (the console reads the Prometheus rules API,
+# upstream of this relabeling).
+apiVersion: monitoring.openshift.io/v1
+kind: AlertRelabelConfig
+metadata:
+  name: drop-high-overall-control-plane-memory
+  namespace: openshift-monitoring
+spec:
+  configs:
+    - sourceLabels:
+        - alertname
+      regex: HighOverallControlPlaneMemory
+      action: Drop
