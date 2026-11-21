@@ -1,0 +1,25 @@
+---
+# Stop OLM copying CSVs of AllNamespaces operators into every namespace.
+# On 4.22.22 OLM's copied-CSV hash check never matches, so every resync
+# rewrites all ~2,640 copies (15 operators x 176 namespaces) as no-op PUTs:
+# 44-91 writes/s, ~1-2 kube-apiserver cores, 183 MiB of etcd. An orphaned
+# agent-sandbox copy in the deleted agent-control-plane namespace also keeps
+# the OLMConfig copy-count check requeueing that operator nonstop.
+#
+# With copies disabled OLM deletes them cluster-wide (including the orphan),
+# keeps one per operator in the protected `openshift` namespace, and records
+# a DisabledCopiedCSVs event on each original CSV. Single/MultiNamespace
+# operators are unaffected. Tradeoff: project-scoped console views
+# (Installed Operators, operand pages, dev-console operator-backed catalog)
+# no longer list global operators; admins use "All Projects". Set to false
+# to restore the copies.
+#
+# CVO creates this singleton with release.openshift.io/create-only, so it
+# does not revert spec changes.
+apiVersion: operators.coreos.com/v1
+kind: OLMConfig
+metadata:
+  name: cluster
+spec:
+  features:
+    disableCopiedCSVs: true
