@@ -14,7 +14,7 @@ spec:
   targets:
     staticConfig:
       static:
-        # ghapp tokens, Renovate, and every git push depend on GitHub
+        # gh CLI auth, the Hermes ghbroker, Renovate, and every git push depend on GitHub
         - https://github.com
       labels:
         tier: standard
