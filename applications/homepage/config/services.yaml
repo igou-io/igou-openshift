@@ -140,7 +140,7 @@
 - Work Queue:
     # GitHub search API, unauthenticated - works because igou-openshift and
     # igou-devenv are PUBLIC repos. igou-inventory is private, so its
-    # alert-issue backlog can't be shown without token plumbing (ghapp
+    # alert-issue backlog can't be shown without token plumbing (GitHub App
     # tokens are 1h; homepage reads env at startup only).
     - PRs igou-openshift:
         icon: github.png
