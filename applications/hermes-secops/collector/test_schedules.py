@@ -57,6 +57,18 @@ class SnapshotTests(unittest.TestCase):
             with patch.object(module, "HOME", root), patch.object(module, "OUTPUT", root / "output"):
                 self.assertEqual(module.snapshot()[0], directory)
 
+    def test_unreachable_acs_fails_preflight(self):
+        empty = {"finished": "now", "acs_inventory": {"clusters": {"unique": 0}, "images": {"unique": 0}}}
+        with patch.object(module, "snapshot", return_value=(Path("/output/run"), empty)):
+            with self.assertRaises(SystemExit) as raised:
+                module.prepare("scan-coverage")
+            self.assertIn("no ACS records", str(raised.exception))
+        reached = {"finished": "now", "acs_inventory": {"clusters": {"unique": 2}, "images": {"unique": 0}}}
+        with patch.object(module, "snapshot", return_value=(Path("/output/run"), reached)), \
+                patch("builtins.print") as printed:
+            module.prepare("scan-coverage")
+            printed.assert_called_once()
+
 
 class KevTests(unittest.TestCase):
     def evidence(self):

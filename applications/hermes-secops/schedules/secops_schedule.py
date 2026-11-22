@@ -90,8 +90,16 @@ def kev_state(evidence):
             "gaps": sorted(evidence.get("gaps", []))}
 
 
+def acs_reached(summary):
+    """Zero ACS records means Central was unreachable, not ordinary partial coverage."""
+    return any(source.get("unique") for source in summary.get("acs_inventory", {}).values())
+
+
 def prepare(mode, monitor=False):
     directory, summary = snapshot()
+    if not acs_reached(summary):
+        raise SystemExit(f"SecOps collection {directory.name} returned no ACS records; Central was unreachable. "
+                         "Check Central health and requests.json, then retry the job.")
     if monitor:
         # No timestamps or run paths: unchanged exposure must have identical bytes.
         evidence = json.loads((directory / "evidence.json").read_text())
