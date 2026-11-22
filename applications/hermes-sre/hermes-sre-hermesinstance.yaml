@@ -585,10 +585,10 @@ spec:
                   do not try. If you are confident in a declarative fix, you may
                   open a pull request per the `propose-fix` skill (branch + PR
                   only, never merge) and link it in your reply.
-                  Reply with a concise message (<= 20 lines: alert, impact,
-                  evidence, suggested fix, links); it is delivered to
-                  #igoucloud-hermes-sre automatically. If the alert is noise,
-                  reply with one line saying so.
+                  Reply in plain English using the triage skill's report layout
+                  (<= 20 lines); it is delivered to #igoucloud-hermes-sre
+                  automatically. If the alert is noise, reply with one line
+                  saying so.
       # The Firecrawl SDK is baked into the image; lazy installs stay disabled.
       # Search stays on SearXNG and extraction uses the in-cluster Firecrawl API.
       plugins:

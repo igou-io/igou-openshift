@@ -8,6 +8,9 @@ infrastructure repos and personal projects, delivered as PRs.
   subtree (seeded from hermes-k8s at cutover), opencode-go key, own Slack app "Hermes Developer" confined to
   `#igoucloud-hermes-developer` (no slash commands, see hermes-sre). No GCP, no cluster credentials — verification of infra changes goes through CI,
   ArgoCD and the read-only `hermes-sre` instance.
+- Persona: `hermes-developer-context-configmap.yaml` mounts `SOUL.md` read-only (the stock
+  Hermes paragraph plus plain-English writing rules). Restart the pod after
+  editing it; the dashboard persona editor can no longer save.
 - No cron store; `agent-repos` is the full checkout set copied from hermes-k8s.
 - External HTTP/HTTPS from the agent, generated sessions, `auth-login`, and
   ghbroker must traverse the shared Squid proxy. NetworkPolicy denies generic

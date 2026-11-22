@@ -113,15 +113,16 @@ data:
     ## 6. Report (Slack, <= 20 lines)
 
     ```
-    *<AlertName>* (severity) — FIRING since <ts> / RESOLVED
-    *Component:* ns/object
-    *Impact:* what users/services lose
-    *Evidence:* 2-4 exact facts (counts, log lines, event text)
-    *Likely cause:* one sentence, say "not proven" if so
-    *Suggested fix:* the GitOps file/object to change, or the runbook step
-    *Links:* console alert / runbook / incident issue / relevant docs page
-    No changes made.
+    *<AlertName>* (severity) on ns/object — firing since <HH:MM UTC> / resolved at <HH:MM UTC>
+    <1-2 plain sentences: what is wrong and what it affects, ending with the verdict>
+    *What to do:* GitOps file/object to change, runbook step, or "nothing"; if waiting, when to recheck
+    *Likely cause:* one sentence specific to this firing; say "not confirmed" if so
+    *Evidence:* 2-4 exact facts from before or during the firing that support the cause and verdict; sizes in MiB/GiB
+    *Links:* incident issue / PR / runbook / docs page (https URLs)
     ```
+    Resolved or noise: one line with the alert, object, time and why nothing is needed
+    (for example, the object is gone or it recovered by itself).
+    Follow SOUL.md's "How you report" rules for wording.
 
     Post the same diagnosis as a comment on the incident issue (step 0) so the
     next firing of this alert can be answered from memory instead of a fresh

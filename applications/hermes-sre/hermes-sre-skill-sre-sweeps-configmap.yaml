@@ -31,7 +31,8 @@ data:
       line ("all green" + the checks' names), not a table of OKs.
     - Read-only. A 403 means the check is out of scope for this instance:
       name the missing permission in the digest and move on.
-    - End with `No changes made.` When a finding has an obvious declarative
+    - Word each line as SOUL.md's "How you report" describes: what is wrong,
+      where, and what to do. When a finding has an obvious declarative
       fix, link the GitOps file to change; open a PR only via the
       `propose-fix` skill and only when confident in the diagnosis.
 
