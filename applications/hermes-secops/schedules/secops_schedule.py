@@ -42,7 +42,8 @@ def snapshot():
         # Cron itself is serialized; this also protects manual preflight invocations.
         fcntl.flock(lock, fcntl.LOCK_EX)
         for directory in sorted(OUTPUT.glob("*/summary.json"), key=lambda p: p.stat().st_mtime, reverse=True):
-            if summary := verified_snapshot(directory.parent):
+            # An empty ACS collection is never reused, so a retry collects again.
+            if (summary := verified_snapshot(directory.parent)) and acs_reached(summary):
                 return directory.parent, summary
         from tools.terminal_tool import terminal_tool, _atexit_cleanup
         task_id = "secops-collection-" + uuid.uuid4().hex[:12]
