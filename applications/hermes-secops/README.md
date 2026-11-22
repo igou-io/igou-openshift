@@ -90,8 +90,10 @@ populated from concealed fields in `lab_agents/hermes-secops`. They limit the
 runtime to the existing authorized user, `#igoucloud-hermes-secops` and that user's DMs.
 Channel requests require a mention. The Slack toolset remains file, skills,
 terminal and web; it adds no generic messaging, scheduling or remediation
-tools. Summaries reply in the requesting thread/DM with status, collection
-time, priorities, coverage gaps and the authenticated report location.
+tools. Summaries reply in the requesting thread/DM with a plain-English bottom
+line, priorities, blind spots and the authenticated report location. Report
+and Slack layout and wording rules live in the assess skill's "Writing reports"
+section; scheduled skills only define what each report checks.
 Seven operator-provisioned schedules deliver briefs to the configured home
 channel. The agent cannot create additional schedules or message other channels.
 

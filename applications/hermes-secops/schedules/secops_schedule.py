@@ -103,4 +103,4 @@ def prepare(mode, monitor=False):
                       "status": summary.get("status"), "acs_integrity": summary.get("acs_integrity"),
                       "gaps": summary.get("gaps", []),
                       "instructions": "Reuse this verified collection. Read summary.json and selected evidence; do not recollect. "
-                      "Write the named report, read it back, then return a concise Slack brief and authenticated report location."}))
+                      "Write the named report, read it back, then reply with a short plain-English Slack summary and the dashboard report location."}))

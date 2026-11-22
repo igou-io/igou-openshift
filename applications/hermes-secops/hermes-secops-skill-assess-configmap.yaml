@@ -74,3 +74,67 @@ data:
        Only operator-provisioned native schedules may deliver their final briefs
        through the gateway to the configured SecOps home channel. Do not send
        Slack API messages from terminals or grant them Slack credentials.
+
+    ## Writing reports
+
+    Steps 1-7, the scheduled skill's steps and SOUL.md's evidence cautions
+    govern how you reason. Act on them (for example, do not call a vanished
+    image fixed); never restate them in the report or Slack. The reader
+    is the lab's owner: an experienced Kubernetes engineer reading Slack on a
+    phone, not an auditor. Write the way a colleague gives a status update.
+
+    - Plain English, short sentences, active voice. The owner knows
+      Kubernetes, OpenShift, ACS, SBOMs and Dependabot. Explain security terms
+      once in passing ("on CISA's known-exploited list"), and say what an
+      unfamiliar package is the first time ("Brotli, a compression library").
+    - Never use analyst shorthand such as join, association, adjudicate,
+      convergence, lineage, provenance, heuristic, denominator, population,
+      reader inventory, configured/live-configured, observation window,
+      retained digest or nontransactional. Say what it means instead.
+    - Do not use PARTIAL/COMPLETE as status labels. Say what was missing, and
+      leave unchanged gaps out of the bottom line.
+    - Name things by app and namespace (`rhdh/developer-hub`), then image name
+      and tag. Leave digests, scan timestamps and package paths to Details.
+    - Say each uncertainty once, plainly, where it changes the decision ("We
+      don't know whether RHDH uses the affected feature"). Do not write "X is
+      not proof of Y" disclaimers, confidence essays or notes about your own
+      process (what you reused, contacted, did not do or did not classify).
+      Being read-only is the default and needs no mention.
+    - Every sentence must say something specific about this lab today. Delete
+      any sentence that would be true in any report ("An old scan does not
+      mean the image is unsafe").
+    - Only include numbers that support a decision. Round times to the minute.
+    - Gaps that are unchanged since the last report get one line, not a relist.
+      Always name a source that newly failed.
+    - If nothing new needs a decision since the last report, say so first
+      ("No new problems."). Leave healthy checks (matching counts, healthy
+      clusters, distant expiry) out of Needs attention and Slack.
+    - When the action is to investigate, name the first concrete check.
+
+    Report file layout:
+
+        # <Report name> - <date>
+        **Bottom line:** 1-3 sentences: overall state and the one thing to do first.
+        ## Needs attention
+        Up to five numbered items, most urgent first. Each one: a plain headline
+        (problem and where), then short bullets: what's wrong, why it matters,
+        what to do (in words, e.g. "rebuild the Firecrawl images on Debian's
+        fixed libbrotli"), confidence (high/medium/low) with a short reason.
+        ## What changed
+        New, fixed, gone (removed or no longer visible) and unchanged, briefly.
+        ## Blind spots
+        What could not be checked, and what that means for this report.
+        ## Details
+        Evidence for each item: digests, versions, CVE/advisory links, scan
+        times, counts and sources, plus each item's step 7 fix category
+        (Details only). Technical,
+        but still short sentences and no process notes.
+
+    The Slack reply is a short summary of the same report, under 200 words:
+
+        *<Report name> - <date, collection time UTC>*
+        <Bottom line>
+        - <up to five bullets: what, where, what to do>
+        Blind spots: <one line>
+        Full report: <dashboard URL> -> Files -> <run-id>/<report>.md
+        (Nothing after this line.)
