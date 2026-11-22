@@ -16,9 +16,10 @@ module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
 
-def snapshot_files(root, age=0):
+def snapshot_files(root, age=0, clusters=2):
     summary = {"finished": (datetime.now(timezone.utc) - timedelta(seconds=age)).isoformat(),
-               "status": "PARTIAL", "acs_integrity": "COMPLETE"}
+               "status": "PARTIAL", "acs_integrity": "COMPLETE",
+               "acs_inventory": {"clusters": {"unique": clusters}}}
     hashes = {}
     for name, content in (("summary.json", json.dumps(summary)), ("evidence.json", "{}"),
                           ("report.md", "coverage is partial"), ("requests.json", "[]")):
@@ -56,6 +57,30 @@ class SnapshotTests(unittest.TestCase):
             snapshot_files(directory)
             with patch.object(module, "HOME", root), patch.object(module, "OUTPUT", root / "output"):
                 self.assertEqual(module.snapshot()[0], directory)
+
+    def test_empty_acs_snapshot_is_not_reused(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            directory = root / "output/run"
+            directory.mkdir(parents=True)
+            snapshot_files(directory, clusters=0)
+            with patch.object(module, "HOME", root), patch.object(module, "OUTPUT", root / "output"), \
+                    patch.dict("sys.modules", {"tools.terminal_tool": None}):
+                # Reaching the terminal import means the empty snapshot was skipped.
+                with self.assertRaises(ImportError):
+                    module.snapshot()
+
+    def test_unreachable_acs_fails_preflight(self):
+        empty = {"finished": "now", "acs_inventory": {"clusters": {"unique": 0}, "images": {"unique": 0}}}
+        with patch.object(module, "snapshot", return_value=(Path("/output/run"), empty)):
+            with self.assertRaises(SystemExit) as raised:
+                module.prepare("scan-coverage")
+            self.assertIn("no ACS records", str(raised.exception))
+        reached = {"finished": "now", "acs_inventory": {"clusters": {"unique": 2}, "images": {"unique": 0}}}
+        with patch.object(module, "snapshot", return_value=(Path("/output/run"), reached)), \
+                patch("builtins.print") as printed:
+            module.prepare("scan-coverage")
+            printed.assert_called_once()
 
 
 class KevTests(unittest.TestCase):

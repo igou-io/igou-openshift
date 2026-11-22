@@ -42,7 +42,8 @@ def snapshot():
         # Cron itself is serialized; this also protects manual preflight invocations.
         fcntl.flock(lock, fcntl.LOCK_EX)
         for directory in sorted(OUTPUT.glob("*/summary.json"), key=lambda p: p.stat().st_mtime, reverse=True):
-            if summary := verified_snapshot(directory.parent):
+            # An empty ACS collection is never reused, so a retry collects again.
+            if (summary := verified_snapshot(directory.parent)) and acs_reached(summary):
                 return directory.parent, summary
         from tools.terminal_tool import terminal_tool, _atexit_cleanup
         task_id = "secops-collection-" + uuid.uuid4().hex[:12]
@@ -90,8 +91,16 @@ def kev_state(evidence):
             "gaps": sorted(evidence.get("gaps", []))}
 
 
+def acs_reached(summary):
+    """Zero ACS records means Central was unreachable, not ordinary partial coverage."""
+    return any(source.get("unique") for source in summary.get("acs_inventory", {}).values())
+
+
 def prepare(mode, monitor=False):
     directory, summary = snapshot()
+    if not acs_reached(summary):
+        raise SystemExit(f"SecOps collection {directory.name} returned no ACS records; Central was unreachable. "
+                         "Check Central health and requests.json, then retry the job.")
     if monitor:
         # No timestamps or run paths: unchanged exposure must have identical bytes.
         evidence = json.loads((directory / "evidence.json").read_text())
