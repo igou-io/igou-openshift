@@ -1,19 +1,17 @@
 ---
 name: access-health
-description: Check the existing read-only security sources and ACS reader expiry.
+description: Check that each read-only security source still works and when the ACS reader token expires.
 ---
 
-1. Use the current preflight source outcomes and acs_token_expires metadata. Enumerate broker-allowed repositories and classify each SBOM/alert source as readable, disabled, denied or unknown. Record the collection time.
+1. From the preflight results and `acs_token_expires`, list each allowed repository and say whether its SBOM, Dependabot and code-scanning data could be read, is disabled, was denied, or is unknown.
 
-2. Flag ACS expiry within 14 days or an unknown expiry. Explain that broker read success is not an audit of the GitHub App's full permissions, and this skill cannot verify 1Password or OAuth refresh independence.
+2. Flag an ACS token expiring within 14 days, or with an unknown expiry. A successful read through the broker does not audit the GitHub App's full permissions, and this check cannot see 1Password or the Codex login.
 
-3. Use no alternate identity and do not request broad permissions. Do not test write APIs, retrieve credential values, rotate tokens or change App installations. Propose the precise operator action needed.
+3. For each problem, give the exact operator action that fixes it. Do not use another identity, request broader access, test writes, read credential values, rotate tokens or change the App installation.
 
-Follow the assess skill's read-only boundaries and evidence rules. For a scheduled
-run, use the verified preflight collection; do not start another collector.
-Write access-health.md in the supplied evidence directory and read it back before
-claiming completion. A first run establishes a baseline. Keep source failures and
-partial coverage explicit. The final response is the scheduler's Slack payload:
-status, UTC collection time, key changes, coverage gaps, authenticated dashboard
-URL and Files path. Do not send messages yourself or expose raw evidence.
-
+For a scheduled run, use the preflight evidence you were given; do not collect
+again. Follow the assess skill's read-only and evidence rules, and write the report and Slack reply as
+its "Writing reports" section describes. If no earlier report exists, say this
+run sets the baseline. Save access-health.md in the evidence directory and read it back
+before saying it is done. Your final response is the Slack message; do not send
+messages yourself or paste raw evidence.

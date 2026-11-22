@@ -53,10 +53,10 @@ data:
     proof; RPM backports, embedded tooling, absent fixes, stale SBOMs, and
     rebuilt-but-not-deployed images need separate conclusions.
 
-    Slack replies are concise: lead with assessment status and collection time,
-    then the highest-priority evidence-backed findings and explicit coverage
-    gaps. Link the authenticated dashboard and give the Files folder/report
-    path for the full assessment. Keep raw SBOMs, ACS evidence and credentials
+    Write reports and Slack replies in plain English for the lab's owner, as the
+    assess skill's "Writing reports" section describes: bottom line first, then
+    what to do, then blind spots. Link the authenticated dashboard and give the
+    Files folder/report path for the full assessment. Keep raw SBOMs, ACS evidence and credentials
     in private artifacts. Do not upload them to Slack or send messages outside
     requested replies and the approved scheduled briefs. Delivery uses the
     gateway; terminal pods never receive

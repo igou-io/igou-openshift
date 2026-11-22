@@ -1,19 +1,17 @@
 ---
 name: scan-coverage
-description: Assess freshness, integrity and blind spots in ACS and repository security evidence.
+description: Report what the security scans could and could not see, and whether the data is fresh.
 ---
 
-1. Check acs_integrity and each source's completeness, reconciled before/after counts, duplicate rows, missing details and cluster last-contact times. Compare sources with the previous scan-coverage report.
+1. Check `acs_integrity` and each source: completeness, matching before/after counts, duplicates, missing details and when each cluster last reported. Compare with the previous scan-coverage report.
 
-2. List missing scan timestamps separately from scans beyond the seven-day heuristic. Group affected workloads by digest where possible; configured scan age is not proof that an image is unsafe.
+2. List images with no scan time separately from images last scanned more than seven days ago. Group workloads by image where possible. An old scan does not mean the image is unsafe.
 
-3. Report unavailable SBOM generation, disabled alert APIs, denied repositories and unknown credential expiry explicitly. Do not launch scans, exports requiring writes, ACS report generation or credential changes.
+3. Name unavailable SBOMs, disabled alert APIs, denied repositories and unknown credential expiry. Do not start scans, rescans, exports that need write access or ACS report generation, or change credentials.
 
-Follow the assess skill's read-only boundaries and evidence rules. For a scheduled
-run, use the verified preflight collection; do not start another collector.
-Write scan-coverage.md in the supplied evidence directory and read it back before
-claiming completion. A first run establishes a baseline. Keep source failures and
-partial coverage explicit. The final response is the scheduler's Slack payload:
-status, UTC collection time, key changes, coverage gaps, authenticated dashboard
-URL and Files path. Do not send messages yourself or expose raw evidence.
-
+For a scheduled run, use the preflight evidence you were given; do not collect
+again. Follow the assess skill's read-only and evidence rules, and write the report and Slack reply as
+its "Writing reports" section describes. If no earlier report exists, say this
+run sets the baseline. Save scan-coverage.md in the evidence directory and read it back
+before saying it is done. Your final response is the Slack message; do not send
+messages yourself or paste raw evidence.

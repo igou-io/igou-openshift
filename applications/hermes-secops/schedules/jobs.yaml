@@ -4,56 +4,59 @@ jobs:
     skill: security-brief
     schedule: '0 13 * * 1-5'
     prompt: >-
-      Produce the weekday security brief from the preflight evidence. Compare with the previous
-      security-brief report, prioritize five actionable changes, and distinguish new, persistent,
-      resolved and unknown findings. Save and verify security-brief.md. Return status, UTC collection
-      time, affected workloads, verified remediation paths, coverage gaps and the report location.
+      Write the weekday security brief from the preflight evidence. Compare it with the previous
+      security brief and lead with up to five things the owner should act on, saying which are new,
+      ongoing, fixed or unknown. Save and verify security-brief.md, then reply with the Slack
+      summary.
   - name: secops-kev-watch
     skill: kev-watch
     schedule: every 2d
     prompt: >-
-      The native monitor detected a changed KEV exposure or coverage baseline. Review the supplied
-      diff against fresh preflight evidence. Describe newly affected workloads, changed image digests,
-      resolved matches or degraded coverage. Verify material advisory claims, save kev-watch.md and
-      return a concise notification. A KEV match is evidence of known exploitation of the CVE,
-      not proof this workload is exploitable. Never claim clean coverage from missing scans.
+      The monitor found a change in running workloads affected by CISA known-exploited CVEs, or in
+      scan coverage. Review the supplied diff against the preflight evidence: what is newly
+      affected, what changed, what went away, and whether coverage got worse. Check the advisories
+      behind any claim you make. A KEV listing means the CVE is exploited somewhere, not that this
+      workload is exploitable, and missing scans never mean clean. Save and verify kev-watch.md,
+      then reply with the Slack summary.
   - name: secops-scan-coverage
     skill: scan-coverage
     schedule: '30 12 * * *'
     prompt: >-
-      Audit collection integrity and scan/SBOM coverage using the preflight evidence. Identify missing
-      and stale scans, inaccessible sources, mismatched counts and expiring reader credentials.
-      Compare the previous scan-coverage report. Save scan-coverage.md and return the concrete gaps,
-      their impact on assessment confidence, responsible source and UTC collection time.
+      Check how complete and fresh the preflight evidence is: missing or old scans, sources that
+      could not be read, counts that do not match, and reader credentials close to expiry. Compare
+      with the previous scan-coverage report and say what each gap leaves unknown. Save and verify
+      scan-coverage.md, then reply with the Slack summary.
   - name: secops-hardening-review
     skill: hardening-review
     schedule: '0 14 * * 1'
     prompt: >-
-      Review ACS workload hardening evidence, emphasizing live workloads and changes since the prior
-      hardening-review report. Explain justified operator/CSI privileges separately from application
-      exceptions. Save hardening-review.md and return the five most actionable proposals with evidence,
-      confidence, caveats and report location. Propose changes only; never remediate.
+      Review workload hardening in the preflight evidence, focusing on running workloads and on
+      changes since the previous hardening review. Keep privileges that operators and CSI drivers
+      need apart from application exceptions. Propose up to five changes; never apply them. Save and
+      verify hardening-review.md, then reply with the Slack summary.
   - name: secops-runtime-triage
     skill: runtime-triage
     schedule: '0 14 * * 3'
     prompt: >-
-      Correlate repository dependency alerts with deployed image findings using preflight evidence.
-      Keep confirmed runtime matches, source-only alerts and unknown attribution separate. Classify
-      remediation as dependency/tool/base-image update, rebuild, rollout, upstream blocked or
-      investigation. Save runtime-triage.md and return the prioritized decisions and coverage gaps.
+      Match repository dependency alerts with vulnerabilities found in deployed images, using the
+      preflight evidence. Keep findings confirmed in running images, repository-only alerts and
+      unclear cases apart, and say what kind of fix each one needs. Save and verify
+      runtime-triage.md, then reply with the Slack summary.
   - name: secops-security-trends
     skill: security-trends
     schedule: '0 14 * * 5'
     prompt: >-
-      Compare the current preflight evidence with a verified snapshot closest to seven days earlier.
-      Account for changed scope, scans and source access before presenting new/resolved findings,
-      fixable vulnerability age and hardening trends. Save security-trends.md. If no comparable older
-      evidence exists, establish an explicit baseline instead of inventing a trend.
+      Compare the preflight evidence with the verified snapshot closest to seven days earlier.
+      Account for changes in what was scanned or readable before reporting new or fixed findings,
+      the age of fixable vulnerabilities and hardening changes. If there is no comparable older
+      snapshot, set a baseline instead of inventing a trend. Save and verify security-trends.md,
+      then reply with the Slack summary.
   - name: secops-access-health
     skill: access-health
     schedule: '0 15 * * 5'
     prompt: >-
-      Review source readability and ACS reader expiry from the fresh preflight evidence. Report each
-      allowed repository/source as readable, disabled, denied or unknown with evidence; prioritize
-      expiry within 14 days. Save access-health.md and return failures and the next operator action.
-      Do not retrieve credentials, inspect 1Password, rotate tokens, broaden grants or test writes.
+      From the preflight evidence, report whether each allowed repository and source could be read,
+      is disabled, was denied or is unknown, and when the ACS reader token expires; flag anything
+      within 14 days. Give the next operator action for each problem. Do not read credentials, open
+      1Password, rotate tokens, widen access or test writes. Save and verify access-health.md, then
+      reply with the Slack summary.
