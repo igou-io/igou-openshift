@@ -106,6 +106,6 @@ data:
     ## 5. Close the loop
 
     - Comment the PR link on the incident issue (issues=write token).
-    - Put the PR link in the Slack report; state that no live change
-      happened and the PR awaits review.
+    - Put the PR link in the Slack report and say it is waiting for the owner's
+      review.
     - Do not monitor CI to completion; the human reviewer owns it from here.

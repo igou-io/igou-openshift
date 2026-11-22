@@ -36,6 +36,7 @@ resources:
   - ghbroker-deployment.yaml
   - ghbroker-service.yaml
   - ghbroker-networkpolicy.yaml
+  - hermes-assistant-context-configmap.yaml
   - hermes-assistant-hermesinstance.yaml
   - hermes-assistant-dashboard-route.yaml
 

@@ -38,5 +38,6 @@ resources:
   - ghbroker-deployment.yaml
   - ghbroker-service.yaml
   - ghbroker-networkpolicy.yaml
+  - hermes-developer-context-configmap.yaml
   - hermes-developer-hermesinstance.yaml
   - hermes-developer-dashboard-route.yaml

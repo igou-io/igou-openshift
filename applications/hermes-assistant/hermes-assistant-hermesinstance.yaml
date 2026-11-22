@@ -221,6 +221,9 @@ spec:
   # documents at /opt/data/cache/documents; sessions see the same data at
   # /workspace and /output (see terminal.kubernetes.spec below).
   extraVolumes:
+    - name: context
+      configMap:
+        name: hermes-assistant-context
     - name: skill-storescrape
       configMap:
         name: hermes-assistant-skill-storescrape
@@ -228,6 +231,11 @@ spec:
       persistentVolumeClaim:
         claimName: hermes-workspace
   extraVolumeMounts:
+    # subPath file mount: the rest of /opt/data (PVC) stays writable.
+    - name: context
+      subPath: SOUL.md
+      mountPath: /opt/data/SOUL.md
+      readOnly: true
     - name: skill-storescrape
       mountPath: /opt/data/agent-skills/homelab/storescrape
       readOnly: true

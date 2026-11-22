@@ -13,6 +13,9 @@ app tokens and the `hermes-dashboard` hostname at cutover.
   model endpoints, broker and other internal dependencies on direct paths.
   NetworkPolicy denies generic direct Internet access, so HTTP-aware clients
   must honor the proxy environment.
+- Persona: `hermes-assistant-context-configmap.yaml` mounts `SOUL.md` read-only (the stock
+  Hermes paragraph plus plain-English writing rules). Restart the pod after
+  editing it; the dashboard persona editor can no longer save.
 - Everything else mirrors `hermes-k8s` (regular Kubernetes sessions, egress, sizes).
 
 See `../hermes-sre/README.md` for the split and the sync-wave notes.
