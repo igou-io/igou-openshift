@@ -17,6 +17,17 @@ spec:
           localnet: trunk-network
           state: present
     interfaces:
+      # MS-01 I226-LM AMT port (CRS328 ether14, VLAN 60). Keep the link up for
+      # AMT (its own static 10.10.60.225) but give Linux no address: a DHCP
+      # lease here adds a connected 10.10.60.0/24 route, so replies to IPMI
+      # clients bypass br-ex and BMCs cannot mount metal3 virtual media.
+      - name: enp88s0
+        type: ethernet
+        state: up
+        ipv4:
+          enabled: false
+        ipv6:
+          enabled: false
       - name: enp2s0f1.45
         type: vlan
         state: up
