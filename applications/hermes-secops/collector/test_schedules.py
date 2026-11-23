@@ -76,6 +76,13 @@ class SnapshotTests(unittest.TestCase):
             with self.assertRaises(SystemExit) as raised:
                 module.prepare("scan-coverage")
             self.assertIn("no ACS records", str(raised.exception))
+        # A collector that aborts before ACS (e.g. missing ghapp) must not be blamed on Central.
+        aborted = {**empty, "gaps": ["GitHub broker command failed"]}
+        with patch.object(module, "snapshot", return_value=(Path("/output/run"), aborted)):
+            with self.assertRaises(SystemExit) as raised:
+                module.prepare("kev-watch")
+            self.assertIn("GitHub broker command failed", str(raised.exception))
+            self.assertNotIn("Central was unreachable", str(raised.exception))
         reached = {"finished": "now", "acs_inventory": {"clusters": {"unique": 2}, "images": {"unique": 0}}}
         with patch.object(module, "snapshot", return_value=(Path("/output/run"), reached)), \
                 patch("builtins.print") as printed:
