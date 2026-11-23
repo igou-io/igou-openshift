@@ -7,6 +7,7 @@ resources:
   - hermes-sre-am-relay-externalsecret.yaml
   - alertmanager-slack-bot-token-externalsecret.yaml
   - drop-automation-orchestrator-targetdown-alertrelabelconfig.yaml
+  - drop-high-overall-control-plane-memory-alertrelabelconfig.yaml
   - drop-unsupported-hco-modification-alertrelabelconfig.yaml
 secretGenerator:
   - name: alertmanager-main
