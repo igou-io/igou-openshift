@@ -9,6 +9,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      # DB is well under 1Gi and grows slowly; 5Gi gives multi-year headroom.
-      storage: 5Gi
+      # The database is ~1.7Gi and an in-place backup doubles that; 10Gi
+      # leaves room for one backup plus years of growth.
+      storage: 10Gi
   storageClassName: freenas-nvmeof-ssd-csi
