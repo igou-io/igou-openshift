@@ -1,0 +1,16 @@
+---
+# Private Layer2 network for the igou-ansible `armbian` Molecule scenario.
+# A RouterOS CHR guest serves DHCP and TFTP on it, so OVN IPAM is disabled.
+# Shared prerequisite: the scoped ansible-molecule identity can attach VMs to
+# the generated NetworkAttachmentDefinition but cannot create networks.
+apiVersion: k8s.ovn.org/v1
+kind: UserDefinedNetwork
+metadata:
+  name: armbian-netboot
+  namespace: molecule
+spec:
+  topology: Layer2
+  layer2:
+    role: Secondary
+    ipam:
+      mode: Disabled
