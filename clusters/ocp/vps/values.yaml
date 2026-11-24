@@ -108,6 +108,8 @@ applications:
       path: clusters/vps/gotify
 
   bank:
+    # Stateless; prune the superseded hashed bank-html ConfigMap on each update.
+    autoSyncPrune: true
     annotations:
       argocd.argoproj.io/sync-wave: '20'
     destination:
