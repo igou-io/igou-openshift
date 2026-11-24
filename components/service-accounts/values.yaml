@@ -122,6 +122,21 @@ clusterRoles:
           - delete
           - patch
           - update
+      # Scenarios that netboot their guests own a run-scoped private network.
+      # A namespaced UserDefinedNetwork can only be a Layer2/Layer3 overlay:
+      # it cannot reach a physical network.
+      - apiGroups:
+          - k8s.ovn.org
+        resources:
+          - userdefinednetworks
+        verbs:
+          - get
+          - list
+          - watch
+          - create
+          - delete
+          - patch
+          - update
       # Read-only: watch DV-owned PVCs reach Bound during import/clone.
       - apiGroups:
           - ""
