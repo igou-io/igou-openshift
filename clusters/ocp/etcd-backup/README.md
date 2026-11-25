@@ -23,6 +23,10 @@ Design notes (the non-obvious bits):
   and conversely, after a multi-day failure streak few sets survive the
   cap. A set is valid iff its `COMPLETE` marker exists (written last,
   deleted first).
+- **`openshift-user-critical` priority**: the pod is pinned to the master,
+  which user workloads can fully request (2026-11-25: ad-hoc AAP test
+  stacks left it Pending until `activeDeadlineSeconds`). The priority
+  lets the scheduler preempt lower-priority pods instead.
 - **The local copies under `/var/backup/etcd` on the master are a
   convenience** for "I fat-fingered a CRD", not a backup — they live on
   the exact disk whose destruction is the scenario this component exists
