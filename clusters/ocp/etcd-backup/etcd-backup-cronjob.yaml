@@ -45,6 +45,9 @@ spec:
         spec:
           serviceAccountName: etcd-backup
           restartPolicy: Never
+          # Pinned to the master; preempt lower-priority user pods rather
+          # than sit Pending to the deadline when its CPU is fully requested.
+          priorityClassName: openshift-user-critical
           hostNetwork: true
           hostPID: true
           dnsPolicy: ClusterFirstWithHostNet
