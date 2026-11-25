@@ -74,6 +74,13 @@ route:
     - matchers:
         - alertname = HighOverallControlPlaneCPU
       receiver: 'null'
+    # Same SNO-hostile N-1 check: fires when requests exceed allocatable minus
+    # the largest node, which here is the sole control plane (its loss is a
+    # full outage regardless). The base cluster sits within ~1 CPU of that
+    # line and flaps every time the casval burst worker (189 CPU) leaves.
+    - matchers:
+        - alertname =~ "KubeCPUOvercommit|KubeMemoryOvercommit"
+      receiver: 'null'
     # Casval molecule image-cache DataImportCrons (components/molecule/*-casval-*)
     # import onto lvms-casval (topology: casval.igou.systems). The CAPI/Metal3
     # burst node only exists during an AAP lease; by design (components/molecule/
@@ -127,6 +134,13 @@ route:
       # additionally dedupes against the EDA-filed GitHub issue.
       group_interval: 30m
       repeat_interval: 12h
+    # A failed Job stays failed until it is cleaned up (one Insights gather
+    # fired for 23h). Push it once and on resolve, not every 4h.
+    - matchers:
+        - alertname = KubeJobFailed
+        - severity = warning
+      receiver: gotify-and-slack-warning
+      repeat_interval: 24h
     - matchers:
         - severity = critical
       receiver: gotify-and-slack-critical
