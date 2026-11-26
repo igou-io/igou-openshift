@@ -79,6 +79,15 @@
   ],
   "customManagers": [
     {
+      "description": "Grafana CR spec.version pin (full image ref); the kubernetes manager only parses image: fields",
+      "customType": "regex",
+      "managerFilePatterns": ["/^components/grafana/grafana-grafana\\.yaml$/"],
+      "matchStrings": [
+        "version: (?<depName>docker\\.io/grafana/grafana):(?<currentValue>[^\\s@]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker"
+    },
+    {
       "description": "HermesInstance agent images: track latest in the separate digest field rather than updating only sidecar image strings",
       "customType": "regex",
       "managerFilePatterns": ["/^applications/hermes-[^/]+/hermes-[^/]+-hermesinstance\\.yaml$/"],
