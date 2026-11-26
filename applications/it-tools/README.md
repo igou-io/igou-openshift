@@ -10,8 +10,8 @@ https://it-tools.apps.ocp.igou.systems
 
 - Upstream repository: https://github.com/sharevb/it-tools
 - Image source: `ghcr.io/sharevb/it-tools`
-- Pinned stable version: `2026.7.11`
-- Pinned manifest digest: `sha256:5d79e8c7fbf39d6473c282b9c4f86ff85c4900ec22ef766ae3c6f0f9ca8dbb37`
+- Pinned stable version: `2026.11.22`
+- Pinned manifest digest: `sha256:bcbb29086ca71f1ff23c7dc061f8c9b6e50f1267b4dc704327bb29ba55a8b87d`
 - Container port: `8080/TCP`
 - Service: `80/TCP` to container port `8080`
 - Ingress: edge-TLS at `it-tools.apps.ocp.igou.systems`
