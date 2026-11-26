@@ -41,6 +41,10 @@ helmCharts:
             auth:
               existingSecret: aap-portal-postgresql-auth
           backstage:
+            # Pin the hub digest; the chart's floating 1.10 tag left the pod on an
+            # older build after Red Hat published CVE fixes (CVE-2026-111497).
+            image:
+              tag: "1.10@sha256:d83fcbf763438a5de3e17d911679969b4e5adffa8d162cb99e87747776935dbd"
             appConfig:
               app:
                 title: Automation Portal - igou.systems
