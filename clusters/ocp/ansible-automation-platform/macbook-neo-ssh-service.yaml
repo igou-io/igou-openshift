@@ -1,0 +1,18 @@
+---
+# Neo half of the AAP -> Mac SSH egress; see macbook-air-ssh-service.yaml.
+apiVersion: v1
+kind: Service
+metadata:
+  name: macbook-neo-ssh
+  namespace: ansible-automation-platform
+  annotations:
+    tailscale.com/tailnet-ip: 100.70.251.72
+    tailscale.com/tags: tag:openshift
+    tailscale.com/hostname: ocp-egress-macbook-neo
+spec:
+  type: ExternalName
+  externalName: placeholder
+  ports:
+    - name: ssh
+      port: 22
+      protocol: TCP

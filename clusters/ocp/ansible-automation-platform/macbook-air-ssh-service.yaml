@@ -1,0 +1,21 @@
+---
+# Cluster egress from AAP job pods to sshd on the tailnet Macs (igou-inventory
+# group macos). The Tailscale operator replaces each ExternalName Service with
+# a proxy in the tailscale namespace, tagged tag:openshift for the tailnet
+# grant to tcp/22. Each Mac's sshd AllowUsers admits its proxy's tailnet IP.
+apiVersion: v1
+kind: Service
+metadata:
+  name: macbook-air-ssh
+  namespace: ansible-automation-platform
+  annotations:
+    tailscale.com/tailnet-ip: 100.105.67.24
+    tailscale.com/tags: tag:openshift
+    tailscale.com/hostname: ocp-egress-macbook-air
+spec:
+  type: ExternalName
+  externalName: placeholder
+  ports:
+    - name: ssh
+      port: 22
+      protocol: TCP

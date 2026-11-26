@@ -1,0 +1,23 @@
+---
+# Job pods may reach the Tailscale egress proxies of this namespace's
+# ExternalName Services (macbook-*-ssh-service.yaml) on tcp/22.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: macos-ssh
+  namespace: ansible-automation-platform
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tailscale
+          podSelector:
+            matchLabels:
+              tailscale.com/parent-resource-ns: ansible-automation-platform
+      ports:
+        - port: 22
+          protocol: TCP
