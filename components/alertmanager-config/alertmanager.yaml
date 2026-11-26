@@ -222,7 +222,7 @@ receivers:
   - name: slack-info
     slack_configs:
       - api_url: https://slack.com/api/chat.postMessage
-        channel: '#igoucloud-notifications'
+        channel: '#igoucloud-alerts-warning'
         http_config:
           authorization:
             credentials_file: /etc/alertmanager/secrets/alertmanager-slack-bot-token/password
