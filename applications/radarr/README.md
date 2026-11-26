@@ -32,7 +32,7 @@ validation.
 ## Historical image and source audit
 
 The current GitOps target is
-`ghcr.io/home-operations/radarr:6.4.4@sha256:be53998a2d39cfa3c3315b70c7509a6a1f2a10c3aee9337653efc9f4c970430e`.
+`ghcr.io/home-operations/radarr:7.0.3@sha256:55d3cf8a4c4c531bb8b5c1ba88eb270d4435e01e228fbdb16cdfc910a17e3b06`.
 
 The first OpenShift boot is pinned to the exact source image reference:
 
