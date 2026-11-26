@@ -42,7 +42,7 @@ helmCharts:
             app:
               image:
                 repository: docker.io/jgraph/drawio
-                tag: 32.6.1@sha256:3d0a5a5ffb4f76abcecd9d17ae1373e3eefd0db07b657c545637dc9c6a7412e1
+                tag: 32.6.10@sha256:44e9e4b43d92a0704ee67da3dcf0966272ce95543cd135025ff05515e1dfaa9c
               command:
                 - /docker-entrypoint.sh
               args:
