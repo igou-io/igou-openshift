@@ -91,8 +91,8 @@ helmCharts:
                 - --max-old-space-size=2048
                 - dist/src/index.js
               image: &firecrawlImage
-                repository: docker.io/winkkgmbh/firecrawl
-                digest: sha256:8b26e0967fa83e7f92d2e506e0957c10fe52f082b829e56a72ade0f7a627ed50
+                repository: ghcr.io/firecrawl/firecrawl
+                tag: "2.11.800@sha256:fbadfc5e2b48f4418153f4f81cb2de325ac01b97c0700fe63bfa22c7340f99ad"
                 pullPolicy: IfNotPresent
               envFrom: &firecrawlEnvFrom
                 - configMapRef:
@@ -135,7 +135,7 @@ helmCharts:
                 liveness:
                   enabled: true
                   type: HTTP
-                  path: /v0/health/liveness
+                  path: /health/liveness
                   port: 3002
                   spec:
                     initialDelaySeconds: 30
@@ -145,7 +145,7 @@ helmCharts:
                 readiness:
                   enabled: true
                   type: HTTP
-                  path: /v0/health/readiness
+                  path: /health/readiness
                   port: 3002
                   spec:
                     initialDelaySeconds: 30
@@ -486,9 +486,15 @@ helmCharts:
           containers:
             app:
               nameOverride: playwright-service
+              # The image's `pnpm start` wrapper is avoided under OpenShift's
+              # arbitrary UID; this is the script it runs.
+              command:
+                - node
+              args:
+                - dist/api.js
               image:
-                repository: docker.io/winkkgmbh/firecrawl-playwright
-                digest: sha256:3542c4773c7ba5072258625cf40916d6589b2d94f7f12a5ed22e670ece126ead
+                repository: ghcr.io/firecrawl/playwright-service
+                digest: sha256:227ce3d8059173925a5a0697c63a1e947662cca934a609151651f578774edd5d
                 pullPolicy: IfNotPresent
               envFrom:
                 - configMapRef:
@@ -633,8 +639,8 @@ helmCharts:
             app:
               nameOverride: nuq-postgres
               image:
-                repository: docker.io/winkkgmbh/nuq-postgres
-                digest: sha256:b0f14f9c8c9b5929d25a5d6f1f7f6ef99c51475d45767908eed4f086f7159e02
+                repository: ghcr.io/firecrawl/nuq-postgres
+                digest: sha256:d719b36160eac2fcbe16dc7e7360ddb9c82c40ea5da183d07bf4a755c6a0b2ae
                 pullPolicy: IfNotPresent
               env:
                 POSTGRES_USER: postgres

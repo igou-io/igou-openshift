@@ -17,6 +17,11 @@
   },
   "packageRules": [
     {
+      "description": "Firecrawl publishes about ten builds a day and can drop process entrypoints (2.11.8xx removed extract-worker.js and the v0/v1 controllers); review each bump against applications/firecrawl before merging",
+      "matchPackageNames": ["/^ghcr\\.io/firecrawl//"],
+      "automerge": false
+    },
+    {
       "description": "HermesInstance agent pins use separate tag and digest fields; the regex manager updates the digest consumed by the operator",
       "matchManagers": ["helm-values"],
       "matchFileNames": ["applications/hermes-*/hermes-*-hermesinstance.yaml"],
