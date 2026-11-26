@@ -835,6 +835,21 @@ applications:
       namespace: ansible-automation-platform
     source:
       path: clusters/ocp/ansible-automation-platform
+    # The Tailscale operator rewrites the Mac SSH egress Services'
+    # spec.externalName from the git placeholder to its proxy FQDN; defer it.
+    ignoreDifferences:
+      - group: ""
+        kind: Service
+        name: macbook-air-ssh
+        namespace: ansible-automation-platform
+        jsonPointers:
+          - /spec/externalName
+      - group: ""
+        kind: Service
+        name: macbook-neo-ssh
+        namespace: ansible-automation-platform
+        jsonPointers:
+          - /spec/externalName
 
   # Automation orchestrator 2026.8 (AAP family, stable OLM channel) with its
   # CNPG PostgreSQL cluster. After AAP (30): the standalone install works
